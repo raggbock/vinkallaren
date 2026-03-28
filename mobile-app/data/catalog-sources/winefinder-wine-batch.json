@@ -1,1 +1,82 @@
-[]
+[
+  {
+    "name": "Pahlmeyer Chardonnay Napa",
+    "producer": "Pahlmeyer",
+    "country": "USA",
+    "region": "Napa Valley",
+    "vintage": "2013",
+    "type": "Vitt vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/usa/napa-valley/pahlmeyer-chardonnay-napa-okand-2013-a114257"
+  },
+  {
+    "name": "Family Reserve Chardonnay",
+    "producer": "Silver Heights Vineyards",
+    "country": "Kina",
+    "region": "Ningxia",
+    "vintage": "2017",
+    "type": "Vitt vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/kina/ningxia/family-reserve-chardonnay-silver-heights-vineyards-2017-a130238"
+  },
+  {
+    "name": "Alskade Bourgogne - Chardonnay Edition!",
+    "producer": "Terres Secretes",
+    "country": "Frankrike",
+    "region": "Bourgogne",
+    "vintage": null,
+    "type": "Vitt vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/bourgogne/alskade-bourgogne-chardonnay-edition-terres-secretes-a136159"
+  },
+  {
+    "name": "Reserve Bin 18A Chardonnay",
+    "producer": "Penfolds",
+    "country": "Australien",
+    "region": "South Australia",
+    "vintage": "2018",
+    "type": "Vitt vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/australien/south-australia/reserve-bin-18a-chardonnay-penfolds-2018-a129673"
+  },
+  {
+    "name": "Arbois Jura Chardonnay",
+    "producer": "Domaine du Pelican",
+    "country": "Frankrike",
+    "region": "Jura",
+    "vintage": "2020",
+    "type": "Vitt vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/jura/arbois-jura-chardonnay-domaine-du-pelican-2020-kpw136441"
+  },
+  {
+    "name": "Cotes du Rhone",
+    "producer": "Bruno-Thierry",
+    "country": "Frankrike",
+    "region": "Cotes du Rhone",
+    "vintage": "2019",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/cotes-du-rhone/cotes-du-rhone-bruno-thierry-2019-kpw135809"
+  },
+  {
+    "name": "B de Fonbadet",
+    "producer": "Chateau Fonbadet",
+    "country": "Frankrike",
+    "region": "Bordeaux",
+    "vintage": "2019",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/bordeaux/b-de-fonbadet-chteau-fonbadet-2019-a133947"
+  },
+  {
+    "name": "Classic Cuvee",
+    "producer": "Nyetimber",
+    "country": "England",
+    "region": "Sussex",
+    "vintage": null,
+    "type": "Mousserande",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/england/sussex/classic-cuvee-nyetimber-a124754"
+  }
+]
