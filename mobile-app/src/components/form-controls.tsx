@@ -118,7 +118,7 @@ export function AutocompleteInput({
           onBlur={() => {
             blurTimeoutRef.current = setTimeout(() => {
               setFocused(false);
-            }, 120);
+            }, 220);
           }}
         />
         {showSuggestions ? (
@@ -126,7 +126,17 @@ export function AutocompleteInput({
             {suggestions.map((option) => (
               <Pressable
                 key={`${label}-${option}`}
-                onPressIn={() => selectOption(option)}
+                onPress={() => selectOption(option)}
+                onPressIn={() => {
+                  if (blurTimeoutRef.current) {
+                    clearTimeout(blurTimeoutRef.current);
+                  }
+                }}
+                onResponderGrant={() => {
+                  if (blurTimeoutRef.current) {
+                    clearTimeout(blurTimeoutRef.current);
+                  }
+                }}
                 style={styles.autocompleteItem}
               >
                 <Text style={styles.autocompleteText}>{option}</Text>
