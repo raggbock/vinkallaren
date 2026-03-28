@@ -10,6 +10,7 @@ export type ProductCatalogEntry = {
   vintage?: number;
   foodPairings?: string[];
   sourceLabel: string;
+  sourceConfidence?: "high" | "medium" | "low";
 };
 
 type ProductLookupInput = {
@@ -163,6 +164,19 @@ const systembolagetSeedCatalog: ProductCatalogEntry[] = [
     foodPairings: ["dessert", "blåmögelost", "frukt"],
     sourceLabel: "Systembolaget referens",
   },
+  {
+    systembolagetProductId: "211001",
+    barcode: "651357542936",
+    name: "Motif Red Hills Cabernet Sauvignon",
+    producer: "Precision Wine Company",
+    country: "USA",
+    region: "North Coast, Lake County",
+    grape: "Cabernet Sauvignon",
+    type: "Rött",
+    vintage: 2023,
+    foodPairings: ["lamm", "nöt", "vilt", "grillat"],
+    sourceLabel: "Systembolaget referens",
+  },
 ];
 
 export async function findCatalogMatch(input: ProductLookupInput) {
@@ -275,7 +289,9 @@ function mapOpenFoodFactsProduct(barcode: string, product: NonNullable<OpenFoodF
     return null;
   }
 
-  if (!looksLikeWineProduct(name, product.categories)) {
+  const confidence = classifyWineConfidence(name, product.categories);
+
+  if (confidence === "low") {
     return null;
   }
 
@@ -295,14 +311,15 @@ function mapOpenFoodFactsProduct(barcode: string, product: NonNullable<OpenFoodF
     type,
     vintage,
     foodPairings: inferFoodPairings(name, product.categories, type),
-    sourceLabel: "Open Food Facts",
+    sourceLabel: confidence === "high" ? "Open Food Facts" : "Open Food Facts (möjlig träff)",
+    sourceConfidence: confidence,
   };
 }
 
-function looksLikeWineProduct(name: string, categories?: string) {
+function classifyWineConfidence(name: string, categories?: string): "high" | "medium" | "low" {
   const haystack = normalizeForLookup(`${name} ${categories ?? ""}`);
 
-  return matchesAny(haystack, [
+  if (matchesAny(haystack, [
     "wine",
     "vin",
     "red wine",
@@ -319,7 +336,63 @@ function looksLikeWineProduct(name: string, categories?: string) {
     "chablis",
     "sancerre",
     "bourgogne",
-  ]);
+  ])) {
+    return "high";
+  }
+
+  if (matchesAny(haystack, [
+    "alcoholic beverages",
+    "alcoholic beverage",
+    "beverages",
+    "fermented beverages",
+    "druvor",
+    "grapes",
+    "organic wine",
+    "natural wine",
+    "vin rouge",
+    "vin blanc",
+    "vino",
+    "wein",
+    "brut",
+    "reserve",
+    "reserva",
+    "grand cru",
+    "premier cru",
+    "cotes du rhone",
+    "cotes de",
+    "chateau",
+    "domaine",
+    "cuvee",
+    "cuvée",
+  ])) {
+    return "medium";
+  }
+
+  if (matchesAny(haystack, [
+    "chocolate",
+    "snack",
+    "chips",
+    "candy",
+    "confectionery",
+    "hazelnut spread",
+    "coffee",
+    "tea",
+    "juice",
+    "yoghurt",
+    "cheese",
+    "beer",
+    "stout",
+    "ipa",
+    "cider",
+    "whisky",
+    "vodka",
+    "gin",
+    "rum",
+  ])) {
+    return "low";
+  }
+
+  return inferVintage(name) || inferGrape(name, categories) || inferRegion(name, categories) ? "medium" : "low";
 }
 
 function inferWineType(name: string, categories?: string) {
