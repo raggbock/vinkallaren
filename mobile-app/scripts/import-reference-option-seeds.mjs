@@ -127,7 +127,7 @@ try {
   const psqlPath = process.env.PSQL_PATH || "psql";
   const result = spawnSync(psqlPath, [connectionString, "-f", tempFile], {
     stdio: "inherit",
-    shell: process.platform === "win32",
+    shell: false,
   });
 
   if (result.status !== 0) {
