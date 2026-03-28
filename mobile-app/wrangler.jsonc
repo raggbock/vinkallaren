@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "minvinkallare-web",
+  "name": "vinkallaren",
   "compatibility_date": "2026-03-28",
   "assets": {
     "directory": "./dist/",
