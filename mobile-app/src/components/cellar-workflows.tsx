@@ -3,6 +3,7 @@ import { Image, Modal, Pressable, SafeAreaView, ScrollView, Text, View } from "r
 
 import { buildNumericOptions, getSuggestedPairings, getWineStoragePlacementLabel, mergeTagText, parseTags } from "../lib/cellar-helpers";
 import type { ProductCatalogEntry } from "../lib/product-catalog";
+import type { ProductCatalogWineRow } from "../types/product-catalog";
 import type { ReferenceOptionRow } from "../types/reference-data";
 import type { StorageSpaceRow } from "../types/storage-space";
 import type { CatalogEditorDraft, ImportFieldSelection, ImportMode, WineDraft } from "../types/cellar-drafts";
@@ -196,11 +197,13 @@ export function AddWinePanel({
   lookupBusy,
   lookupMessage,
   catalogSuggestion,
+  selectedCatalogNameEntry,
   importMode,
   importSelection,
   savingCatalogEntry,
   saving,
   onDraftChange,
+  onNameSelected,
   onBarcodeChange,
   onArticleNumberChange,
   onStorageSpaceChange,
@@ -234,11 +237,13 @@ export function AddWinePanel({
   lookupBusy: boolean;
   lookupMessage: string;
   catalogSuggestion: ProductCatalogEntry | null;
+  selectedCatalogNameEntry: ProductCatalogWineRow | null;
   importMode: ImportMode;
   importSelection: ImportFieldSelection;
   savingCatalogEntry: boolean;
   saving: boolean;
   onDraftChange: (patch: Partial<WineDraft>) => void;
+  onNameSelected: (value: string) => void;
   onBarcodeChange: (value: string) => void;
   onArticleNumberChange: (value: string) => void;
   onStorageSpaceChange: (spaceId: string) => void;
@@ -253,6 +258,20 @@ export function AddWinePanel({
   onChooseImage: () => void;
   onSaveWine: () => void;
 }) {
+  const isLockedByCatalog = (field: keyof ProductCatalogWineRow) => {
+    if (!selectedCatalogNameEntry) {
+      return false;
+    }
+
+    const value = selectedCatalogNameEntry[field];
+
+    if (Array.isArray(value)) {
+      return value.length > 0;
+    }
+
+    return value !== null && value !== "";
+  };
+
   return (
     <View style={styles.panel}>
       <Text style={styles.panelTitle}>Lägg till vin</Text>
@@ -260,12 +279,19 @@ export function AddWinePanel({
         label="Namn"
         value={draft.name}
         onChangeText={(value) => onDraftChange({ name: value })}
+        onOptionSelected={onNameSelected}
         options={effectiveWineNameOptions}
         optionRows={wineNameReferenceRows}
         placeholder="Skriv minst 4 bokstäver"
         minimumQueryLength={4}
+        editable={!isLockedByCatalog("name")}
       />
-      <LabeledInput label="Producent" value={draft.producer} onChangeText={(value) => onDraftChange({ producer: value })} />
+      <LabeledInput
+        label="Producent"
+        value={draft.producer}
+        onChangeText={(value) => onDraftChange({ producer: value })}
+        editable={!isLockedByCatalog("producer")}
+      />
       <DoubleRow>
         <AutocompleteInput
           label="Land"
@@ -274,6 +300,7 @@ export function AddWinePanel({
           options={effectiveCountryOptions}
           optionRows={countryReferenceRows}
           placeholder="Skriv t.ex. fr eller it"
+          editable={!isLockedByCatalog("country")}
         />
         <AutocompleteInput
           label="Region"
@@ -282,6 +309,7 @@ export function AddWinePanel({
           options={effectiveRegionOptions}
           optionRows={regionReferenceRows}
           placeholder="Skriv t.ex. bor, rio, nap..."
+          editable={!isLockedByCatalog("region")}
         />
       </DoubleRow>
       <AutocompleteInput
@@ -291,12 +319,19 @@ export function AddWinePanel({
         options={effectiveGrapeOptions}
         optionRows={grapeReferenceRows}
         placeholder="Nebbiolo, Chardonnay..."
+        editable={!isLockedByCatalog("grape")}
       />
       <DoubleRow>
         <LabeledInput label="Årgång" value={draft.vintage} onChangeText={(value) => onDraftChange({ vintage: value })} keyboardType="number-pad" />
         <LabeledInput label="Antal" value={draft.quantity} onChangeText={(value) => onDraftChange({ quantity: value })} keyboardType="number-pad" />
       </DoubleRow>
-      <SuggestionRow title="Vintyp" options={WINE_TYPE_OPTIONS} selected={draft.type} onSelect={(value) => onDraftChange({ type: value })} />
+      <SuggestionRow
+        title="Vintyp"
+        options={WINE_TYPE_OPTIONS}
+        selected={draft.type}
+        onSelect={(value) => onDraftChange({ type: value })}
+        disabled={isLockedByCatalog("type")}
+      />
       <LabeledInput label="Drick senast" value={draft.drinkBy} onChangeText={(value) => onDraftChange({ drinkBy: value })} keyboardType="number-pad" />
 
       {storageSpaces.length > 0 ? (
@@ -334,7 +369,12 @@ export function AddWinePanel({
       />
 
       <LabeledInput label="Fri platsnotering" value={draft.location} onChangeText={(value) => onDraftChange({ location: value })} placeholder="t.ex. längst bak, överst i kylen" />
-      <LabeledInput label="Streckkod" value={draft.barcode} onChangeText={onBarcodeChange} />
+      <LabeledInput
+        label="Streckkod"
+        value={draft.barcode}
+        onChangeText={onBarcodeChange}
+        editable={!isLockedByCatalog("barcode")}
+      />
       <Pressable onPress={onStartBarcodeScanner} style={styles.secondaryButton}>
         <Text style={styles.secondaryButtonText}>Skanna streckkod</Text>
       </Pressable>
@@ -344,6 +384,7 @@ export function AddWinePanel({
         value={draft.systembolagetProductId}
         onChangeText={onArticleNumberChange}
         placeholder="t.ex. 12345"
+        editable={!isLockedByCatalog("systembolaget_product_id")}
       />
 
       {lookupBusy ? <Text style={styles.notesText}>Söker produktmatch...</Text> : null}
@@ -405,7 +446,13 @@ export function AddWinePanel({
       ) : null}
 
       <LabeledInput label="Etiketter" value={draft.tags} onChangeText={(value) => onDraftChange({ tags: value })} placeholder="middag, present, lagring" />
-      <LabeledInput label="Passar till" value={draft.foodPairings} onChangeText={(value) => onDraftChange({ foodPairings: value })} placeholder="lamm, ost, svamp, fisk" />
+      <LabeledInput
+        label="Passar till"
+        value={draft.foodPairings}
+        onChangeText={(value) => onDraftChange({ foodPairings: value })}
+        placeholder="lamm, ost, svamp, fisk"
+        editable={!isLockedByCatalog("food_pairings")}
+      />
       <LabeledInput label="Anteckningar" value={draft.notes} onChangeText={(value) => onDraftChange({ notes: value })} multiline />
 
       <Pressable onPress={onChooseImage} style={styles.secondaryButton}>

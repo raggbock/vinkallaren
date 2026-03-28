@@ -419,6 +419,7 @@ function CellarScreen({ session }: { session: Session }) {
   const [editingWine, setEditingWine] = useState<WineRecord | null>(null);
   const [editWineDraft, setEditWineDraft] = useState<WineDraft | null>(null);
   const [savingWineEdit, setSavingWineEdit] = useState(false);
+  const [selectedCatalogNameEntry, setSelectedCatalogNameEntry] = useState<ProductCatalogWineRow | null>(null);
 
   const stats = useMemo(() => buildStats(wines), [wines]);
   const grapeReferenceRows = useMemo(
@@ -430,6 +431,20 @@ function CellarScreen({ session }: { session: Session }) {
     () => mergeReferenceRows([...catalogWineNameReferenceRows]),
     [catalogWineNameReferenceRows]
   );
+  const catalogNameEntryByName = useMemo(() => {
+    const map = new Map<string, ProductCatalogWineRow>();
+
+    for (const entry of catalogNameEntries) {
+      const key = normalizeLookupValue(entry.name);
+      const existing = map.get(key);
+
+      if (!existing || scoreCatalogCompleteness(entry) > scoreCatalogCompleteness(existing)) {
+        map.set(key, entry);
+      }
+    }
+
+    return map;
+  }, [catalogNameEntries]);
   const countryReferenceRows = useMemo(
     () => mergeReferenceRows(referenceOptions.filter((option) => option.category === "country")),
     [referenceOptions]
@@ -471,6 +486,41 @@ function CellarScreen({ session }: { session: Session }) {
 
   function goToSection(section: CellarSection) {
     setActiveSection(section);
+  }
+
+  function updateAddWineDraft(patch: Partial<WineDraft>) {
+    let lockedEntry = selectedCatalogNameEntry;
+
+    if (typeof patch.name === "string") {
+      lockedEntry = catalogNameEntryByName.get(normalizeLookupValue(patch.name)) ?? null;
+      setSelectedCatalogNameEntry(lockedEntry);
+    }
+
+    setDraft((current) => applyCatalogLocksToDraft(current, patch, lockedEntry));
+  }
+
+  function handleWineNameSelected(name: string) {
+    const selectedEntry = catalogNameEntryByName.get(normalizeLookupValue(name)) ?? null;
+    setSelectedCatalogNameEntry(selectedEntry);
+
+    if (!selectedEntry) {
+      setDraft((current) => ({ ...current, name }));
+      return;
+    }
+
+    setDraft((current) => ({
+      ...current,
+      name: selectedEntry.name,
+      producer: selectedEntry.producer ?? "",
+      country: selectedEntry.country ?? "",
+      region: selectedEntry.region ?? "",
+      grape: selectedEntry.grape ?? "",
+      vintage: selectedEntry.vintage ? String(selectedEntry.vintage) : "",
+      type: selectedEntry.type ?? current.type,
+      barcode: selectedEntry.barcode ?? "",
+      systembolagetProductId: selectedEntry.systembolaget_product_id ?? "",
+      foodPairings: selectedEntry.food_pairings.join(", "),
+    }));
   }
 
   const filteredWines = useMemo(() => {
@@ -857,6 +907,7 @@ function CellarScreen({ session }: { session: Session }) {
       await cacheWineDraftAsCatalogEntry(payload, session.user.id);
 
       setDraft(defaultDraft);
+      setSelectedCatalogNameEntry(null);
       await Promise.all([fetchWines(), fetchCatalogEntries(), fetchCatalogNameEntries(), fetchReferenceOptions()]);
     } catch (error) {
       Alert.alert("Kunde inte spara", error instanceof Error ? error.message : "Försök igen.");
@@ -1419,17 +1470,19 @@ function CellarScreen({ session }: { session: Session }) {
         importSelection={importSelection}
         savingCatalogEntry={savingCatalogEntry}
         saving={saving}
-        onDraftChange={(patch) => setDraft((current) => ({ ...current, ...patch }))}
+        selectedCatalogNameEntry={selectedCatalogNameEntry}
+        onDraftChange={updateAddWineDraft}
+        onNameSelected={handleWineNameSelected}
         onBarcodeChange={(value) =>
           setDraft((current) => {
-            const nextDraft = { ...current, barcode: value };
+            const nextDraft = applyCatalogLocksToDraft(current, { barcode: value }, selectedCatalogNameEntry);
             void maybeSuggestCatalogMatch(nextDraft);
             return nextDraft;
           })
         }
         onArticleNumberChange={(value) =>
           setDraft((current) => {
-            const nextDraft = { ...current, systembolagetProductId: value };
+            const nextDraft = applyCatalogLocksToDraft(current, { systembolagetProductId: value }, selectedCatalogNameEntry);
             void maybeSuggestCatalogMatch(nextDraft);
             return nextDraft;
           })
@@ -1826,6 +1879,75 @@ function buildWineInsertFromDraft(
     notes: emptyToNull(draft.notes),
     image_path: imagePath,
   };
+}
+
+function applyCatalogLocksToDraft(
+  current: WineDraft,
+  patch: Partial<WineDraft>,
+  selectedCatalogEntry: ProductCatalogWineRow | null
+) {
+  if (!selectedCatalogEntry) {
+    return { ...current, ...patch };
+  }
+
+  const nextDraft = { ...current, ...patch };
+
+  if (selectedCatalogEntry.name) {
+    nextDraft.name = selectedCatalogEntry.name;
+  }
+
+  if (selectedCatalogEntry.producer) {
+    nextDraft.producer = selectedCatalogEntry.producer;
+  }
+
+  if (selectedCatalogEntry.country) {
+    nextDraft.country = selectedCatalogEntry.country;
+  }
+
+  if (selectedCatalogEntry.region) {
+    nextDraft.region = selectedCatalogEntry.region;
+  }
+
+  if (selectedCatalogEntry.grape) {
+    nextDraft.grape = selectedCatalogEntry.grape;
+  }
+
+  if (selectedCatalogEntry.vintage) {
+    nextDraft.vintage = String(selectedCatalogEntry.vintage);
+  }
+
+  if (selectedCatalogEntry.type) {
+    nextDraft.type = selectedCatalogEntry.type;
+  }
+
+  if (selectedCatalogEntry.barcode) {
+    nextDraft.barcode = selectedCatalogEntry.barcode;
+  }
+
+  if (selectedCatalogEntry.systembolaget_product_id) {
+    nextDraft.systembolagetProductId = selectedCatalogEntry.systembolaget_product_id;
+  }
+
+  if (selectedCatalogEntry.food_pairings.length > 0) {
+    nextDraft.foodPairings = selectedCatalogEntry.food_pairings.join(", ");
+  }
+
+  return nextDraft;
+}
+
+function scoreCatalogCompleteness(entry: ProductCatalogWineRow) {
+  return [
+    entry.name,
+    entry.producer,
+    entry.country,
+    entry.region,
+    entry.grape,
+    entry.type,
+    entry.vintage,
+    entry.barcode,
+    entry.systembolaget_product_id,
+    entry.food_pairings.length > 0 ? "pairings" : null,
+  ].filter(Boolean).length;
 }
 
 function applyNullableCatalogFilter<

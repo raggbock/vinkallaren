@@ -22,18 +22,22 @@ export function AutocompleteInput({
   label,
   value,
   onChangeText,
+  onOptionSelected,
   options,
   optionRows,
   placeholder,
   minimumQueryLength = 1,
+  editable = true,
 }: {
   label: string;
   value: string;
   onChangeText: (value: string) => void;
+  onOptionSelected?: (value: string) => void;
   options: string[];
   optionRows?: ReferenceOptionRow[];
   placeholder?: string;
   minimumQueryLength?: number;
+  editable?: boolean;
 }) {
   const [focused, setFocused] = useState(false);
   const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -93,6 +97,7 @@ export function AutocompleteInput({
       clearTimeout(blurTimeoutRef.current);
     }
     onChangeText(option);
+    onOptionSelected?.(option);
     setFocused(false);
   }
 
@@ -105,6 +110,7 @@ export function AutocompleteInput({
           placeholderTextColor="#8f8178"
           style={styles.input}
           value={value}
+          editable={editable}
           onChangeText={(nextValue) => {
             onChangeText(nextValue);
             setFocused(true);
@@ -121,7 +127,7 @@ export function AutocompleteInput({
             }, 220);
           }}
         />
-        {showSuggestions ? (
+        {editable && showSuggestions ? (
           <View style={styles.autocompleteListInline}>
             {suggestions.map((option) => (
               <Pressable
@@ -184,11 +190,13 @@ export function SuggestionRow({
   options,
   selected,
   onSelect,
+  disabled = false,
 }: {
   title: string;
   options: string[];
   selected?: string;
   onSelect: (value: string) => void;
+  disabled?: boolean;
 }) {
   return (
     <View style={styles.foodSection}>
@@ -201,6 +209,7 @@ export function SuggestionRow({
             <Pressable
               key={`${title}-${option}`}
               onPress={() => onSelect(option)}
+              disabled={disabled}
               style={[styles.suggestionPill, isSelected && styles.suggestionPillActive]}
             >
               <Text style={[styles.suggestionText, isSelected && styles.suggestionTextActive]}>{option}</Text>
