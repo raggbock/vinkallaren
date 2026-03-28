@@ -17,9 +17,9 @@ En första riktig Expo-baserad mobilapp för iPhone och Android med Supabase fö
 - Snabbval för `importera allt`, `bara tomma fält` eller `välj själv`
 - Matmatchning per vin, till exempel `lamm`, `fisk`, `ost` eller `svamp`
 - Automatiska matförslag baserat på vintyp
-- En “Vad ska vi äta?”-vy som lyfter fram relevanta flaskor först
+- En "Vad ska vi äta?"-vy som lyfter fram relevanta flaskor först
 - Filter i källaren för att visa viner till en viss maträtt
-- Filter på land, vintyp och fritextsökning
+- Filter på land, region, årgång, vintyp och fritextsökning
 - Bilduppladdning till Supabase Storage
 - SQL-migration med row-level security i `supabase/migrations`
 
@@ -45,6 +45,10 @@ npm run android
 npm run ios
 ```
 
+## Release
+
+Se [release.md](docs/release.md) för EAS-profiler, webexport och rekommenderad gratis hosting.
+
 ## Viktiga filer
 
 - `App.tsx`
@@ -55,3 +59,4 @@ npm run ios
 - `supabase/migrations/20260328101500_add_grape_column.sql`
 - `supabase/migrations/20260328114000_add_systembolaget_reference.sql`
 - `docs/backend-setup.md`
+- `docs/release.md`

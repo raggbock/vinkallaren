@@ -3,6 +3,7 @@
     "name": "Vinkällaren",
     "slug": "vinkallaren",
     "version": "1.0.0",
+    "scheme": "vinkallaren",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -12,12 +13,14 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
+      "bundleIdentifier": "se.raggbock.vinkallaren",
       "infoPlist": {
         "NSCameraUsageDescription": "Kameran används för att skanna streckkoder på vinflaskor."
       },
       "supportsTablet": true
     },
     "android": {
+      "package": "se.raggbock.vinkallaren",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -30,7 +33,8 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "output": "single"
     }
   }
 }

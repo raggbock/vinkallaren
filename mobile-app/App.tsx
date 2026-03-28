@@ -908,6 +908,11 @@ function CellarScreen({ session }: { session: Session }) {
                 selected={importSelection.systembolagetProductId}
                 onToggle={() => toggleImportField("systembolagetProductId")}
               />
+              <ImportSelectionRow
+                label="Streckkod"
+                selected={importSelection.barcode}
+                onToggle={() => toggleImportField("barcode")}
+              />
               <Pressable onPress={() => applyCatalogSuggestion("custom")} style={styles.primaryButton}>
                 <Text style={styles.primaryButtonText}>Fyll i från förslag</Text>
               </Pressable>
