@@ -24,6 +24,7 @@ import type { Session } from "@supabase/supabase-js";
 
 import { supabase, supabaseConfigured } from "./src/lib/supabase";
 import { cacheCatalogEntry, findCatalogMatch, type ProductCatalogEntry } from "./src/lib/product-catalog";
+import type { ProductCatalogRow } from "./src/types/product-catalog";
 import type { StorageSpaceInsert, StorageSpaceRow } from "./src/types/storage-space";
 import type { WineInsert, WineRecord, WineRow } from "./src/types/wine";
 
@@ -379,10 +380,13 @@ function CellarScreen({ session }: { session: Session }) {
   const [draft, setDraft] = useState<WineDraft>(defaultDraft);
   const [storageSpaceDraft, setStorageSpaceDraft] = useState<StorageSpaceDraft>(defaultStorageSpaceDraft);
   const [storageSpaces, setStorageSpaces] = useState<StorageSpaceRow[]>([]);
+  const [catalogEntries, setCatalogEntries] = useState<ProductCatalogRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingStorageSpaces, setLoadingStorageSpaces] = useState(true);
+  const [loadingCatalogEntries, setLoadingCatalogEntries] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savingStorageSpace, setSavingStorageSpace] = useState(false);
+  const [savingCatalogEntry, setSavingCatalogEntry] = useState(false);
   const [selectedPairingFilter, setSelectedPairingFilter] = useState("Alla");
   const [selectedMeal, setSelectedMeal] = useState("lamm");
   const [searchQuery, setSearchQuery] = useState("");
@@ -471,6 +475,7 @@ function CellarScreen({ session }: { session: Session }) {
   useEffect(() => {
     void fetchWines();
     void fetchStorageSpaces();
+    void fetchCatalogEntries();
   }, []);
 
   useEffect(() => {
@@ -540,6 +545,25 @@ function CellarScreen({ session }: { session: Session }) {
     setLoadingStorageSpaces(false);
   }
 
+  async function fetchCatalogEntries() {
+    setLoadingCatalogEntries(true);
+
+    const { data, error } = await supabase
+      .from("product_catalog_entries")
+      .select("*")
+      .order("updated_at", { ascending: false })
+      .limit(12);
+
+    if (error) {
+      Alert.alert("Kunde inte hämta produktkatalogen", error.message);
+      setLoadingCatalogEntries(false);
+      return;
+    }
+
+    setCatalogEntries((data ?? []) as ProductCatalogRow[]);
+    setLoadingCatalogEntries(false);
+  }
+
   async function saveWine() {
     if (!draft.name.trim()) {
       Alert.alert("Namn saknas", "Skriv in vilket vin du vill lägga till.");
@@ -588,7 +612,7 @@ function CellarScreen({ session }: { session: Session }) {
       await cacheWineDraftAsCatalogEntry(payload, session.user.id);
 
       setDraft(defaultDraft);
-      await fetchWines();
+      await Promise.all([fetchWines(), fetchCatalogEntries()]);
     } catch (error) {
       Alert.alert("Kunde inte spara", error instanceof Error ? error.message : "Försök igen.");
     } finally {
@@ -711,6 +735,50 @@ function CellarScreen({ session }: { session: Session }) {
 
     if (error) {
       Alert.alert("Kunde inte logga ut", error.message);
+    }
+  }
+
+  async function saveDraftToCatalog() {
+    const barcode = draft.barcode.trim();
+    const systembolagetProductId = draft.systembolagetProductId.trim();
+
+    if (!barcode && !systembolagetProductId) {
+      Alert.alert("Identifierare saknas", "Lägg in streckkod eller artikelnummer först.");
+      return;
+    }
+
+    if (!draft.name.trim()) {
+      Alert.alert("Namn saknas", "Fyll i åtminstone namnet på vinet innan du sparar det i katalogen.");
+      return;
+    }
+
+    setSavingCatalogEntry(true);
+
+    try {
+      const entry: ProductCatalogEntry = {
+        barcode: barcode || undefined,
+        systembolagetProductId: systembolagetProductId || undefined,
+        name: draft.name.trim(),
+        producer: emptyToNull(draft.producer) ?? undefined,
+        country: emptyToNull(draft.country) ?? undefined,
+        region: emptyToNull(draft.region) ?? undefined,
+        grape: emptyToNull(draft.grape) ?? undefined,
+        type: emptyToNull(draft.type) ?? undefined,
+        vintage: toNumberOrNull(draft.vintage) ?? undefined,
+        foodPairings: parseTags(draft.foodPairings),
+        sourceLabel: "MinVinkällare",
+        sourceConfidence: "high",
+      };
+
+      await cacheCatalogEntry(entry, session.user.id);
+      setCatalogSuggestion(entry);
+      setLookupMessage("Produkten sparades i katalogen. Nästa skanning ska hitta den direkt.");
+      await fetchCatalogEntries();
+      Alert.alert("Sparad i katalogen", "Produkten är nu sparad och kan återanvändas vid nästa streckkodsskanning.");
+    } catch (error) {
+      Alert.alert("Kunde inte spara i katalogen", error instanceof Error ? error.message : "Försök igen.");
+    } finally {
+      setSavingCatalogEntry(false);
     }
   }
 
@@ -1034,6 +1102,40 @@ function CellarScreen({ session }: { session: Session }) {
 
         <View style={styles.panel}>
           <View style={styles.panelHeaderRow}>
+            <Text style={styles.panelTitle}>Produktkatalog</Text>
+            <Pressable onPress={fetchCatalogEntries}>
+              <Text style={styles.linkText}>Uppdatera</Text>
+            </Pressable>
+          </View>
+
+          <Text style={styles.notesText}>
+            Här syns produkter appen redan känner igen. Om en streckkod inte ger träff kan du fylla i flaskan och spara den hit.
+          </Text>
+
+          {loadingCatalogEntries ? <LoadingInline label="Laddar produktkatalog..." /> : null}
+
+          {!loadingCatalogEntries && catalogEntries.length === 0 ? (
+            <Text style={styles.emptyState}>Katalogen är tom ännu. Första säkra träffen eller manuella sparning hamnar här.</Text>
+          ) : null}
+
+          {catalogEntries.map((entry) => (
+            <View key={entry.id} style={styles.storageSpaceCard}>
+              <Text style={styles.wineType}>{entry.source_label || "Katalog"}</Text>
+              <Text style={styles.recommendationName}>{entry.name}</Text>
+              <Text style={styles.notesText}>
+                {[entry.producer, entry.country, entry.region, entry.grape].filter(Boolean).join(" • ")}
+              </Text>
+              <Text style={styles.notesText}>
+                {[entry.barcode, entry.systembolaget_product_id ? `Art.nr ${entry.systembolaget_product_id}` : ""]
+                  .filter(Boolean)
+                  .join(" • ")}
+              </Text>
+            </View>
+          ))}
+        </View>
+
+        <View style={styles.panel}>
+          <View style={styles.panelHeaderRow}>
             <Text style={styles.panelTitle}>Vad ska vi äta?</Text>
             <Text style={styles.linkText}>{selectedMeal}</Text>
           </View>
@@ -1314,6 +1416,20 @@ function CellarScreen({ session }: { session: Session }) {
               </Pressable>
                 </>
               ) : null}
+            </View>
+          ) : null}
+
+          {!catalogSuggestion && (draft.barcode.trim() || draft.systembolagetProductId.trim()) ? (
+            <View style={styles.importSuggestionCard}>
+              <Text style={styles.inputLabel}>Ingen träff ännu?</Text>
+              <Text style={styles.notesText}>
+                Fyll i vinets namn och det du vet, och spara sedan produkten i katalogen så att nästa skanning hittar den direkt.
+              </Text>
+              <Pressable onPress={saveDraftToCatalog} style={styles.primaryButton} disabled={savingCatalogEntry}>
+                <Text style={styles.primaryButtonText}>
+                  {savingCatalogEntry ? "Sparar i katalogen..." : "Spara nuvarande vin i katalogen"}
+                </Text>
+              </Pressable>
             </View>
           ) : null}
 
