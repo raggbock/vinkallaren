@@ -52,7 +52,13 @@ alter table public.wines
 add column if not exists storage_slot integer;
 
 alter table public.wines
+drop constraint if exists wines_storage_row_check;
+
+alter table public.wines
 add constraint wines_storage_row_check check (storage_row is null or storage_row > 0);
+
+alter table public.wines
+drop constraint if exists wines_storage_slot_check;
 
 alter table public.wines
 add constraint wines_storage_slot_check check (storage_slot is null or storage_slot > 0);
