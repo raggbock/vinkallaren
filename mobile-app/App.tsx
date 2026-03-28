@@ -24,6 +24,7 @@ import type { Session } from "@supabase/supabase-js";
 
 import { supabase, supabaseConfigured } from "./src/lib/supabase";
 import { cacheCatalogEntry, findCatalogMatch, type ProductCatalogEntry } from "./src/lib/product-catalog";
+import { GRAPE_VARIETIES, WINE_COUNTRIES, WINE_REGIONS } from "./src/lib/reference-data";
 import type { ProductCatalogRow } from "./src/types/product-catalog";
 import type { StorageSpaceInsert, StorageSpaceRow } from "./src/types/storage-space";
 import type { WineInsert, WineRecord, WineRow } from "./src/types/wine";
@@ -1165,22 +1166,25 @@ function CellarScreen({ session }: { session: Session }) {
                   onChangeText={(value) => setCatalogEditorDraft((current) => (current ? { ...current, producer: value } : current))}
                 />
                 <DoubleRow>
-                  <LabeledInput
+                  <AutocompleteInput
                     label="Land"
                     value={catalogEditorDraft.country}
                     onChangeText={(value) => setCatalogEditorDraft((current) => (current ? { ...current, country: value } : current))}
+                    options={WINE_COUNTRIES}
                   />
-                  <LabeledInput
+                  <AutocompleteInput
                     label="Region"
                     value={catalogEditorDraft.region}
                     onChangeText={(value) => setCatalogEditorDraft((current) => (current ? { ...current, region: value } : current))}
+                    options={WINE_REGIONS}
                   />
                 </DoubleRow>
                 <DoubleRow>
-                  <LabeledInput
+                  <AutocompleteInput
                     label="Druva"
                     value={catalogEditorDraft.grape}
                     onChangeText={(value) => setCatalogEditorDraft((current) => (current ? { ...current, grape: value } : current))}
+                    options={GRAPE_VARIETIES}
                   />
                   <LabeledInput
                     label="Årgång"
@@ -1437,13 +1441,26 @@ function CellarScreen({ session }: { session: Session }) {
             onChangeText={(value) => setDraft((current) => ({ ...current, producer: value }))}
           />
           <DoubleRow>
-            <LabeledInput label="Land" value={draft.country} onChangeText={(value) => setDraft((current) => ({ ...current, country: value }))} />
-            <LabeledInput label="Region" value={draft.region} onChangeText={(value) => setDraft((current) => ({ ...current, region: value }))} />
+            <AutocompleteInput
+              label="Land"
+              value={draft.country}
+              onChangeText={(value) => setDraft((current) => ({ ...current, country: value }))}
+              options={WINE_COUNTRIES}
+              placeholder="Skriv t.ex. fr eller it"
+            />
+            <AutocompleteInput
+              label="Region"
+              value={draft.region}
+              onChangeText={(value) => setDraft((current) => ({ ...current, region: value }))}
+              options={WINE_REGIONS}
+              placeholder="Skriv t.ex. bor, rio, nap..."
+            />
           </DoubleRow>
-          <LabeledInput
+          <AutocompleteInput
             label="Druva"
             value={draft.grape}
             onChangeText={(value) => setDraft((current) => ({ ...current, grape: value }))}
+            options={GRAPE_VARIETIES}
             placeholder="Nebbiolo, Chardonnay..."
           />
           <DoubleRow>
@@ -1870,6 +1887,83 @@ function LabeledInput({ label, multiline, ...props }: ComponentProps<typeof Text
   );
 }
 
+function AutocompleteInput({
+  label,
+  value,
+  onChangeText,
+  options,
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  onChangeText: (value: string) => void;
+  options: string[];
+  placeholder?: string;
+}) {
+  const [focused, setFocused] = useState(false);
+
+  const suggestions = useMemo(() => {
+    const query = normalizeLookupValue(value);
+
+    if (!query) {
+      return [];
+    }
+
+    return options
+      .filter((option) => normalizeLookupValue(option).includes(query))
+      .sort((left, right) => {
+        const leftNormalized = normalizeLookupValue(left);
+        const rightNormalized = normalizeLookupValue(right);
+        const leftStarts = leftNormalized.startsWith(query) ? 0 : 1;
+        const rightStarts = rightNormalized.startsWith(query) ? 0 : 1;
+
+        if (leftStarts !== rightStarts) {
+          return leftStarts - rightStarts;
+        }
+
+        return left.localeCompare(right);
+      })
+      .slice(0, 8);
+  }, [options, value]);
+
+  const showSuggestions =
+    focused &&
+    value.trim().length > 0 &&
+    suggestions.length > 0 &&
+    !suggestions.some((option) => normalizeLookupValue(option) === normalizeLookupValue(value));
+
+  return (
+    <View style={styles.inputGroup}>
+      <Text style={styles.inputLabel}>{label}</Text>
+      <TextInput
+        placeholder={placeholder}
+        placeholderTextColor="#8f8178"
+        style={styles.input}
+        value={value}
+        onChangeText={onChangeText}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+      />
+      {showSuggestions ? (
+        <View style={styles.autocompleteList}>
+          {suggestions.map((option) => (
+            <Pressable
+              key={`${label}-${option}`}
+              onPress={() => {
+                onChangeText(option);
+                setFocused(false);
+              }}
+              style={styles.autocompleteItem}
+            >
+              <Text style={styles.autocompleteText}>{option}</Text>
+            </Pressable>
+          ))}
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
 function DoubleRow({ children }: { children: ReactNode }) {
   return <View style={styles.doubleRow}>{children}</View>;
 }
@@ -2251,6 +2345,13 @@ function resolveImportedValue(currentValue: string, importedValue: string, modeO
   return importedValue || currentValue;
 }
 
+function normalizeLookupValue(value: string) {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
 function mergeDraftWithCatalogSuggestion(
   current: WineDraft,
   suggestion: ProductCatalogEntry,
@@ -2485,6 +2586,24 @@ const styles = StyleSheet.create({
     fontSize: 15,
     borderWidth: 1,
     borderColor: "#e6d7c8",
+  },
+  autocompleteList: {
+    marginTop: 6,
+    borderRadius: 16,
+    backgroundColor: "#fffaf5",
+    borderWidth: 1,
+    borderColor: "#e6d7c8",
+    overflow: "hidden",
+  },
+  autocompleteItem: {
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#f2e7db",
+  },
+  autocompleteText: {
+    color: "#231815",
+    fontSize: 15,
   },
   textarea: {
     minHeight: 96,
