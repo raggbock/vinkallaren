@@ -1,4 +1,4 @@
-import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Modal, Pressable, SafeAreaView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useEffect, useMemo, useRef, useState, type ComponentProps, type ReactNode } from "react";
 
 import type { ReferenceOptionRow } from "../types/reference-data";
@@ -34,6 +34,7 @@ export function AutocompleteInput({
   placeholder?: string;
 }) {
   const [focused, setFocused] = useState(false);
+  const [pickerVisible, setPickerVisible] = useState(false);
   const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -86,49 +87,86 @@ export function AutocompleteInput({
     suggestions.length > 0 &&
     !suggestions.some((option) => normalizeLookupValue(option) === normalizeLookupValue(value));
 
+  function selectOption(option: string) {
+    if (blurTimeoutRef.current) {
+      clearTimeout(blurTimeoutRef.current);
+    }
+    onChangeText(option);
+    setFocused(false);
+    setPickerVisible(false);
+  }
+
   return (
-    <View style={styles.inputGroup}>
-      <Text style={styles.inputLabel}>{label}</Text>
-      <View style={styles.autocompleteWrapper}>
-        <TextInput
-          placeholder={placeholder}
-          placeholderTextColor="#8f8178"
-          style={styles.input}
-          value={value}
-          onChangeText={onChangeText}
-          onFocus={() => {
-            if (blurTimeoutRef.current) {
-              clearTimeout(blurTimeoutRef.current);
-            }
-            setFocused(true);
-          }}
-          onBlur={() => {
-            blurTimeoutRef.current = setTimeout(() => {
-              setFocused(false);
-            }, 120);
-          }}
-        />
-        {showSuggestions ? (
-          <View style={styles.autocompleteList}>
-            {suggestions.map((option) => (
-              <Pressable
-                key={`${label}-${option}`}
-                onPressIn={() => {
-                  if (blurTimeoutRef.current) {
-                    clearTimeout(blurTimeoutRef.current);
-                  }
-                  onChangeText(option);
-                  setFocused(false);
-                }}
-                style={styles.autocompleteItem}
-              >
-                <Text style={styles.autocompleteText}>{option}</Text>
-              </Pressable>
-            ))}
-          </View>
-        ) : null}
+    <>
+      <View style={styles.inputGroup}>
+        <Text style={styles.inputLabel}>{label}</Text>
+        <View style={styles.autocompleteWrapper}>
+          <TextInput
+            placeholder={placeholder}
+            placeholderTextColor="#8f8178"
+            style={styles.input}
+            value={value}
+            onChangeText={(nextValue) => {
+              onChangeText(nextValue);
+              setFocused(true);
+            }}
+            onFocus={() => {
+              if (blurTimeoutRef.current) {
+                clearTimeout(blurTimeoutRef.current);
+              }
+              setFocused(true);
+            }}
+            onBlur={() => {
+              blurTimeoutRef.current = setTimeout(() => {
+                setFocused(false);
+              }, 120);
+            }}
+          />
+          {(showSuggestions || value.trim().length > 0) && suggestions.length > 0 ? (
+            <Pressable onPress={() => setPickerVisible(true)} style={styles.autocompleteLauncher}>
+              <Text style={styles.autocompleteLauncherText}>
+                Visa {suggestions.length} förslag
+              </Text>
+            </Pressable>
+          ) : null}
+        </View>
       </View>
-    </View>
+
+      <Modal visible={pickerVisible} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setPickerVisible(false)}>
+        <SafeAreaView style={styles.autocompleteModalScreen}>
+          <View style={styles.autocompleteModalHeader}>
+            <View style={styles.flexFill}>
+              <Text style={styles.panelTitle}>{label}</Text>
+              <Text style={styles.notesText}>Skriv för att filtrera och välj ett färdigt alternativ.</Text>
+            </View>
+            <Pressable onPress={() => setPickerVisible(false)} style={styles.secondaryButtonCompact}>
+              <Text style={styles.secondaryButtonText}>Stäng</Text>
+            </Pressable>
+          </View>
+
+          <TextInput
+            placeholder={placeholder}
+            placeholderTextColor="#8f8178"
+            style={styles.input}
+            value={value}
+            autoFocus
+            onChangeText={onChangeText}
+          />
+
+          <View style={styles.autocompleteListModal}>
+            {suggestions.length > 0 ? (
+              suggestions.map((option) => (
+                <Pressable key={`${label}-modal-${option}`} onPress={() => selectOption(option)} style={styles.autocompleteItem}>
+                  <Text style={styles.autocompleteText}>{option}</Text>
+                </Pressable>
+              ))
+            ) : (
+              <Text style={styles.notesText}>Inga träffar ännu. Fortsätt skriva eller skriv in värdet manuellt.</Text>
+            )}
+          </View>
+        </SafeAreaView>
+      </Modal>
+    </>
   );
 }
 
@@ -292,6 +330,18 @@ const styles = StyleSheet.create({
   autocompleteWrapper: {
     gap: 6,
   },
+  autocompleteLauncher: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+    backgroundColor: "#ead8ca",
+  },
+  autocompleteLauncherText: {
+    color: "#6f1d1b",
+    fontWeight: "700",
+    fontSize: 13,
+  },
   textarea: {
     minHeight: 96,
     textAlignVertical: "top",
@@ -307,6 +357,44 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.12,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 6 },
+  },
+  autocompleteModalScreen: {
+    flex: 1,
+    backgroundColor: "#f8f1e8",
+    padding: 18,
+    gap: 14,
+  },
+  autocompleteModalHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
+  },
+  flexFill: {
+    flex: 1,
+    gap: 4,
+  },
+  autocompleteListModal: {
+    borderRadius: 16,
+    backgroundColor: "#fffaf5",
+    borderWidth: 1,
+    borderColor: "#e6d7c8",
+    overflow: "hidden",
+  },
+  secondaryButtonCompact: {
+    backgroundColor: "#ead8ca",
+    borderRadius: 999,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    alignItems: "center",
+  },
+  secondaryButtonText: {
+    color: "#6f1d1b",
+    fontWeight: "700",
+  },
+  panelTitle: {
+    color: "#231815",
+    fontSize: 24,
+    fontWeight: "700",
   },
   autocompleteItem: {
     paddingHorizontal: 14,
