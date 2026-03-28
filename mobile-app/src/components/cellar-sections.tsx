@@ -323,6 +323,7 @@ export function WineCollectionPanel({
   onStorageSpaceFilterChange,
   onSignOut,
   onOpenSystembolaget,
+  onEditWine,
   onDrinkWine,
   onDeleteWine,
 }: {
@@ -352,6 +353,7 @@ export function WineCollectionPanel({
   onStorageSpaceFilterChange: (value: string) => void;
   onSignOut: () => void;
   onOpenSystembolaget: (productId: string) => void;
+  onEditWine: (wine: WineRecord) => void;
   onDrinkWine: (wine: WineRecord) => void;
   onDeleteWine: (wineId: string, imagePath: string | null) => void;
 }) {
@@ -449,6 +451,9 @@ export function WineCollectionPanel({
           <Text style={styles.notesText}>{wine.notes || "Ingen anteckning ännu."}</Text>
 
           <View style={styles.actionRow}>
+            <Pressable onPress={() => onEditWine(wine)}>
+              <Text style={styles.linkText}>Redigera</Text>
+            </Pressable>
             <Pressable onPress={() => onDrinkWine(wine)} style={styles.secondaryButton}>
               <Text style={styles.secondaryButtonText}>Drack 1 flaska</Text>
             </Pressable>

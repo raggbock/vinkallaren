@@ -42,7 +42,7 @@ import {
   StorageSpacesPanel,
   WineCollectionPanel,
 } from "./src/components/cellar-sections";
-import { AddWinePanel, BarcodeScannerModal, CatalogEditorModal, DrinkWineModal } from "./src/components/cellar-workflows";
+import { AddWinePanel, BarcodeScannerModal, CatalogEditorModal, DrinkWineModal, EditWineModal } from "./src/components/cellar-workflows";
 import { CELLAR_SECTIONS, type CellarSection } from "./src/types/cellar";
 import type { CatalogEditorDraft, ImportFieldSelection, ImportMode, StorageSpaceDraft, WineDraft } from "./src/types/cellar-drafts";
 import type { ProductCatalogWineRow } from "./src/types/product-catalog";
@@ -415,6 +415,10 @@ function CellarScreen({ session }: { session: Session }) {
   const [drinkRating, setDrinkRating] = useState("");
   const [drinkNotes, setDrinkNotes] = useState("");
   const [catalogBackfillDone, setCatalogBackfillDone] = useState(false);
+  const [editWineVisible, setEditWineVisible] = useState(false);
+  const [editingWine, setEditingWine] = useState<WineRecord | null>(null);
+  const [editWineDraft, setEditWineDraft] = useState<WineDraft | null>(null);
+  const [savingWineEdit, setSavingWineEdit] = useState(false);
 
   const stats = useMemo(() => buildStats(wines), [wines]);
   const grapeReferenceRows = useMemo(
@@ -457,6 +461,8 @@ function CellarScreen({ session }: { session: Session }) {
   const storageSpaceById = useMemo(() => new Map(storageSpaces.map((space) => [space.id, space])), [storageSpaces]);
   const storageSpaceBottleCounts = useMemo(() => buildStorageSpaceBottleCounts(wines), [wines]);
   const selectedStorageSpace = storageSpaces.find((space) => space.id === selectedStorageSpaceId) ?? null;
+  const selectedEditStorageSpace =
+    storageSpaces.find((space) => space.id === (editWineDraft?.storageSpaceId || "")) ?? null;
   const mealSuggestions = useMemo(() => buildMealSuggestions(wines), [wines]);
   const mealRecommendations = useMemo(
     () => buildMealRecommendations(wines, selectedMeal),
@@ -929,6 +935,22 @@ function CellarScreen({ session }: { session: Session }) {
     setDrinkNotes("");
   }
 
+  function openEditWineModal(wine: WineRecord) {
+    setEditingWine(wine);
+    setEditWineDraft(toWineDraft(wine));
+    setEditWineVisible(true);
+  }
+
+  function closeEditWineModal() {
+    if (savingWineEdit) {
+      return;
+    }
+
+    setEditWineVisible(false);
+    setEditingWine(null);
+    setEditWineDraft(null);
+  }
+
   async function saveDrinkHistory() {
     if (!selectedDrinkWine) {
       return;
@@ -995,6 +1017,62 @@ function CellarScreen({ session }: { session: Session }) {
       Alert.alert("Kunde inte spara historiken", error instanceof Error ? error.message : "Försök igen.");
     } finally {
       setSavingDrinkHistory(false);
+    }
+  }
+
+  async function saveWineEdit() {
+    if (!editingWine || !editWineDraft) {
+      return;
+    }
+
+    if (!editWineDraft.name.trim()) {
+      Alert.alert("Namn saknas", "Skriv in vilket vin du vill spara.");
+      return;
+    }
+
+    const knownCatalogName = effectiveWineNameReferenceRows.some(
+      (option) => normalizeLookupValue(option.name) === normalizeLookupValue(editWineDraft.name)
+    );
+    const missingCatalogFields = getMissingCatalogFields(editWineDraft);
+
+    if (!knownCatalogName && missingCatalogFields.length > 0) {
+      Alert.alert(
+        "Komplettera vinet",
+        `Om vinet inte redan finns i katalogen behöver du fylla i: ${missingCatalogFields.join(", ")}. Då kan appen spara det i katalogen också.`
+      );
+      return;
+    }
+
+    setSavingWineEdit(true);
+
+    try {
+      const payload = buildWineInsertFromDraft(editWineDraft, editWineDraft.storageSpaceId, editWineDraft.storageRow, editWineDraft.storageSlot, editingWine.image_path);
+
+      const { data, error } = await supabase
+        .from("wines")
+        .update(payload)
+        .eq("id", editingWine.id)
+        .select("*")
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      const updatedWine = (data ?? null) as WineRow | null;
+
+      if (updatedWine) {
+        await syncCatalogEntryForEditedWine(editingWine, updatedWine, session.user.id);
+        const [hydrated] = await hydrateWineRecords([updatedWine]);
+        setWines((current) => current.map((wine) => (wine.id === editingWine.id ? hydrated : wine)));
+      }
+
+      await Promise.all([fetchCatalogEntries(), fetchCatalogNameEntries()]);
+      closeEditWineModal();
+    } catch (error) {
+      Alert.alert("Kunde inte spara ändringen", error instanceof Error ? error.message : "Försök igen.");
+    } finally {
+      setSavingWineEdit(false);
     }
   }
 
@@ -1402,6 +1480,7 @@ function CellarScreen({ session }: { session: Session }) {
         onStorageSpaceFilterChange={setSelectedStorageSpaceFilterId}
         onSignOut={signOut}
         onOpenSystembolaget={openSystembolaget}
+        onEditWine={openEditWineModal}
         onDrinkWine={openDrinkModal}
         onDeleteWine={deleteWine}
       />
@@ -1445,6 +1524,37 @@ function CellarScreen({ session }: { session: Session }) {
         onRatingChange={setDrinkRating}
         onNotesChange={setDrinkNotes}
         onConfirm={saveDrinkHistory}
+      />
+      <EditWineModal
+        visible={editWineVisible}
+        styles={styles}
+        draft={editWineDraft}
+        storageSpaces={storageSpaces}
+        selectedStorageSpace={selectedEditStorageSpace}
+        storageSpaceById={storageSpaceById}
+        effectiveWineNameOptions={effectiveWineNameOptions}
+        effectiveCountryOptions={effectiveCountryOptions}
+        effectiveRegionOptions={effectiveRegionOptions}
+        effectiveGrapeOptions={effectiveGrapeOptions}
+        wineNameReferenceRows={effectiveWineNameReferenceRows}
+        countryReferenceRows={countryReferenceRows}
+        regionReferenceRows={regionReferenceRows}
+        grapeReferenceRows={grapeReferenceRows}
+        saving={savingWineEdit}
+        onClose={closeEditWineModal}
+        onDraftChange={(patch) => setEditWineDraft((current) => (current ? { ...current, ...patch } : current))}
+        onStorageSpaceChange={(spaceId) =>
+          setEditWineDraft((current) =>
+            current ? { ...current, storageSpaceId: spaceId, storageRow: "1", storageSlot: "1" } : current
+          )
+        }
+        onStorageRowChange={(value) =>
+          setEditWineDraft((current) => (current ? { ...current, storageRow: value } : current))
+        }
+        onStorageSlotChange={(value) =>
+          setEditWineDraft((current) => (current ? { ...current, storageSlot: value } : current))
+        }
+        onSave={saveWineEdit}
       />
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         <View style={styles.heroPanel}>
@@ -1592,6 +1702,140 @@ async function cacheWineRecordAsCatalogEntry(wine: WineRecord, userId: string) {
     },
     userId
   );
+}
+
+async function syncCatalogEntryForEditedWine(previousWine: WineRecord, nextWine: WineRow, userId: string) {
+  if (!canBeSavedAsCatalogEntry(nextWine)) {
+    return;
+  }
+
+  const nextPayload = {
+    name: nextWine.name.trim(),
+    producer: nextWine.producer ?? null,
+    country: nextWine.country ?? null,
+    region: nextWine.region ?? null,
+    grape: nextWine.grape ?? null,
+    type: nextWine.type ?? null,
+    vintage: nextWine.vintage ?? null,
+    food_pairings: nextWine.food_pairings ?? [],
+    source_label: "MinVinkällare",
+    source_confidence: "high",
+    barcode: nextWine.barcode?.trim() || null,
+    systembolaget_product_id: nextWine.systembolaget_product_id?.trim() || null,
+    created_by: userId,
+  };
+
+  const previousBarcode = previousWine.barcode?.trim();
+  const previousArticleNumber = previousWine.systembolaget_product_id?.trim();
+
+  let lookup = supabase.from("product_catalog_wines").select("id").limit(1);
+
+  if (previousBarcode) {
+    lookup = lookup.eq("barcode", previousBarcode);
+  } else if (previousArticleNumber) {
+    lookup = lookup.eq("systembolaget_product_id", previousArticleNumber);
+  } else {
+    lookup = lookup.eq("name", previousWine.name);
+    lookup = applyNullableCatalogFilter(lookup, "producer", previousWine.producer ?? null);
+    lookup = applyNullableCatalogFilter(lookup, "country", previousWine.country ?? null);
+    lookup = applyNullableCatalogFilter(lookup, "region", previousWine.region ?? null);
+    lookup = applyNullableCatalogFilter(lookup, "grape", previousWine.grape ?? null);
+    lookup = applyNullableCatalogFilter(lookup, "type", previousWine.type ?? null);
+    lookup = applyNullableCatalogFilter(lookup, "vintage", previousWine.vintage ?? null);
+  }
+
+  const { data, error } = await lookup.maybeSingle();
+
+  if (!error && data?.id) {
+    const { error: updateError } = await supabase.from("product_catalog_wines").update(nextPayload).eq("id", data.id);
+
+    if (!updateError) {
+      return;
+    }
+  }
+
+  await cacheCatalogEntry(
+    {
+      barcode: nextPayload.barcode || undefined,
+      systembolagetProductId: nextPayload.systembolaget_product_id || undefined,
+      name: nextPayload.name,
+      producer: nextPayload.producer || undefined,
+      country: nextPayload.country || undefined,
+      region: nextPayload.region || undefined,
+      grape: nextPayload.grape || undefined,
+      type: nextPayload.type || undefined,
+      vintage: nextPayload.vintage || undefined,
+      foodPairings: nextPayload.food_pairings,
+      sourceLabel: "MinVinkällare",
+      sourceConfidence: "high",
+    },
+    userId
+  );
+}
+
+function toWineDraft(wine: WineRecord): WineDraft {
+  return {
+    name: wine.name,
+    producer: wine.producer ?? "",
+    country: wine.country ?? "",
+    region: wine.region ?? "",
+    grape: wine.grape ?? "",
+    vintage: wine.vintage ? String(wine.vintage) : "",
+    quantity: String(wine.quantity),
+    type: wine.type || "Rött",
+    drinkBy: wine.drink_by_year ? String(wine.drink_by_year) : "",
+    location: wine.cellar_location ?? "",
+    storageSpaceId: wine.storage_space_id ?? "",
+    storageRow: wine.storage_row ? String(wine.storage_row) : "1",
+    storageSlot: wine.storage_slot ? String(wine.storage_slot) : "1",
+    barcode: wine.barcode ?? "",
+    systembolagetProductId: wine.systembolaget_product_id ?? "",
+    tags: wine.tags.join(", "),
+    foodPairings: wine.food_pairings.join(", "),
+    notes: wine.notes ?? "",
+    imageUri: wine.image_url ?? "",
+  };
+}
+
+function buildWineInsertFromDraft(
+  draft: WineDraft,
+  storageSpaceId: string,
+  storageRow: string,
+  storageSlot: string,
+  imagePath: string | null
+): Omit<WineInsert, "user_id"> {
+  return {
+    name: draft.name.trim(),
+    producer: emptyToNull(draft.producer),
+    country: emptyToNull(draft.country),
+    region: emptyToNull(draft.region),
+    grape: emptyToNull(draft.grape),
+    vintage: toNumberOrNull(draft.vintage),
+    quantity: Math.max(1, Number(draft.quantity) || 1),
+    type: draft.type.trim() || "Rött",
+    drink_by_year: toNumberOrNull(draft.drinkBy),
+    cellar_location: emptyToNull(draft.location),
+    storage_space_id: emptyToNull(storageSpaceId),
+    storage_row: storageSpaceId ? toNumberOrNull(storageRow) : null,
+    storage_slot: storageSpaceId ? toNumberOrNull(storageSlot) : null,
+    barcode: emptyToNull(draft.barcode),
+    systembolaget_product_id: emptyToNull(draft.systembolagetProductId),
+    tags: parseTags(draft.tags),
+    food_pairings: parseTags(draft.foodPairings),
+    pairing_source: "manual",
+    notes: emptyToNull(draft.notes),
+    image_path: imagePath,
+  };
+}
+
+function applyNullableCatalogFilter<
+  TQuery extends { eq: (column: string, value: any) => TQuery; is: (column: string, value: null) => TQuery }
+>(query: TQuery, column: string, value: string | number | null) {
+  if (value === null) {
+    return query.is(column, null);
+  }
+
+  return query.eq(column, value);
 }
 
 function getMissingCatalogFields(source: Pick<WineDraft, "producer" | "country" | "region" | "grape" | "type">) {
