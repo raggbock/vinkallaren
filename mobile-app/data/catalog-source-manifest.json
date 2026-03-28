@@ -1,0 +1,32 @@
+[
+  {
+    "source": "Systembolaget",
+    "priority": 1,
+    "files": [
+      "./data/wine-name-seeds.json",
+      "./data/systembolaget-wine-name-batch.json",
+      "./data/systembolaget-wine-name-batch-2.json"
+    ]
+  },
+  {
+    "source": "Alko",
+    "priority": 2,
+    "files": [
+      "./data/catalog-sources/alko-wine-batch.json"
+    ]
+  },
+  {
+    "source": "Winefinder",
+    "priority": 3,
+    "files": [
+      "./data/catalog-sources/winefinder-wine-batch.json"
+    ]
+  },
+  {
+    "source": "VildMedVin",
+    "priority": 4,
+    "files": [
+      "./data/catalog-sources/vildmedvin-wine-batch.json"
+    ]
+  }
+]

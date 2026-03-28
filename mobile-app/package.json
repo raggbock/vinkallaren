@@ -13,6 +13,12 @@
     "catalog:seed:apply": "node ./scripts/import-product-catalog-seeds.mjs ./data/product-catalog-seeds.json --apply",
     "catalog:names:seed:sql": "node ./scripts/import-product-catalog-name-seeds.mjs ./data/wine-name-seeds.json --sql",
     "catalog:names:seed:apply": "node ./scripts/import-product-catalog-name-seeds.mjs ./data/wine-name-seeds.json --apply",
+    "catalog:sources:sql": "node ./scripts/import-product-catalog-source-batches.mjs ./data/catalog-source-manifest.json --all --sql",
+    "catalog:sources:apply": "node ./scripts/import-product-catalog-source-batches.mjs ./data/catalog-source-manifest.json --all --apply",
+    "catalog:systembolaget:sql": "node ./scripts/import-product-catalog-source-batches.mjs ./data/catalog-source-manifest.json --systembolaget --sql",
+    "catalog:systembolaget:apply": "node ./scripts/import-product-catalog-source-batches.mjs ./data/catalog-source-manifest.json --systembolaget --apply",
+    "catalog:alko:sql": "node ./scripts/import-product-catalog-source-batches.mjs ./data/catalog-source-manifest.json --alko --sql",
+    "catalog:alko:apply": "node ./scripts/import-product-catalog-source-batches.mjs ./data/catalog-source-manifest.json --alko --apply",
     "wine-names:seed:sql": "node ./scripts/import-reference-option-seeds.mjs ./data/wine-name-seeds.json wine_name --sql",
     "wine-names:seed:apply": "node ./scripts/import-reference-option-seeds.mjs ./data/wine-name-seeds.json wine_name --apply"
   },
