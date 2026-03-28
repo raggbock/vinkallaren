@@ -13,6 +13,8 @@ En första riktig Expo-baserad mobilapp för iPhone och Android med Supabase fö
 - Streckkodsskanning med kameran i mobilen
 - Automatisk lokal förifyllning om samma streckkod redan finns i din källare
 - Importförslag när streckkod eller Systembolaget artikelnummer matchar känd produktdata
+- Importassistent där du själv väljer vilka fält som ska fyllas i
+- Snabbval för `importera allt`, `bara tomma fält` eller `välj själv`
 - Matmatchning per vin, till exempel `lamm`, `fisk`, `ost` eller `svamp`
 - Automatiska matförslag baserat på vintyp
 - En “Vad ska vi äta?”-vy som lyfter fram relevanta flaskor först

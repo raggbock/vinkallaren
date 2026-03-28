@@ -47,3 +47,4 @@ That keeps the storage policies simple and makes it easy to scope access to the 
 - Import pairing hints from trusted sources when a wine matches by barcode or product identity
 - Prefer Systembolaget product data where available
 - Treat Vivino as optional enrichment only after confirming an acceptable integration path
+- Avoid scraping Systembolaget's public consumer site directly; prefer official feeds, exports, or explicitly allowed integration paths

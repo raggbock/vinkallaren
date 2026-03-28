@@ -47,6 +47,20 @@ type WineDraft = {
   imageUri: string;
 };
 
+type ImportFieldSelection = {
+  name: boolean;
+  producer: boolean;
+  country: boolean;
+  region: boolean;
+  grape: boolean;
+  type: boolean;
+  foodPairings: boolean;
+  systembolagetProductId: boolean;
+  barcode: boolean;
+};
+
+type ImportMode = "custom" | "all" | "empty";
+
 const defaultDraft: WineDraft = {
   name: "",
   producer: "",
@@ -64,6 +78,18 @@ const defaultDraft: WineDraft = {
   foodPairings: "",
   notes: "",
   imageUri: "",
+};
+
+const defaultImportSelection: ImportFieldSelection = {
+  name: true,
+  producer: true,
+  country: true,
+  region: true,
+  grape: true,
+  type: true,
+  foodPairings: true,
+  systembolagetProductId: true,
+  barcode: true,
 };
 
 export default function App() {
@@ -251,6 +277,8 @@ function CellarScreen({ session }: { session: Session }) {
   const [scannerVisible, setScannerVisible] = useState(false);
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const [catalogSuggestion, setCatalogSuggestion] = useState<ProductCatalogEntry | null>(null);
+  const [importSelection, setImportSelection] = useState<ImportFieldSelection>(defaultImportSelection);
+  const [importMode, setImportMode] = useState<ImportMode>("custom");
 
   const stats = useMemo(() => buildStats(wines), [wines]);
   const pairingOptions = useMemo(() => buildPairingOptions(wines), [wines]);
@@ -431,27 +459,75 @@ function CellarScreen({ session }: { session: Session }) {
     });
 
     setCatalogSuggestion(match);
+    setImportSelection(defaultImportSelection);
+    setImportMode("custom");
   }
 
-  function applyCatalogSuggestion() {
+  function applyCatalogSuggestion(mode: ImportMode = importMode) {
     if (!catalogSuggestion) {
       return;
     }
 
     setDraft((current) => ({
       ...current,
-      name: current.name || catalogSuggestion.name,
-      producer: current.producer || catalogSuggestion.producer || "",
-      country: current.country || catalogSuggestion.country || "",
-      region: current.region || catalogSuggestion.region || "",
-      grape: current.grape || catalogSuggestion.grape || "",
-      type: current.type || catalogSuggestion.type || "Rött",
-      foodPairings:
-        current.foodPairings || (catalogSuggestion.foodPairings ?? []).join(", "),
-      systembolagetProductId:
-        current.systembolagetProductId || catalogSuggestion.systembolagetProductId || "",
-      barcode: current.barcode || catalogSuggestion.barcode || "",
+      name: resolveImportedValue(current.name, catalogSuggestion.name, shouldApplyField("name", mode, current.name)),
+      producer: resolveImportedValue(
+        current.producer,
+        catalogSuggestion.producer || "",
+        shouldApplyField("producer", mode, current.producer)
+      ),
+      country: resolveImportedValue(
+        current.country,
+        catalogSuggestion.country || "",
+        shouldApplyField("country", mode, current.country)
+      ),
+      region: resolveImportedValue(
+        current.region,
+        catalogSuggestion.region || "",
+        shouldApplyField("region", mode, current.region)
+      ),
+      grape: resolveImportedValue(
+        current.grape,
+        catalogSuggestion.grape || "",
+        shouldApplyField("grape", mode, current.grape)
+      ),
+      type: resolveImportedValue(current.type, catalogSuggestion.type || "Rött", shouldApplyField("type", mode, current.type)),
+      foodPairings: resolveImportedValue(
+        current.foodPairings,
+        (catalogSuggestion.foodPairings ?? []).join(", "),
+        shouldApplyField("foodPairings", mode, current.foodPairings)
+      ),
+      systembolagetProductId: resolveImportedValue(
+        current.systembolagetProductId,
+        catalogSuggestion.systembolagetProductId || "",
+        shouldApplyField("systembolagetProductId", mode, current.systembolagetProductId)
+      ),
+      barcode: resolveImportedValue(
+        current.barcode,
+        catalogSuggestion.barcode || "",
+        shouldApplyField("barcode", mode, current.barcode)
+      ),
     }));
+  }
+
+  function toggleImportField(field: keyof ImportFieldSelection) {
+    setImportSelection((current) => ({
+      ...current,
+      [field]: !current[field],
+    }));
+    setImportMode("custom");
+  }
+
+  function shouldApplyField(field: keyof ImportFieldSelection, mode: ImportMode, currentValue: string) {
+    if (mode === "all") {
+      return true;
+    }
+
+    if (mode === "empty") {
+      return !currentValue.trim();
+    }
+
+    return importSelection[field];
   }
 
   async function startBarcodeScanner() {
@@ -719,14 +795,91 @@ function CellarScreen({ session }: { session: Session }) {
             <View style={styles.importSuggestionCard}>
               <Text style={styles.inputLabel}>Importförslag</Text>
               <Text style={styles.recommendationName}>{catalogSuggestion.name}</Text>
+              <Text style={styles.linkText}>{catalogSuggestion.sourceLabel}</Text>
               <Text style={styles.notesText}>
                 {[catalogSuggestion.producer, catalogSuggestion.country, catalogSuggestion.region]
                   .filter(Boolean)
                   .join(" • ")}
               </Text>
-              <Pressable onPress={applyCatalogSuggestion} style={styles.primaryButton}>
+              <View style={styles.importModeRow}>
+                <Pressable
+                  onPress={() => {
+                    setImportMode("all");
+                    applyCatalogSuggestion("all");
+                  }}
+                  style={[styles.quickImportButton, importMode === "all" && styles.quickImportButtonActive]}
+                >
+                  <Text style={[styles.quickImportText, importMode === "all" && styles.quickImportTextActive]}>
+                    Importera allt
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => {
+                    setImportMode("empty");
+                    applyCatalogSuggestion("empty");
+                  }}
+                  style={[styles.quickImportButton, importMode === "empty" && styles.quickImportButtonActive]}
+                >
+                  <Text style={[styles.quickImportText, importMode === "empty" && styles.quickImportTextActive]}>
+                    Bara tomma fält
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => setImportMode("custom")}
+                  style={[styles.quickImportButton, importMode === "custom" && styles.quickImportButtonActive]}
+                >
+                  <Text style={[styles.quickImportText, importMode === "custom" && styles.quickImportTextActive]}>
+                    Välj själv
+                  </Text>
+                </Pressable>
+              </View>
+              {importMode === "custom" ? (
+                <>
+              <ImportSelectionRow
+                label="Namn"
+                selected={importSelection.name}
+                onToggle={() => toggleImportField("name")}
+              />
+              <ImportSelectionRow
+                label="Producent"
+                selected={importSelection.producer}
+                onToggle={() => toggleImportField("producer")}
+              />
+              <ImportSelectionRow
+                label="Land"
+                selected={importSelection.country}
+                onToggle={() => toggleImportField("country")}
+              />
+              <ImportSelectionRow
+                label="Region"
+                selected={importSelection.region}
+                onToggle={() => toggleImportField("region")}
+              />
+              <ImportSelectionRow
+                label="Druva"
+                selected={importSelection.grape}
+                onToggle={() => toggleImportField("grape")}
+              />
+              <ImportSelectionRow
+                label="Typ"
+                selected={importSelection.type}
+                onToggle={() => toggleImportField("type")}
+              />
+              <ImportSelectionRow
+                label="Matmatchning"
+                selected={importSelection.foodPairings}
+                onToggle={() => toggleImportField("foodPairings")}
+              />
+              <ImportSelectionRow
+                label="Artikelnummer"
+                selected={importSelection.systembolagetProductId}
+                onToggle={() => toggleImportField("systembolagetProductId")}
+              />
+              <Pressable onPress={() => applyCatalogSuggestion("custom")} style={styles.primaryButton}>
                 <Text style={styles.primaryButtonText}>Fyll i från förslag</Text>
               </Pressable>
+                </>
+              ) : null}
             </View>
           ) : null}
 
@@ -948,6 +1101,25 @@ function SuggestionRow({
   );
 }
 
+function ImportSelectionRow({
+  label,
+  selected,
+  onToggle,
+}: {
+  label: string;
+  selected: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <Pressable onPress={onToggle} style={[styles.importOptionRow, selected && styles.importOptionRowActive]}>
+      <Text style={[styles.importOptionText, selected && styles.importOptionTextActive]}>{label}</Text>
+      <Text style={[styles.importOptionState, selected && styles.importOptionTextActive]}>
+        {selected ? "Ja" : "Nej"}
+      </Text>
+    </Pressable>
+  );
+}
+
 function LoadingInline() {
   return (
     <View style={styles.loadingInline}>
@@ -1143,6 +1315,14 @@ function mergeTagText(currentValue: string, nextValue: string) {
   }
 
   return [...parts, nextValue].join(", ");
+}
+
+function resolveImportedValue(currentValue: string, importedValue: string, modeOrSelection: boolean) {
+  if (!modeOrSelection) {
+    return currentValue;
+  }
+
+  return importedValue || currentValue;
 }
 
 const styles = StyleSheet.create({
@@ -1371,6 +1551,52 @@ const styles = StyleSheet.create({
     gap: 8,
     borderWidth: 1,
     borderColor: "#f4c38c",
+  },
+  importModeRow: {
+    gap: 8,
+  },
+  quickImportButton: {
+    backgroundColor: "#fffaf5",
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: "#ead8ca",
+  },
+  quickImportButtonActive: {
+    backgroundColor: "#6f1d1b",
+    borderColor: "#6f1d1b",
+  },
+  quickImportText: {
+    color: "#6f1d1b",
+    fontWeight: "700",
+    textAlign: "center",
+  },
+  quickImportTextActive: {
+    color: "#fffaf5",
+  },
+  importOptionRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 14,
+    backgroundColor: "#fffaf5",
+  },
+  importOptionRowActive: {
+    backgroundColor: "#f4c38c",
+  },
+  importOptionText: {
+    color: "#231815",
+    fontWeight: "600",
+  },
+  importOptionState: {
+    color: "#6f6259",
+    fontWeight: "700",
+  },
+  importOptionTextActive: {
+    color: "#5c1d1b",
   },
   insightValue: {
     color: "#231815",
