@@ -10,7 +10,9 @@
     "web:build": "expo export --platform web",
     "release:web": "npm run web:build",
     "catalog:seed:sql": "node ./scripts/import-product-catalog-seeds.mjs ./data/product-catalog-seeds.json --sql",
-    "catalog:seed:apply": "node ./scripts/import-product-catalog-seeds.mjs ./data/product-catalog-seeds.json --apply"
+    "catalog:seed:apply": "node ./scripts/import-product-catalog-seeds.mjs ./data/product-catalog-seeds.json --apply",
+    "wine-names:seed:sql": "node ./scripts/import-reference-option-seeds.mjs ./data/wine-name-seeds.json wine_name --sql",
+    "wine-names:seed:apply": "node ./scripts/import-reference-option-seeds.mjs ./data/wine-name-seeds.json wine_name --apply"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^3.0.2",

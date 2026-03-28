@@ -57,9 +57,11 @@ export function CatalogEditorModal({
   styles,
   draft,
   saving,
+  effectiveWineNameOptions,
   effectiveCountryOptions,
   effectiveRegionOptions,
   effectiveGrapeOptions,
+  wineNameReferenceRows,
   countryReferenceRows,
   regionReferenceRows,
   grapeReferenceRows,
@@ -71,9 +73,11 @@ export function CatalogEditorModal({
   styles: SharedStyles;
   draft: CatalogEditorDraft | null;
   saving: boolean;
+  effectiveWineNameOptions: string[];
   effectiveCountryOptions: string[];
   effectiveRegionOptions: string[];
   effectiveGrapeOptions: string[];
+  wineNameReferenceRows: ReferenceOptionRow[];
   countryReferenceRows: ReferenceOptionRow[];
   regionReferenceRows: ReferenceOptionRow[];
   grapeReferenceRows: ReferenceOptionRow[];
@@ -97,7 +101,15 @@ export function CatalogEditorModal({
         <ScrollView contentContainerStyle={styles.catalogEditorContent} keyboardShouldPersistTaps="handled">
           {draft ? (
             <>
-              <LabeledInput label="Namn" value={draft.name} onChangeText={(value) => onChange({ name: value })} />
+              <AutocompleteInput
+                label="Namn"
+                value={draft.name}
+                onChangeText={(value) => onChange({ name: value })}
+                options={effectiveWineNameOptions}
+                optionRows={wineNameReferenceRows}
+                placeholder="Skriv minst 4 bokstäver"
+                minimumQueryLength={4}
+              />
               <DoubleRow>
                 <LabeledInput label="Streckkod" value={draft.barcode} onChangeText={(value) => onChange({ barcode: value })} />
                 <LabeledInput
@@ -172,9 +184,11 @@ export function AddWinePanel({
   selectedStorageRow,
   selectedStorageSlot,
   storageSpaceById,
+  effectiveWineNameOptions,
   effectiveCountryOptions,
   effectiveRegionOptions,
   effectiveGrapeOptions,
+  wineNameReferenceRows,
   countryReferenceRows,
   regionReferenceRows,
   grapeReferenceRows,
@@ -208,9 +222,11 @@ export function AddWinePanel({
   selectedStorageRow: string;
   selectedStorageSlot: string;
   storageSpaceById: Map<string, StorageSpaceRow>;
+  effectiveWineNameOptions: string[];
   effectiveCountryOptions: string[];
   effectiveRegionOptions: string[];
   effectiveGrapeOptions: string[];
+  wineNameReferenceRows: ReferenceOptionRow[];
   countryReferenceRows: ReferenceOptionRow[];
   regionReferenceRows: ReferenceOptionRow[];
   grapeReferenceRows: ReferenceOptionRow[];
@@ -239,7 +255,15 @@ export function AddWinePanel({
   return (
     <View style={styles.panel}>
       <Text style={styles.panelTitle}>Lägg till vin</Text>
-      <LabeledInput label="Namn" value={draft.name} onChangeText={(value) => onDraftChange({ name: value })} />
+      <AutocompleteInput
+        label="Namn"
+        value={draft.name}
+        onChangeText={(value) => onDraftChange({ name: value })}
+        options={effectiveWineNameOptions}
+        optionRows={wineNameReferenceRows}
+        placeholder="Skriv minst 4 bokstäver"
+        minimumQueryLength={4}
+      />
       <LabeledInput label="Producent" value={draft.producer} onChangeText={(value) => onDraftChange({ producer: value })} />
       <DoubleRow>
         <AutocompleteInput

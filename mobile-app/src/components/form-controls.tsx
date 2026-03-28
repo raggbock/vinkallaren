@@ -25,6 +25,7 @@ export function AutocompleteInput({
   options,
   optionRows,
   placeholder,
+  minimumQueryLength = 1,
 }: {
   label: string;
   value: string;
@@ -32,6 +33,7 @@ export function AutocompleteInput({
   options: string[];
   optionRows?: ReferenceOptionRow[];
   placeholder?: string;
+  minimumQueryLength?: number;
 }) {
   const [focused, setFocused] = useState(false);
   const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -47,7 +49,7 @@ export function AutocompleteInput({
   const suggestions = useMemo(() => {
     const query = normalizeLookupValue(value);
 
-    if (!query) {
+    if (!query || query.length < minimumQueryLength) {
       return [];
     }
 
@@ -78,7 +80,7 @@ export function AutocompleteInput({
       .map((option) => option.value)
       .filter((option, index, values) => values.indexOf(option) === index)
       .slice(0, 8);
-  }, [optionRows, options, value]);
+  }, [minimumQueryLength, optionRows, options, value]);
 
   const showSuggestions =
     focused &&

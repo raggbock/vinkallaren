@@ -410,6 +410,10 @@ function CellarScreen({ session }: { session: Session }) {
     () => mergeReferenceRows(referenceOptions.filter((option) => option.category === "grape")),
     [referenceOptions]
   );
+  const wineNameReferenceRows = useMemo(
+    () => mergeReferenceRows(referenceOptions.filter((option) => option.category === "wine_name")),
+    [referenceOptions]
+  );
   const countryReferenceRows = useMemo(
     () => mergeReferenceRows(referenceOptions.filter((option) => option.category === "country")),
     [referenceOptions]
@@ -419,6 +423,7 @@ function CellarScreen({ session }: { session: Session }) {
     [referenceOptions]
   );
   const grapeOptions = useMemo(() => grapeReferenceRows.map((option) => option.name), [grapeReferenceRows]);
+  const wineNameOptions = useMemo(() => wineNameReferenceRows.map((option) => option.name), [wineNameReferenceRows]);
   const countryReferenceOptions = useMemo(
     () => countryReferenceRows.map((option) => option.name),
     [countryReferenceRows]
@@ -428,6 +433,15 @@ function CellarScreen({ session }: { session: Session }) {
     [regionReferenceRows]
   );
   const effectiveGrapeOptions = grapeOptions.length > 0 ? grapeOptions : GRAPE_VARIETIES;
+  const effectiveWineNameOptions = useMemo(() => {
+    if (wineNameOptions.length > 0) {
+      return wineNameOptions;
+    }
+
+    return Array.from(new Set([...catalogEntries.map((entry) => entry.name), ...wines.map((wine) => wine.name)])).sort((left, right) =>
+      left.localeCompare(right)
+    );
+  }, [catalogEntries, wineNameOptions, wines]);
   const effectiveCountryOptions = countryReferenceOptions.length > 0 ? countryReferenceOptions : WINE_COUNTRIES;
   const effectiveRegionOptions = regionReferenceOptions.length > 0 ? regionReferenceOptions : WINE_REGIONS;
   const pairingOptions = useMemo(() => buildPairingOptions(wines), [wines]);
@@ -597,7 +611,7 @@ function CellarScreen({ session }: { session: Session }) {
     const { data, error } = await supabase
       .from("reference_options")
       .select("*")
-      .in("category", ["grape", "country", "region"])
+      .in("category", ["grape", "country", "region", "wine_name"])
       .order("category", { ascending: true })
       .order("sort_order", { ascending: true })
       .order("name", { ascending: true });
@@ -1151,9 +1165,11 @@ function CellarScreen({ session }: { session: Session }) {
         selectedStorageRow={selectedStorageRow}
         selectedStorageSlot={selectedStorageSlot}
         storageSpaceById={storageSpaceById}
+        effectiveWineNameOptions={effectiveWineNameOptions}
         effectiveCountryOptions={effectiveCountryOptions}
         effectiveRegionOptions={effectiveRegionOptions}
         effectiveGrapeOptions={effectiveGrapeOptions}
+        wineNameReferenceRows={wineNameReferenceRows}
         countryReferenceRows={countryReferenceRows}
         regionReferenceRows={regionReferenceRows}
         grapeReferenceRows={grapeReferenceRows}
@@ -1245,9 +1261,11 @@ function CellarScreen({ session }: { session: Session }) {
         styles={styles}
         draft={catalogEditorDraft}
         saving={savingCatalogEdit}
+        effectiveWineNameOptions={effectiveWineNameOptions}
         effectiveCountryOptions={effectiveCountryOptions}
         effectiveRegionOptions={effectiveRegionOptions}
         effectiveGrapeOptions={effectiveGrapeOptions}
+        wineNameReferenceRows={wineNameReferenceRows}
         countryReferenceRows={countryReferenceRows}
         regionReferenceRows={regionReferenceRows}
         grapeReferenceRows={grapeReferenceRows}
