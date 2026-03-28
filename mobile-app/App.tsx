@@ -417,10 +417,18 @@ function CellarScreen({ session }: { session: Session }) {
     () => mergeReferenceRows(referenceOptions.filter((option) => option.category === "grape")),
     [referenceOptions]
   );
-  const localWineNameReferenceRows = useMemo(() => toWineNameReferenceRows(localWineNameSeeds), []);
+  const localWineNameReferenceRows = useMemo(() => toWineNameReferenceRows(localWineNameSeeds, "local-wine-name"), []);
+  const catalogWineNameReferenceRows = useMemo(() => toWineNameReferenceRows(catalogEntries, "catalog-wine-name"), [catalogEntries]);
+  const savedWineNameReferenceRows = useMemo(() => toWineNameReferenceRows(wines, "saved-wine-name"), [wines]);
   const wineNameReferenceRows = useMemo(
-    () => mergeReferenceRows(referenceOptions.filter((option) => option.category === "wine_name")),
-    [referenceOptions]
+    () =>
+      mergeReferenceRows([
+        ...referenceOptions.filter((option) => option.category === "wine_name"),
+        ...catalogWineNameReferenceRows,
+        ...savedWineNameReferenceRows,
+        ...localWineNameReferenceRows,
+      ]),
+    [catalogWineNameReferenceRows, localWineNameReferenceRows, referenceOptions, savedWineNameReferenceRows]
   );
   const countryReferenceRows = useMemo(
     () => mergeReferenceRows(referenceOptions.filter((option) => option.category === "country")),
@@ -432,10 +440,6 @@ function CellarScreen({ session }: { session: Session }) {
   );
   const grapeOptions = useMemo(() => grapeReferenceRows.map((option) => option.name), [grapeReferenceRows]);
   const wineNameOptions = useMemo(() => wineNameReferenceRows.map((option) => option.name), [wineNameReferenceRows]);
-  const fallbackWineNameOptions = useMemo(
-    () => localWineNameReferenceRows.map((option) => option.name),
-    [localWineNameReferenceRows]
-  );
   const countryReferenceOptions = useMemo(
     () => countryReferenceRows.map((option) => option.name),
     [countryReferenceRows]
@@ -445,20 +449,8 @@ function CellarScreen({ session }: { session: Session }) {
     [regionReferenceRows]
   );
   const effectiveGrapeOptions = grapeOptions.length > 0 ? grapeOptions : GRAPE_VARIETIES;
-  const effectiveWineNameOptions = useMemo(() => {
-    if (wineNameOptions.length > 0) {
-      return wineNameOptions;
-    }
-
-    if (fallbackWineNameOptions.length > 0) {
-      return fallbackWineNameOptions;
-    }
-
-    return Array.from(new Set([...catalogEntries.map((entry) => entry.name), ...wines.map((wine) => wine.name)])).sort(
-      (left, right) => left.localeCompare(right)
-    );
-  }, [catalogEntries, fallbackWineNameOptions, wineNameOptions, wines]);
-  const effectiveWineNameReferenceRows = wineNameReferenceRows.length > 0 ? wineNameReferenceRows : localWineNameReferenceRows;
+  const effectiveWineNameOptions = wineNameOptions;
+  const effectiveWineNameReferenceRows = wineNameReferenceRows;
   const effectiveCountryOptions = countryReferenceOptions.length > 0 ? countryReferenceOptions : WINE_COUNTRIES;
   const effectiveRegionOptions = regionReferenceOptions.length > 0 ? regionReferenceOptions : WINE_REGIONS;
   const pairingOptions = useMemo(() => buildPairingOptions(wines), [wines]);
@@ -799,7 +791,7 @@ function CellarScreen({ session }: { session: Session }) {
       await cacheWineDraftAsCatalogEntry(payload, session.user.id);
 
       setDraft(defaultDraft);
-      await Promise.all([fetchWines(), fetchCatalogEntries()]);
+      await Promise.all([fetchWines(), fetchCatalogEntries(), fetchReferenceOptions()]);
     } catch (error) {
       Alert.alert("Kunde inte spara", error instanceof Error ? error.message : "Försök igen.");
     } finally {
@@ -965,7 +957,7 @@ function CellarScreen({ session }: { session: Session }) {
       await cacheCatalogEntry(entry, session.user.id);
       setCatalogSuggestion(entry);
       setLookupMessage("Produkten sparades i katalogen. Nästa skanning ska hitta den direkt.");
-      await fetchCatalogEntries();
+      await Promise.all([fetchCatalogEntries(), fetchReferenceOptions()]);
       Alert.alert("Sparad i katalogen", "Produkten är nu sparad och kan återanvändas vid nästa streckkodsskanning.");
     } catch (error) {
       Alert.alert("Kunde inte spara i katalogen", error instanceof Error ? error.message : "Försök igen.");
@@ -1330,10 +1322,13 @@ function CellarScreen({ session }: { session: Session }) {
 }
 
 function toWineNameReferenceRows(
-  seeds: Array<{ name: string; producer?: string | null; country?: string | null; region?: string | null }>
+  seeds: Array<{ name: string; producer?: string | null; country?: string | null; region?: string | null }>,
+  idPrefix: string
 ): ReferenceOptionRow[] {
-  return seeds.map((seed, index) => ({
-    id: `local-wine-name-${index}`,
+  return seeds
+    .filter((seed) => Boolean(seed.name?.trim()))
+    .map((seed, index) => ({
+    id: `${idPrefix}-${index}`,
     name: seed.name,
     category: "wine_name" as const,
     aliases: [seed.producer, seed.country, seed.region].filter((value): value is string => Boolean(value)),
