@@ -19,7 +19,8 @@
     "source": "Winefinder",
     "priority": 3,
     "files": [
-      "./data/catalog-sources/winefinder-wine-batch.json"
+      "./data/catalog-sources/winefinder-wine-batch.json",
+      "./data/catalog-sources/winefinder-red-batch.json"
     ]
   },
   {

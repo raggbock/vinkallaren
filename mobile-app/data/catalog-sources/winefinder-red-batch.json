@@ -1,0 +1,1542 @@
+[
+  {
+    "name": "Cote Sud Rouge 2022",
+    "producer": "Domaine Lafage",
+    "country": "Frankrike",
+    "region": "Cote de Catalans",
+    "vintage": "2022",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/cote-de-catalans/cote-sud-rouge-domaine-lafage-2022-a136271"
+  },
+  {
+    "name": "Cotes du Rhone 2019",
+    "producer": "Bruno-Thierry",
+    "country": "Frankrike",
+    "region": "Cotes du Rhone",
+    "vintage": "2019",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/cotes-du-rhone/cotes-du-rhone-bruno-thierry-2019-kpw135809"
+  },
+  {
+    "name": "Côtes du Rhône Village 2019",
+    "producer": "Vidal-Fleury",
+    "country": "Frankrike",
+    "region": "Cotes du Rhone",
+    "vintage": "2019",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/cotes-du-rhone/ctes-du-rhne-village-vidal-fleury-2019-kpw135178"
+  },
+  {
+    "name": "Genio Espanol Roble 2021",
+    "producer": "Bodegas Familia Bastida",
+    "country": "Spanien",
+    "region": "Jumilla",
+    "vintage": "2021",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/spanien/jumilla/genio-espanol-roble-bodegas-familia-bastida-2021-kpw134937"
+  },
+  {
+    "name": "Les Darons 2023",
+    "producer": "Jeff Carrel",
+    "country": "Frankrike",
+    "region": "Languedoc-Roussillon",
+    "vintage": "2023",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/languedoc-roussillon/les-darons-jeff-carrel-2023-kesv136388"
+  },
+  {
+    "name": "Estate Pinot Noir 2024",
+    "producer": "Vina Errazuriz",
+    "country": "Chile",
+    "region": "Aconcagua Valley",
+    "vintage": "2024",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/chile/aconcagua-valley/estate-pinot-noir-vina-errazuriz-2024-khjh136838"
+  },
+  {
+    "name": "B de Fonbadet 2019",
+    "producer": "Château Fonbadet",
+    "country": "Frankrike",
+    "region": "Bordeaux",
+    "vintage": "2019",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/bordeaux/b-de-fonbadet-chteau-fonbadet-2019-a136010"
+  },
+  {
+    "name": "Cabernet Sauvignon 2020",
+    "producer": "Catena Zapata",
+    "country": "Argentina",
+    "region": "Mendoza",
+    "vintage": "2020",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/argentina/mendoza/cabernet-sauvignon-catena-zapata-2020-a136483"
+  },
+  {
+    "name": "Cabernet Sauvignon 2022",
+    "producer": "David Finlayson",
+    "country": "Sydafrika",
+    "region": "Stellenbosch",
+    "vintage": "2022",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/sydafrika/stellenbosch/cabernet-sauvignon-david-finlayson-2022-ksa136437"
+  },
+  {
+    "name": "Ranch 32 Pinot Noir 2022",
+    "producer": "Scheid Family Wines",
+    "country": "USA",
+    "region": "Monterey County",
+    "vintage": "2022",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/usa/monterey-county/ranch-32-pinot-noir-scheid-family-wines-2022-kpw136507"
+  },
+  {
+    "name": "Tessellae Old Vines 2022",
+    "producer": "Domaine Lafage",
+    "country": "Frankrike",
+    "region": "Languedoc-Roussillon",
+    "vintage": "2022",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/languedoc-roussillon/tessellae-old-vines-domaine-lafage-2022-a137096"
+  },
+  {
+    "name": "Chateau Liversan 2018",
+    "producer": "Chateau Liversan",
+    "country": "Frankrike",
+    "region": "Haut-Médoc",
+    "vintage": "2018",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/haut-medoc/chateau-liversan-chateau-liversan-2018-a137188"
+  },
+  {
+    "name": "Rioja Cerro Añón Reserva 2020",
+    "producer": "Bodegas Olarra",
+    "country": "Spanien",
+    "region": "Rioja",
+    "vintage": "2020",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/spanien/rioja/rioja-cerro-an-reserva-bodegas-olarra-2020-kpw137643"
+  },
+  {
+    "name": "Pinot Noir 2022",
+    "producer": "David Finlayson",
+    "country": "Sydafrika",
+    "region": "Stellenbosch",
+    "vintage": "2022",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/sydafrika/stellenbosch/pinot-noir-david-finlayson-2022-ksa134197"
+  },
+  {
+    "name": "Pinot Noir La Vauvise 2023",
+    "producer": "Ekologiskt, Domaine Bernard Fleuriet",
+    "country": "Frankrike",
+    "region": "Loire",
+    "vintage": "2023",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/loire/pinot-noir-la-vauvise-domaine-bernard-fleuriet-2023-kpw137414eko"
+  },
+  {
+    "name": "Quarterback 2021",
+    "producer": "De Lisio Wines",
+    "country": "Australien",
+    "region": "McLaren Vale",
+    "vintage": "2021",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/australien/mclaren-vale/quarterback-de-lisio-wines-2021-khjh136102"
+  },
+  {
+    "name": "Cru Bourgeois 2020",
+    "producer": "Château Lamothe-Cissac",
+    "country": "Frankrike",
+    "region": "Haut-Médoc",
+    "vintage": "2020",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/haut-medoc/cru-bourgeois-chteau-lamothe-cissac-2020-kpw135261"
+  },
+  {
+    "name": "Gran Reserva 2019",
+    "producer": "Bodegas Ondarre",
+    "country": "Spanien",
+    "region": "Rioja",
+    "vintage": "2019",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/spanien/rioja/gran-reserva-bodegas-ondarre-2019-kpw137350"
+  },
+  {
+    "name": "Château Puygueraud 2018",
+    "producer": "Chateau Puygueraud",
+    "country": "Frankrike",
+    "region": "Francs - Côtes de Bordeaux",
+    "vintage": "2018",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/francs-ctes-de-bordeaux/chteau-puygueraud-chateau-puygueraud-2018-a136340"
+  },
+  {
+    "name": "Rosso di Montalcino 2023",
+    "producer": "CapAnna",
+    "country": "Italien",
+    "region": "Rosso di Montalcino",
+    "vintage": "2023",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/italien/rosso-di-montalcino/rosso-di-montalcino-capanna-2023-a137465"
+  },
+  {
+    "name": "Chateau Senejac 2022",
+    "producer": "Chateau Sénéjac",
+    "country": "Frankrike",
+    "region": "Haut-Médoc",
+    "vintage": "2022",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/haut-medoc/chateau-senejac-chateau-senejac-2022-a135997"
+  },
+  {
+    "name": "Château Plincette 2022",
+    "producer": "Château Plincette",
+    "country": "Frankrike",
+    "region": "Pomerol",
+    "vintage": "2022",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/pomerol/chteau-plincette-chteau-plincette-2022-kpw137359"
+  },
+  {
+    "name": "Le Terre Barbaresco DOCG 2019",
+    "producer": "Cantina Terre del Barolo",
+    "country": "Italien",
+    "region": "Barbaresco",
+    "vintage": "2019",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/italien/barbaresco/le-terre-barbaresco-docg-cantina-terre-del-barolo-2019-kpw137442"
+  },
+  {
+    "name": "Liberty 2022",
+    "producer": "Domaine La Barroche",
+    "country": "Frankrike",
+    "region": "Rhone",
+    "vintage": "2022",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/rhone/liberty-domaine-la-barroche-2022-a137642"
+  },
+  {
+    "name": "Brunello di Montalcino Corte dei Pazzi Saccente 2020",
+    "producer": "Geografico",
+    "country": "Italien",
+    "region": "Brunello di Montalcino",
+    "vintage": "2020",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/italien/brunello-di-montalcino/brunello-di-montalcino-corte-dei-pazzi-saccente-geografico-2020-a136218"
+  },
+  {
+    "name": "Brunello di Montalcino 2021",
+    "producer": "Altesino",
+    "country": "Italien",
+    "region": "Brunello di Montalcino",
+    "vintage": "2021",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/italien/brunello-di-montalcino/brunello-di-montalcino-altesino-2021-a137467"
+  },
+  {
+    "name": "Brunello di Montalcino 2020",
+    "producer": "CapAnna",
+    "country": "Italien",
+    "region": "Brunello di Montalcino",
+    "vintage": "2020",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/italien/brunello-di-montalcino/brunello-di-montalcino-capanna-2020-a136205"
+  },
+  {
+    "name": "Brunello di Montalcino 2021",
+    "producer": "Tenuta di Argiano",
+    "country": "Italien",
+    "region": "Brunello di Montalcino",
+    "vintage": "2021",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/italien/brunello-di-montalcino/brunello-di-montalcino-tenuta-di-argiano-2021-a137470"
+  },
+  {
+    "name": "Brunello di Montalcino 2021",
+    "producer": "CapAnna",
+    "country": "Italien",
+    "region": "Brunello di Montalcino",
+    "vintage": "2021",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/italien/brunello-di-montalcino/brunello-di-montalcino-capanna-2021-a137428"
+  },
+  {
+    "name": "Rosso di Montalcino Halvflaska 375 ml 2022",
+    "producer": "CapAnna",
+    "country": "Italien",
+    "region": "Rosso di Montalcino",
+    "vintage": "2022",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/italien/rosso-di-montalcino/rosso-di-montalcino-halvflaska-375-ml-capanna-2022-a135807"
+  },
+  {
+    "name": "Château Blaignan 2018",
+    "producer": "Chateau Blaignan",
+    "country": "Frankrike",
+    "region": "Médoc",
+    "vintage": "2018",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/medoc/chteau-blaignan-chateau-blaignan-2018-kpw133723"
+  },
+  {
+    "name": "Cotes du Rhone Roulepierre 2022",
+    "producer": "Pierre Amadieu",
+    "country": "Frankrike",
+    "region": "Cotes du Rhone",
+    "vintage": "2022",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/cotes-du-rhone/cotes-du-rhone-roulepierre-pierre-amadieu-2022-kesv135825"
+  },
+  {
+    "name": "Beaujolais Villages Nouveau 2025",
+    "producer": "Ekologiskt, Remi Dufaitre",
+    "country": "Frankrike",
+    "region": "Beaujolais Village",
+    "vintage": "2025",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/beaujolais-village/beaujolais-villages-nouveau-remi-dufaitre-2025-a137030"
+  },
+  {
+    "name": "Reserve 2023",
+    "producer": "Chateau Lamothe Vincent",
+    "country": "Frankrike",
+    "region": "Entre-Deux-Mers",
+    "vintage": "2023",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/entre-deux-mers/reserve-chateau-lamothe-vincent-2023-a137100"
+  },
+  {
+    "name": "Terrasses Rouge EKO 2022",
+    "producer": "Ekologiskt, Chateau Pesquie",
+    "country": "Frankrike",
+    "region": "Rhone",
+    "vintage": "2022",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/rhone/terrasses-rouge-eko-chateau-pesquie-2022-a135350eko"
+  },
+  {
+    "name": "Principe de Viana Crianza 2021",
+    "producer": "Bodegas Principe de Viana",
+    "country": "Spanien",
+    "region": "Navarra",
+    "vintage": "2021",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/spanien/navarra/principe-de-viana-crianza-bodegas-principe-de-viana-2021-a137015"
+  },
+  {
+    "name": "Ned & Henrys Shiraz 2020",
+    "producer": "Hewitson",
+    "country": "Australien",
+    "region": "Barossa Valley",
+    "vintage": "2020",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/australien/barossa-valley/ned-henrys-shiraz-hewitson-2020-kesv136428"
+  },
+  {
+    "name": "Langhe Rosso 2024",
+    "producer": "Renato Ratti",
+    "country": "Italien",
+    "region": "Langhe",
+    "vintage": "2024",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/italien/langhe/langhe-rosso-renato-ratti-2024-kpw137426"
+  },
+  {
+    "name": "Caliza Dominio de Valdepusa D.O. 2018",
+    "producer": "Marques de Grinon",
+    "country": "Spanien",
+    "region": "La Mancha",
+    "vintage": "2018",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/spanien/la-mancha/caliza-dominio-de-valdepusa-do-marques-de-grinon-2018-kesv133343"
+  },
+  {
+    "name": "Barbera d´Alba Superiore 2024",
+    "producer": "Carlo Revello & Figli",
+    "country": "Italien",
+    "region": "Barbera dAlba",
+    "vintage": "2024",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/italien/barbera-dalba/barbera-dalba-superiore-carlo-revello-figli-2024-a136850"
+  },
+  {
+    "name": "Woodcutters Shiraz 2023",
+    "producer": "Torbreck",
+    "country": "Australien",
+    "region": "Barossa Valley",
+    "vintage": "2023",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/australien/barossa-valley/woodcutters-shiraz-torbreck-2023-khjh136663"
+  },
+  {
+    "name": "Nierstein Pinot Noir Red Wine 2019",
+    "producer": "Weingut Fritz Ekkehard Huff",
+    "country": "Tyskland",
+    "region": "Rheinhessen",
+    "vintage": "2019",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/tyskland/rheinhessen/nierstein-pinot-noir-red-wine-weingut-fritz-ekkehard-huff-2019-a137164"
+  },
+  {
+    "name": "Chateau Liversan Vertikal 2016-2021 i OWC6",
+    "producer": "Chateau Liversan",
+    "country": "Frankrike",
+    "region": "Haut-Médoc",
+    "vintage": "2016",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/haut-medoc/chateau-liversan-vertikal-2016-2021-i-owc6-chateau-liversan-a136132"
+  },
+  {
+    "name": "Valpolicella Ripasso Superiore 2021",
+    "producer": "Dal Cero",
+    "country": "Italien",
+    "region": "Veneto",
+    "vintage": "2021",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/italien/veneto/valpolicella-ripasso-superiore-dal-cero-2021-kesv136700"
+  },
+  {
+    "name": "Côtes-du-Rhône Lieu-Dit Clavin 2020",
+    "producer": "Domaine de la Vieille Julienne",
+    "country": "Frankrike",
+    "region": "Cotes du Rhone",
+    "vintage": "2020",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/cotes-du-rhone/ctes-du-rhne-lieu-dit-clavin-domaine-de-la-vieille-julienne-2020-kpw137398"
+  },
+  {
+    "name": "Peter Max Pinot Noir 2024",
+    "producer": "Crystallum Wines",
+    "country": "Sydafrika",
+    "region": "Coastal Region",
+    "vintage": "2024",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/sydafrika/coastal-region/peter-max-pinot-noir-crystallum-wines-2024-ksa136570"
+  },
+  {
+    "name": "Barolo Ludo 2019",
+    "producer": "Luigi Einaudi",
+    "country": "Italien",
+    "region": "Barolo",
+    "vintage": "2019",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/italien/barolo/barolo-ludo-luigi-einaudi-2019-kpw137364"
+  },
+  {
+    "name": "Brunello di Montalcino 2020",
+    "producer": "Tenuta Fossacolle",
+    "country": "Italien",
+    "region": "Brunello di Montalcino",
+    "vintage": "2020",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/italien/brunello-di-montalcino/brunello-di-montalcino-tenuta-fossacolle-2020-kpw137159"
+  },
+  {
+    "name": "Brunello di Montalcino 2020",
+    "producer": "Altesino",
+    "country": "Italien",
+    "region": "Brunello di Montalcino",
+    "vintage": "2020",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/italien/brunello-di-montalcino/brunello-di-montalcino-altesino-2020-kpw137443"
+  },
+  {
+    "name": "Chateau Lafaurie-Peyraguey 2010",
+    "producer": "Chateau Lafaurie-Peyraguey",
+    "country": "Frankrike",
+    "region": "Sauternes",
+    "vintage": "2010",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/sauternes/chateau-lafaurie-peyraguey-chateau-lafaurie-peyraguey-2010-a137452"
+  },
+  {
+    "name": "Brunello di Montalcino 2019",
+    "producer": "Celestino Pecci",
+    "country": "Italien",
+    "region": "Brunello di Montalcino",
+    "vintage": "2019",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/italien/brunello-di-montalcino/brunello-di-montalcino-celestino-pecci-2019-kesv136998"
+  },
+  {
+    "name": "Preludio 2021",
+    "producer": "Sei Solo",
+    "country": "Spanien",
+    "region": "Ribera del Duero",
+    "vintage": "2021",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/spanien/ribera-del-duero/preludio-sei-solo-2021-khjh136840"
+  },
+  {
+    "name": "Chateauneuf du Pape Julien Barrot 2023",
+    "producer": "Domaine La Barroche",
+    "country": "Frankrike",
+    "region": "Châteauneuf-du-Pape",
+    "vintage": "2023",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/chteauneuf-du-pape/chateauneuf-du-pape-julien-barrot-domaine-la-barroche-2023-a137260"
+  },
+  {
+    "name": "Brunello di Montalcino 2020",
+    "producer": "Tenuta Il Poggione",
+    "country": "Italien",
+    "region": "Brunello di Montalcino",
+    "vintage": "2020",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/italien/brunello-di-montalcino/brunello-di-montalcino-tenuta-il-poggione-2020-a136179"
+  },
+  {
+    "name": "Estate Reserve Syrah 2021",
+    "producer": "Lismore Estate Vineyards",
+    "country": "Sydafrika",
+    "region": "Western Cape",
+    "vintage": "2021",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/sydafrika/western-cape/estate-reserve-syrah-lismore-estate-vineyards-2021-ksa134876"
+  },
+  {
+    "name": "Brunello di Montalcino 2021",
+    "producer": "Tenuta Il Poggione",
+    "country": "Italien",
+    "region": "Brunello di Montalcino",
+    "vintage": "2021",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/italien/brunello-di-montalcino/brunello-di-montalcino-tenuta-il-poggione-2021-a137463"
+  },
+  {
+    "name": "Chateau Malescot Saint Exupery OWC6 2019",
+    "producer": "Chateau Malescot Saint Exupery",
+    "country": "Frankrike",
+    "region": "Margaux",
+    "vintage": "2019",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/margaux/chateau-malescot-saint-exupery-owc6-chateau-malescot-saint-exupery-2019-a137378"
+  },
+  {
+    "name": "Marsannay Les Favières 2023",
+    "producer": "Ekologiskt, Domaine Charles Audoin",
+    "country": "Frankrike",
+    "region": "Marsannay",
+    "vintage": "2023",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/marsannay/marsannay-les-favires-domaine-charles-audoin-2023-kpw136987eko"
+  },
+  {
+    "name": "Marsannay Clos de Jeu 2020",
+    "producer": "Domaine Charles Audoin",
+    "country": "Frankrike",
+    "region": "Marsannay",
+    "vintage": "2020",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/marsannay/marsannay-clos-de-jeu-domaine-charles-audoin-2020-kpw133570"
+  },
+  {
+    "name": "Bourgogne Rouge Marquis 2020",
+    "producer": "Domaine Marquis dAngerville",
+    "country": "Frankrike",
+    "region": "Volnay",
+    "vintage": "2020",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/volnay/bourgogne-rouge-marquis-domaine-marquis-dangerville-2020-a137694"
+  },
+  {
+    "name": "Brunello di Montalcino 2021",
+    "producer": "Casanova di Neri",
+    "country": "Italien",
+    "region": "Brunello di Montalcino",
+    "vintage": "2021",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/italien/brunello-di-montalcino/brunello-di-montalcino-casanova-di-neri-2021-a137517"
+  },
+  {
+    "name": "Boggina A Sangiovese EKO 2021",
+    "producer": "Ekologiskt, Tenuta di Petrolo",
+    "country": "Italien",
+    "region": "Toscana",
+    "vintage": "2021",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/italien/toscana/boggina-a-sangiovese-eko-tenuta-di-petrolo-2021-kpw135174eko"
+  },
+  {
+    "name": "Reserve De La Comtesse Ex-Chateau 2026 OWC6 2016",
+    "producer": "Pichon Longueville Comtesse de Lalande",
+    "country": "Frankrike",
+    "region": "Pauillac",
+    "vintage": "2026",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/pauillac/reserve-de-la-comtesse-ex-chateau-2026-owc6-pichon-longueville-comtesse-de-lalande-2016-a137544"
+  },
+  {
+    "name": "Château dIssan Ex Chateau 2026 2019",
+    "producer": "Château d'Issan",
+    "country": "Frankrike",
+    "region": "Margaux",
+    "vintage": "2026",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/margaux/chteau-dissan-ex-chateau-2026-chteau-dissan-2019-a137571"
+  },
+  {
+    "name": "Barolo Rocche dell´Annunziata 2020",
+    "producer": "Trediberri",
+    "country": "Italien",
+    "region": "Barolo",
+    "vintage": "2020",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/italien/barolo/barolo-rocche-dellannunziata-trediberri-2020-kpw135366"
+  },
+  {
+    "name": "Brunello di Montalcino Montosoli 2021",
+    "producer": "Altesino",
+    "country": "Italien",
+    "region": "Brunello di Montalcino",
+    "vintage": "2021",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/italien/brunello-di-montalcino/brunello-di-montalcino-montosoli-altesino-2021-a137469"
+  },
+  {
+    "name": "Château la Gaffelière OWC6 2016",
+    "producer": "Château la Gaffeliere",
+    "country": "Frankrike",
+    "region": "Saint-Emilion",
+    "vintage": "2016",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/saint-emilion/chteau-la-gaffelire-owc6-chteau-la-gaffeliere-2016-a137397"
+  },
+  {
+    "name": "Les Amis 2017",
+    "producer": "Torbreck",
+    "country": "Australien",
+    "region": "Barossa Valley",
+    "vintage": "2017",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/australien/barossa-valley/les-amis-torbreck-2017-khjh130078"
+  },
+  {
+    "name": "Chateau Leoville Barton Ex-Château 2025 2019",
+    "producer": "Château Léoville-Barton",
+    "country": "Frankrike",
+    "region": "Saint-Julien",
+    "vintage": "2025",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/saint-julien/chateau-leoville-barton-ex-chteau-2025-chteau-leoville-barton-2019-a137194"
+  },
+  {
+    "name": "Litoral Pinot Noir 2019",
+    "producer": "Ventolera",
+    "country": "Chile",
+    "region": "Leyda Valley",
+    "vintage": "2019",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/chile/leyda-valley/litoral-pinot-noir-ventolera-2019-a137334"
+  },
+  {
+    "name": "GSM Rouge Grenache Syrah Mourvèdre 2021",
+    "producer": "Vidal-Fleury",
+    "country": "Frankrike",
+    "region": "Vin de Pays",
+    "vintage": "2021",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/vin-de-pays/gsm-rouge-grenache-syrah-mourvdre-vidal-fleury-2021-kpw133484"
+  },
+  {
+    "name": "Libertae Sans sulphites 2021",
+    "producer": "Chateau Lamothe Vincent",
+    "country": "Frankrike",
+    "region": "Entre-Deux-Mers",
+    "vintage": "2021",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/entre-deux-mers/libertae-sans-sulphites-chateau-lamothe-vincent-2021-a137098"
+  },
+  {
+    "name": "Gaba do Xil Tinto 2019",
+    "producer": "Ekologiskt, Telmo Rodriguez",
+    "country": "Spanien",
+    "region": "Valdeorras",
+    "vintage": "2019",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/spanien/valdeorras/gaba-do-xil-tinto-telmo-rodriguez-2019-a137647"
+  },
+  {
+    "name": "Zinfandel 2021",
+    "producer": "McManis",
+    "country": "USA",
+    "region": "Lodi",
+    "vintage": "2021",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/usa/lodi/zinfandel-mcmanis-2021-a136887"
+  },
+  {
+    "name": "Merlot 2022",
+    "producer": "David Finlayson",
+    "country": "Sydafrika",
+    "region": "Stellenbosch",
+    "vintage": "2022",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/sydafrika/stellenbosch/merlot-david-finlayson-2022-ksa134871"
+  },
+  {
+    "name": "Pinot Noir 2023",
+    "producer": "McManis",
+    "country": "USA",
+    "region": "Lodi",
+    "vintage": "2023",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/usa/lodi/pinot-noir-mcmanis-2023-a136886"
+  },
+  {
+    "name": "Cabernet Sauvignon 2021",
+    "producer": "McManis",
+    "country": "USA",
+    "region": "Lodi",
+    "vintage": "2021",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/usa/lodi/cabernet-sauvignon-mcmanis-2021-a136889"
+  },
+  {
+    "name": "Bastide Miraflors 2023",
+    "producer": "Domaine Lafage",
+    "country": "Frankrike",
+    "region": "Cotes du Roussillon",
+    "vintage": "2023",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/cotes-du-roussillon/bastide-miraflors-domaine-lafage-2023-a137685"
+  },
+  {
+    "name": "Chianti Classico 2020",
+    "producer": "Terreno",
+    "country": "Italien",
+    "region": "Chianti Classico",
+    "vintage": "2020",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/italien/chianti-classico/chianti-classico-terreno-2020-kbb136172"
+  },
+  {
+    "name": "Mother´s Milk Shiraz 2020",
+    "producer": "First Drop Wines",
+    "country": "Australien",
+    "region": "Barossa Valley",
+    "vintage": "2020",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/australien/barossa-valley/mothers-milk-shiraz-first-drop-wines-2020-kpw136101"
+  },
+  {
+    "name": "Condeminal Poncho Pampa Pinot Noir 2019",
+    "producer": "Bodega Atamisque",
+    "country": "Argentina",
+    "region": "Mendoza",
+    "vintage": "2019",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/argentina/mendoza/condeminal-poncho-pampa-pinot-noir-bodega-atamisque-2019-kpw133784"
+  },
+  {
+    "name": "CAB et al 2021",
+    "producer": "David Finlayson",
+    "country": "Sydafrika",
+    "region": "Stellenbosch",
+    "vintage": "2021",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/sydafrika/stellenbosch/cab-et-al-david-finlayson-2021-ksa134210"
+  },
+  {
+    "name": "Rosso di Toscana 2023",
+    "producer": "Tenuta Il Poggione",
+    "country": "Italien",
+    "region": "Toscana",
+    "vintage": "2023",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/italien/toscana/rosso-di-toscana-tenuta-il-poggione-2023-a136884"
+  },
+  {
+    "name": "Wish you were here Sangiovese 2023",
+    "producer": "Ekologiskt, Wine Mechanics",
+    "country": "EU",
+    "region": "EU",
+    "vintage": "2023",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/eu/eu/wish-you-were-here-sangiovese-wine-mechanics-2023-a137667"
+  },
+  {
+    "name": "Les Silices 2023",
+    "producer": "Domaine du Vieux Pressoir",
+    "country": "Frankrike",
+    "region": "Saumur",
+    "vintage": "2023",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/saumur/les-silices-domaine-du-vieux-pressoir-2023-a136672"
+  },
+  {
+    "name": "Langhe Nebbiolo Simane 2022",
+    "producer": "Tenuta Michele Reverdito",
+    "country": "Italien",
+    "region": "Langhe Nebbiolo",
+    "vintage": "2022",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/italien/langhe-nebbiolo/langhe-nebbiolo-simane-tenuta-michele-reverdito-2022-kesv136701"
+  },
+  {
+    "name": "Dolcetto d´Alba 2024",
+    "producer": "Carlo Revello & Figli",
+    "country": "Italien",
+    "region": "Dolcetto dAlba",
+    "vintage": "2024",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/italien/dolcetto-dalba/dolcetto-dalba-carlo-revello-figli-2024-a136849"
+  },
+  {
+    "name": "Ramnasgras Cinsault 2022",
+    "producer": "Badenhorst Family Wines",
+    "country": "Sydafrika",
+    "region": "Swartland",
+    "vintage": "2022",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/sydafrika/swartland/ramnasgras-cinsault-badenhorst-family-wines-2022-ksa135311"
+  },
+  {
+    "name": "Cru Bourgeois 2022",
+    "producer": "Château Lamothe-Cissac",
+    "country": "Frankrike",
+    "region": "Haut-Médoc",
+    "vintage": "2022",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/haut-medoc/cru-bourgeois-chteau-lamothe-cissac-2022-kpw137630"
+  },
+  {
+    "name": "822 Tempranillo 2023",
+    "producer": "Pagos de Anguix",
+    "country": "Spanien",
+    "region": "Ribera del Duero",
+    "vintage": "2023",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/spanien/ribera-del-duero/822-tempranillo-pagos-de-anguix-2023-khjh137538eko"
+  },
+  {
+    "name": "Brunello di Montalcino Halvflaska 375 ml 2020",
+    "producer": "CapAnna",
+    "country": "Italien",
+    "region": "Brunello di Montalcino",
+    "vintage": "2020",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/italien/brunello-di-montalcino/brunello-di-montalcino-halvflaska-375-ml-capanna-2020-a136148"
+  },
+  {
+    "name": "Chinon Rouge La Fraîch’ 2023",
+    "producer": "Ekologiskt, Domaine Olga Raffault",
+    "country": "Frankrike",
+    "region": "Chinon",
+    "vintage": "2023",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/chinon/chinon-rouge-la-frach-domaine-olga-raffault-2023-kpw136451eko"
+  },
+  {
+    "name": "La Superbe 2021",
+    "producer": "Domaine Mongeard-Mugneret",
+    "country": "Frankrike",
+    "region": "Bourgogne",
+    "vintage": "2021",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/bourgogne/la-superbe-domaine-mongeard-mugneret-2021-a136673"
+  },
+  {
+    "name": "Côtes du Rhône Villages Séguret Rouge 2023",
+    "producer": "Domaine des Bosquets",
+    "country": "Frankrike",
+    "region": "Cotes du Rhone Villages",
+    "vintage": "2023",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/cotes-du-rhone-villages/ctes-du-rhne-villages-seguret-rouge-domaine-des-bosquets-2023-kpw137587"
+  },
+  {
+    "name": "Valpolicella Ripasso Superiore 2023",
+    "producer": "Dal Cero",
+    "country": "Italien",
+    "region": "Veneto",
+    "vintage": "2023",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/italien/veneto/valpolicella-ripasso-superiore-dal-cero-2023-kesv137629"
+  },
+  {
+    "name": "Julien Barrot AOC Chateauneuf du Pape Halvflaska 375 ml 2022",
+    "producer": "Domaine La Barroche",
+    "country": "Frankrike",
+    "region": "Châteauneuf-du-Pape",
+    "vintage": "2022",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/chteauneuf-du-pape/julien-barrot-aoc-chateauneuf-du-pape-halvflaska-375-ml-domaine-la-barroche-2022-a136155"
+  },
+  {
+    "name": "Sapo de Otro Pozo Red Blend 2019",
+    "producer": "Mosquita Muerta Wines",
+    "country": "Argentina",
+    "region": "Mendoza",
+    "vintage": "2019",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/argentina/mendoza/sapo-de-otro-pozo-red-blend-mosquita-muerta-wines-2019-a133860"
+  },
+  {
+    "name": "Geyserville halvflaska 375 ml 2020",
+    "producer": "Ridge Vineyards",
+    "country": "USA",
+    "region": "Sonoma",
+    "vintage": "2020",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/usa/sonoma-/geyserville-halvflaska-375-ml-ridge-vineyards-2020-a135164"
+  },
+  {
+    "name": "Côtes du Rhône Villages Séguret Rouge 2021",
+    "producer": "Domaine des Bosquets",
+    "country": "Frankrike",
+    "region": "Cotes du Rhone Villages",
+    "vintage": "2021",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/cotes-du-rhone-villages/ctes-du-rhne-villages-seguret-rouge-domaine-des-bosquets-2021-kpw136445"
+  },
+  {
+    "name": "Noir Pinot Noir 2022",
+    "producer": "Escarpment Winery",
+    "country": "Nya Zeeland",
+    "region": "Martinborough",
+    "vintage": "2022",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/nya-zeeland/martinborough/noir-pinot-noir-escarpment-winery-2022-khjh136460"
+  },
+  {
+    "name": "Langhe Nebbiolo 2024",
+    "producer": "Carlo Revello & Figli",
+    "country": "Italien",
+    "region": "Langhe Nebbiolo",
+    "vintage": "2024",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/italien/langhe-nebbiolo/langhe-nebbiolo-carlo-revello-figli-2024-a136851"
+  },
+  {
+    "name": "Classique 2018",
+    "producer": "Rupert & Rothschild",
+    "country": "Sydafrika",
+    "region": "Western Cape",
+    "vintage": "2018",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/sydafrika/western-cape/classique-rupert-rothschild-2018-ksa137108"
+  },
+  {
+    "name": "Bourgogne Pinot Noir 2022",
+    "producer": "Joseph Drouhin",
+    "country": "Frankrike",
+    "region": "Bourgogne",
+    "vintage": "2022",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/bourgogne/bourgogne-pinot-noir-joseph-drouhin-2022-khjh137420"
+  },
+  {
+    "name": "Il Bacialé Barbera Monferrato 2019",
+    "producer": "Braida",
+    "country": "Italien",
+    "region": "Piemonte",
+    "vintage": "2019",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/italien/piemonte/il-baciale-barbera-monferrato-braida-2019-kpw137424"
+  },
+  {
+    "name": "Langhe Nebbiolo 2023",
+    "producer": "Renato Ratti",
+    "country": "Italien",
+    "region": "Langhe Nebbiolo",
+    "vintage": "2023",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/italien/langhe-nebbiolo/langhe-nebbiolo-renato-ratti-2023-kpw137432"
+  },
+  {
+    "name": "Cabirau Rouge 2023",
+    "producer": "Domaine Lafage",
+    "country": "Frankrike",
+    "region": "Cotes du Roussillon",
+    "vintage": "2023",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/cotes-du-roussillon/cabirau-rouge-domaine-lafage-2023-a137683"
+  },
+  {
+    "name": "Barbera d´Alba Vignota 2022",
+    "producer": "Conterno Fantino",
+    "country": "Italien",
+    "region": "Barolo",
+    "vintage": "2022",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/italien/barolo/barbera-dalba-vignota-conterno-fantino-2022-kpw135559"
+  },
+  {
+    "name": "Langhe Nebbiolo Ochetti 2023",
+    "producer": "Renato Ratti",
+    "country": "Italien",
+    "region": "Piemonte",
+    "vintage": "2023",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/italien/piemonte/langhe-nebbiolo-ochetti-renato-ratti-2023-kpw137136"
+  },
+  {
+    "name": "Saouma Côtes du Rhône Villages Rouge Inopia 2020",
+    "producer": "Rotem & Mounir Saouma",
+    "country": "Frankrike",
+    "region": "Châteauneuf-du-Pape",
+    "vintage": "2020",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/chteauneuf-du-pape/saouma-ctes-du-rhne-villages-rouge-inopia-rotem-mounir-saouma-2020-a137257"
+  },
+  {
+    "name": "Silica Rouge - EKO 2022",
+    "producer": "Ekologiskt, Chateau Pesquie",
+    "country": "Frankrike",
+    "region": "Cotes du Ventoux",
+    "vintage": "2022",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/cotes-du-ventoux/silica-rouge-eko-chateau-pesquie-2022-a137094eko"
+  },
+  {
+    "name": "L´ile Quatre Sous 2020",
+    "producer": "Ekologiskt, Chateau Yvonne",
+    "country": "Frankrike",
+    "region": "Loire",
+    "vintage": "2020",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/loire/lile-quatre-sous-chateau-yvonne-2020-kojv133189"
+  },
+  {
+    "name": "Spätburgunder Tradition 2020",
+    "producer": "Weingut Künstler",
+    "country": "Tyskland",
+    "region": "Rheingau",
+    "vintage": "2020",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/tyskland/rheingau/spatburgunder-tradition-weingut-kunstler-2020-kpw133462"
+  },
+  {
+    "name": "Pinot Noir Cloudline 2022",
+    "producer": "Domaine Drouhin",
+    "country": "USA",
+    "region": "Oregon",
+    "vintage": "2022",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/usa/oregon/pinot-noir-cloudline-domaine-drouhin-2022-khjh136119"
+  },
+  {
+    "name": "Brolio Chianti Classico Riserva 2022",
+    "producer": "Barone Ricasoli",
+    "country": "Italien",
+    "region": "Chianti Classico",
+    "vintage": "2022",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/italien/chianti-classico/brolio-chianti-classico-riserva-barone-ricasoli-2022-a137198"
+  },
+  {
+    "name": "La Dame de Montrose Halvflaska 375 ml 2014",
+    "producer": "Château Montrose",
+    "country": "Frankrike",
+    "region": "Saint-Estèphe",
+    "vintage": "2014",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/saint-estphe/la-dame-de-montrose-halvflaska-375-ml-chteau-montrose-2014-a136278"
+  },
+  {
+    "name": "Spätburgunder Tradition 2022",
+    "producer": "Weingut Künstler",
+    "country": "Tyskland",
+    "region": "Rheingau",
+    "vintage": "2022",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/tyskland/rheingau/spatburgunder-tradition-weingut-kunstler-2022-kpw136368"
+  },
+  {
+    "name": "Morgon Aux Charmes 2023",
+    "producer": "Domaine Les Heritiers Saint Genys",
+    "country": "Frankrike",
+    "region": "Morgon",
+    "vintage": "2023",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/morgon/morgon-aux-charmes-domaine-les-heritiers-saint-genys-2023-a137135"
+  },
+  {
+    "name": "Art Series Shiraz 2022",
+    "producer": "Leeuwin Estate",
+    "country": "Australien",
+    "region": "Margaret River",
+    "vintage": "2022",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/australien/margaret-river/art-series-shiraz-leeuwin-estate-2022-khjh137436"
+  },
+  {
+    "name": "Langhe Nebbiolo Ginestrino 2020",
+    "producer": "Conterno Fantino",
+    "country": "Italien",
+    "region": "Barolo",
+    "vintage": "2020",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/italien/barolo/langhe-nebbiolo-ginestrino-conterno-fantino-2020-kpw134688"
+  },
+  {
+    "name": "Le Grand Rossignon 2020",
+    "producer": "Chateau Lamothe Vincent",
+    "country": "Frankrike",
+    "region": "Entre-Deux-Mers",
+    "vintage": "2020",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/entre-deux-mers/le-grand-rossignon-chateau-lamothe-vincent-2020-a137097"
+  },
+  {
+    "name": "Terrasses Rouge Magnum 2022",
+    "producer": "Ekologiskt, Chateau Pesquie",
+    "country": "Frankrike",
+    "region": "Rhone",
+    "vintage": "2022",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/rhone/terrasses-rouge-magnum-chateau-pesquie-2022-a136223eko"
+  },
+  {
+    "name": "Corimbo 2020",
+    "producer": "RODA Bodegas La Horra",
+    "country": "Spanien",
+    "region": "Ribera del Duero",
+    "vintage": "2020",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/spanien/ribera-del-duero/corimbo-roda-bodegas-la-horra-2020-kpw136875"
+  },
+  {
+    "name": "The Steading 2022",
+    "producer": "Torbreck",
+    "country": "Australien",
+    "region": "South Australia",
+    "vintage": "2022",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/australien/south-australia/the-steading-torbreck-2022-a137181"
+  },
+  {
+    "name": "Gigondas Réserve 2022",
+    "producer": "Domaine des Bosquets",
+    "country": "Frankrike",
+    "region": "Gigondas",
+    "vintage": "2022",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/gigondas/gigondas-reserve-domaine-des-bosquets-2022-kpw137588"
+  },
+  {
+    "name": "Crozes-Hermitage 2022",
+    "producer": "Saint Cosme",
+    "country": "Frankrike",
+    "region": "Crozes-Hermitage",
+    "vintage": "2022",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/crozes-hermitage/crozes-hermitage-saint-cosme-2022-kpw137589"
+  },
+  {
+    "name": "Barolo Monvigliero 2013",
+    "producer": "Arnaldo Rivera",
+    "country": "Italien",
+    "region": "Barolo",
+    "vintage": "2013",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/italien/barolo/barolo-monvigliero-arnaldo-rivera-2013-kpw133634"
+  },
+  {
+    "name": "Verso de Haut Batailley 2018",
+    "producer": "Chateau Haut Batailley",
+    "country": "Frankrike",
+    "region": "Pauillac",
+    "vintage": "2018",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/pauillac/verso-de-haut-batailley-chateau-haut-batailley-2018-a136961"
+  },
+  {
+    "name": "Ringmuur Cinsault 2022",
+    "producer": "Badenhorst Family Wines",
+    "country": "Sydafrika",
+    "region": "Swartland",
+    "vintage": "2022",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/sydafrika/swartland/ringmuur-cinsault-badenhorst-family-wines-2022-ksa135312"
+  },
+  {
+    "name": "Sangiovese di S. Lucia Toscana 2020",
+    "producer": "Castello dei Rampolla",
+    "country": "Italien",
+    "region": "Toscana",
+    "vintage": "2020",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/italien/toscana/sangiovese-di-s-lucia-toscana-castello-dei-rampolla-2020-kpw134222"
+  },
+  {
+    "name": "Bourgogne Côte d´Or 2022",
+    "producer": "Marchand-Tawse",
+    "country": "Frankrike",
+    "region": "Cote de Beaune",
+    "vintage": "2022",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/cote-de-beaune/bourgogne-cte-dor-marchand-tawse-2022-a136343"
+  },
+  {
+    "name": "Bourgogne Rouge 2023",
+    "producer": "Ekologiskt, Domaine Charles Audoin",
+    "country": "Frankrike",
+    "region": "Marsannay",
+    "vintage": "2023",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/marsannay/bourgogne-rouge-domaine-charles-audoin-2023-kpw136993eko"
+  },
+  {
+    "name": "Chateau Montlandrie 2019",
+    "producer": "Chateau Montlandrie",
+    "country": "Frankrike",
+    "region": "Castillon Côtes de Bordeaux",
+    "vintage": "2019",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/castillon-ctes-de-bordeaux/chateau-montlandrie-chateau-montlandrie-2019-a136283"
+  },
+  {
+    "name": "Artemia - EKO 2022",
+    "producer": "Ekologiskt, Chateau Pesquie",
+    "country": "Frankrike",
+    "region": "Rhone",
+    "vintage": "2022",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/rhone/artemia-eko-chateau-pesquie-2022-a137093eko"
+  },
+  {
+    "name": "Barolo La Morra 2019",
+    "producer": "Tenuta Michele Reverdito",
+    "country": "Italien",
+    "region": "Barolo",
+    "vintage": "2019",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/italien/barolo/barolo-la-morra-tenuta-michele-reverdito-2019-kesv135835"
+  },
+  {
+    "name": "Bourgogne Pinot Noir Les Terres Rouges 2022",
+    "producer": "Ekologiskt, Domaine J et J Archambaud",
+    "country": "Frankrike",
+    "region": "Vosne-Romanée",
+    "vintage": "2022",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/vosne-romanee/bourgogne-pinot-noir-les-terres-rouges-domaine-j-et-j-archambaud-2022-kpw136494eko"
+  },
+  {
+    "name": "Baron de Brane 2021",
+    "producer": "Chateau Brane-Cantenac",
+    "country": "Frankrike",
+    "region": "Margaux",
+    "vintage": "2021",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/margaux/baron-de-brane-chateau-brane-cantenac-2021-a137402"
+  },
+  {
+    "name": "Saint Joseph Vieilles Vignes 2020",
+    "producer": "Maison Tardieu-Laurent",
+    "country": "Frankrike",
+    "region": "Saint-Joseph",
+    "vintage": "2020",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/saint-joseph/saint-joseph-vieilles-vignes-maison-tardieu-laurent-2020-a136484"
+  },
+  {
+    "name": "Barolo 2021",
+    "producer": "Carlo Revello & Figli",
+    "country": "Italien",
+    "region": "Barolo",
+    "vintage": "2021",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/italien/barolo/barolo-carlo-revello-figli-2021-a136852"
+  },
+  {
+    "name": "Trois Cépages Arbois Jura 2018",
+    "producer": "Domaine du Pelican",
+    "country": "Frankrike",
+    "region": "Jura",
+    "vintage": "2018",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/jura/trois-cepages-arbois-jura-domaine-du-pelican-2018-kpw136442"
+  },
+  {
+    "name": "Chateau de Pez 2022",
+    "producer": "Château de Pez",
+    "country": "Frankrike",
+    "region": "Saint-Estèphe",
+    "vintage": "2022",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/saint-estphe/chateau-de-pez-chteau-de-pez-2022-a135993"
+  },
+  {
+    "name": "Rully Rouge Cuvée Marey du Clos de Bellecroix 2023",
+    "producer": "Domaine de la Folie",
+    "country": "Frankrike",
+    "region": "Rully",
+    "vintage": "2023",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/rully/rully-rouge-cuvee-marey-du-clos-de-bellecroix-domaine-de-la-folie-2023-kpw137425"
+  },
+  {
+    "name": "Chinon Les Varennes du Grand Clos Rouge 2015",
+    "producer": "Domaine Charles Joguet",
+    "country": "Frankrike",
+    "region": "Chinon",
+    "vintage": "2015",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/chinon/chinon-les-varennes-du-grand-clos-rouge-domaine-charles-joguet-2015-kpw135860"
+  },
+  {
+    "name": "Mabalel Pinot Noir 2024",
+    "producer": "Crystallum Wines",
+    "country": "Sydafrika",
+    "region": "Hemel-en-Aarde",
+    "vintage": "2024",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/sydafrika/hemel-en-aarde/mabalel-pinot-noir-crystallum-wines-2024-ksa137035"
+  },
+  {
+    "name": "Litigo Pinot Noir 2024",
+    "producer": "Crystallum Wines",
+    "country": "Sydafrika",
+    "region": "Hemel-en-Aarde",
+    "vintage": "2024",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/sydafrika/hemel-en-aarde/litigo-pinot-noir-crystallum-wines-2024-ksa137033"
+  },
+  {
+    "name": "Brunello di Montalcino 2017",
+    "producer": "Caparzo",
+    "country": "Italien",
+    "region": "Brunello di Montalcino",
+    "vintage": "2017",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/italien/brunello-di-montalcino/brunello-di-montalcino-caparzo-2017-kojv133653"
+  },
+  {
+    "name": "Varvara 2022",
+    "producer": "Castello di Bolgheri",
+    "country": "Italien",
+    "region": "Bolgheri",
+    "vintage": "2022",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/italien/bolgheri/varvara-castello-di-bolgheri-2022-kpw135862"
+  },
+  {
+    "name": "Le C des Carmes 2022",
+    "producer": "Chateau Les Carmes Haut Brion",
+    "country": "Frankrike",
+    "region": "Pessac-Léognan",
+    "vintage": "2022",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/pessac-leognan/le-c-des-carmes-chateau-les-carmes-haut-brion-2022-a137206"
+  },
+  {
+    "name": "Marsannay Clos du Roy Rouge 2020",
+    "producer": "Jean Fournier",
+    "country": "Frankrike",
+    "region": "Marsannay",
+    "vintage": "2020",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/marsannay/marsannay-clos-du-roy-rouge-jean-fournier-2020-kesv133439"
+  },
+  {
+    "name": "Quintessence Rouge Magnum 2021",
+    "producer": "Ekologiskt, Chateau Pesquie",
+    "country": "Frankrike",
+    "region": "Rhone",
+    "vintage": "2021",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/rhone/quintessence-rouge-magnum-chateau-pesquie-2021-a136222eko"
+  },
+  {
+    "name": "Pinot Noir Roserock 2023",
+    "producer": "Domaine Drouhin",
+    "country": "USA",
+    "region": "Oregon",
+    "vintage": "2023",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/usa/oregon/pinot-noir-roserock-domaine-drouhin-2023-khjh136339"
+  },
+  {
+    "name": "Bourgogne Rouge La Taupe 2022",
+    "producer": "Domaine Chavy Chouet",
+    "country": "Frankrike",
+    "region": "Bourgogne Rouge",
+    "vintage": "2022",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/bourgogne-rouge/bourgogne-rouge-la-taupe-domaine-chavy-chouet-2022-a136632"
+  },
+  {
+    "name": "Barolo EKO 2018",
+    "producer": "Ekologiskt, Brezza Giacomo e Figli",
+    "country": "Italien",
+    "region": "Barolo",
+    "vintage": "2018",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/italien/barolo/barolo-eko-brezza-giacomo-e-figli-2018-a133411eko"
+  },
+  {
+    "name": "Bodyguard 2019",
+    "producer": "DAOU Vineyards",
+    "country": "USA",
+    "region": "Paso Robles",
+    "vintage": "2019",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/usa/paso-robles/bodyguard-daou-vineyards-2019-khjh135133"
+  },
+  {
+    "name": "Chinon Clos de la Dioterie Rouge 2016",
+    "producer": "Ekologiskt, Domaine Charles Joguet",
+    "country": "Frankrike",
+    "region": "Chinon",
+    "vintage": "2016",
+    "type": "Rott vin",
+    "sourceLabel": "Winefinder",
+    "sourceUrl": "https://www.winefinder.se/vin/frankrike/chinon/chinon-clos-de-la-dioterie-rouge-domaine-charles-joguet-2016-kpw135861"
+  }
+]

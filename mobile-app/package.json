@@ -17,6 +17,7 @@
     "catalog:sources:apply": "node ./scripts/import-product-catalog-source-batches.mjs ./data/catalog-source-manifest.json --all --apply",
     "catalog:systembolaget:sql": "node ./scripts/import-product-catalog-source-batches.mjs ./data/catalog-source-manifest.json --systembolaget --sql",
     "catalog:systembolaget:apply": "node ./scripts/import-product-catalog-source-batches.mjs ./data/catalog-source-manifest.json --systembolaget --apply",
+    "catalog:winefinder:fetch": "node ./scripts/fetch-winefinder-red-batch.mjs 5 ./data/catalog-sources/winefinder-red-batch.json",
     "catalog:alko:sql": "node ./scripts/import-product-catalog-source-batches.mjs ./data/catalog-source-manifest.json --alko --sql",
     "catalog:alko:apply": "node ./scripts/import-product-catalog-source-batches.mjs ./data/catalog-source-manifest.json --alko --apply",
     "wine-names:seed:sql": "node ./scripts/import-reference-option-seeds.mjs ./data/wine-name-seeds.json wine_name --sql",
