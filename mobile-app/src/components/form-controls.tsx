@@ -108,25 +108,25 @@ export function AutocompleteInput({
             }, 120);
           }}
         />
-      {showSuggestions ? (
-        <View style={styles.autocompleteList}>
-          {suggestions.map((option) => (
-            <Pressable
-              key={`${label}-${option}`}
-              onPressIn={() => {
-                if (blurTimeoutRef.current) {
-                  clearTimeout(blurTimeoutRef.current);
-                }
-                onChangeText(option);
-                setFocused(false);
-              }}
-              style={styles.autocompleteItem}
-            >
-              <Text style={styles.autocompleteText}>{option}</Text>
-            </Pressable>
-          ))}
-        </View>
-      ) : null}
+        {showSuggestions ? (
+          <View style={styles.autocompleteList}>
+            {suggestions.map((option) => (
+              <Pressable
+                key={`${label}-${option}`}
+                onPressIn={() => {
+                  if (blurTimeoutRef.current) {
+                    clearTimeout(blurTimeoutRef.current);
+                  }
+                  onChangeText(option);
+                  setFocused(false);
+                }}
+                style={styles.autocompleteItem}
+              >
+                <Text style={styles.autocompleteText}>{option}</Text>
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
       </View>
     </View>
   );
@@ -290,25 +290,19 @@ const styles = StyleSheet.create({
     borderColor: "#e6d7c8",
   },
   autocompleteWrapper: {
-    position: "relative",
-    zIndex: 20,
+    gap: 6,
   },
   textarea: {
     minHeight: 96,
     textAlignVertical: "top",
   },
   autocompleteList: {
-    position: "absolute",
-    top: 58,
-    left: 0,
-    right: 0,
     borderRadius: 16,
     backgroundColor: "#fffaf5",
     borderWidth: 1,
     borderColor: "#e6d7c8",
     overflow: "hidden",
-    zIndex: 50,
-    elevation: 8,
+    maxHeight: 280,
     shadowColor: "#000",
     shadowOpacity: 0.12,
     shadowRadius: 12,
