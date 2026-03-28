@@ -175,6 +175,9 @@ function AuthScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [guestBusy, setGuestBusy] = useState(false);
+  const [signupNotice, setSignupNotice] = useState("");
+  const [awaitingVerification, setAwaitingVerification] = useState(false);
 
   async function handleAuth() {
     if (!email.trim() || !password.trim()) {
@@ -183,10 +186,11 @@ function AuthScreen() {
     }
 
     setBusy(true);
+    setSignupNotice("");
 
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email: email.trim(),
           password: password.trim(),
         });
@@ -195,9 +199,17 @@ function AuthScreen() {
           throw error;
         }
 
+        const confirmationMessage =
+          "Kontot är skapat. Kolla din e-post och bekräfta adressen innan du loggar in.";
+
+        setSignupNotice(confirmationMessage);
+        setAwaitingVerification(!data.session);
+
         Alert.alert(
           "Konto skapat",
-          "Om e-postbekräftelse är aktiv i Supabase får du nu ett mail för att slutföra registreringen."
+          data.session
+            ? "Kontot skapades och du är nu inloggad."
+            : confirmationMessage
         );
       } else {
         const { error } = await supabase.auth.signInWithPassword({
@@ -214,6 +226,67 @@ function AuthScreen() {
     } finally {
       setBusy(false);
     }
+  }
+
+  async function handleGuestSignIn() {
+    setGuestBusy(true);
+    setSignupNotice("");
+
+    try {
+      const { error } = await supabase.auth.signInAnonymously();
+
+      if (error) {
+        throw error;
+      }
+    } catch (error) {
+      Alert.alert(
+        "Gästläge gick inte att starta",
+        error instanceof Error
+          ? `${error.message} Aktivera Anonymous Sign-Ins i Supabase Authentication om du vill använda gästläge.`
+          : "Aktivera Anonymous Sign-Ins i Supabase Authentication om du vill använda gästläge."
+      );
+    } finally {
+      setGuestBusy(false);
+    }
+  }
+
+  if (awaitingVerification) {
+    return (
+      <SafeAreaView style={styles.screen}>
+        <StatusBar style="light" />
+        <View style={styles.scrollContent}>
+          <View style={styles.heroPanel}>
+            <Text style={styles.eyebrow}>Verifiera din e-post</Text>
+            <Text style={styles.heroTitle}>Ett steg kvar innan du kan logga in.</Text>
+            <Text style={styles.heroText}>
+              Vi har skickat ett bekräftelsemail till {email}. Öppna mailet och klicka på länken, kom sedan tillbaka och logga in.
+            </Text>
+          </View>
+
+          <View style={styles.panel}>
+            <Text style={styles.authNotice}>
+              Hittar du inget mail? Kolla skräppost eller försök registrera igen om adressen blev fel.
+            </Text>
+
+            <Pressable
+              onPress={() => {
+                setAwaitingVerification(false);
+                setMode("signin");
+              }}
+              style={styles.primaryButton}
+            >
+              <Text style={styles.primaryButtonText}>Jag har verifierat min mail</Text>
+            </Pressable>
+
+            <Pressable onPress={handleGuestSignIn} style={styles.secondaryButton} disabled={guestBusy}>
+              <Text style={styles.secondaryButtonText}>
+                {guestBusy ? "Startar gästläge..." : "Fortsätt som gäst i stället"}
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
   }
 
   return (
@@ -259,6 +332,18 @@ function AuthScreen() {
                 {busy ? "Arbetar..." : mode === "signup" ? "Skapa konto" : "Logga in"}
               </Text>
             </Pressable>
+
+            {signupNotice ? <Text style={styles.authNotice}>{signupNotice}</Text> : null}
+
+            <Pressable onPress={handleGuestSignIn} style={styles.secondaryButton} disabled={guestBusy}>
+              <Text style={styles.secondaryButtonText}>
+                {guestBusy ? "Startar gästläge..." : "Fortsätt som gäst"}
+              </Text>
+            </Pressable>
+
+            <Text style={styles.authFootnote}>
+              Gästläge kräver att Anonymous Sign-Ins är aktiverat i ditt Supabase-projekt.
+            </Text>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -1574,6 +1659,15 @@ const styles = StyleSheet.create({
   secondaryButtonText: {
     color: "#6f1d1b",
     fontWeight: "700",
+  },
+  authNotice: {
+    color: "#6f1d1b",
+    lineHeight: 21,
+  },
+  authFootnote: {
+    color: "#6f6259",
+    lineHeight: 21,
+    fontSize: 13,
   },
   inlineLinkButton: {
     alignSelf: "flex-start",
