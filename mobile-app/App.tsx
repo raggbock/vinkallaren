@@ -23,7 +23,7 @@ import {
 import type { Session } from "@supabase/supabase-js";
 
 import { supabase, supabaseConfigured } from "./src/lib/supabase";
-import { findCatalogMatch, type ProductCatalogEntry } from "./src/lib/product-catalog";
+import { cacheCatalogEntry, findCatalogMatch, type ProductCatalogEntry } from "./src/lib/product-catalog";
 import type { StorageSpaceInsert, StorageSpaceRow } from "./src/types/storage-space";
 import type { WineInsert, WineRecord, WineRow } from "./src/types/wine";
 
@@ -585,6 +585,8 @@ function CellarScreen({ session }: { session: Session }) {
         throw error;
       }
 
+      await cacheWineDraftAsCatalogEntry(payload, session.user.id);
+
       setDraft(defaultDraft);
       await fetchWines();
     } catch (error) {
@@ -865,6 +867,7 @@ function CellarScreen({ session }: { session: Session }) {
     }
 
     if (match) {
+      await cacheCatalogEntry(match, session.user.id);
       setDraft((current) => mergeDraftWithCatalogSuggestion(current, match, "empty", defaultImportSelection));
       Alert.alert(
         "Produkt hittad",
@@ -1927,6 +1930,37 @@ function mergeDraftWithCatalogSuggestion(
     ),
     barcode: resolveImportedValue(current.barcode, suggestion.barcode || "", shouldApply("barcode", current.barcode)),
   };
+}
+
+async function cacheWineDraftAsCatalogEntry(payload: WineInsert, userId: string) {
+  const barcode = payload.barcode?.trim();
+  const systembolagetProductId = payload.systembolaget_product_id?.trim();
+
+  if (!barcode && !systembolagetProductId) {
+    return;
+  }
+
+  if (!payload.name.trim()) {
+    return;
+  }
+
+  await cacheCatalogEntry(
+    {
+      barcode,
+      systembolagetProductId,
+      name: payload.name,
+      producer: payload.producer ?? undefined,
+      country: payload.country ?? undefined,
+      region: payload.region ?? undefined,
+      grape: payload.grape ?? undefined,
+      type: payload.type ?? undefined,
+      vintage: payload.vintage ?? undefined,
+      foodPairings: payload.food_pairings ?? [],
+      sourceLabel: "MinVinkällare",
+      sourceConfidence: "high",
+    },
+    userId
+  );
 }
 
 const styles = StyleSheet.create({

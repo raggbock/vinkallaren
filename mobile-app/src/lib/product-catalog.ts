@@ -1,3 +1,6 @@
+import { supabase } from "./supabase";
+import type { ProductCatalogInsert, ProductCatalogRow } from "../types/product-catalog";
+
 export type ProductCatalogEntry = {
   systembolagetProductId?: string;
   barcode?: string;
@@ -13,7 +16,7 @@ export type ProductCatalogEntry = {
   sourceConfidence?: "high" | "medium" | "low";
 };
 
-type ProductLookupInput = {
+export type ProductLookupInput = {
   barcode?: string;
   systembolagetProductId?: string;
 };
@@ -180,6 +183,12 @@ const systembolagetSeedCatalog: ProductCatalogEntry[] = [
 ];
 
 export async function findCatalogMatch(input: ProductLookupInput) {
+  const sharedMatch = await findSharedCatalogMatch(input);
+
+  if (sharedMatch) {
+    return sharedMatch;
+  }
+
   const localMatch = findLocalCatalogMatch(input);
 
   if (localMatch) {
@@ -204,6 +213,36 @@ function findLocalCatalogMatch(input: ProductLookupInput) {
       return Boolean(barcodeMatch || articleMatch);
     }) ?? null
   );
+}
+
+async function findSharedCatalogMatch(input: ProductLookupInput) {
+  const barcode = input.barcode?.trim();
+  const systembolagetProductId = input.systembolagetProductId?.trim();
+
+  if (!barcode && !systembolagetProductId) {
+    return null;
+  }
+
+  let query = supabase
+    .from("product_catalog_entries")
+    .select("*")
+    .limit(1);
+
+  if (barcode && systembolagetProductId) {
+    query = query.or(`barcode.eq.${escapeFilterValue(barcode)},systembolaget_product_id.eq.${escapeFilterValue(systembolagetProductId)}`);
+  } else if (barcode) {
+    query = query.eq("barcode", barcode);
+  } else if (systembolagetProductId) {
+    query = query.eq("systembolaget_product_id", systembolagetProductId);
+  }
+
+  const { data, error } = await query.maybeSingle();
+
+  if (error || !data) {
+    return null;
+  }
+
+  return mapCatalogRowToEntry(data as ProductCatalogRow);
 }
 
 async function findRemoteCatalogMatch(input: ProductLookupInput) {
@@ -239,6 +278,26 @@ async function findCustomRemoteCatalogMatch(endpoint: string, input: ProductLook
 
   const data = (await response.json()) as ProductCatalogEntry | null;
   return data;
+}
+
+export async function cacheCatalogEntry(entry: ProductCatalogEntry, userId?: string | null) {
+  const payload = mapEntryToCatalogInsert(entry, userId);
+
+  if (!payload.barcode && !payload.systembolaget_product_id) {
+    return;
+  }
+
+  const identifierColumn = payload.barcode ? "barcode" : "systembolaget_product_id";
+  const { error } = await supabase
+    .from("product_catalog_entries")
+    .upsert(payload, {
+      onConflict: identifierColumn,
+      ignoreDuplicates: false,
+    });
+
+  if (error) {
+    console.warn("Could not cache product catalog entry", error.message);
+  }
 }
 
 async function findOpenFoodFactsMatch(input: ProductLookupInput) {
@@ -525,4 +584,43 @@ function firstNonEmpty(values: Array<string | undefined>) {
 
 function cleanValue(value?: string | null) {
   return value?.trim() || undefined;
+}
+
+function mapCatalogRowToEntry(row: ProductCatalogRow): ProductCatalogEntry {
+  return {
+    barcode: row.barcode || undefined,
+    systembolagetProductId: row.systembolaget_product_id || undefined,
+    name: row.name,
+    producer: row.producer || undefined,
+    country: row.country || undefined,
+    region: row.region || undefined,
+    grape: row.grape || undefined,
+    type: row.type || undefined,
+    vintage: row.vintage || undefined,
+    foodPairings: row.food_pairings,
+    sourceLabel: row.source_label || "Delad katalog",
+    sourceConfidence: (row.source_confidence as ProductCatalogEntry["sourceConfidence"]) || "high",
+  };
+}
+
+function mapEntryToCatalogInsert(entry: ProductCatalogEntry, userId?: string | null): ProductCatalogInsert {
+  return {
+    barcode: entry.barcode?.trim() || null,
+    systembolaget_product_id: entry.systembolagetProductId?.trim() || null,
+    name: entry.name.trim(),
+    producer: entry.producer?.trim() || null,
+    country: entry.country?.trim() || null,
+    region: entry.region?.trim() || null,
+    grape: entry.grape?.trim() || null,
+    type: entry.type?.trim() || null,
+    vintage: entry.vintage ?? null,
+    food_pairings: entry.foodPairings ?? [],
+    source_label: entry.sourceLabel,
+    source_confidence: entry.sourceConfidence ?? "high",
+    created_by: userId ?? null,
+  };
+}
+
+function escapeFilterValue(value: string) {
+  return value.replace(/,/g, "\\,");
 }
