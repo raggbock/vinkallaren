@@ -200,7 +200,6 @@ export function AddWinePanel({
   selectedCatalogNameEntry,
   importMode,
   importSelection,
-  savingCatalogEntry,
   saving,
   onDraftChange,
   onNameSelected,
@@ -214,7 +213,6 @@ export function AddWinePanel({
   onSetImportMode,
   onApplyCatalogSuggestion,
   onToggleImportField,
-  onSaveDraftToCatalog,
   onChooseImage,
   onSaveWine,
 }: {
@@ -240,7 +238,6 @@ export function AddWinePanel({
   selectedCatalogNameEntry: ProductCatalogWineRow | null;
   importMode: ImportMode;
   importSelection: ImportFieldSelection;
-  savingCatalogEntry: boolean;
   saving: boolean;
   onDraftChange: (patch: Partial<WineDraft>) => void;
   onNameSelected: (value: string) => void;
@@ -254,7 +251,6 @@ export function AddWinePanel({
   onSetImportMode: (mode: ImportMode) => void;
   onApplyCatalogSuggestion: (mode: ImportMode) => void;
   onToggleImportField: (field: keyof ImportFieldSelection) => void;
-  onSaveDraftToCatalog: () => void;
   onChooseImage: () => void;
   onSaveWine: () => void;
 }) {
@@ -437,11 +433,8 @@ export function AddWinePanel({
         <View style={styles.importSuggestionCard}>
           <Text style={styles.inputLabel}>Ingen träff ännu?</Text>
           <Text style={styles.notesText}>
-            Fyll i vinets namn och det du vet, och spara sedan produkten i katalogen så att nästa skanning hittar den direkt.
+            Fyll i resten av uppgifterna och spara som vanligt. Om posten är tillräckligt komplett läggs den automatiskt i katalogen också.
           </Text>
-          <Pressable onPress={onSaveDraftToCatalog} style={styles.primaryButton} disabled={savingCatalogEntry}>
-            <Text style={styles.primaryButtonText}>{savingCatalogEntry ? "Sparar i katalogen..." : "Spara nuvarande vin i katalogen"}</Text>
-          </Pressable>
         </View>
       ) : null}
 
@@ -462,7 +455,7 @@ export function AddWinePanel({
       {draft.imageUri ? <Image source={{ uri: draft.imageUri }} style={styles.wineImage} /> : null}
 
       <Pressable onPress={onSaveWine} style={styles.primaryButton} disabled={saving}>
-        <Text style={styles.primaryButtonText}>{saving ? "Sparar..." : "Spara i molnet"}</Text>
+        <Text style={styles.primaryButtonText}>{saving ? "Sparar..." : "Spara i källaren"}</Text>
       </Pressable>
     </View>
   );

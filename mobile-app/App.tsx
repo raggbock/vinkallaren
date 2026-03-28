@@ -388,7 +388,6 @@ function CellarScreen({ session }: { session: Session }) {
   const [loadingCatalogEntries, setLoadingCatalogEntries] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savingStorageSpace, setSavingStorageSpace] = useState(false);
-  const [savingCatalogEntry, setSavingCatalogEntry] = useState(false);
   const [savingCatalogEdit, setSavingCatalogEdit] = useState(false);
   const [savingDrinkHistory, setSavingDrinkHistory] = useState(false);
   const [selectedPairingFilter, setSelectedPairingFilter] = useState("Alla");
@@ -1171,55 +1170,6 @@ function CellarScreen({ session }: { session: Session }) {
     }
   }
 
-  async function saveDraftToCatalog() {
-    const barcode = draft.barcode.trim();
-    const systembolagetProductId = draft.systembolagetProductId.trim();
-
-    if (!draft.name.trim()) {
-      Alert.alert("Namn saknas", "Fyll i åtminstone namnet på vinet innan du sparar det i katalogen.");
-      return;
-    }
-
-    const missingCatalogFields = getMissingCatalogFields(draft);
-
-    if (missingCatalogFields.length > 0) {
-      Alert.alert(
-        "Mer info behövs",
-        `För att spara vinet i katalogen behöver du fylla i: ${missingCatalogFields.join(", ")}.`
-      );
-      return;
-    }
-
-    setSavingCatalogEntry(true);
-
-    try {
-      const entry: ProductCatalogEntry = {
-        barcode: barcode || undefined,
-        systembolagetProductId: systembolagetProductId || undefined,
-        name: draft.name.trim(),
-        producer: emptyToNull(draft.producer) ?? undefined,
-        country: emptyToNull(draft.country) ?? undefined,
-        region: emptyToNull(draft.region) ?? undefined,
-        grape: emptyToNull(draft.grape) ?? undefined,
-        type: emptyToNull(draft.type) ?? undefined,
-        vintage: toNumberOrNull(draft.vintage) ?? undefined,
-        foodPairings: parseTags(draft.foodPairings),
-        sourceLabel: "MinVinkällare",
-        sourceConfidence: "high",
-      };
-
-      await cacheCatalogEntry(entry, session.user.id);
-      setCatalogSuggestion(entry);
-      setLookupMessage("Produkten sparades i katalogen. Nästa skanning ska hitta den direkt.");
-      await Promise.all([fetchCatalogEntries(), fetchCatalogNameEntries(), fetchReferenceOptions()]);
-      Alert.alert("Sparad i katalogen", "Produkten är nu sparad och kan återanvändas vid nästa streckkodsskanning.");
-    } catch (error) {
-      Alert.alert("Kunde inte spara i katalogen", error instanceof Error ? error.message : "Försök igen.");
-    } finally {
-      setSavingCatalogEntry(false);
-    }
-  }
-
   async function chooseImage() {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
@@ -1468,7 +1418,6 @@ function CellarScreen({ session }: { session: Session }) {
         catalogSuggestion={catalogSuggestion}
         importMode={importMode}
         importSelection={importSelection}
-        savingCatalogEntry={savingCatalogEntry}
         saving={saving}
         selectedCatalogNameEntry={selectedCatalogNameEntry}
         onDraftChange={updateAddWineDraft}
@@ -1499,7 +1448,6 @@ function CellarScreen({ session }: { session: Session }) {
         onSetImportMode={setImportMode}
         onApplyCatalogSuggestion={applyCatalogSuggestion}
         onToggleImportField={toggleImportField}
-        onSaveDraftToCatalog={saveDraftToCatalog}
         onChooseImage={chooseImage}
         onSaveWine={saveWine}
       />
