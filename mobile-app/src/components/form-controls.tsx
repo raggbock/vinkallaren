@@ -1,5 +1,5 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
-import { useEffect, useMemo, useRef, useState, type ComponentProps, type ReactNode } from "react";
+import { Children, useEffect, useMemo, useRef, useState, type ComponentProps, type ReactNode } from "react";
 
 import type { ReferenceOptionRow } from "../types/reference-data";
 import type { StorageSpaceRow } from "../types/storage-space";
@@ -138,7 +138,15 @@ export function AutocompleteInput({
 }
 
 export function DoubleRow({ children }: { children: ReactNode }) {
-  return <View style={styles.doubleRow}>{children}</View>;
+  return (
+    <View style={styles.doubleRow}>
+      {Children.toArray(children).map((child, index) => (
+        <View key={index} style={styles.doubleRowItem}>
+          {child}
+        </View>
+      ))}
+    </View>
+  );
 }
 
 export function MetricCard({ value, label }: { value: string; label: string }) {
@@ -275,7 +283,6 @@ function normalizeLookupValue(value: string) {
 const styles = StyleSheet.create({
   inputGroup: {
     gap: 6,
-    flex: 1,
   },
   inputLabel: {
     color: "#6f6259",
@@ -322,6 +329,9 @@ const styles = StyleSheet.create({
   doubleRow: {
     flexDirection: "row",
     gap: 12,
+  },
+  doubleRowItem: {
+    flex: 1,
   },
   metricCard: {
     flex: 1,
