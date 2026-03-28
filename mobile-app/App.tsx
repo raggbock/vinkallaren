@@ -3,8 +3,8 @@ import "react-native-url-polyfill/auto";
 import * as ImagePicker from "expo-image-picker";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { StatusBar } from "expo-status-bar";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Image, KeyboardAvoidingView, LayoutChangeEvent, Linking, Modal, Platform, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, Alert, Image, KeyboardAvoidingView, Linking, Modal, Platform, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { Session } from "@supabase/supabase-js";
 
 import { supabase, supabaseConfigured } from "./src/lib/supabase";
@@ -403,16 +403,7 @@ function CellarScreen({ session }: { session: Session }) {
   const [importMode, setImportMode] = useState<ImportMode>("custom");
   const [lookupBusy, setLookupBusy] = useState(false);
   const [lookupMessage, setLookupMessage] = useState("");
-  const [activeSection, setActiveSection] = useState<CellarSection>("cellar");
-  const scrollRef = useRef<ScrollView | null>(null);
-  const sectionOffsets = useRef<Record<CellarSection, number>>({
-    overview: 0,
-    storage: 0,
-    catalog: 0,
-    meal: 0,
-    add: 0,
-    cellar: 0,
-  });
+  const [activeSection, setActiveSection] = useState<CellarSection>("overview");
 
   const stats = useMemo(() => buildStats(wines), [wines]);
   const grapeReferenceRows = useMemo(
@@ -453,18 +444,8 @@ function CellarScreen({ session }: { session: Session }) {
     [selectedMeal, wines]
   );
 
-  function registerSectionOffset(section: CellarSection) {
-    return (event: LayoutChangeEvent) => {
-      sectionOffsets.current[section] = event.nativeEvent.layout.y;
-    };
-  }
-
   function goToSection(section: CellarSection) {
     setActiveSection(section);
-    scrollRef.current?.scrollTo({
-      y: Math.max(0, (sectionOffsets.current[section] ?? 0) - 8),
-      animated: true,
-    });
   }
 
   const filteredWines = useMemo(() => {
@@ -1122,6 +1103,134 @@ function CellarScreen({ session }: { session: Session }) {
     await Linking.openURL(url);
   }
 
+  let activePanel = <StatsPanel stats={stats} styles={styles} onRefresh={fetchWines} />;
+
+  if (activeSection === "storage") {
+    activePanel = (
+      <StorageSpacesPanel
+        styles={styles}
+        storageSpaces={storageSpaces}
+        storageSpaceBottleCounts={storageSpaceBottleCounts}
+        storageSpaceDraft={storageSpaceDraft}
+        loadingStorageSpaces={loadingStorageSpaces}
+        savingStorageSpace={savingStorageSpace}
+        onDraftChange={(patch) => setStorageSpaceDraft((current) => ({ ...current, ...patch }))}
+        onSave={saveStorageSpace}
+        onDelete={deleteStorageSpace}
+      />
+    );
+  } else if (activeSection === "catalog") {
+    activePanel = (
+      <ProductCatalogPanel
+        styles={styles}
+        loadingCatalogEntries={loadingCatalogEntries}
+        catalogEntries={catalogEntries}
+        onRefresh={fetchCatalogEntries}
+        onEdit={openCatalogEditor}
+        onDelete={deleteCatalogEntry}
+      />
+    );
+  } else if (activeSection === "meal") {
+    activePanel = (
+      <MealPlannerPanel
+        styles={styles}
+        selectedMeal={selectedMeal}
+        mealSuggestions={mealSuggestions}
+        mealRecommendations={mealRecommendations}
+        onSelectMeal={setSelectedMeal}
+      />
+    );
+  } else if (activeSection === "add") {
+    activePanel = (
+      <AddWinePanel
+        styles={styles}
+        draft={draft}
+        storageSpaces={storageSpaces}
+        selectedStorageSpace={selectedStorageSpace}
+        selectedStorageSpaceId={selectedStorageSpaceId}
+        selectedStorageRow={selectedStorageRow}
+        selectedStorageSlot={selectedStorageSlot}
+        storageSpaceById={storageSpaceById}
+        effectiveCountryOptions={effectiveCountryOptions}
+        effectiveRegionOptions={effectiveRegionOptions}
+        effectiveGrapeOptions={effectiveGrapeOptions}
+        countryReferenceRows={countryReferenceRows}
+        regionReferenceRows={regionReferenceRows}
+        grapeReferenceRows={grapeReferenceRows}
+        lookupBusy={lookupBusy}
+        lookupMessage={lookupMessage}
+        catalogSuggestion={catalogSuggestion}
+        importMode={importMode}
+        importSelection={importSelection}
+        savingCatalogEntry={savingCatalogEntry}
+        saving={saving}
+        onDraftChange={(patch) => setDraft((current) => ({ ...current, ...patch }))}
+        onBarcodeChange={(value) =>
+          setDraft((current) => {
+            const nextDraft = { ...current, barcode: value };
+            void maybeSuggestCatalogMatch(nextDraft);
+            return nextDraft;
+          })
+        }
+        onArticleNumberChange={(value) =>
+          setDraft((current) => {
+            const nextDraft = { ...current, systembolagetProductId: value };
+            void maybeSuggestCatalogMatch(nextDraft);
+            return nextDraft;
+          })
+        }
+        onStorageSpaceChange={(spaceId) => {
+          setSelectedStorageSpaceId(spaceId);
+          setSelectedStorageRow("1");
+          setSelectedStorageSlot("1");
+        }}
+        onStorageRowChange={setSelectedStorageRow}
+        onStorageSlotChange={setSelectedStorageSlot}
+        onStartBarcodeScanner={startBarcodeScanner}
+        onOpenSystembolaget={openSystembolaget}
+        onSetImportMode={setImportMode}
+        onApplyCatalogSuggestion={applyCatalogSuggestion}
+        onToggleImportField={toggleImportField}
+        onSaveDraftToCatalog={saveDraftToCatalog}
+        onChooseImage={chooseImage}
+        onSaveWine={saveWine}
+      />
+    );
+  } else if (activeSection === "cellar") {
+    activePanel = (
+      <WineCollectionPanel
+        styles={styles}
+        searchQuery={searchQuery}
+        selectedPairingFilter={selectedPairingFilter}
+        selectedCountryFilter={selectedCountryFilter}
+        selectedRegionFilter={selectedRegionFilter}
+        selectedTypeFilter={selectedTypeFilter}
+        selectedVintageFilter={selectedVintageFilter}
+        selectedStorageSpaceFilterId={selectedStorageSpaceFilterId}
+        pairingOptions={pairingOptions}
+        countryOptions={countryOptions}
+        regionOptions={regionOptions}
+        typeOptions={typeOptions}
+        vintageOptions={vintageOptions}
+        storageSpaces={storageSpaces}
+        filteredWines={filteredWines}
+        loading={loading}
+        storageSpaceById={storageSpaceById}
+        onSearchChange={setSearchQuery}
+        onPairingChange={setSelectedPairingFilter}
+        onCountryChange={setSelectedCountryFilter}
+        onRegionChange={setSelectedRegionFilter}
+        onTypeChange={setSelectedTypeFilter}
+        onVintageChange={setSelectedVintageFilter}
+        onStorageSpaceFilterChange={setSelectedStorageSpaceFilterId}
+        onSignOut={signOut}
+        onOpenSystembolaget={openSystembolaget}
+        onDecrementWine={decrementWine}
+        onDeleteWine={deleteWine}
+      />
+    );
+  }
+
   return (
     <SafeAreaView style={styles.screen}>
       <StatusBar style="light" />
@@ -1146,13 +1255,8 @@ function CellarScreen({ session }: { session: Session }) {
         onSave={saveCatalogEditor}
         onChange={(patch) => setCatalogEditorDraft((current) => (current ? { ...current, ...patch } : current))}
       />
-      <ScrollView
-        ref={scrollRef}
-        stickyHeaderIndices={[1]}
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={styles.heroPanel} onLayout={registerSectionOffset("overview")}>
+      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+        <View style={styles.heroPanel}>
           <Text style={styles.eyebrow}>Synkad vinkällare</Text>
           <Text style={styles.heroTitle}>Alla flaskor, alltid med dig.</Text>
           <Text style={styles.heroText}>{session.user.email}</Text>
@@ -1166,133 +1270,7 @@ function CellarScreen({ session }: { session: Session }) {
 
         <CellarSectionNav activeSection={activeSection} sections={CELLAR_SECTIONS} styles={styles} onSelect={goToSection} />
 
-        <View onLayout={registerSectionOffset("storage")}>
-          <StatsPanel stats={stats} styles={styles} onRefresh={fetchWines} />
-        </View>
-
-        <View onLayout={registerSectionOffset("catalog")}>
-          <StorageSpacesPanel
-            styles={styles}
-            storageSpaces={storageSpaces}
-            storageSpaceBottleCounts={storageSpaceBottleCounts}
-            storageSpaceDraft={storageSpaceDraft}
-            loadingStorageSpaces={loadingStorageSpaces}
-            savingStorageSpace={savingStorageSpace}
-            onDraftChange={(patch) => setStorageSpaceDraft((current) => ({ ...current, ...patch }))}
-            onSave={saveStorageSpace}
-            onDelete={deleteStorageSpace}
-          />
-        </View>
-
-        <View onLayout={registerSectionOffset("meal")}>
-          <ProductCatalogPanel
-            styles={styles}
-            loadingCatalogEntries={loadingCatalogEntries}
-            catalogEntries={catalogEntries}
-            onRefresh={fetchCatalogEntries}
-            onEdit={openCatalogEditor}
-            onDelete={deleteCatalogEntry}
-          />
-        </View>
-
-        <View onLayout={registerSectionOffset("add")}>
-          <MealPlannerPanel
-            styles={styles}
-            selectedMeal={selectedMeal}
-            mealSuggestions={mealSuggestions}
-            mealRecommendations={mealRecommendations}
-            onSelectMeal={setSelectedMeal}
-          />
-        </View>
-
-        <View onLayout={registerSectionOffset("cellar")}>
-          <AddWinePanel
-            styles={styles}
-            draft={draft}
-            storageSpaces={storageSpaces}
-            selectedStorageSpace={selectedStorageSpace}
-            selectedStorageSpaceId={selectedStorageSpaceId}
-            selectedStorageRow={selectedStorageRow}
-            selectedStorageSlot={selectedStorageSlot}
-            storageSpaceById={storageSpaceById}
-            effectiveCountryOptions={effectiveCountryOptions}
-            effectiveRegionOptions={effectiveRegionOptions}
-            effectiveGrapeOptions={effectiveGrapeOptions}
-            countryReferenceRows={countryReferenceRows}
-            regionReferenceRows={regionReferenceRows}
-            grapeReferenceRows={grapeReferenceRows}
-            lookupBusy={lookupBusy}
-            lookupMessage={lookupMessage}
-            catalogSuggestion={catalogSuggestion}
-            importMode={importMode}
-            importSelection={importSelection}
-            savingCatalogEntry={savingCatalogEntry}
-            saving={saving}
-            onDraftChange={(patch) => setDraft((current) => ({ ...current, ...patch }))}
-            onBarcodeChange={(value) =>
-              setDraft((current) => {
-                const nextDraft = { ...current, barcode: value };
-                void maybeSuggestCatalogMatch(nextDraft);
-                return nextDraft;
-              })
-            }
-            onArticleNumberChange={(value) =>
-              setDraft((current) => {
-                const nextDraft = { ...current, systembolagetProductId: value };
-                void maybeSuggestCatalogMatch(nextDraft);
-                return nextDraft;
-              })
-            }
-            onStorageSpaceChange={(spaceId) => {
-              setSelectedStorageSpaceId(spaceId);
-              setSelectedStorageRow("1");
-              setSelectedStorageSlot("1");
-            }}
-            onStorageRowChange={setSelectedStorageRow}
-            onStorageSlotChange={setSelectedStorageSlot}
-            onStartBarcodeScanner={startBarcodeScanner}
-            onOpenSystembolaget={openSystembolaget}
-            onSetImportMode={setImportMode}
-            onApplyCatalogSuggestion={applyCatalogSuggestion}
-            onToggleImportField={toggleImportField}
-            onSaveDraftToCatalog={saveDraftToCatalog}
-            onChooseImage={chooseImage}
-            onSaveWine={saveWine}
-          />
-        </View>
-
-        <View onLayout={registerSectionOffset("cellar")}>
-          <WineCollectionPanel
-            styles={styles}
-            searchQuery={searchQuery}
-            selectedPairingFilter={selectedPairingFilter}
-            selectedCountryFilter={selectedCountryFilter}
-            selectedRegionFilter={selectedRegionFilter}
-            selectedTypeFilter={selectedTypeFilter}
-            selectedVintageFilter={selectedVintageFilter}
-            selectedStorageSpaceFilterId={selectedStorageSpaceFilterId}
-            pairingOptions={pairingOptions}
-            countryOptions={countryOptions}
-            regionOptions={regionOptions}
-            typeOptions={typeOptions}
-            vintageOptions={vintageOptions}
-            storageSpaces={storageSpaces}
-            filteredWines={filteredWines}
-            loading={loading}
-            storageSpaceById={storageSpaceById}
-            onSearchChange={setSearchQuery}
-            onPairingChange={setSelectedPairingFilter}
-            onCountryChange={setSelectedCountryFilter}
-            onRegionChange={setSelectedRegionFilter}
-            onTypeChange={setSelectedTypeFilter}
-            onVintageChange={setSelectedVintageFilter}
-            onStorageSpaceFilterChange={setSelectedStorageSpaceFilterId}
-            onSignOut={signOut}
-            onOpenSystembolaget={openSystembolaget}
-            onDecrementWine={decrementWine}
-            onDeleteWine={deleteWine}
-          />
-        </View>
+        {activePanel}
       </ScrollView>
     </SafeAreaView>
   );
