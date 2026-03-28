@@ -9,6 +9,7 @@ import type { CatalogEditorDraft, ImportFieldSelection, ImportMode, WineDraft } 
 import { AutocompleteInput, DoubleRow, ImportSelectionRow, LabeledInput, StorageSpaceSelector, SuggestionRow } from "./form-controls";
 
 type SharedStyles = any;
+const WINE_TYPE_OPTIONS = ["Rött", "Vitt", "Mousserande", "Sött"];
 
 export function BarcodeScannerModal({
   visible,
@@ -132,7 +133,7 @@ export function CatalogEditorModal({
                 />
                 <LabeledInput label="Årgång" value={draft.vintage} onChangeText={(value) => onChange({ vintage: value })} keyboardType="number-pad" />
               </DoubleRow>
-              <LabeledInput label="Typ" value={draft.type} onChangeText={(value) => onChange({ type: value })} />
+              <SuggestionRow title="Vintyp" options={WINE_TYPE_OPTIONS} selected={draft.type} onSelect={(value) => onChange({ type: value })} />
               <LabeledInput
                 label="Matmatchning"
                 value={draft.foodPairings}
@@ -270,10 +271,8 @@ export function AddWinePanel({
         <LabeledInput label="Årgång" value={draft.vintage} onChangeText={(value) => onDraftChange({ vintage: value })} keyboardType="number-pad" />
         <LabeledInput label="Antal" value={draft.quantity} onChangeText={(value) => onDraftChange({ quantity: value })} keyboardType="number-pad" />
       </DoubleRow>
-      <DoubleRow>
-        <LabeledInput label="Typ" value={draft.type} onChangeText={(value) => onDraftChange({ type: value })} />
-        <LabeledInput label="Drick senast" value={draft.drinkBy} onChangeText={(value) => onDraftChange({ drinkBy: value })} keyboardType="number-pad" />
-      </DoubleRow>
+      <SuggestionRow title="Vintyp" options={WINE_TYPE_OPTIONS} selected={draft.type} onSelect={(value) => onDraftChange({ type: value })} />
+      <LabeledInput label="Drick senast" value={draft.drinkBy} onChangeText={(value) => onDraftChange({ drinkBy: value })} keyboardType="number-pad" />
 
       {storageSpaces.length > 0 ? (
         <View style={styles.foodSection}>
