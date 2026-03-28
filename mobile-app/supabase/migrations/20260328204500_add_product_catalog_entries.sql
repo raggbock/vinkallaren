@@ -55,6 +55,12 @@ for update
 using (auth.role() = 'authenticated')
 with check (auth.role() = 'authenticated');
 
+drop policy if exists "product_catalog_entries_delete_authenticated" on public.product_catalog_entries;
+create policy "product_catalog_entries_delete_authenticated"
+on public.product_catalog_entries
+for delete
+using (auth.role() = 'authenticated');
+
 drop trigger if exists set_product_catalog_entries_updated_at on public.product_catalog_entries;
 create trigger set_product_catalog_entries_updated_at
 before update on public.product_catalog_entries

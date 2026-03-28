@@ -60,6 +60,22 @@ type StorageSpaceDraft = {
   notes: string;
 };
 
+type CatalogEditorDraft = {
+  id: string;
+  barcode: string;
+  systembolagetProductId: string;
+  name: string;
+  producer: string;
+  country: string;
+  region: string;
+  grape: string;
+  type: string;
+  vintage: string;
+  foodPairings: string;
+  sourceLabel: string;
+  sourceConfidence: string;
+};
+
 type ImportFieldSelection = {
   name: boolean;
   producer: boolean;
@@ -117,6 +133,24 @@ const defaultImportSelection: ImportFieldSelection = {
   systembolagetProductId: true,
   barcode: true,
 };
+
+function toCatalogEditorDraft(entry: ProductCatalogRow): CatalogEditorDraft {
+  return {
+    id: entry.id,
+    barcode: entry.barcode ?? "",
+    systembolagetProductId: entry.systembolaget_product_id ?? "",
+    name: entry.name,
+    producer: entry.producer ?? "",
+    country: entry.country ?? "",
+    region: entry.region ?? "",
+    grape: entry.grape ?? "",
+    type: entry.type ?? "",
+    vintage: entry.vintage ? String(entry.vintage) : "",
+    foodPairings: entry.food_pairings.join(", "),
+    sourceLabel: entry.source_label ?? "",
+    sourceConfidence: entry.source_confidence ?? "high",
+  };
+}
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -381,12 +415,15 @@ function CellarScreen({ session }: { session: Session }) {
   const [storageSpaceDraft, setStorageSpaceDraft] = useState<StorageSpaceDraft>(defaultStorageSpaceDraft);
   const [storageSpaces, setStorageSpaces] = useState<StorageSpaceRow[]>([]);
   const [catalogEntries, setCatalogEntries] = useState<ProductCatalogRow[]>([]);
+  const [catalogEditorVisible, setCatalogEditorVisible] = useState(false);
+  const [catalogEditorDraft, setCatalogEditorDraft] = useState<CatalogEditorDraft | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingStorageSpaces, setLoadingStorageSpaces] = useState(true);
   const [loadingCatalogEntries, setLoadingCatalogEntries] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savingStorageSpace, setSavingStorageSpace] = useState(false);
   const [savingCatalogEntry, setSavingCatalogEntry] = useState(false);
+  const [savingCatalogEdit, setSavingCatalogEdit] = useState(false);
   const [selectedPairingFilter, setSelectedPairingFilter] = useState("Alla");
   const [selectedMeal, setSelectedMeal] = useState("lamm");
   const [searchQuery, setSearchQuery] = useState("");
@@ -562,6 +599,104 @@ function CellarScreen({ session }: { session: Session }) {
 
     setCatalogEntries((data ?? []) as ProductCatalogRow[]);
     setLoadingCatalogEntries(false);
+  }
+
+  function openCatalogEditor(entry: ProductCatalogRow) {
+    setCatalogEditorDraft(toCatalogEditorDraft(entry));
+    setCatalogEditorVisible(true);
+  }
+
+  function closeCatalogEditor() {
+    setCatalogEditorVisible(false);
+    setCatalogEditorDraft(null);
+  }
+
+  async function saveCatalogEditor() {
+    if (!catalogEditorDraft) {
+      return;
+    }
+
+    if (!catalogEditorDraft.name.trim()) {
+      Alert.alert("Namn saknas", "Skriv in ett namn innan du sparar katalogposten.");
+      return;
+    }
+
+    if (!catalogEditorDraft.barcode.trim() && !catalogEditorDraft.systembolagetProductId.trim()) {
+      Alert.alert("Identifierare saknas", "Lägg in streckkod eller artikelnummer innan du sparar.");
+      return;
+    }
+
+    setSavingCatalogEdit(true);
+
+    try {
+      const { error } = await supabase
+        .from("product_catalog_entries")
+        .update({
+          barcode: emptyToNull(catalogEditorDraft.barcode),
+          systembolaget_product_id: emptyToNull(catalogEditorDraft.systembolagetProductId),
+          name: catalogEditorDraft.name.trim(),
+          producer: emptyToNull(catalogEditorDraft.producer),
+          country: emptyToNull(catalogEditorDraft.country),
+          region: emptyToNull(catalogEditorDraft.region),
+          grape: emptyToNull(catalogEditorDraft.grape),
+          type: emptyToNull(catalogEditorDraft.type),
+          vintage: toNumberOrNull(catalogEditorDraft.vintage),
+          food_pairings: parseTags(catalogEditorDraft.foodPairings),
+          source_label: emptyToNull(catalogEditorDraft.sourceLabel),
+          source_confidence: emptyToNull(catalogEditorDraft.sourceConfidence) || "high",
+        })
+        .eq("id", catalogEditorDraft.id);
+
+      if (error) {
+        throw error;
+      }
+
+      closeCatalogEditor();
+      await fetchCatalogEntries();
+    } catch (error) {
+      Alert.alert("Kunde inte spara ändringen", error instanceof Error ? error.message : "Försök igen.");
+    } finally {
+      setSavingCatalogEdit(false);
+    }
+  }
+
+  function deleteCatalogEntry(entry: ProductCatalogRow) {
+    Alert.alert(
+      "Ta bort produkt?",
+      `Vill du ta bort ${entry.name} från katalogen?`,
+      [
+        { text: "Avbryt", style: "cancel" },
+        {
+          text: "Ta bort",
+          style: "destructive",
+          onPress: () => {
+            void deleteCatalogEntryConfirmed(entry.id);
+          },
+        },
+      ]
+    );
+  }
+
+  async function deleteCatalogEntryConfirmed(id: string) {
+    setSavingCatalogEdit(true);
+
+    try {
+      const { error } = await supabase.from("product_catalog_entries").delete().eq("id", id);
+
+      if (error) {
+        throw error;
+      }
+
+      if (catalogEditorDraft?.id === id) {
+        closeCatalogEditor();
+      }
+
+      await fetchCatalogEntries();
+    } catch (error) {
+      Alert.alert("Kunde inte ta bort produkt", error instanceof Error ? error.message : "Försök igen.");
+    } finally {
+      setSavingCatalogEdit(false);
+    }
   }
 
   async function saveWine() {
@@ -990,6 +1125,111 @@ function CellarScreen({ session }: { session: Session }) {
           </Text>
         </SafeAreaView>
       </Modal>
+      <Modal visible={catalogEditorVisible} animationType="slide" presentationStyle="fullScreen">
+        <SafeAreaView style={styles.scannerScreen}>
+          <View style={styles.scannerHeader}>
+            <View style={styles.flex}>
+              <Text style={styles.eyebrow}>Produktkatalog</Text>
+              <Text style={styles.scannerTitle}>Redigera produkt</Text>
+            </View>
+            <Pressable onPress={closeCatalogEditor} disabled={savingCatalogEdit}>
+              <Text style={styles.linkText}>Stäng</Text>
+            </Pressable>
+          </View>
+
+          <ScrollView contentContainerStyle={styles.catalogEditorContent}>
+            {catalogEditorDraft ? (
+              <>
+                <LabeledInput
+                  label="Namn"
+                  value={catalogEditorDraft.name}
+                  onChangeText={(value) => setCatalogEditorDraft((current) => (current ? { ...current, name: value } : current))}
+                />
+                <DoubleRow>
+                  <LabeledInput
+                    label="Streckkod"
+                    value={catalogEditorDraft.barcode}
+                    onChangeText={(value) => setCatalogEditorDraft((current) => (current ? { ...current, barcode: value } : current))}
+                  />
+                  <LabeledInput
+                    label="Artikelnummer"
+                    value={catalogEditorDraft.systembolagetProductId}
+                    onChangeText={(value) =>
+                      setCatalogEditorDraft((current) => (current ? { ...current, systembolagetProductId: value } : current))
+                    }
+                  />
+                </DoubleRow>
+                <LabeledInput
+                  label="Producent"
+                  value={catalogEditorDraft.producer}
+                  onChangeText={(value) => setCatalogEditorDraft((current) => (current ? { ...current, producer: value } : current))}
+                />
+                <DoubleRow>
+                  <LabeledInput
+                    label="Land"
+                    value={catalogEditorDraft.country}
+                    onChangeText={(value) => setCatalogEditorDraft((current) => (current ? { ...current, country: value } : current))}
+                  />
+                  <LabeledInput
+                    label="Region"
+                    value={catalogEditorDraft.region}
+                    onChangeText={(value) => setCatalogEditorDraft((current) => (current ? { ...current, region: value } : current))}
+                  />
+                </DoubleRow>
+                <DoubleRow>
+                  <LabeledInput
+                    label="Druva"
+                    value={catalogEditorDraft.grape}
+                    onChangeText={(value) => setCatalogEditorDraft((current) => (current ? { ...current, grape: value } : current))}
+                  />
+                  <LabeledInput
+                    label="Årgång"
+                    value={catalogEditorDraft.vintage}
+                    onChangeText={(value) => setCatalogEditorDraft((current) => (current ? { ...current, vintage: value } : current))}
+                    keyboardType="number-pad"
+                  />
+                </DoubleRow>
+                <LabeledInput
+                  label="Typ"
+                  value={catalogEditorDraft.type}
+                  onChangeText={(value) => setCatalogEditorDraft((current) => (current ? { ...current, type: value } : current))}
+                />
+                <LabeledInput
+                  label="Matmatchning"
+                  value={catalogEditorDraft.foodPairings}
+                  onChangeText={(value) =>
+                    setCatalogEditorDraft((current) => (current ? { ...current, foodPairings: value } : current))
+                  }
+                  placeholder="lamm, fisk, ost"
+                />
+                <LabeledInput
+                  label="Källmärkning"
+                  value={catalogEditorDraft.sourceLabel}
+                  onChangeText={(value) =>
+                    setCatalogEditorDraft((current) => (current ? { ...current, sourceLabel: value } : current))
+                  }
+                />
+                <LabeledInput
+                  label="Kvalitetsnivå"
+                  value={catalogEditorDraft.sourceConfidence}
+                  onChangeText={(value) =>
+                    setCatalogEditorDraft((current) => (current ? { ...current, sourceConfidence: value } : current))
+                  }
+                  placeholder="high, medium, low"
+                />
+                <View style={styles.modalActionRow}>
+                  <Pressable onPress={closeCatalogEditor} style={styles.secondaryButton} disabled={savingCatalogEdit}>
+                    <Text style={styles.secondaryButtonText}>Avbryt</Text>
+                  </Pressable>
+                  <Pressable onPress={saveCatalogEditor} style={styles.primaryButton} disabled={savingCatalogEdit}>
+                    <Text style={styles.primaryButtonText}>{savingCatalogEdit ? "Sparar..." : "Spara ändringar"}</Text>
+                  </Pressable>
+                </View>
+              </>
+            ) : null}
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.heroPanel}>
           <Text style={styles.eyebrow}>Synkad vinkällare</Text>
@@ -1130,6 +1370,14 @@ function CellarScreen({ session }: { session: Session }) {
                   .filter(Boolean)
                   .join(" • ")}
               </Text>
+              <View style={styles.actionRow}>
+                <Pressable onPress={() => openCatalogEditor(entry)}>
+                  <Text style={styles.linkText}>Redigera</Text>
+                </Pressable>
+                <Pressable onPress={() => deleteCatalogEntry(entry)}>
+                  <Text style={styles.dangerText}>Ta bort</Text>
+                </Pressable>
+              </View>
             </View>
           ))}
         </View>
@@ -2100,6 +2348,10 @@ const styles = StyleSheet.create({
     padding: 18,
     gap: 18,
   },
+  catalogEditorContent: {
+    gap: 14,
+    paddingBottom: 24,
+  },
   scannerHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -2126,6 +2378,11 @@ const styles = StyleSheet.create({
     color: "#ead8ca",
     fontSize: 15,
     lineHeight: 22,
+  },
+  modalActionRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 4,
   },
   scrollContent: {
     padding: 18,
