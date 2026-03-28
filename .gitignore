@@ -1,0 +1,31 @@
+# Node / Expo
+node_modules/
+mobile-app/node_modules/
+.expo/
+mobile-app/.expo/
+dist/
+build/
+
+# Environment files
+.env
+.env.*
+!.env.example
+mobile-app/.env
+mobile-app/.env.*
+!mobile-app/.env.example
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Expo / React Native
+mobile-app/web-build/
+mobile-app/.expo-shared/

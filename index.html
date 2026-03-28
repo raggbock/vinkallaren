@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#6f1d1b">
+  <title>Vinkällaren</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="hero">
+      <p class="eyebrow">Mobil vinkällare</p>
+      <h1>Håll koll på varje flaska du har hemma.</h1>
+      <p class="hero-copy">
+        Lägg in viner, se hur många flaskor du har kvar och hitta rätt vin när det är dags att öppna något speciellt.
+      </p>
+
+      <section class="stats" aria-label="Översikt">
+        <div>
+          <span id="total-bottles">0</span>
+          <small>Flaskor totalt</small>
+        </div>
+        <div>
+          <span id="total-wines">0</span>
+          <small>Olika viner</small>
+        </div>
+        <div>
+          <span id="drink-soon">0</span>
+          <small>Drick snart</small>
+        </div>
+      </section>
+    </header>
+
+    <main class="content">
+      <section class="panel">
+        <div class="section-heading">
+          <h2>Statistik</h2>
+          <p>Snabb överblick över hur din källare är fördelad.</p>
+        </div>
+
+        <div class="insight-grid">
+          <div class="insight">
+            <span id="top-country">Ingen data</span>
+            <small>Mest flaskor från</small>
+          </div>
+          <div class="insight">
+            <span id="top-type">Ingen data</span>
+            <small>Vanligaste vintyp</small>
+          </div>
+          <div class="insight">
+            <span id="avg-vintage">-</span>
+            <small>Snittårgång</small>
+          </div>
+        </div>
+
+        <div class="stats-stack">
+          <section>
+            <div class="mini-heading">
+              <h3>Per land</h3>
+              <small>Antal flaskor</small>
+            </div>
+            <div id="country-breakdown" class="breakdown-list"></div>
+          </section>
+
+          <section>
+            <div class="mini-heading">
+              <h3>Per typ</h3>
+              <small>Antal flaskor</small>
+            </div>
+            <div id="type-breakdown" class="breakdown-list"></div>
+          </section>
+
+          <section>
+            <div class="mini-heading">
+              <h3>Drickfönster</h3>
+              <small>När flaskorna bör öppnas</small>
+            </div>
+            <div id="drink-window-breakdown" class="breakdown-list"></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="section-heading">
+          <h2>Lägg till vin</h2>
+          <p>Allt sparas lokalt på enheten, inklusive bilder.</p>
+        </div>
+
+        <form id="wine-form" class="wine-form">
+          <label>
+            Namn
+            <input id="name" name="name" type="text" placeholder="Barolo, Chablis..." required>
+          </label>
+          <label>
+            Producent
+            <input id="producer" name="producer" type="text" placeholder="Gaja">
+          </label>
+          <div class="two-columns">
+            <label>
+              Land
+              <input id="country" name="country" type="text" placeholder="Italien">
+            </label>
+            <label>
+              Region
+              <input id="region" name="region" type="text" placeholder="Piemonte">
+            </label>
+          </div>
+          <div class="two-columns">
+            <label>
+              Årgång
+              <input id="vintage" name="vintage" type="number" inputmode="numeric" min="1900" max="2100" placeholder="2019">
+            </label>
+            <label>
+              Antal flaskor
+              <input id="quantity" name="quantity" type="number" inputmode="numeric" min="1" value="1" required>
+            </label>
+          </div>
+          <div class="two-columns">
+            <label>
+              Typ
+              <select id="type" name="type">
+                <option>Rött</option>
+                <option>Vitt</option>
+                <option>Rosé</option>
+                <option>Mousserande</option>
+                <option>Dessert</option>
+                <option>Orange</option>
+              </select>
+            </label>
+            <label>
+              Drickfönster till
+              <input id="drinkBy" name="drinkBy" type="number" inputmode="numeric" min="1900" max="2100" placeholder="2030">
+            </label>
+          </div>
+          <div class="two-columns">
+            <label>
+              Streckkod
+              <input id="barcode" name="barcode" type="text" inputmode="numeric" placeholder="EAN / UPC">
+            </label>
+            <div class="scan-field">
+              <span>Skanna med kamera</span>
+              <button id="scan-button" type="button" class="secondary-button">Skanna streckkod</button>
+            </div>
+          </div>
+          <label>
+            Plats i källaren
+            <input id="location" name="location" type="text" placeholder="Hylla B, rad 2">
+          </label>
+          <label>
+            Etiketter
+            <input id="tags" name="tags" type="text" placeholder="middag, present, lagring">
+          </label>
+          <label>
+            Bild på flaskan
+            <input id="image" name="image" type="file" accept="image/*">
+          </label>
+          <div id="image-preview" class="image-preview" hidden>
+            <img id="preview-image" alt="Förhandsvisning av vald vinbild">
+          </div>
+          <label>
+            Anteckning
+            <textarea id="notes" name="notes" rows="3" placeholder="Köpt i Bourgogne-resan, öppna till lamm..."></textarea>
+          </label>
+          <button type="submit" class="primary-button">Spara vin</button>
+        </form>
+      </section>
+
+      <section class="panel cellar-panel">
+        <div class="section-heading">
+          <h2>Min källare</h2>
+          <p>Filtrera och uppdatera dina flaskor.</p>
+        </div>
+
+        <div class="toolbar">
+          <label class="search-field">
+            <span class="sr-only">Sök</span>
+            <input id="search" type="search" placeholder="Sök på namn, producent eller region">
+          </label>
+          <label>
+            <span class="sr-only">Filtrera på typ</span>
+            <select id="filter-type">
+              <option value="Alla">Alla typer</option>
+              <option value="Rött">Rött</option>
+              <option value="Vitt">Vitt</option>
+              <option value="Rosé">Rosé</option>
+              <option value="Mousserande">Mousserande</option>
+              <option value="Dessert">Dessert</option>
+              <option value="Orange">Orange</option>
+            </select>
+          </label>
+          <label>
+            <span class="sr-only">Filtrera på etikett</span>
+            <input id="filter-tag" type="search" placeholder="Filtrera etikett">
+          </label>
+        </div>
+
+        <div id="wine-list" class="wine-list" aria-live="polite"></div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="scanner-dialog" class="scanner-dialog">
+    <form method="dialog" class="scanner-sheet">
+      <div class="scanner-header">
+        <div>
+          <p class="eyebrow">Kameraskanning</p>
+          <h2>Skanna streckkod</h2>
+        </div>
+        <button type="submit" class="ghost-button">Stäng</button>
+      </div>
+      <p class="scanner-copy">Rikta kameran mot flaskans streckkod. Om skanning inte stöds kan du skriva in koden manuellt.</p>
+      <video id="scanner-video" playsinline muted></video>
+      <p id="scanner-status" class="scanner-status">Startar kamera...</p>
+    </form>
+  </dialog>
+
+  <template id="wine-card-template">
+    <article class="wine-card">
+      <div class="wine-visual" hidden>
+        <img class="wine-image" alt="Bild på vinflaska">
+      </div>
+      <div class="wine-card-top">
+        <div>
+          <p class="wine-type"></p>
+          <h3 class="wine-name"></h3>
+          <p class="wine-meta"></p>
+        </div>
+        <div class="quantity-badge"></div>
+      </div>
+      <div class="tag-list"></div>
+      <dl class="wine-details"></dl>
+      <p class="wine-notes"></p>
+      <div class="wine-actions">
+        <button type="button" class="secondary-button" data-action="decrement">Drack 1 flaska</button>
+        <button type="button" class="ghost-button" data-action="delete">Ta bort</button>
+      </div>
+    </article>
+  </template>
+
+  <script src="script.js"></script>
+</body>
+</html>

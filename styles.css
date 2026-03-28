@@ -1,0 +1,554 @@
+:root {
+  --bg: #f3ece2;
+  --surface: rgba(252, 248, 242, 0.88);
+  --surface-strong: #fffaf4;
+  --ink: #231815;
+  --muted: #6f6259;
+  --accent: #6f1d1b;
+  --accent-soft: #b34a3a;
+  --line: rgba(63, 42, 35, 0.12);
+  --shadow: 0 24px 70px rgba(46, 23, 18, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Manrope", sans-serif;
+  background:
+    radial-gradient(circle at top right, rgba(179, 74, 58, 0.22), transparent 28%),
+    radial-gradient(circle at left center, rgba(111, 29, 27, 0.12), transparent 24%),
+    linear-gradient(180deg, #f7f1e8 0%, var(--bg) 56%, #efe5d7 100%);
+  color: var(--ink);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.12), transparent 36%),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0,
+      transparent 38px,
+      rgba(111, 29, 27, 0.025) 38px,
+      rgba(111, 29, 27, 0.025) 39px
+    );
+  pointer-events: none;
+}
+
+.app-shell {
+  width: min(100%, 560px);
+  margin: 0 auto;
+  padding: 24px 18px 40px;
+}
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  padding: 24px 22px 22px;
+  border-radius: 28px;
+  background:
+    linear-gradient(160deg, rgba(255, 250, 244, 0.94), rgba(249, 238, 226, 0.9)),
+    linear-gradient(45deg, rgba(111, 29, 27, 0.04), transparent);
+  box-shadow: var(--shadow);
+  isolation: isolate;
+  animation: rise-in 550ms ease-out both;
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: auto -40px -70px auto;
+  width: 170px;
+  height: 240px;
+  border-radius: 44% 44% 24% 24%;
+  background:
+    linear-gradient(180deg, rgba(92, 17, 17, 0.18), rgba(92, 17, 17, 0.04)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.44), rgba(255, 255, 255, 0));
+  filter: blur(1px);
+  transform: rotate(-10deg);
+}
+
+.eyebrow,
+.wine-type {
+  margin: 0;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-family: "Cormorant Garamond", serif;
+  line-height: 0.98;
+}
+
+h1 {
+  margin-top: 10px;
+  font-size: clamp(2.6rem, 9vw, 4.1rem);
+  max-width: 10ch;
+}
+
+.hero-copy,
+.section-heading p,
+.wine-meta,
+.wine-notes,
+dd,
+small,
+input,
+select,
+textarea,
+button {
+  font-size: 0.96rem;
+  line-height: 1.5;
+}
+
+.hero-copy {
+  max-width: 32ch;
+  margin: 14px 0 0;
+  color: var(--muted);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.stats div,
+.panel {
+  backdrop-filter: blur(14px);
+}
+
+.stats div {
+  padding: 14px 12px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.48);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+}
+
+.stats span {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+small,
+.section-heading p,
+.wine-meta,
+dd,
+.wine-notes {
+  color: var(--muted);
+}
+
+.content {
+  display: grid;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.panel {
+  padding: 20px 16px;
+  border-radius: 26px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  animation: rise-in 600ms ease-out both;
+}
+
+.panel:nth-child(2) {
+  animation-delay: 120ms;
+}
+
+.section-heading {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.section-heading h2 {
+  font-size: 2rem;
+}
+
+.insight-grid {
+  grid-template-columns: repeat(3, 1fr);
+  margin-bottom: 14px;
+}
+
+.insight {
+  padding: 14px 12px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.54);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+}
+
+.insight span {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.mini-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.mini-heading h3 {
+  font-size: 1.45rem;
+}
+
+.breakdown-item {
+  gap: 8px;
+}
+
+.breakdown-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.breakdown-bar {
+  overflow: hidden;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(111, 29, 27, 0.08);
+}
+
+.breakdown-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), var(--accent-soft));
+}
+
+.breakdown-empty {
+  color: var(--muted);
+  margin: 0;
+}
+
+.wine-form,
+.toolbar,
+.wine-list,
+.wine-card,
+.wine-actions,
+.tag-list,
+.scan-field,
+.scanner-sheet,
+.stats-stack,
+.breakdown-list,
+.breakdown-item,
+.insight-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.two-columns {
+  display: grid;
+  gap: 12px;
+}
+
+label {
+  display: grid;
+  gap: 7px;
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+input,
+select,
+textarea,
+button {
+  font: inherit;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px 15px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--ink);
+  transition: border-color 160ms ease, transform 160ms ease, background-color 160ms ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: rgba(111, 29, 27, 0.42);
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.94);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+button {
+  border: 0;
+  border-radius: 999px;
+  padding: 14px 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 160ms ease, opacity 160ms ease, background-color 160ms ease;
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+.primary-button {
+  background: linear-gradient(135deg, var(--accent), var(--accent-soft));
+  color: #fff8f3;
+}
+
+.secondary-button {
+  background: rgba(111, 29, 27, 0.09);
+  color: var(--accent);
+}
+
+.ghost-button {
+  background: transparent;
+  color: var(--muted);
+}
+
+.toolbar {
+  margin-bottom: 10px;
+}
+
+.scan-field {
+  align-content: end;
+}
+
+.scan-field span {
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.search-field input {
+  padding-left: 16px;
+}
+
+.wine-list {
+  min-height: 120px;
+}
+
+.wine-card {
+  padding: 18px 0 0;
+  border-top: 1px solid var(--line);
+  animation: fade-up 260ms ease-out both;
+}
+
+.wine-card:first-child {
+  border-top: 0;
+  padding-top: 4px;
+}
+
+.wine-card-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: start;
+}
+
+.wine-visual {
+  margin-bottom: 14px;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border-radius: 22px;
+  background: rgba(111, 29, 27, 0.08);
+}
+
+.wine-image,
+.image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.wine-name {
+  margin-top: 3px;
+  font-size: 2rem;
+}
+
+.quantity-badge {
+  min-width: 60px;
+  padding: 10px 12px;
+  border-radius: 18px;
+  background: rgba(111, 29, 27, 0.08);
+  text-align: center;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.wine-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 14px;
+  margin: 0;
+}
+
+dt {
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+dd {
+  margin: 2px 0 0;
+}
+
+.wine-notes {
+  margin: 0;
+}
+
+.tag-list {
+  grid-template-columns: repeat(auto-fit, minmax(90px, max-content));
+  gap: 8px;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: rgba(111, 29, 27, 0.08);
+  color: var(--accent);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.wine-actions {
+  grid-template-columns: 1fr auto;
+  align-items: center;
+}
+
+.image-preview {
+  overflow: hidden;
+  aspect-ratio: 16 / 10;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+}
+
+.scanner-dialog {
+  width: min(100% - 24px, 520px);
+  padding: 0;
+  border: 0;
+  border-radius: 28px;
+  background: transparent;
+}
+
+.scanner-dialog::backdrop {
+  background: rgba(24, 12, 9, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+.scanner-sheet {
+  padding: 18px;
+  border-radius: 28px;
+  background: #fff8f3;
+  box-shadow: var(--shadow);
+}
+
+.scanner-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: start;
+}
+
+.scanner-copy,
+.scanner-status {
+  margin: 0;
+  color: var(--muted);
+}
+
+#scanner-video {
+  width: 100%;
+  min-height: 240px;
+  border-radius: 20px;
+  background: #2c1c19;
+  object-fit: cover;
+}
+
+.empty-state {
+  padding: 18px 0 6px;
+  color: var(--muted);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (min-width: 480px) {
+  .app-shell {
+    padding-inline: 20px;
+  }
+
+  .stats-stack {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .two-columns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .toolbar {
+    grid-template-columns: 1.3fr 1fr 1fr;
+  }
+}
