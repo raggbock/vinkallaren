@@ -369,6 +369,7 @@ function CellarScreen({ session }: { session: Session }) {
   const [importSelection, setImportSelection] = useState<ImportFieldSelection>(defaultImportSelection);
   const [importMode, setImportMode] = useState<ImportMode>("custom");
   const [lookupBusy, setLookupBusy] = useState(false);
+  const [lookupMessage, setLookupMessage] = useState("");
 
   const stats = useMemo(() => buildStats(wines), [wines]);
   const pairingOptions = useMemo(() => buildPairingOptions(wines), [wines]);
@@ -556,17 +557,42 @@ function CellarScreen({ session }: { session: Session }) {
   }
 
   async function maybeSuggestCatalogMatch(nextDraft: WineDraft) {
+    const barcode = nextDraft.barcode.trim();
+    const systembolagetProductId = nextDraft.systembolagetProductId.trim();
+
+    if (barcode.length < 8 && systembolagetProductId.length < 4) {
+      setCatalogSuggestion(null);
+      setLookupMessage("");
+      return null;
+    }
+
     setLookupBusy(true);
 
-    const match = await findCatalogMatch({
-      barcode: nextDraft.barcode,
-      systembolagetProductId: nextDraft.systembolagetProductId,
-    });
+    try {
+      const match = await findCatalogMatch({
+        barcode,
+        systembolagetProductId,
+      });
 
-    setCatalogSuggestion(match);
-    setImportSelection(defaultImportSelection);
-    setImportMode("custom");
-    setLookupBusy(false);
+      setCatalogSuggestion(match);
+      setImportSelection(defaultImportSelection);
+      setImportMode("custom");
+      setLookupMessage(
+        match
+          ? `Träff hittad från ${match.sourceLabel}.`
+          : barcode
+            ? "Ingen träff på streckkoden ännu."
+            : "Ingen träff på artikelnumret ännu."
+      );
+
+      return match;
+    } catch (_error) {
+      setCatalogSuggestion(null);
+      setLookupMessage("Kunde inte hämta produktdata just nu.");
+      return null;
+    } finally {
+      setLookupBusy(false);
+    }
   }
 
   function applyCatalogSuggestion(mode: ImportMode = importMode) {
@@ -574,51 +600,7 @@ function CellarScreen({ session }: { session: Session }) {
       return;
     }
 
-    setDraft((current) => ({
-      ...current,
-      name: resolveImportedValue(current.name, catalogSuggestion.name, shouldApplyField("name", mode, current.name)),
-      producer: resolveImportedValue(
-        current.producer,
-        catalogSuggestion.producer || "",
-        shouldApplyField("producer", mode, current.producer)
-      ),
-      country: resolveImportedValue(
-        current.country,
-        catalogSuggestion.country || "",
-        shouldApplyField("country", mode, current.country)
-      ),
-      region: resolveImportedValue(
-        current.region,
-        catalogSuggestion.region || "",
-        shouldApplyField("region", mode, current.region)
-      ),
-      vintage: resolveImportedValue(
-        current.vintage,
-        catalogSuggestion.vintage ? String(catalogSuggestion.vintage) : "",
-        shouldApplyField("vintage", mode, current.vintage)
-      ),
-      grape: resolveImportedValue(
-        current.grape,
-        catalogSuggestion.grape || "",
-        shouldApplyField("grape", mode, current.grape)
-      ),
-      type: resolveImportedValue(current.type, catalogSuggestion.type || "Rött", shouldApplyField("type", mode, current.type)),
-      foodPairings: resolveImportedValue(
-        current.foodPairings,
-        (catalogSuggestion.foodPairings ?? []).join(", "),
-        shouldApplyField("foodPairings", mode, current.foodPairings)
-      ),
-      systembolagetProductId: resolveImportedValue(
-        current.systembolagetProductId,
-        catalogSuggestion.systembolagetProductId || "",
-        shouldApplyField("systembolagetProductId", mode, current.systembolagetProductId)
-      ),
-      barcode: resolveImportedValue(
-        current.barcode,
-        catalogSuggestion.barcode || "",
-        shouldApplyField("barcode", mode, current.barcode)
-      ),
-    }));
+    setDraft((current) => mergeDraftWithCatalogSuggestion(current, catalogSuggestion, mode, importSelection));
   }
 
   function toggleImportField(field: keyof ImportFieldSelection) {
@@ -667,7 +649,7 @@ function CellarScreen({ session }: { session: Session }) {
     setScannerVisible(true);
   }
 
-  function handleBarcodeScanned({ data }: { data: string }) {
+  async function handleBarcodeScanned({ data }: { data: string }) {
     setScannerVisible(false);
 
     const matchedWine = wines.find((wine) => wine.barcode === data);
@@ -697,14 +679,26 @@ function CellarScreen({ session }: { session: Session }) {
       };
     });
 
-    void maybeSuggestCatalogMatch({
+    const match = await maybeSuggestCatalogMatch({
       ...draft,
       barcode: data,
     });
 
     if (matchedWine) {
       Alert.alert("Förifyllt från din källare", `Jag hittade ${matchedWine.name} med samma streckkod och fyllde i det som gick.`);
+      return;
     }
+
+    if (match) {
+      setDraft((current) => mergeDraftWithCatalogSuggestion(current, match, "empty", defaultImportSelection));
+      Alert.alert(
+        "Produkt hittad",
+        `Jag hittade ${match.name} från ${match.sourceLabel} och fyllde i tomma fält automatiskt.`
+      );
+      return;
+    }
+
+    Alert.alert("Ingen produktträff", "Jag hittade ingen produktdata för den här streckkoden ännu, men streckkoden sparades i formuläret.");
   }
 
   async function openSystembolaget(productId: string) {
@@ -910,6 +904,7 @@ function CellarScreen({ session }: { session: Session }) {
           />
 
           {lookupBusy ? <Text style={styles.notesText}>Söker produktmatch...</Text> : null}
+          {!lookupBusy && lookupMessage ? <Text style={styles.notesText}>{lookupMessage}</Text> : null}
 
           {draft.systembolagetProductId ? (
             <Pressable
@@ -1498,6 +1493,51 @@ function resolveImportedValue(currentValue: string, importedValue: string, modeO
   }
 
   return importedValue || currentValue;
+}
+
+function mergeDraftWithCatalogSuggestion(
+  current: WineDraft,
+  suggestion: ProductCatalogEntry,
+  mode: ImportMode,
+  selection: ImportFieldSelection
+) {
+  const shouldApply = (field: keyof ImportFieldSelection, currentValue: string) => {
+    if (mode === "all") {
+      return true;
+    }
+
+    if (mode === "empty") {
+      return !currentValue.trim();
+    }
+
+    return selection[field];
+  };
+
+  return {
+    ...current,
+    name: resolveImportedValue(current.name, suggestion.name, shouldApply("name", current.name)),
+    producer: resolveImportedValue(current.producer, suggestion.producer || "", shouldApply("producer", current.producer)),
+    country: resolveImportedValue(current.country, suggestion.country || "", shouldApply("country", current.country)),
+    region: resolveImportedValue(current.region, suggestion.region || "", shouldApply("region", current.region)),
+    vintage: resolveImportedValue(
+      current.vintage,
+      suggestion.vintage ? String(suggestion.vintage) : "",
+      shouldApply("vintage", current.vintage)
+    ),
+    grape: resolveImportedValue(current.grape, suggestion.grape || "", shouldApply("grape", current.grape)),
+    type: resolveImportedValue(current.type, suggestion.type || "Rött", shouldApply("type", current.type)),
+    foodPairings: resolveImportedValue(
+      current.foodPairings,
+      (suggestion.foodPairings ?? []).join(", "),
+      shouldApply("foodPairings", current.foodPairings)
+    ),
+    systembolagetProductId: resolveImportedValue(
+      current.systembolagetProductId,
+      suggestion.systembolagetProductId || "",
+      shouldApply("systembolagetProductId", current.systembolagetProductId)
+    ),
+    barcode: resolveImportedValue(current.barcode, suggestion.barcode || "", shouldApply("barcode", current.barcode)),
+  };
 }
 
 const styles = StyleSheet.create({

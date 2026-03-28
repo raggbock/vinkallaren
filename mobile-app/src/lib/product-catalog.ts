@@ -17,6 +17,21 @@ type ProductLookupInput = {
   systembolagetProductId?: string;
 };
 
+type OpenFoodFactsResponse = {
+  code?: string;
+  status?: number;
+  product?: {
+    product_name?: string;
+    product_name_sv?: string;
+    generic_name?: string;
+    generic_name_sv?: string;
+    brands?: string;
+    countries?: string;
+    origins?: string;
+    categories?: string;
+  };
+};
+
 const systembolagetSeedCatalog: ProductCatalogEntry[] = [
   {
     systembolagetProductId: "7202301",
@@ -180,10 +195,18 @@ function findLocalCatalogMatch(input: ProductLookupInput) {
 async function findRemoteCatalogMatch(input: ProductLookupInput) {
   const endpoint = process.env.EXPO_PUBLIC_PRODUCT_LOOKUP_URL;
 
-  if (!endpoint) {
-    return null;
+  if (endpoint) {
+    const remoteMatch = await findCustomRemoteCatalogMatch(endpoint, input);
+
+    if (remoteMatch) {
+      return remoteMatch;
+    }
   }
 
+  return findOpenFoodFactsMatch(input);
+}
+
+async function findCustomRemoteCatalogMatch(endpoint: string, input: ProductLookupInput) {
   const query = new URLSearchParams();
 
   if (input.barcode?.trim()) {
@@ -202,4 +225,172 @@ async function findRemoteCatalogMatch(input: ProductLookupInput) {
 
   const data = (await response.json()) as ProductCatalogEntry | null;
   return data;
+}
+
+async function findOpenFoodFactsMatch(input: ProductLookupInput) {
+  const barcode = input.barcode?.trim();
+
+  if (!barcode || barcode.length < 8) {
+    return null;
+  }
+
+  const fields = [
+    "code",
+    "product_name",
+    "product_name_sv",
+    "generic_name",
+    "generic_name_sv",
+    "brands",
+    "countries",
+    "origins",
+    "categories",
+  ].join(",");
+
+  const response = await fetch(
+    `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(barcode)}?fields=${encodeURIComponent(fields)}`
+  );
+
+  if (!response.ok) {
+    return null;
+  }
+
+  const data = (await response.json()) as OpenFoodFactsResponse;
+
+  if (data.status !== 1 || !data.product) {
+    return null;
+  }
+
+  return mapOpenFoodFactsProduct(barcode, data.product);
+}
+
+function mapOpenFoodFactsProduct(barcode: string, product: NonNullable<OpenFoodFactsResponse["product"]>) {
+  const name = firstNonEmpty([
+    product.product_name_sv,
+    product.product_name,
+    product.generic_name_sv,
+    product.generic_name,
+  ]);
+
+  if (!name) {
+    return null;
+  }
+
+  if (!looksLikeWineProduct(name, product.categories)) {
+    return null;
+  }
+
+  const country = firstNonEmpty([product.countries, product.origins]);
+  const type = inferWineType(name, product.categories);
+
+  return {
+    barcode,
+    name,
+    producer: cleanValue(product.brands),
+    country: cleanValue(country),
+    type,
+    foodPairings: inferFoodPairings(name, product.categories, type),
+    sourceLabel: "Open Food Facts",
+  };
+}
+
+function looksLikeWineProduct(name: string, categories?: string) {
+  const haystack = normalizeForLookup(`${name} ${categories ?? ""}`);
+
+  return matchesAny(haystack, [
+    "wine",
+    "vin",
+    "red wine",
+    "white wine",
+    "rose wine",
+    "sparkling wine",
+    "champagne",
+    "prosecco",
+    "cava",
+    "barolo",
+    "rioja",
+    "chianti",
+    "riesling",
+    "chablis",
+    "sancerre",
+    "bourgogne",
+  ]);
+}
+
+function inferWineType(name: string, categories?: string) {
+  const haystack = normalizeForLookup(`${name} ${categories ?? ""}`);
+
+  if (matchesAny(haystack, ["champagne", "prosecco", "cava", "sparkling", "mousserande", "frizzante"])) {
+    return "Mousserande";
+  }
+
+  if (matchesAny(haystack, ["rose", "rosé"])) {
+    return "Rosé";
+  }
+
+  if (matchesAny(haystack, ["white wine", "vin blanc", "vitt vin", "riesling", "chablis", "sancerre"])) {
+    return "Vitt";
+  }
+
+  if (matchesAny(haystack, ["dessert wine", "sauternes", "tokaji", "port", "sherry", "late harvest"])) {
+    return "Dessert";
+  }
+
+  if (matchesAny(haystack, ["red wine", "vin rouge", "rott vin", "rött vin", "rioja", "barolo", "chianti"])) {
+    return "Rött";
+  }
+
+  if (matchesAny(haystack, ["wine", "vin"])) {
+    return "Rött";
+  }
+
+  return undefined;
+}
+
+function inferFoodPairings(name: string, categories?: string, type?: string) {
+  const haystack = normalizeForLookup(`${name} ${categories ?? ""}`);
+
+  if (type === "Mousserande") {
+    return ["aperitif", "skaldjur", "chips", "ost"];
+  }
+
+  if (type === "Vitt") {
+    return ["fisk", "skaldjur", "getost", "sallad"];
+  }
+
+  if (type === "Rosé") {
+    return ["grillat", "sallad", "fågel", "aperitif"];
+  }
+
+  if (type === "Dessert") {
+    return ["dessert", "ost", "frukt"];
+  }
+
+  if (matchesAny(haystack, ["pinot noir", "burgundy", "bourgogne"])) {
+    return ["fågel", "svamp", "ost"];
+  }
+
+  if (matchesAny(haystack, ["rioja", "tempranillo", "barolo", "nebbiolo", "syrah", "cabernet", "merlot"])) {
+    return ["lamm", "nöt", "grillat", "lagrad ost"];
+  }
+
+  return ["middag"];
+}
+
+function matchesAny(value: string, needles: string[]) {
+  return needles.some((needle) => value.includes(normalizeForLookup(needle)));
+}
+
+function normalizeForLookup(value: string) {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function firstNonEmpty(values: Array<string | undefined>) {
+  return values.map(cleanValue).find(Boolean);
+}
+
+function cleanValue(value?: string | null) {
+  return value?.trim() || undefined;
 }
