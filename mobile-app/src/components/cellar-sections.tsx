@@ -3,6 +3,7 @@ import { Image, Pressable, ScrollView, Text, View } from "react-native";
 import { buildSystembolagetProductUrl, getWineStoragePlacementLabel } from "../lib/cellar-helpers";
 import type { ProductCatalogWineRow } from "../types/product-catalog";
 import type { StorageSpaceRow } from "../types/storage-space";
+import type { WineHistoryRecord } from "../types/wine-history";
 import type { WineRecord } from "../types/wine";
 import type { CellarSection } from "../types/cellar";
 import { DoubleRow, InsightCard, LabeledInput, LoadingInline, MetricCard, StorageSpaceSelector, SuggestionRow } from "./form-controls";
@@ -322,7 +323,7 @@ export function WineCollectionPanel({
   onStorageSpaceFilterChange,
   onSignOut,
   onOpenSystembolaget,
-  onDecrementWine,
+  onDrinkWine,
   onDeleteWine,
 }: {
   styles: SharedStyles;
@@ -351,7 +352,7 @@ export function WineCollectionPanel({
   onStorageSpaceFilterChange: (value: string) => void;
   onSignOut: () => void;
   onOpenSystembolaget: (productId: string) => void;
-  onDecrementWine: (wine: WineRecord) => void;
+  onDrinkWine: (wine: WineRecord) => void;
   onDeleteWine: (wineId: string, imagePath: string | null) => void;
 }) {
   return (
@@ -448,13 +449,74 @@ export function WineCollectionPanel({
           <Text style={styles.notesText}>{wine.notes || "Ingen anteckning ännu."}</Text>
 
           <View style={styles.actionRow}>
-            <Pressable onPress={() => onDecrementWine(wine)} style={styles.secondaryButton}>
+            <Pressable onPress={() => onDrinkWine(wine)} style={styles.secondaryButton}>
               <Text style={styles.secondaryButtonText}>Drack 1 flaska</Text>
             </Pressable>
             <Pressable onPress={() => onDeleteWine(wine.id, wine.image_path)}>
               <Text style={styles.dangerText}>Ta bort</Text>
             </Pressable>
           </View>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+export function HistoryPanel({
+  styles,
+  historyEntries,
+  loadingHistory,
+  storageSpaceById,
+}: {
+  styles: SharedStyles;
+  historyEntries: WineHistoryRecord[];
+  loadingHistory: boolean;
+  storageSpaceById: Map<string, StorageSpaceRow>;
+}) {
+  return (
+    <View style={styles.panel}>
+      <View style={styles.panelHeaderRow}>
+        <Text style={styles.panelTitle}>Historik</Text>
+        <Text style={styles.linkText}>{historyEntries.length} poster</Text>
+      </View>
+
+      <Text style={styles.notesText}>
+        Här hamnar flaskor du har druckit upp. De försvinner alltså inte ur minnet bara för att lagersaldot går ner till noll.
+      </Text>
+
+      {loadingHistory ? <LoadingInline label="Laddar historik..." /> : null}
+
+      {!loadingHistory && historyEntries.length === 0 ? (
+        <Text style={styles.emptyState}>Ingen historik ännu. När du markerar att du druckit en flaska kan du sätta betyg här.</Text>
+      ) : null}
+
+      {historyEntries.map((entry) => (
+        <View key={entry.id} style={styles.wineCard}>
+          {entry.image_url ? <Image source={{ uri: entry.image_url }} style={styles.wineImage} /> : null}
+
+          <View style={styles.wineCardHeader}>
+            <View style={styles.flex}>
+              <Text style={styles.wineType}>{entry.type || "Historik"}</Text>
+              <Text style={styles.wineName}>{entry.name}</Text>
+              <Text style={styles.wineMeta}>
+                {[entry.producer, entry.vintage, entry.grape, [entry.country, entry.region].filter(Boolean).join(", ")]
+                  .filter(Boolean)
+                  .join(" • ")}
+              </Text>
+              <Text style={styles.locationText}>
+                {getWineStoragePlacementLabel(entry, storageSpaceById) || entry.cellar_location || "Ingen plats sparad"}
+              </Text>
+            </View>
+            <View style={styles.quantityBadge}>
+              <Text style={styles.quantityBadgeText}>{entry.rating ? `${entry.rating}/5` : "Ej betygsatt"}</Text>
+            </View>
+          </View>
+
+          <Text style={styles.notesText}>
+            Dracks {new Date(entry.consumed_at).toLocaleDateString("sv-SE")} • {entry.quantity_consumed} flaska
+            {entry.quantity_consumed > 1 ? "r" : ""}
+          </Text>
+          <Text style={styles.notesText}>{entry.tasting_notes || "Ingen smaknotering ännu."}</Text>
         </View>
       ))}
     </View>

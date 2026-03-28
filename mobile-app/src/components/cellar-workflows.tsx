@@ -6,6 +6,7 @@ import type { ProductCatalogEntry } from "../lib/product-catalog";
 import type { ReferenceOptionRow } from "../types/reference-data";
 import type { StorageSpaceRow } from "../types/storage-space";
 import type { CatalogEditorDraft, ImportFieldSelection, ImportMode, WineDraft } from "../types/cellar-drafts";
+import type { WineRecord } from "../types/wine";
 import { AutocompleteInput, DoubleRow, ImportSelectionRow, LabeledInput, StorageSpaceSelector, SuggestionRow } from "./form-controls";
 
 type SharedStyles = any;
@@ -417,5 +418,70 @@ export function AddWinePanel({
         <Text style={styles.primaryButtonText}>{saving ? "Sparar..." : "Spara i molnet"}</Text>
       </Pressable>
     </View>
+  );
+}
+
+export function DrinkWineModal({
+  visible,
+  styles,
+  wine,
+  rating,
+  notes,
+  saving,
+  onClose,
+  onRatingChange,
+  onNotesChange,
+  onConfirm,
+}: {
+  visible: boolean;
+  styles: SharedStyles;
+  wine: WineRecord | null;
+  rating: string;
+  notes: string;
+  saving: boolean;
+  onClose: () => void;
+  onRatingChange: (value: string) => void;
+  onNotesChange: (value: string) => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" transparent={false}>
+      <SafeAreaView style={styles.scannerScreen}>
+        <View style={styles.scannerHeader}>
+          <View style={styles.flex}>
+            <Text style={styles.eyebrow}>Historik</Text>
+            <Text style={styles.scannerTitle}>Drack du {wine?.name || "det här vinet"}?</Text>
+          </View>
+          <Pressable onPress={onClose} disabled={saving}>
+            <Text style={styles.linkText}>Stäng</Text>
+          </Pressable>
+        </View>
+
+        <ScrollView contentContainerStyle={styles.catalogEditorContent} keyboardShouldPersistTaps="handled">
+          <Text style={styles.notesText}>
+            Sätt gärna ett betyg direkt. Om det var sista flaskan hamnar vinet ändå kvar i historiken.
+          </Text>
+
+          <SuggestionRow title="Betyg" options={["1", "2", "3", "4", "5"]} selected={rating} onSelect={onRatingChange} />
+
+          <LabeledInput
+            label="Smaknotering"
+            value={notes}
+            onChangeText={onNotesChange}
+            placeholder="t.ex. mörk frukt, bra syra, gärna igen"
+            multiline
+          />
+
+          <View style={styles.modalActionRow}>
+            <Pressable onPress={onClose} style={styles.secondaryButton} disabled={saving}>
+              <Text style={styles.secondaryButtonText}>Avbryt</Text>
+            </Pressable>
+            <Pressable onPress={onConfirm} style={styles.primaryButton} disabled={saving}>
+              <Text style={styles.primaryButtonText}>{saving ? "Sparar..." : "Spara i historik"}</Text>
+            </Pressable>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </Modal>
   );
 }
