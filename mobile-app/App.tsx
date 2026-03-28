@@ -49,6 +49,13 @@ import type { ReferenceOptionRow } from "./src/types/reference-data";
 import type { StorageSpaceInsert, StorageSpaceRow } from "./src/types/storage-space";
 import type { WineInsert, WineRecord, WineRow } from "./src/types/wine";
 
+const localWineNameSeeds = require("./data/wine-name-seeds.json") as Array<{
+  name: string;
+  producer?: string | null;
+  country?: string | null;
+  region?: string | null;
+}>;
+
 type AuthMode = "signin" | "signup";
 
 const defaultDraft: WineDraft = {
@@ -410,6 +417,7 @@ function CellarScreen({ session }: { session: Session }) {
     () => mergeReferenceRows(referenceOptions.filter((option) => option.category === "grape")),
     [referenceOptions]
   );
+  const localWineNameReferenceRows = useMemo(() => toWineNameReferenceRows(localWineNameSeeds), []);
   const wineNameReferenceRows = useMemo(
     () => mergeReferenceRows(referenceOptions.filter((option) => option.category === "wine_name")),
     [referenceOptions]
@@ -424,6 +432,10 @@ function CellarScreen({ session }: { session: Session }) {
   );
   const grapeOptions = useMemo(() => grapeReferenceRows.map((option) => option.name), [grapeReferenceRows]);
   const wineNameOptions = useMemo(() => wineNameReferenceRows.map((option) => option.name), [wineNameReferenceRows]);
+  const fallbackWineNameOptions = useMemo(
+    () => localWineNameReferenceRows.map((option) => option.name),
+    [localWineNameReferenceRows]
+  );
   const countryReferenceOptions = useMemo(
     () => countryReferenceRows.map((option) => option.name),
     [countryReferenceRows]
@@ -438,10 +450,15 @@ function CellarScreen({ session }: { session: Session }) {
       return wineNameOptions;
     }
 
-    return Array.from(new Set([...catalogEntries.map((entry) => entry.name), ...wines.map((wine) => wine.name)])).sort((left, right) =>
-      left.localeCompare(right)
+    if (fallbackWineNameOptions.length > 0) {
+      return fallbackWineNameOptions;
+    }
+
+    return Array.from(new Set([...catalogEntries.map((entry) => entry.name), ...wines.map((wine) => wine.name)])).sort(
+      (left, right) => left.localeCompare(right)
     );
-  }, [catalogEntries, wineNameOptions, wines]);
+  }, [catalogEntries, fallbackWineNameOptions, wineNameOptions, wines]);
+  const effectiveWineNameReferenceRows = wineNameReferenceRows.length > 0 ? wineNameReferenceRows : localWineNameReferenceRows;
   const effectiveCountryOptions = countryReferenceOptions.length > 0 ? countryReferenceOptions : WINE_COUNTRIES;
   const effectiveRegionOptions = regionReferenceOptions.length > 0 ? regionReferenceOptions : WINE_REGIONS;
   const pairingOptions = useMemo(() => buildPairingOptions(wines), [wines]);
@@ -727,6 +744,19 @@ function CellarScreen({ session }: { session: Session }) {
       return;
     }
 
+    const knownCatalogName = wineNameReferenceRows.some(
+      (option) => normalizeLookupValue(option.name) === normalizeLookupValue(draft.name)
+    );
+    const missingCatalogFields = getMissingCatalogFields(draft);
+
+    if (!knownCatalogName && missingCatalogFields.length > 0) {
+      Alert.alert(
+        "Komplettera vinet",
+        `Om vinet inte redan finns i katalogen behöver du fylla i: ${missingCatalogFields.join(", ")}. Då kan appen spara det i katalogen också.`
+      );
+      return;
+    }
+
     setSaving(true);
 
     try {
@@ -899,13 +929,18 @@ function CellarScreen({ session }: { session: Session }) {
     const barcode = draft.barcode.trim();
     const systembolagetProductId = draft.systembolagetProductId.trim();
 
-    if (!barcode) {
-      Alert.alert("Streckkod saknas", "Lägg in streckkoden innan du sparar produkten i katalogen.");
+    if (!draft.name.trim()) {
+      Alert.alert("Namn saknas", "Fyll i åtminstone namnet på vinet innan du sparar det i katalogen.");
       return;
     }
 
-    if (!draft.name.trim()) {
-      Alert.alert("Namn saknas", "Fyll i åtminstone namnet på vinet innan du sparar det i katalogen.");
+    const missingCatalogFields = getMissingCatalogFields(draft);
+
+    if (missingCatalogFields.length > 0) {
+      Alert.alert(
+        "Mer info behövs",
+        `För att spara vinet i katalogen behöver du fylla i: ${missingCatalogFields.join(", ")}.`
+      );
       return;
     }
 
@@ -1169,7 +1204,7 @@ function CellarScreen({ session }: { session: Session }) {
         effectiveCountryOptions={effectiveCountryOptions}
         effectiveRegionOptions={effectiveRegionOptions}
         effectiveGrapeOptions={effectiveGrapeOptions}
-        wineNameReferenceRows={wineNameReferenceRows}
+        wineNameReferenceRows={effectiveWineNameReferenceRows}
         countryReferenceRows={countryReferenceRows}
         regionReferenceRows={regionReferenceRows}
         grapeReferenceRows={grapeReferenceRows}
@@ -1265,7 +1300,7 @@ function CellarScreen({ session }: { session: Session }) {
         effectiveCountryOptions={effectiveCountryOptions}
         effectiveRegionOptions={effectiveRegionOptions}
         effectiveGrapeOptions={effectiveGrapeOptions}
-        wineNameReferenceRows={wineNameReferenceRows}
+        wineNameReferenceRows={effectiveWineNameReferenceRows}
         countryReferenceRows={countryReferenceRows}
         regionReferenceRows={regionReferenceRows}
         grapeReferenceRows={grapeReferenceRows}
@@ -1292,6 +1327,21 @@ function CellarScreen({ session }: { session: Session }) {
       </ScrollView>
     </SafeAreaView>
   );
+}
+
+function toWineNameReferenceRows(
+  seeds: Array<{ name: string; producer?: string | null; country?: string | null; region?: string | null }>
+): ReferenceOptionRow[] {
+  return seeds.map((seed, index) => ({
+    id: `local-wine-name-${index}`,
+    name: seed.name,
+    category: "wine_name" as const,
+    aliases: [seed.producer, seed.country, seed.region].filter((value): value is string => Boolean(value)),
+    parent_name: seed.producer ?? null,
+    sort_order: index,
+    created_at: "",
+    updated_at: "",
+  }));
 }
 
 async function hydrateWineRecords(rows: WineRow[]): Promise<WineRecord[]> {
@@ -1336,11 +1386,11 @@ async function cacheWineDraftAsCatalogEntry(payload: WineInsert, userId: string)
   const barcode = payload.barcode?.trim();
   const systembolagetProductId = payload.systembolaget_product_id?.trim();
 
-  if (!barcode) {
+  if (!payload.name.trim()) {
     return;
   }
 
-  if (!payload.name.trim()) {
+  if (!canBeSavedAsCatalogEntry(payload)) {
     return;
   }
 
@@ -1360,6 +1410,43 @@ async function cacheWineDraftAsCatalogEntry(payload: WineInsert, userId: string)
       sourceConfidence: "high",
     },
     userId
+  );
+}
+
+function getMissingCatalogFields(source: Pick<WineDraft, "producer" | "country" | "region" | "grape" | "type">) {
+  const missing: string[] = [];
+
+  if (!source.producer.trim()) {
+    missing.push("producent");
+  }
+
+  if (!source.country.trim()) {
+    missing.push("land");
+  }
+
+  if (!source.region.trim()) {
+    missing.push("region");
+  }
+
+  if (!source.grape.trim()) {
+    missing.push("druva");
+  }
+
+  if (!source.type.trim()) {
+    missing.push("vintyp");
+  }
+
+  return missing;
+}
+
+function canBeSavedAsCatalogEntry(payload: WineInsert) {
+  return Boolean(
+    payload.name.trim() &&
+      payload.producer?.trim() &&
+      payload.country?.trim() &&
+      payload.region?.trim() &&
+      payload.grape?.trim() &&
+      payload.type?.trim()
   );
 }
 
