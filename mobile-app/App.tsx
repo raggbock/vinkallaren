@@ -382,6 +382,7 @@ function CellarScreen({ session }: { session: Session }) {
   const [storageSpaceDraft, setStorageSpaceDraft] = useState<StorageSpaceDraft>(defaultStorageSpaceDraft);
   const [storageSpaces, setStorageSpaces] = useState<StorageSpaceRow[]>([]);
   const [catalogEntries, setCatalogEntries] = useState<ProductCatalogWineRow[]>([]);
+  const [catalogNameEntries, setCatalogNameEntries] = useState<ProductCatalogWineRow[]>([]);
   const [referenceOptions, setReferenceOptions] = useState<ReferenceOptionRow[]>([]);
   const [catalogEditorVisible, setCatalogEditorVisible] = useState(false);
   const [catalogEditorDraft, setCatalogEditorDraft] = useState<CatalogEditorDraft | null>(null);
@@ -418,17 +419,14 @@ function CellarScreen({ session }: { session: Session }) {
     [referenceOptions]
   );
   const localWineNameReferenceRows = useMemo(() => toWineNameReferenceRows(localWineNameSeeds, "local-wine-name"), []);
-  const catalogWineNameReferenceRows = useMemo(() => toWineNameReferenceRows(catalogEntries, "catalog-wine-name"), [catalogEntries]);
-  const savedWineNameReferenceRows = useMemo(() => toWineNameReferenceRows(wines, "saved-wine-name"), [wines]);
+  const catalogWineNameReferenceRows = useMemo(() => toWineNameReferenceRows(catalogNameEntries, "catalog-wine-name"), [catalogNameEntries]);
   const wineNameReferenceRows = useMemo(
     () =>
       mergeReferenceRows([
-        ...referenceOptions.filter((option) => option.category === "wine_name"),
         ...catalogWineNameReferenceRows,
-        ...savedWineNameReferenceRows,
         ...localWineNameReferenceRows,
       ]),
-    [catalogWineNameReferenceRows, localWineNameReferenceRows, referenceOptions, savedWineNameReferenceRows]
+    [catalogWineNameReferenceRows, localWineNameReferenceRows]
   );
   const countryReferenceRows = useMemo(
     () => mergeReferenceRows(referenceOptions.filter((option) => option.category === "country")),
@@ -527,6 +525,7 @@ function CellarScreen({ session }: { session: Session }) {
     void fetchWines();
     void fetchStorageSpaces();
     void fetchCatalogEntries();
+    void fetchCatalogNameEntries();
     void fetchReferenceOptions();
   }, []);
 
@@ -616,11 +615,25 @@ function CellarScreen({ session }: { session: Session }) {
     setLoadingCatalogEntries(false);
   }
 
+  async function fetchCatalogNameEntries() {
+    const { data, error } = await supabase
+      .from("product_catalog_wines")
+      .select("*")
+      .order("name", { ascending: true })
+      .limit(5000);
+
+    if (error) {
+      return;
+    }
+
+    setCatalogNameEntries((data ?? []) as ProductCatalogWineRow[]);
+  }
+
   async function fetchReferenceOptions() {
     const { data, error } = await supabase
       .from("reference_options")
       .select("*")
-      .in("category", ["grape", "country", "region", "wine_name"])
+      .in("category", ["grape", "country", "region"])
       .order("category", { ascending: true })
       .order("sort_order", { ascending: true })
       .order("name", { ascending: true });
@@ -683,7 +696,7 @@ function CellarScreen({ session }: { session: Session }) {
       }
 
       closeCatalogEditor();
-      await fetchCatalogEntries();
+      await Promise.all([fetchCatalogEntries(), fetchCatalogNameEntries()]);
     } catch (error) {
       Alert.alert("Kunde inte spara ändringen", error instanceof Error ? error.message : "Försök igen.");
     } finally {
@@ -722,7 +735,7 @@ function CellarScreen({ session }: { session: Session }) {
         closeCatalogEditor();
       }
 
-      await fetchCatalogEntries();
+      await Promise.all([fetchCatalogEntries(), fetchCatalogNameEntries()]);
     } catch (error) {
       Alert.alert("Kunde inte ta bort produkt", error instanceof Error ? error.message : "Försök igen.");
     } finally {
@@ -736,7 +749,7 @@ function CellarScreen({ session }: { session: Session }) {
       return;
     }
 
-    const knownCatalogName = wineNameReferenceRows.some(
+    const knownCatalogName = effectiveWineNameReferenceRows.some(
       (option) => normalizeLookupValue(option.name) === normalizeLookupValue(draft.name)
     );
     const missingCatalogFields = getMissingCatalogFields(draft);
@@ -791,7 +804,7 @@ function CellarScreen({ session }: { session: Session }) {
       await cacheWineDraftAsCatalogEntry(payload, session.user.id);
 
       setDraft(defaultDraft);
-      await Promise.all([fetchWines(), fetchCatalogEntries(), fetchReferenceOptions()]);
+      await Promise.all([fetchWines(), fetchCatalogEntries(), fetchCatalogNameEntries(), fetchReferenceOptions()]);
     } catch (error) {
       Alert.alert("Kunde inte spara", error instanceof Error ? error.message : "Försök igen.");
     } finally {
@@ -957,7 +970,7 @@ function CellarScreen({ session }: { session: Session }) {
       await cacheCatalogEntry(entry, session.user.id);
       setCatalogSuggestion(entry);
       setLookupMessage("Produkten sparades i katalogen. Nästa skanning ska hitta den direkt.");
-      await Promise.all([fetchCatalogEntries(), fetchReferenceOptions()]);
+      await Promise.all([fetchCatalogEntries(), fetchCatalogNameEntries(), fetchReferenceOptions()]);
       Alert.alert("Sparad i katalogen", "Produkten är nu sparad och kan återanvändas vid nästa streckkodsskanning.");
     } catch (error) {
       Alert.alert("Kunde inte spara i katalogen", error instanceof Error ? error.message : "Försök igen.");

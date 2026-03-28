@@ -11,6 +11,8 @@
     "release:web": "npm run web:build",
     "catalog:seed:sql": "node ./scripts/import-product-catalog-seeds.mjs ./data/product-catalog-seeds.json --sql",
     "catalog:seed:apply": "node ./scripts/import-product-catalog-seeds.mjs ./data/product-catalog-seeds.json --apply",
+    "catalog:names:seed:sql": "node ./scripts/import-product-catalog-name-seeds.mjs ./data/wine-name-seeds.json --sql",
+    "catalog:names:seed:apply": "node ./scripts/import-product-catalog-name-seeds.mjs ./data/wine-name-seeds.json --apply",
     "wine-names:seed:sql": "node ./scripts/import-reference-option-seeds.mjs ./data/wine-name-seeds.json wine_name --sql",
     "wine-names:seed:apply": "node ./scripts/import-reference-option-seeds.mjs ./data/wine-name-seeds.json wine_name --apply"
   },
