@@ -1,1 +1,122 @@
-[]
+[
+  {
+    "name": "Elsa Bianchi Chardonnay",
+    "producer": "Valentin Bianchi",
+    "country": "Argentina",
+    "region": "Mendoza",
+    "vintage": "2019",
+    "type": "Vitt vin",
+    "sourceLabel": "Alko",
+    "sourceUrl": "https://www.alko.fi/sv/produkter/vitvin/argentina"
+  },
+  {
+    "name": "Catena Tupungato Chardonnay",
+    "producer": "Catena",
+    "country": "Argentina",
+    "region": "Mendoza",
+    "vintage": "2023",
+    "type": "Vitt vin",
+    "sourceLabel": "Alko",
+    "sourceUrl": "https://www.alko.fi/sv/produkter/vitvin/argentina"
+  },
+  {
+    "name": "Zuccardi Los Olivos Semillon Torrontes",
+    "producer": "Zuccardi",
+    "country": "Argentina",
+    "region": "Mendoza",
+    "vintage": "2019",
+    "type": "Vitt vin",
+    "sourceLabel": "Alko",
+    "sourceUrl": "https://www.alko.fi/sv/produkter/vitvin/argentina"
+  },
+  {
+    "name": "Famiglia Bianchi Chardonnay",
+    "producer": "Famiglia Bianchi",
+    "country": "Argentina",
+    "region": "Mendoza",
+    "vintage": "2019",
+    "type": "Vitt vin",
+    "sourceLabel": "Alko",
+    "sourceUrl": "https://www.alko.fi/sv/produkter/vitvin/argentina"
+  },
+  {
+    "name": "Trivento Reserve Chardonnay",
+    "producer": "Trivento",
+    "country": "Argentina",
+    "region": "Mendoza",
+    "vintage": "2023",
+    "type": "Vitt vin",
+    "sourceLabel": "Alko",
+    "sourceUrl": "https://www.alko.fi/sv/produkter/vitvin/argentina"
+  },
+  {
+    "name": "Raza Torrontes Pinot Grigio Organic",
+    "producer": "Raza",
+    "country": "Argentina",
+    "region": "Mendoza",
+    "vintage": "2024",
+    "type": "Vitt vin",
+    "sourceLabel": "Alko",
+    "sourceUrl": "https://www.alko.fi/sv/produkter/vitvin/argentina"
+  },
+  {
+    "name": "Santa Julia Organic Viognier",
+    "producer": "Santa Julia",
+    "country": "Argentina",
+    "region": "Mendoza",
+    "vintage": "2023",
+    "type": "Vitt vin",
+    "sourceLabel": "Alko",
+    "sourceUrl": "https://www.alko.fi/sv/produkter/vitvin/argentina"
+  },
+  {
+    "name": "Terrazas de los Andes Altos del Plata Chardonnay",
+    "producer": "Terrazas de los Andes",
+    "country": "Argentina",
+    "region": "Mendoza",
+    "vintage": "2018",
+    "type": "Vitt vin",
+    "sourceLabel": "Alko",
+    "sourceUrl": "https://www.alko.fi/sv/produkter/vitvin/argentina"
+  },
+  {
+    "name": "Santa Julia Family Estate White Malbec",
+    "producer": "Santa Julia",
+    "country": "Argentina",
+    "region": "Mendoza",
+    "vintage": "2024",
+    "type": "Vitt vin",
+    "sourceLabel": "Alko",
+    "sourceUrl": "https://www.alko.fi/sv/produkter/vitvin/argentina"
+  },
+  {
+    "name": "Trapiche Reserve Chardonnay",
+    "producer": "Trapiche",
+    "country": "Argentina",
+    "region": "Mendoza",
+    "vintage": "2024",
+    "type": "Vitt vin",
+    "sourceLabel": "Alko",
+    "sourceUrl": "https://www.alko.fi/sv/produkter/vitvin/argentina"
+  },
+  {
+    "name": "El Esteco Blanc de Blancs",
+    "producer": "El Esteco",
+    "country": "Argentina",
+    "region": "Salta",
+    "vintage": "2022",
+    "type": "Vitt vin",
+    "sourceLabel": "Alko",
+    "sourceUrl": "https://www.alko.fi/sv/produkter/vitvin/argentina"
+  },
+  {
+    "name": "Trapiche Costa y Pampa Sauvignon Blanc",
+    "producer": "Trapiche",
+    "country": "Argentina",
+    "region": "Buenos Aires",
+    "vintage": "2016",
+    "type": "Vitt vin",
+    "sourceLabel": "Alko",
+    "sourceUrl": "https://www.alko.fi/sv/produkter/vitvin/argentina"
+  }
+]
