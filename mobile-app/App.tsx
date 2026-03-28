@@ -24,6 +24,7 @@ import type { Session } from "@supabase/supabase-js";
 
 import { supabase, supabaseConfigured } from "./src/lib/supabase";
 import { findCatalogMatch, type ProductCatalogEntry } from "./src/lib/product-catalog";
+import type { StorageSpaceInsert, StorageSpaceRow } from "./src/types/storage-space";
 import type { WineInsert, WineRecord, WineRow } from "./src/types/wine";
 
 type AuthMode = "signin" | "signup";
@@ -39,12 +40,23 @@ type WineDraft = {
   type: string;
   drinkBy: string;
   location: string;
+  storageSpaceId: string;
+  storageRow: string;
+  storageSlot: string;
   barcode: string;
   systembolagetProductId: string;
   tags: string;
   foodPairings: string;
   notes: string;
   imageUri: string;
+};
+
+type StorageSpaceDraft = {
+  name: string;
+  spaceType: string;
+  rowCount: string;
+  slotsPerRow: string;
+  notes: string;
 };
 
 type ImportFieldSelection = {
@@ -73,12 +85,23 @@ const defaultDraft: WineDraft = {
   type: "Rött",
   drinkBy: "",
   location: "",
+  storageSpaceId: "",
+  storageRow: "1",
+  storageSlot: "1",
   barcode: "",
   systembolagetProductId: "",
   tags: "",
   foodPairings: "",
   notes: "",
   imageUri: "",
+};
+
+const defaultStorageSpaceDraft: StorageSpaceDraft = {
+  name: "",
+  spaceType: "kallare",
+  rowCount: "6",
+  slotsPerRow: "6",
+  notes: "",
 };
 
 const defaultImportSelection: ImportFieldSelection = {
@@ -354,8 +377,12 @@ function AuthScreen() {
 function CellarScreen({ session }: { session: Session }) {
   const [wines, setWines] = useState<WineRecord[]>([]);
   const [draft, setDraft] = useState<WineDraft>(defaultDraft);
+  const [storageSpaceDraft, setStorageSpaceDraft] = useState<StorageSpaceDraft>(defaultStorageSpaceDraft);
+  const [storageSpaces, setStorageSpaces] = useState<StorageSpaceRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingStorageSpaces, setLoadingStorageSpaces] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingStorageSpace, setSavingStorageSpace] = useState(false);
   const [selectedPairingFilter, setSelectedPairingFilter] = useState("Alla");
   const [selectedMeal, setSelectedMeal] = useState("lamm");
   const [searchQuery, setSearchQuery] = useState("");
@@ -363,6 +390,10 @@ function CellarScreen({ session }: { session: Session }) {
   const [selectedRegionFilter, setSelectedRegionFilter] = useState("Alla");
   const [selectedTypeFilter, setSelectedTypeFilter] = useState("Alla");
   const [selectedVintageFilter, setSelectedVintageFilter] = useState("Alla");
+  const [selectedStorageSpaceFilterId, setSelectedStorageSpaceFilterId] = useState("");
+  const [selectedStorageSpaceId, setSelectedStorageSpaceId] = useState("");
+  const [selectedStorageRow, setSelectedStorageRow] = useState("1");
+  const [selectedStorageSlot, setSelectedStorageSlot] = useState("1");
   const [scannerVisible, setScannerVisible] = useState(false);
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const [catalogSuggestion, setCatalogSuggestion] = useState<ProductCatalogEntry | null>(null);
@@ -377,6 +408,9 @@ function CellarScreen({ session }: { session: Session }) {
   const regionOptions = useMemo(() => buildValueOptions(wines, (wine) => wine.region), [wines]);
   const typeOptions = useMemo(() => buildValueOptions(wines, (wine) => wine.type), [wines]);
   const vintageOptions = useMemo(() => buildVintageOptions(wines), [wines]);
+  const storageSpaceById = useMemo(() => new Map(storageSpaces.map((space) => [space.id, space])), [storageSpaces]);
+  const storageSpaceBottleCounts = useMemo(() => buildStorageSpaceBottleCounts(wines), [wines]);
+  const selectedStorageSpace = storageSpaces.find((space) => space.id === selectedStorageSpaceId) ?? null;
   const mealSuggestions = useMemo(() => buildMealSuggestions(wines), [wines]);
   const mealRecommendations = useMemo(
     () => buildMealRecommendations(wines, selectedMeal),
@@ -391,6 +425,8 @@ function CellarScreen({ session }: { session: Session }) {
       const matchesType = selectedTypeFilter === "Alla" || wine.type === selectedTypeFilter;
       const matchesVintage =
         selectedVintageFilter === "Alla" || String(wine.vintage ?? "") === selectedVintageFilter;
+      const matchesStorageSpace =
+        !selectedStorageSpaceFilterId || wine.storage_space_id === selectedStorageSpaceFilterId;
       const normalizedQuery = searchQuery.trim().toLowerCase();
       const matchesSearch =
         normalizedQuery.length === 0 ||
@@ -401,27 +437,72 @@ function CellarScreen({ session }: { session: Session }) {
           wine.region,
           wine.grape,
           wine.type,
+          wine.cellar_location,
+          getWineStoragePlacementLabel(wine, storageSpaceById),
+          storageSpaceById.get(wine.storage_space_id ?? "")?.name,
           ...wine.food_pairings,
           ...wine.tags,
         ]
           .filter(Boolean)
           .some((value) => String(value).toLowerCase().includes(normalizedQuery));
 
-      return matchesPairing && matchesCountry && matchesRegion && matchesType && matchesVintage && matchesSearch;
+      return (
+        matchesPairing &&
+        matchesCountry &&
+        matchesRegion &&
+        matchesType &&
+        matchesVintage &&
+        matchesStorageSpace &&
+        matchesSearch
+      );
     });
   }, [
+    selectedStorageSpaceFilterId,
     searchQuery,
     selectedCountryFilter,
     selectedPairingFilter,
     selectedRegionFilter,
     selectedTypeFilter,
     selectedVintageFilter,
+    storageSpaceById,
     wines,
   ]);
 
   useEffect(() => {
-    fetchWines();
+    void fetchWines();
+    void fetchStorageSpaces();
   }, []);
+
+  useEffect(() => {
+    if (storageSpaces.length > 0 && !selectedStorageSpaceId) {
+      setSelectedStorageSpaceId(storageSpaces[0].id);
+      setSelectedStorageRow("1");
+      setSelectedStorageSlot("1");
+    }
+  }, [selectedStorageSpaceId, storageSpaces]);
+
+  useEffect(() => {
+    if (!selectedStorageSpaceId) {
+      return;
+    }
+
+    const selectedSpace = storageSpaces.find((space) => space.id === selectedStorageSpaceId);
+
+    if (!selectedSpace) {
+      return;
+    }
+
+    const rowNumber = Number(selectedStorageRow);
+    const slotNumber = Number(selectedStorageSlot);
+
+    if (!Number.isFinite(rowNumber) || rowNumber < 1 || rowNumber > selectedSpace.row_count) {
+      setSelectedStorageRow("1");
+    }
+
+    if (!Number.isFinite(slotNumber) || slotNumber < 1 || slotNumber > selectedSpace.slots_per_row) {
+      setSelectedStorageSlot("1");
+    }
+  }, [selectedStorageRow, selectedStorageSlot, selectedStorageSpaceId, storageSpaces]);
 
   async function fetchWines() {
     setLoading(true);
@@ -439,6 +520,24 @@ function CellarScreen({ session }: { session: Session }) {
 
     setWines(await hydrateWineRecords((data ?? []) as WineRow[]));
     setLoading(false);
+  }
+
+  async function fetchStorageSpaces() {
+    setLoadingStorageSpaces(true);
+
+    const { data, error } = await supabase
+      .from("storage_spaces")
+      .select("*")
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      Alert.alert("Kunde inte hämta förvaringsplatser", error.message);
+      setLoadingStorageSpaces(false);
+      return;
+    }
+
+    setStorageSpaces((data ?? []) as StorageSpaceRow[]);
+    setLoadingStorageSpaces(false);
   }
 
   async function saveWine() {
@@ -468,6 +567,9 @@ function CellarScreen({ session }: { session: Session }) {
         type: draft.type.trim() || "Rött",
         drink_by_year: toNumberOrNull(draft.drinkBy),
         cellar_location: emptyToNull(draft.location),
+        storage_space_id: emptyToNull(selectedStorageSpaceId),
+        storage_row: selectedStorageSpaceId ? toNumberOrNull(selectedStorageRow) : null,
+        storage_slot: selectedStorageSpaceId ? toNumberOrNull(selectedStorageSlot) : null,
         barcode: emptyToNull(draft.barcode),
         systembolaget_product_id: emptyToNull(draft.systembolagetProductId),
         tags: parseTags(draft.tags),
@@ -489,6 +591,58 @@ function CellarScreen({ session }: { session: Session }) {
       Alert.alert("Kunde inte spara", error instanceof Error ? error.message : "Försök igen.");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function saveStorageSpace() {
+    if (!storageSpaceDraft.name.trim()) {
+      Alert.alert("Namn saknas", "Skriv in namnet på förvaringsplatsen.");
+      return;
+    }
+
+    const rowCount = Number(storageSpaceDraft.rowCount);
+    const slotsPerRow = Number(storageSpaceDraft.slotsPerRow);
+
+    if (!Number.isFinite(rowCount) || rowCount < 1 || !Number.isFinite(slotsPerRow) || slotsPerRow < 1) {
+      Alert.alert("Ogiltiga mått", "Ange minst 1 rad och 1 plats per rad.");
+      return;
+    }
+
+    setSavingStorageSpace(true);
+
+    try {
+      const payload: StorageSpaceInsert = {
+        user_id: session.user.id,
+        name: storageSpaceDraft.name.trim(),
+        space_type: storageSpaceDraft.spaceType.trim() || "kallare",
+        row_count: rowCount,
+        slots_per_row: slotsPerRow,
+        notes: emptyToNull(storageSpaceDraft.notes),
+      };
+
+      const { data, error } = await supabase
+        .from("storage_spaces")
+        .insert(payload)
+        .select("*")
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      setStorageSpaceDraft(defaultStorageSpaceDraft);
+
+      if (data?.id) {
+        setSelectedStorageSpaceId(data.id);
+        setSelectedStorageRow("1");
+        setSelectedStorageSlot("1");
+      }
+
+      await fetchStorageSpaces();
+    } catch (error) {
+      Alert.alert("Kunde inte spara platsen", error instanceof Error ? error.message : "Försök igen.");
+    } finally {
+      setSavingStorageSpace(false);
     }
   }
 
@@ -527,6 +681,27 @@ function CellarScreen({ session }: { session: Session }) {
     }
 
     setWines((current) => current.filter((wine) => wine.id !== id));
+  }
+
+  async function deleteStorageSpace(id: string) {
+    const { error } = await supabase.from("storage_spaces").delete().eq("id", id);
+
+    if (error) {
+      Alert.alert("Kunde inte ta bort platsen", error.message);
+      return;
+    }
+
+    if (selectedStorageSpaceId === id) {
+      setSelectedStorageSpaceId("");
+      setSelectedStorageRow("1");
+      setSelectedStorageSlot("1");
+    }
+
+    if (selectedStorageSpaceFilterId === id) {
+      setSelectedStorageSpaceFilterId("");
+    }
+
+    await Promise.all([fetchStorageSpaces(), fetchWines()]);
   }
 
   async function signOut() {
@@ -773,6 +948,89 @@ function CellarScreen({ session }: { session: Session }) {
 
         <View style={styles.panel}>
           <View style={styles.panelHeaderRow}>
+            <Text style={styles.panelTitle}>Förvaringsplatser</Text>
+            <Text style={styles.linkText}>{storageSpaces.length} st</Text>
+          </View>
+
+          <Text style={styles.notesText}>
+            Skapa en plats för varje vinkyl, källare eller annan zon. Varje plats får egna rader och platser per rad.
+          </Text>
+
+          <LabeledInput
+            label="Namn"
+            value={storageSpaceDraft.name}
+            onChangeText={(value) => setStorageSpaceDraft((current) => ({ ...current, name: value }))}
+            placeholder="Vinkyl i köket"
+          />
+          <DoubleRow>
+            <LabeledInput
+              label="Typ"
+              value={storageSpaceDraft.spaceType}
+              onChangeText={(value) => setStorageSpaceDraft((current) => ({ ...current, spaceType: value }))}
+              placeholder="kallare, vinkyl, party cooler"
+            />
+            <LabeledInput
+              label="Rader"
+              value={storageSpaceDraft.rowCount}
+              onChangeText={(value) => setStorageSpaceDraft((current) => ({ ...current, rowCount: value }))}
+              keyboardType="number-pad"
+            />
+          </DoubleRow>
+          <LabeledInput
+            label="Platser per rad"
+            value={storageSpaceDraft.slotsPerRow}
+            onChangeText={(value) => setStorageSpaceDraft((current) => ({ ...current, slotsPerRow: value }))}
+            keyboardType="number-pad"
+          />
+          <LabeledInput
+            label="Anteckning"
+            value={storageSpaceDraft.notes}
+            onChangeText={(value) => setStorageSpaceDraft((current) => ({ ...current, notes: value }))}
+            placeholder="t.ex. översta hyllan blir varm"
+          />
+
+          <Pressable onPress={saveStorageSpace} style={styles.primaryButton} disabled={savingStorageSpace}>
+            <Text style={styles.primaryButtonText}>{savingStorageSpace ? "Sparar..." : "Lägg till plats"}</Text>
+          </Pressable>
+
+          {loadingStorageSpaces ? <LoadingInline label="Laddar förvaringsplatser..." /> : null}
+
+          {!loadingStorageSpaces && storageSpaces.length === 0 ? (
+            <Text style={styles.emptyState}>Inga förvaringsplatser ännu. Skapa din första ovan.</Text>
+          ) : null}
+
+          {storageSpaces.map((space) => {
+            const bottleCount = storageSpaceBottleCounts.get(space.id) || 0;
+
+            return (
+              <View key={space.id} style={styles.storageSpaceCard}>
+                <View style={styles.storageSpaceHeader}>
+                  <View style={styles.flex}>
+                    <Text style={styles.wineType}>{space.space_type}</Text>
+                    <Text style={styles.wineName}>{space.name}</Text>
+                    <Text style={styles.wineMeta}>
+                      {space.row_count} rader • {space.slots_per_row} platser per rad
+                    </Text>
+                  </View>
+                  <View style={styles.quantityBadge}>
+                    <Text style={styles.quantityBadgeText}>{bottleCount} st</Text>
+                  </View>
+                </View>
+
+                {space.notes ? <Text style={styles.notesText}>{space.notes}</Text> : null}
+
+                <View style={styles.actionRow}>
+                  <Pressable onPress={() => deleteStorageSpace(space.id)}>
+                    <Text style={styles.dangerText}>Ta bort</Text>
+                  </Pressable>
+                </View>
+              </View>
+            );
+          })}
+        </View>
+
+        <View style={styles.panel}>
+          <View style={styles.panelHeaderRow}>
             <Text style={styles.panelTitle}>Vad ska vi äta?</Text>
             <Text style={styles.linkText}>{selectedMeal}</Text>
           </View>
@@ -858,6 +1116,44 @@ function CellarScreen({ session }: { session: Session }) {
               keyboardType="number-pad"
             />
           </DoubleRow>
+          {storageSpaces.length > 0 ? (
+            <View style={styles.foodSection}>
+              <Text style={styles.inputLabel}>Förvaringsplats</Text>
+              <Text style={styles.notesText}>Välj plats, rad och slot. Fri platsnotering kan användas som extra stöd.</Text>
+              <StorageSpaceSelector
+                title=""
+                spaces={storageSpaces}
+                selectedId={selectedStorageSpaceId}
+                onSelect={(spaceId) => {
+                  setSelectedStorageSpaceId(spaceId);
+                  setSelectedStorageRow("1");
+                  setSelectedStorageSlot("1");
+                }}
+                clearLabel="Ingen plats"
+              />
+              {selectedStorageSpace ? (
+                <>
+                  <SuggestionRow
+                    title="Rad"
+                    options={buildNumericOptions(selectedStorageSpace.row_count)}
+                    selected={selectedStorageRow}
+                    onSelect={setSelectedStorageRow}
+                  />
+                  <SuggestionRow
+                    title="Plats"
+                    options={buildNumericOptions(selectedStorageSpace.slots_per_row)}
+                    selected={selectedStorageSlot}
+                    onSelect={setSelectedStorageSlot}
+                  />
+                  <Text style={styles.notesText}>
+                    Vald placering: {getWineStoragePlacementLabel({ storage_space_id: selectedStorageSpaceId, storage_row: Number(selectedStorageRow), storage_slot: Number(selectedStorageSlot) }, storageSpaceById)}
+                  </Text>
+                </>
+              ) : null}
+            </View>
+          ) : (
+            <Text style={styles.notesText}>Skapa en förvaringsplats nedan för att kunna välja rad och plats.</Text>
+          )}
           <SuggestionRow
             title="Matförslag"
             options={getSuggestedPairings(draft.type)}
@@ -869,9 +1165,10 @@ function CellarScreen({ session }: { session: Session }) {
             }
           />
           <LabeledInput
-            label="Plats i källaren"
+            label="Fri platsnotering"
             value={draft.location}
             onChangeText={(value) => setDraft((current) => ({ ...current, location: value }))}
+            placeholder="t.ex. längst bak, överst i kylen"
           />
           <LabeledInput
             label="Streckkod"
@@ -1097,6 +1394,16 @@ function CellarScreen({ session }: { session: Session }) {
             onSelect={(vintage) => setSelectedVintageFilter(vintage)}
           />
 
+          {storageSpaces.length > 0 ? (
+            <StorageSpaceSelector
+              title="Filtrera plats"
+              spaces={storageSpaces}
+              selectedId={selectedStorageSpaceFilterId}
+              onSelect={setSelectedStorageSpaceFilterId}
+              clearLabel="Alla"
+            />
+          ) : null}
+
           {loading ? <LoadingInline /> : null}
 
           {!loading && filteredWines.length === 0 ? (
@@ -1116,6 +1423,12 @@ function CellarScreen({ session }: { session: Session }) {
                       .filter(Boolean)
                       .join(" • ")}
                   </Text>
+                  <Text style={styles.locationText}>
+                    {getWineStoragePlacementLabel(wine, storageSpaceById) || wine.cellar_location || "Ingen plats angiven"}
+                  </Text>
+                  {wine.cellar_location && getWineStoragePlacementLabel(wine, storageSpaceById) ? (
+                    <Text style={styles.notesText}>{wine.cellar_location}</Text>
+                  ) : null}
                 </View>
                 <View style={styles.quantityBadge}>
                   <Text style={styles.quantityBadgeText}>{wine.quantity} st</Text>
@@ -1249,6 +1562,51 @@ function SuggestionRow({
   );
 }
 
+function StorageSpaceSelector({
+  title,
+  spaces,
+  onSelect,
+  selectedId,
+  clearLabel,
+}: {
+  title?: string;
+  spaces: StorageSpaceRow[];
+  onSelect: (value: string) => void;
+  selectedId?: string;
+  clearLabel: string;
+}) {
+  if (spaces.length === 0) {
+    return null;
+  }
+
+  return (
+    <View style={styles.foodSection}>
+      {title ? <Text style={styles.inputLabel}>{title}</Text> : null}
+      <View style={styles.tagRow}>
+        <Pressable
+          onPress={() => onSelect("")}
+          style={[styles.suggestionPill, !selectedId && styles.suggestionPillActive]}
+        >
+          <Text style={[styles.suggestionText, !selectedId && styles.suggestionTextActive]}>{clearLabel}</Text>
+        </Pressable>
+        {spaces.map((space) => {
+          const isSelected = selectedId === space.id;
+
+          return (
+            <Pressable
+              key={space.id}
+              onPress={() => onSelect(space.id)}
+              style={[styles.suggestionPill, isSelected && styles.suggestionPillActive]}
+            >
+              <Text style={[styles.suggestionText, isSelected && styles.suggestionTextActive]}>{space.name}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
 function ImportSelectionRow({
   label,
   selected,
@@ -1268,13 +1626,44 @@ function ImportSelectionRow({
   );
 }
 
-function LoadingInline() {
+function LoadingInline({ label = "Laddar viner..." }: { label?: string }) {
   return (
     <View style={styles.loadingInline}>
       <ActivityIndicator color="#6f1d1b" />
-      <Text style={styles.notesText}>Laddar viner...</Text>
+      <Text style={styles.notesText}>{label}</Text>
     </View>
   );
+}
+
+function buildNumericOptions(count: number) {
+  return Array.from({ length: Math.max(1, count) }, (_, index) => String(index + 1));
+}
+
+function buildStorageSpaceBottleCounts(wines: WineRecord[]) {
+  const counts = new Map<string, number>();
+
+  for (const wine of wines) {
+    if (!wine.storage_space_id) {
+      continue;
+    }
+
+    counts.set(wine.storage_space_id, (counts.get(wine.storage_space_id) || 0) + wine.quantity);
+  }
+
+  return counts;
+}
+
+function getWineStoragePlacementLabel(wine: Pick<WineRow, "storage_space_id" | "storage_row" | "storage_slot">, storageSpaceById: Map<string, StorageSpaceRow>) {
+  if (!wine.storage_space_id) {
+    return "";
+  }
+
+  const space = storageSpaceById.get(wine.storage_space_id);
+  const row = wine.storage_row ? `Rad ${wine.storage_row}` : "";
+  const slot = wine.storage_slot ? `Plats ${wine.storage_slot}` : "";
+  const parts = [space?.name || "Förvaringsplats", row, slot].filter(Boolean);
+
+  return parts.join(" • ");
 }
 
 async function hydrateWineRecords(rows: WineRow[]): Promise<WineRecord[]> {
@@ -1833,7 +2222,19 @@ const styles = StyleSheet.create({
     padding: 14,
     gap: 10,
   },
+  storageSpaceCard: {
+    borderRadius: 18,
+    backgroundColor: "#fffaf5",
+    padding: 14,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: "#ead8ca",
+  },
   recommendationHeader: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  storageSpaceHeader: {
     flexDirection: "row",
     gap: 12,
   },
@@ -1879,6 +2280,11 @@ const styles = StyleSheet.create({
   wineMeta: {
     color: "#6f6259",
     marginTop: 4,
+  },
+  locationText: {
+    color: "#6f1d1b",
+    marginTop: 6,
+    fontWeight: "600",
   },
   quantityBadge: {
     backgroundColor: "#ead8ca",

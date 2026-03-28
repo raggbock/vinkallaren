@@ -11,6 +11,9 @@ export type WineRow = {
   type: string;
   barcode: string | null;
   systembolaget_product_id: string | null;
+  storage_space_id: string | null;
+  storage_row: number | null;
+  storage_slot: number | null;
   tags: string[];
   food_pairings: string[];
   pairing_source: string | null;
@@ -39,6 +42,9 @@ export type WineInsert = {
   type: string;
   barcode?: string | null;
   systembolaget_product_id?: string | null;
+  storage_space_id?: string | null;
+  storage_row?: number | null;
+  storage_slot?: number | null;
   tags?: string[];
   food_pairings?: string[];
   pairing_source?: string | null;
