@@ -3,34 +3,50 @@ import "react-native-url-polyfill/auto";
 import * as ImagePicker from "expo-image-picker";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { StatusBar } from "expo-status-bar";
-import { useEffect, useMemo, useState, type ComponentProps, type ReactNode } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Image,
-  KeyboardAvoidingView,
-  Linking,
-  Modal,
-  Platform,
-  Pressable,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ActivityIndicator, Alert, Image, KeyboardAvoidingView, LayoutChangeEvent, Linking, Modal, Platform, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { Session } from "@supabase/supabase-js";
 
 import { supabase, supabaseConfigured } from "./src/lib/supabase";
 import { cacheCatalogEntry, findCatalogMatch, type ProductCatalogEntry } from "./src/lib/product-catalog";
 import { GRAPE_VARIETIES, WINE_COUNTRIES, WINE_REGIONS } from "./src/lib/reference-data";
-import type { ProductCatalogRow } from "./src/types/product-catalog";
+import {
+  buildMealRecommendations,
+  buildMealSuggestions,
+  buildNumericOptions,
+  buildPairingOptions,
+  buildStats,
+  buildStorageSpaceBottleCounts,
+  buildSystembolagetProductUrl,
+  buildValueOptions,
+  buildVintageOptions,
+  emptyToNull,
+  getSuggestedPairings,
+  getWineStoragePlacementLabel,
+  mergeTagText,
+  normalizeLookupValue,
+  parseTags,
+  resolveImportedValue,
+  toNumberOrNull,
+} from "./src/lib/cellar-helpers";
+import {
+  AutocompleteInput,
+  DoubleRow,
+  ImportSelectionRow,
+  InsightCard,
+  LabeledInput,
+  LoadingInline,
+  MetricCard,
+  StorageSpaceSelector,
+  SuggestionRow,
+} from "./src/components/form-controls";
+import type { ProductCatalogWineRow } from "./src/types/product-catalog";
 import type { ReferenceOptionRow } from "./src/types/reference-data";
 import type { StorageSpaceInsert, StorageSpaceRow } from "./src/types/storage-space";
 import type { WineInsert, WineRecord, WineRow } from "./src/types/wine";
 
 type AuthMode = "signin" | "signup";
+type CellarSection = "overview" | "storage" | "catalog" | "meal" | "add" | "cellar";
 
 type WineDraft = {
   name: string;
@@ -136,7 +152,16 @@ const defaultImportSelection: ImportFieldSelection = {
   barcode: true,
 };
 
-function toCatalogEditorDraft(entry: ProductCatalogRow): CatalogEditorDraft {
+const cellarSections: Array<{ key: CellarSection; label: string }> = [
+  { key: "cellar", label: "Min källare" },
+  { key: "storage", label: "Platser" },
+  { key: "catalog", label: "Katalog" },
+  { key: "meal", label: "Mat" },
+  { key: "add", label: "Lägg till" },
+  { key: "overview", label: "Översikt" },
+];
+
+function toCatalogEditorDraft(entry: ProductCatalogWineRow): CatalogEditorDraft {
   return {
     id: entry.id,
     barcode: entry.barcode ?? "",
@@ -416,7 +441,7 @@ function CellarScreen({ session }: { session: Session }) {
   const [draft, setDraft] = useState<WineDraft>(defaultDraft);
   const [storageSpaceDraft, setStorageSpaceDraft] = useState<StorageSpaceDraft>(defaultStorageSpaceDraft);
   const [storageSpaces, setStorageSpaces] = useState<StorageSpaceRow[]>([]);
-  const [catalogEntries, setCatalogEntries] = useState<ProductCatalogRow[]>([]);
+  const [catalogEntries, setCatalogEntries] = useState<ProductCatalogWineRow[]>([]);
   const [referenceOptions, setReferenceOptions] = useState<ReferenceOptionRow[]>([]);
   const [catalogEditorVisible, setCatalogEditorVisible] = useState(false);
   const [catalogEditorDraft, setCatalogEditorDraft] = useState<CatalogEditorDraft | null>(null);
@@ -445,6 +470,16 @@ function CellarScreen({ session }: { session: Session }) {
   const [importMode, setImportMode] = useState<ImportMode>("custom");
   const [lookupBusy, setLookupBusy] = useState(false);
   const [lookupMessage, setLookupMessage] = useState("");
+  const [activeSection, setActiveSection] = useState<CellarSection>("cellar");
+  const scrollRef = useRef<ScrollView | null>(null);
+  const sectionOffsets = useRef<Record<CellarSection, number>>({
+    overview: 0,
+    storage: 0,
+    catalog: 0,
+    meal: 0,
+    add: 0,
+    cellar: 0,
+  });
 
   const stats = useMemo(() => buildStats(wines), [wines]);
   const grapeReferenceRows = useMemo(
@@ -484,6 +519,21 @@ function CellarScreen({ session }: { session: Session }) {
     () => buildMealRecommendations(wines, selectedMeal),
     [selectedMeal, wines]
   );
+
+  function registerSectionOffset(section: CellarSection) {
+    return (event: LayoutChangeEvent) => {
+      sectionOffsets.current[section] = event.nativeEvent.layout.y;
+    };
+  }
+
+  function goToSection(section: CellarSection) {
+    setActiveSection(section);
+    scrollRef.current?.scrollTo({
+      y: Math.max(0, (sectionOffsets.current[section] ?? 0) - 8),
+      animated: true,
+    });
+  }
+
   const filteredWines = useMemo(() => {
     return wines.filter((wine) => {
       const matchesPairing =
@@ -614,7 +664,7 @@ function CellarScreen({ session }: { session: Session }) {
     setLoadingCatalogEntries(true);
 
     const { data, error } = await supabase
-      .from("product_catalog_entries")
+      .from("product_catalog_wines")
       .select("*")
       .order("updated_at", { ascending: false })
       .limit(12);
@@ -625,7 +675,7 @@ function CellarScreen({ session }: { session: Session }) {
       return;
     }
 
-    setCatalogEntries((data ?? []) as ProductCatalogRow[]);
+    setCatalogEntries((data ?? []) as ProductCatalogWineRow[]);
     setLoadingCatalogEntries(false);
   }
 
@@ -645,7 +695,7 @@ function CellarScreen({ session }: { session: Session }) {
     setReferenceOptions((data ?? []) as ReferenceOptionRow[]);
   }
 
-  function openCatalogEditor(entry: ProductCatalogRow) {
+  function openCatalogEditor(entry: ProductCatalogWineRow) {
     setCatalogEditorDraft(toCatalogEditorDraft(entry));
     setCatalogEditorVisible(true);
   }
@@ -665,8 +715,8 @@ function CellarScreen({ session }: { session: Session }) {
       return;
     }
 
-    if (!catalogEditorDraft.barcode.trim() && !catalogEditorDraft.systembolagetProductId.trim()) {
-      Alert.alert("Identifierare saknas", "Lägg in streckkod eller artikelnummer innan du sparar.");
+    if (!catalogEditorDraft.barcode.trim()) {
+      Alert.alert("Streckkod saknas", "Lägg in streckkoden innan du sparar katalogposten.");
       return;
     }
 
@@ -674,7 +724,7 @@ function CellarScreen({ session }: { session: Session }) {
 
     try {
       const { error } = await supabase
-        .from("product_catalog_entries")
+        .from("product_catalog_wines")
         .update({
           barcode: emptyToNull(catalogEditorDraft.barcode),
           systembolaget_product_id: emptyToNull(catalogEditorDraft.systembolagetProductId),
@@ -704,7 +754,7 @@ function CellarScreen({ session }: { session: Session }) {
     }
   }
 
-  function deleteCatalogEntry(entry: ProductCatalogRow) {
+  function deleteCatalogEntry(entry: ProductCatalogWineRow) {
     Alert.alert(
       "Ta bort produkt?",
       `Vill du ta bort ${entry.name} från katalogen?`,
@@ -725,7 +775,7 @@ function CellarScreen({ session }: { session: Session }) {
     setSavingCatalogEdit(true);
 
     try {
-      const { error } = await supabase.from("product_catalog_entries").delete().eq("id", id);
+      const { error } = await supabase.from("product_catalog_wines").delete().eq("id", id);
 
       if (error) {
         throw error;
@@ -921,8 +971,8 @@ function CellarScreen({ session }: { session: Session }) {
     const barcode = draft.barcode.trim();
     const systembolagetProductId = draft.systembolagetProductId.trim();
 
-    if (!barcode && !systembolagetProductId) {
-      Alert.alert("Identifierare saknas", "Lägg in streckkod eller artikelnummer först.");
+    if (!barcode) {
+      Alert.alert("Streckkod saknas", "Lägg in streckkoden innan du sparar produkten i katalogen.");
       return;
     }
 
@@ -997,8 +1047,9 @@ function CellarScreen({ session }: { session: Session }) {
         barcode,
         systembolagetProductId,
       });
+      const normalizedMatch = match && !match.barcode && barcode ? { ...match, barcode } : match;
 
-      setCatalogSuggestion(match);
+      setCatalogSuggestion(normalizedMatch);
       setImportSelection(defaultImportSelection);
       setImportMode("custom");
       setLookupMessage(
@@ -1009,7 +1060,7 @@ function CellarScreen({ session }: { session: Session }) {
             : "Ingen träff på artikelnumret ännu."
       );
 
-      return match;
+      return normalizedMatch;
     } catch (_error) {
       setCatalogSuggestion(null);
       setLookupMessage("Kunde inte hämta produktdata just nu.");
@@ -1280,8 +1331,8 @@ function CellarScreen({ session }: { session: Session }) {
           </ScrollView>
         </SafeAreaView>
       </Modal>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.heroPanel}>
+      <ScrollView ref={scrollRef} stickyHeaderIndices={[1]} contentContainerStyle={styles.scrollContent}>
+        <View style={styles.heroPanel} onLayout={registerSectionOffset("overview")}>
           <Text style={styles.eyebrow}>Synkad vinkällare</Text>
           <Text style={styles.heroTitle}>Alla flaskor, alltid med dig.</Text>
           <Text style={styles.heroText}>{session.user.email}</Text>
@@ -1293,7 +1344,25 @@ function CellarScreen({ session }: { session: Session }) {
           </View>
         </View>
 
-        <View style={styles.panel}>
+        <View style={styles.sectionNavWrapper}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.sectionNav}>
+            {cellarSections.map((section) => {
+              const isActive = activeSection === section.key;
+
+              return (
+                <Pressable
+                  key={section.key}
+                  onPress={() => goToSection(section.key)}
+                  style={[styles.sectionPill, isActive && styles.sectionPillActive]}
+                >
+                  <Text style={[styles.sectionPillText, isActive && styles.sectionPillTextActive]}>{section.label}</Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </View>
+
+        <View style={styles.panel} onLayout={registerSectionOffset("storage")}>
           <View style={styles.panelHeaderRow}>
             <Text style={styles.panelTitle}>Statistik</Text>
             <Pressable onPress={fetchWines}>
@@ -1307,7 +1376,7 @@ function CellarScreen({ session }: { session: Session }) {
           <InsightCard label="Snittårgång" value={stats.averageVintage} />
         </View>
 
-        <View style={styles.panel}>
+        <View style={styles.panel} onLayout={registerSectionOffset("catalog")}>
           <View style={styles.panelHeaderRow}>
             <Text style={styles.panelTitle}>Förvaringsplatser</Text>
             <Text style={styles.linkText}>{storageSpaces.length} st</Text>
@@ -1390,7 +1459,7 @@ function CellarScreen({ session }: { session: Session }) {
           })}
         </View>
 
-        <View style={styles.panel}>
+        <View style={styles.panel} onLayout={registerSectionOffset("meal")}>
           <View style={styles.panelHeaderRow}>
             <Text style={styles.panelTitle}>Produktkatalog</Text>
             <Pressable onPress={fetchCatalogEntries}>
@@ -1432,7 +1501,7 @@ function CellarScreen({ session }: { session: Session }) {
           ))}
         </View>
 
-        <View style={styles.panel}>
+        <View style={styles.panel} onLayout={registerSectionOffset("add")}>
           <View style={styles.panelHeaderRow}>
             <Text style={styles.panelTitle}>Vad ska vi äta?</Text>
             <Text style={styles.linkText}>{selectedMeal}</Text>
@@ -1478,7 +1547,7 @@ function CellarScreen({ session }: { session: Session }) {
           )}
         </View>
 
-        <View style={styles.panel}>
+        <View style={styles.panel} onLayout={registerSectionOffset("cellar")}>
           <Text style={styles.panelTitle}>Lägg till vin</Text>
           <LabeledInput label="Namn" value={draft.name} onChangeText={(value) => setDraft((current) => ({ ...current, name: value }))} />
           <LabeledInput
@@ -1576,6 +1645,7 @@ function CellarScreen({ session }: { session: Session }) {
           <SuggestionRow
             title="Matförslag"
             options={getSuggestedPairings(draft.type)}
+            selected={parseTags(draft.foodPairings)[0] || ""}
             onSelect={(pairing) =>
               setDraft((current) => ({
                 ...current,
@@ -1922,274 +1992,6 @@ function CellarScreen({ session }: { session: Session }) {
   );
 }
 
-function LabeledInput({ label, multiline, ...props }: ComponentProps<typeof TextInput> & { label: string }) {
-  return (
-    <View style={styles.inputGroup}>
-      <Text style={styles.inputLabel}>{label}</Text>
-      <TextInput
-        placeholderTextColor="#8f8178"
-        style={[styles.input, multiline && styles.textarea]}
-        multiline={multiline}
-        {...props}
-      />
-    </View>
-  );
-}
-
-function AutocompleteInput({
-  label,
-  value,
-  onChangeText,
-  options,
-  optionRows,
-  placeholder,
-}: {
-  label: string;
-  value: string;
-  onChangeText: (value: string) => void;
-  options: string[];
-  optionRows?: ReferenceOptionRow[];
-  placeholder?: string;
-}) {
-  const [focused, setFocused] = useState(false);
-
-  const suggestions = useMemo(() => {
-    const query = normalizeLookupValue(value);
-
-    if (!query) {
-      return [];
-    }
-
-    const searchableOptions = optionRows?.length
-      ? optionRows.map((row) => ({
-          value: row.name,
-          haystack: [row.name, ...(row.aliases ?? []), row.parent_name ?? ""].join(" "),
-        }))
-      : options.map((option) => ({
-          value: option,
-          haystack: option,
-        }));
-
-    return searchableOptions
-      .filter((option) => normalizeLookupValue(option.haystack).includes(query))
-      .sort((left, right) => {
-        const leftNormalized = normalizeLookupValue(left.haystack);
-        const rightNormalized = normalizeLookupValue(right.haystack);
-        const leftStarts = leftNormalized.startsWith(query) ? 0 : 1;
-        const rightStarts = rightNormalized.startsWith(query) ? 0 : 1;
-
-        if (leftStarts !== rightStarts) {
-          return leftStarts - rightStarts;
-        }
-
-        return left.value.localeCompare(right.value);
-      })
-      .map((option) => option.value)
-      .filter((option, index, values) => values.indexOf(option) === index)
-      .slice(0, 8);
-  }, [optionRows, options, value]);
-
-  const showSuggestions =
-    focused &&
-    value.trim().length > 0 &&
-    suggestions.length > 0 &&
-    !suggestions.some((option) => normalizeLookupValue(option) === normalizeLookupValue(value));
-
-  return (
-    <View style={styles.inputGroup}>
-      <Text style={styles.inputLabel}>{label}</Text>
-      <TextInput
-        placeholder={placeholder}
-        placeholderTextColor="#8f8178"
-        style={styles.input}
-        value={value}
-        onChangeText={onChangeText}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-      />
-      {showSuggestions ? (
-        <View style={styles.autocompleteList}>
-          {suggestions.map((option) => (
-            <Pressable
-              key={`${label}-${option}`}
-              onPress={() => {
-                onChangeText(option);
-                setFocused(false);
-              }}
-              style={styles.autocompleteItem}
-            >
-              <Text style={styles.autocompleteText}>{option}</Text>
-            </Pressable>
-          ))}
-        </View>
-      ) : null}
-    </View>
-  );
-}
-
-function DoubleRow({ children }: { children: ReactNode }) {
-  return <View style={styles.doubleRow}>{children}</View>;
-}
-
-function MetricCard({ value, label }: { value: string; label: string }) {
-  return (
-    <View style={styles.metricCard}>
-      <Text style={styles.metricValue}>{value}</Text>
-      <Text style={styles.metricLabel}>{label}</Text>
-    </View>
-  );
-}
-
-function InsightCard({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={styles.insightCard}>
-      <Text style={styles.inputLabel}>{label}</Text>
-      <Text style={styles.insightValue}>{value}</Text>
-    </View>
-  );
-}
-
-function SuggestionRow({
-  title,
-  options,
-  onSelect,
-  selected,
-}: {
-  title: string;
-  options: string[];
-  onSelect: (value: string) => void;
-  selected?: string;
-}) {
-  if (options.length === 0) {
-    return null;
-  }
-
-  return (
-    <View style={styles.foodSection}>
-      <Text style={styles.inputLabel}>{title}</Text>
-      <View style={styles.tagRow}>
-        {options.map((option) => {
-          const isSelected = selected === option;
-
-          return (
-            <Pressable
-              key={`${title}-${option}`}
-              onPress={() => onSelect(option)}
-              style={[styles.suggestionPill, isSelected && styles.suggestionPillActive]}
-            >
-              <Text style={[styles.suggestionText, isSelected && styles.suggestionTextActive]}>{option}</Text>
-            </Pressable>
-          );
-        })}
-      </View>
-    </View>
-  );
-}
-
-function StorageSpaceSelector({
-  title,
-  spaces,
-  onSelect,
-  selectedId,
-  clearLabel,
-}: {
-  title?: string;
-  spaces: StorageSpaceRow[];
-  onSelect: (value: string) => void;
-  selectedId?: string;
-  clearLabel: string;
-}) {
-  if (spaces.length === 0) {
-    return null;
-  }
-
-  return (
-    <View style={styles.foodSection}>
-      {title ? <Text style={styles.inputLabel}>{title}</Text> : null}
-      <View style={styles.tagRow}>
-        <Pressable
-          onPress={() => onSelect("")}
-          style={[styles.suggestionPill, !selectedId && styles.suggestionPillActive]}
-        >
-          <Text style={[styles.suggestionText, !selectedId && styles.suggestionTextActive]}>{clearLabel}</Text>
-        </Pressable>
-        {spaces.map((space) => {
-          const isSelected = selectedId === space.id;
-
-          return (
-            <Pressable
-              key={space.id}
-              onPress={() => onSelect(space.id)}
-              style={[styles.suggestionPill, isSelected && styles.suggestionPillActive]}
-            >
-              <Text style={[styles.suggestionText, isSelected && styles.suggestionTextActive]}>{space.name}</Text>
-            </Pressable>
-          );
-        })}
-      </View>
-    </View>
-  );
-}
-
-function ImportSelectionRow({
-  label,
-  selected,
-  onToggle,
-}: {
-  label: string;
-  selected: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <Pressable onPress={onToggle} style={[styles.importOptionRow, selected && styles.importOptionRowActive]}>
-      <Text style={[styles.importOptionText, selected && styles.importOptionTextActive]}>{label}</Text>
-      <Text style={[styles.importOptionState, selected && styles.importOptionTextActive]}>
-        {selected ? "Ja" : "Nej"}
-      </Text>
-    </Pressable>
-  );
-}
-
-function LoadingInline({ label = "Laddar viner..." }: { label?: string }) {
-  return (
-    <View style={styles.loadingInline}>
-      <ActivityIndicator color="#6f1d1b" />
-      <Text style={styles.notesText}>{label}</Text>
-    </View>
-  );
-}
-
-function buildNumericOptions(count: number) {
-  return Array.from({ length: Math.max(1, count) }, (_, index) => String(index + 1));
-}
-
-function buildStorageSpaceBottleCounts(wines: WineRecord[]) {
-  const counts = new Map<string, number>();
-
-  for (const wine of wines) {
-    if (!wine.storage_space_id) {
-      continue;
-    }
-
-    counts.set(wine.storage_space_id, (counts.get(wine.storage_space_id) || 0) + wine.quantity);
-  }
-
-  return counts;
-}
-
-function getWineStoragePlacementLabel(wine: Pick<WineRow, "storage_space_id" | "storage_row" | "storage_slot">, storageSpaceById: Map<string, StorageSpaceRow>) {
-  if (!wine.storage_space_id) {
-    return "";
-  }
-
-  const space = storageSpaceById.get(wine.storage_space_id);
-  const row = wine.storage_row ? `Rad ${wine.storage_row}` : "";
-  const slot = wine.storage_slot ? `Plats ${wine.storage_slot}` : "";
-  const parts = [space?.name || "Förvaringsplats", row, slot].filter(Boolean);
-
-  return parts.join(" • ");
-}
-
 async function hydrateWineRecords(rows: WineRow[]): Promise<WineRecord[]> {
   const paths = rows.map((row) => row.image_path).filter((value): value is string => Boolean(value));
   const signedUrlMap = new Map<string, string>();
@@ -2228,191 +2030,35 @@ async function uploadWineImage(userId: string, uri: string) {
   return filePath;
 }
 
-function buildStats(wines: WineRecord[]) {
-  const totalBottles = wines.reduce((sum, wine) => sum + wine.quantity, 0);
-  const drinkSoon = wines
-    .filter((wine) => wine.drink_by_year && wine.drink_by_year <= new Date().getFullYear() + 1)
-    .reduce((sum, wine) => sum + wine.quantity, 0);
+async function cacheWineDraftAsCatalogEntry(payload: WineInsert, userId: string) {
+  const barcode = payload.barcode?.trim();
+  const systembolagetProductId = payload.systembolaget_product_id?.trim();
 
-  const byCountry = new Map<string, number>();
-  const byType = new Map<string, number>();
-  const byPairing = new Map<string, number>();
-  const vintages = wines.map((wine) => wine.vintage).filter((value): value is number => Boolean(value));
-
-  for (const wine of wines) {
-    if (wine.country) {
-      byCountry.set(wine.country, (byCountry.get(wine.country) || 0) + wine.quantity);
-    }
-
-    byType.set(wine.type, (byType.get(wine.type) || 0) + wine.quantity);
-
-    for (const pairing of wine.food_pairings) {
-      byPairing.set(pairing, (byPairing.get(pairing) || 0) + wine.quantity);
-    }
+  if (!barcode) {
+    return;
   }
 
-  const topCountry = [...byCountry.entries()].sort((a, b) => b[1] - a[1])[0];
-  const topType = [...byType.entries()].sort((a, b) => b[1] - a[1])[0];
-  const topPairing = [...byPairing.entries()].sort((a, b) => b[1] - a[1])[0];
-
-  return {
-    totalBottles,
-    totalLabels: wines.length,
-    drinkSoon,
-    topCountry: topCountry ? `${topCountry[0]} (${topCountry[1]})` : "Ingen data",
-    topType: topType ? `${topType[0]} (${topType[1]})` : "Ingen data",
-    topPairing: topPairing ? `${topPairing[0]} (${topPairing[1]})` : "Ingen data",
-    averageVintage:
-      vintages.length > 0
-        ? String(Math.round(vintages.reduce((sum, value) => sum + value, 0) / vintages.length))
-        : "-",
-  };
-}
-
-function buildPairingOptions(wines: WineRecord[]) {
-  const pairings = new Set<string>(["Alla"]);
-
-  for (const wine of wines) {
-    for (const pairing of wine.food_pairings) {
-      pairings.add(pairing);
-    }
+  if (!payload.name.trim()) {
+    return;
   }
 
-  return [...pairings];
-}
-
-function buildSystembolagetProductUrl(productId: string) {
-  const normalized = productId.trim();
-  return `https://www.systembolaget.se/${encodeURIComponent(normalized)}/`;
-}
-
-function buildMealSuggestions(wines: WineRecord[]) {
-  const defaults = ["lamm", "nöt", "fisk", "skaldjur", "ost", "svamp"];
-  const values = new Set<string>(defaults);
-
-  for (const wine of wines) {
-    for (const pairing of wine.food_pairings) {
-      values.add(pairing);
-    }
-  }
-
-  return [...values];
-}
-
-function buildValueOptions(wines: WineRecord[], selector: (wine: WineRecord) => string | null) {
-  const values = new Set<string>(["Alla"]);
-
-  for (const wine of wines) {
-    const value = selector(wine);
-
-    if (value) {
-      values.add(value);
-    }
-  }
-
-  return [...values];
-}
-
-function buildVintageOptions(wines: WineRecord[]) {
-  const values = new Set<string>(["Alla"]);
-
-  for (const wine of wines) {
-    if (wine.vintage) {
-      values.add(String(wine.vintage));
-    }
-  }
-
-  return [...values].sort((a, b) => {
-    if (a === "Alla") {
-      return -1;
-    }
-
-    if (b === "Alla") {
-      return 1;
-    }
-
-    return Number(b) - Number(a);
-  });
-}
-
-function buildMealRecommendations(wines: WineRecord[], selectedMeal: string) {
-  return [...wines]
-    .filter((wine) => wine.food_pairings.includes(selectedMeal))
-    .sort((a, b) => {
-      const aReady = a.drink_by_year ? Math.abs(a.drink_by_year - new Date().getFullYear()) : 999;
-      const bReady = b.drink_by_year ? Math.abs(b.drink_by_year - new Date().getFullYear()) : 999;
-
-      if (aReady !== bReady) {
-        return aReady - bReady;
-      }
-
-      return b.quantity - a.quantity;
-    })
-    .slice(0, 5);
-}
-
-function getSuggestedPairings(wineType: string) {
-  const normalized = wineType.trim().toLowerCase();
-
-  if (normalized.includes("vitt")) {
-    return ["fisk", "skaldjur", "sallad", "getost"];
-  }
-
-  if (normalized.includes("mousserande")) {
-    return ["aperitif", "skaldjur", "chips", "ost"];
-  }
-
-  if (normalized.includes("ros")) {
-    return ["grillat", "sallad", "kyckling", "snacks"];
-  }
-
-  if (normalized.includes("dessert")) {
-    return ["dessert", "blåmögelost", "frukt"];
-  }
-
-  return ["lamm", "nöt", "svamp", "lagrad ost"];
-}
-
-function parseTags(input: string) {
-  return input
-    .split(",")
-    .map((tag) => tag.trim())
-    .filter(Boolean);
-}
-
-function toNumberOrNull(value: string) {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
-}
-
-function emptyToNull(value: string) {
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
-}
-
-function mergeTagText(currentValue: string, nextValue: string) {
-  const parts = parseTags(currentValue);
-
-  if (parts.includes(nextValue)) {
-    return currentValue;
-  }
-
-  return [...parts, nextValue].join(", ");
-}
-
-function resolveImportedValue(currentValue: string, importedValue: string, modeOrSelection: boolean) {
-  if (!modeOrSelection) {
-    return currentValue;
-  }
-
-  return importedValue || currentValue;
-}
-
-function normalizeLookupValue(value: string) {
-  return value
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+  await cacheCatalogEntry(
+    {
+      barcode,
+      systembolagetProductId,
+      name: payload.name,
+      producer: payload.producer ?? undefined,
+      country: payload.country ?? undefined,
+      region: payload.region ?? undefined,
+      grape: payload.grape ?? undefined,
+      type: payload.type ?? undefined,
+      vintage: payload.vintage ?? undefined,
+      foodPairings: payload.food_pairings ?? [],
+      sourceLabel: "MinVinkällare",
+      sourceConfidence: "high",
+    },
+    userId
+  );
 }
 
 function mergeDraftWithCatalogSuggestion(
@@ -2458,37 +2104,6 @@ function mergeDraftWithCatalogSuggestion(
     ),
     barcode: resolveImportedValue(current.barcode, suggestion.barcode || "", shouldApply("barcode", current.barcode)),
   };
-}
-
-async function cacheWineDraftAsCatalogEntry(payload: WineInsert, userId: string) {
-  const barcode = payload.barcode?.trim();
-  const systembolagetProductId = payload.systembolaget_product_id?.trim();
-
-  if (!barcode && !systembolagetProductId) {
-    return;
-  }
-
-  if (!payload.name.trim()) {
-    return;
-  }
-
-  await cacheCatalogEntry(
-    {
-      barcode,
-      systembolagetProductId,
-      name: payload.name,
-      producer: payload.producer ?? undefined,
-      country: payload.country ?? undefined,
-      region: payload.region ?? undefined,
-      grape: payload.grape ?? undefined,
-      type: payload.type ?? undefined,
-      vintage: payload.vintage ?? undefined,
-      foodPairings: payload.food_pairings ?? [],
-      sourceLabel: "MinVinkällare",
-      sourceConfidence: "high",
-    },
-    userId
-  );
 }
 
 const styles = StyleSheet.create({
@@ -2627,6 +2242,32 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   segmentTextActive: {
+    color: "#fffaf5",
+  },
+  sectionNavWrapper: {
+    marginTop: -4,
+    marginHorizontal: -18,
+  },
+  sectionNav: {
+    flexDirection: "row",
+    gap: 8,
+    paddingHorizontal: 18,
+    paddingBottom: 4,
+  },
+  sectionPill: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 999,
+    backgroundColor: "#ead8ca",
+  },
+  sectionPillActive: {
+    backgroundColor: "#6f1d1b",
+  },
+  sectionPillText: {
+    color: "#6f1d1b",
+    fontWeight: "700",
+  },
+  sectionPillTextActive: {
     color: "#fffaf5",
   },
   inputGroup: {
