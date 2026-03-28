@@ -1,5 +1,5 @@
 import { supabase } from "./supabase";
-import type { ProductCatalogInsert, ProductCatalogRow } from "../types/product-catalog";
+import type { ProductCatalogWineInsert, ProductCatalogWineRow } from "../types/product-catalog";
 
 export type ProductCatalogEntry = {
   systembolagetProductId?: string;
@@ -36,7 +36,7 @@ type OpenFoodFactsResponse = {
   };
 };
 
-const systembolagetSeedCatalog: ProductCatalogEntry[] = [
+const barcodeSeedCatalog: ProductCatalogEntry[] = [
   {
     systembolagetProductId: "7202301",
     barcode: "7310400123456",
@@ -203,7 +203,7 @@ function findLocalCatalogMatch(input: ProductLookupInput) {
   const systembolagetProductId = input.systembolagetProductId?.trim();
 
   return (
-    systembolagetSeedCatalog.find((entry) => {
+    barcodeSeedCatalog.find((entry) => {
       const barcodeMatch = barcode && entry.barcode && entry.barcode === barcode;
       const articleMatch =
         systembolagetProductId &&
@@ -224,7 +224,7 @@ async function findSharedCatalogMatch(input: ProductLookupInput) {
   }
 
   let query = supabase
-    .from("product_catalog_entries")
+    .from("product_catalog_wines")
     .select("*")
     .limit(1);
 
@@ -242,7 +242,7 @@ async function findSharedCatalogMatch(input: ProductLookupInput) {
     return null;
   }
 
-  return mapCatalogRowToEntry(data as ProductCatalogRow);
+  return mapCatalogRowToEntry(data as ProductCatalogWineRow);
 }
 
 async function findRemoteCatalogMatch(input: ProductLookupInput) {
@@ -283,15 +283,14 @@ async function findCustomRemoteCatalogMatch(endpoint: string, input: ProductLook
 export async function cacheCatalogEntry(entry: ProductCatalogEntry, userId?: string | null) {
   const payload = mapEntryToCatalogInsert(entry, userId);
 
-  if (!payload.barcode && !payload.systembolaget_product_id) {
+  if (!payload.barcode) {
     return;
   }
 
-  const identifierColumn = payload.barcode ? "barcode" : "systembolaget_product_id";
   const { error } = await supabase
-    .from("product_catalog_entries")
+    .from("product_catalog_wines")
     .upsert(payload, {
-      onConflict: identifierColumn,
+      onConflict: "barcode",
       ignoreDuplicates: false,
     });
 
@@ -586,9 +585,9 @@ function cleanValue(value?: string | null) {
   return value?.trim() || undefined;
 }
 
-function mapCatalogRowToEntry(row: ProductCatalogRow): ProductCatalogEntry {
+function mapCatalogRowToEntry(row: ProductCatalogWineRow): ProductCatalogEntry {
   return {
-    barcode: row.barcode || undefined,
+    barcode: row.barcode,
     systembolagetProductId: row.systembolaget_product_id || undefined,
     name: row.name,
     producer: row.producer || undefined,
@@ -603,9 +602,9 @@ function mapCatalogRowToEntry(row: ProductCatalogRow): ProductCatalogEntry {
   };
 }
 
-function mapEntryToCatalogInsert(entry: ProductCatalogEntry, userId?: string | null): ProductCatalogInsert {
+function mapEntryToCatalogInsert(entry: ProductCatalogEntry, userId?: string | null): ProductCatalogWineInsert {
   return {
-    barcode: entry.barcode?.trim() || null,
+    barcode: entry.barcode?.trim() || "",
     systembolaget_product_id: entry.systembolagetProductId?.trim() || null,
     name: entry.name.trim(),
     producer: entry.producer?.trim() || null,

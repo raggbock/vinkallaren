@@ -1,4 +1,4 @@
-merge into public.product_catalog_entries as target
+merge into public.product_catalog_wines as target
 using (
   values
     (
