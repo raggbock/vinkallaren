@@ -283,16 +283,35 @@ async function findCustomRemoteCatalogMatch(endpoint: string, input: ProductLook
 export async function cacheCatalogEntry(entry: ProductCatalogEntry, userId?: string | null) {
   const payload = mapEntryToCatalogInsert(entry, userId);
 
-  if (!payload.barcode) {
+  if (!payload.name?.trim()) {
     return;
   }
 
-  const { error } = await supabase
-    .from("product_catalog_wines")
-    .upsert(payload, {
+  let error: { message: string } | null = null;
+
+  if (payload.barcode) {
+    const result = await supabase.from("product_catalog_wines").upsert(payload, {
       onConflict: "barcode",
       ignoreDuplicates: false,
     });
+    error = result.error;
+  } else if (payload.systembolaget_product_id) {
+    const result = await supabase.from("product_catalog_wines").upsert(payload, {
+      onConflict: "systembolaget_product_id",
+      ignoreDuplicates: false,
+    });
+    error = result.error;
+  } else {
+    const existingId = await findExistingManualCatalogEntryId(payload);
+
+    if (existingId) {
+      const result = await supabase.from("product_catalog_wines").update(payload).eq("id", existingId);
+      error = result.error;
+    } else {
+      const result = await supabase.from("product_catalog_wines").insert(payload);
+      error = result.error;
+    }
+  }
 
   if (error) {
     console.warn("Could not cache product catalog entry", error.message);
@@ -587,7 +606,7 @@ function cleanValue(value?: string | null) {
 
 function mapCatalogRowToEntry(row: ProductCatalogWineRow): ProductCatalogEntry {
   return {
-    barcode: row.barcode,
+    barcode: row.barcode || undefined,
     systembolagetProductId: row.systembolaget_product_id || undefined,
     name: row.name,
     producer: row.producer || undefined,
@@ -604,7 +623,7 @@ function mapCatalogRowToEntry(row: ProductCatalogWineRow): ProductCatalogEntry {
 
 function mapEntryToCatalogInsert(entry: ProductCatalogEntry, userId?: string | null): ProductCatalogWineInsert {
   return {
-    barcode: entry.barcode?.trim() || "",
+    barcode: entry.barcode?.trim() || null,
     systembolaget_product_id: entry.systembolagetProductId?.trim() || null,
     name: entry.name.trim(),
     producer: entry.producer?.trim() || null,
@@ -618,6 +637,37 @@ function mapEntryToCatalogInsert(entry: ProductCatalogEntry, userId?: string | n
     source_confidence: entry.sourceConfidence ?? "high",
     created_by: userId ?? null,
   };
+}
+
+async function findExistingManualCatalogEntryId(payload: ProductCatalogWineInsert) {
+  let query = supabase.from("product_catalog_wines").select("id").eq("name", payload.name).limit(1);
+
+  query = applyNullableEqualityFilter(query, "producer", payload.producer ?? null);
+  query = applyNullableEqualityFilter(query, "country", payload.country ?? null);
+  query = applyNullableEqualityFilter(query, "region", payload.region ?? null);
+  query = applyNullableEqualityFilter(query, "grape", payload.grape ?? null);
+  query = applyNullableEqualityFilter(query, "type", payload.type ?? null);
+  query = applyNullableEqualityFilter(query, "vintage", payload.vintage ?? null);
+
+  const { data, error } = await query.maybeSingle();
+
+  if (error || !data) {
+    return null;
+  }
+
+  return data.id as string;
+}
+
+function applyNullableEqualityFilter<TQuery extends { eq: (column: string, value: any) => TQuery; is: (column: string, value: null) => TQuery }>(
+  query: TQuery,
+  column: string,
+  value: string | number | null
+) {
+  if (value === null) {
+    return query.is(column, null);
+  }
+
+  return query.eq(column, value);
 }
 
 function escapeFilterValue(value: string) {

@@ -1,6 +1,6 @@
 export type ProductCatalogWineRow = {
   id: string;
-  barcode: string;
+  barcode: string | null;
   systembolaget_product_id: string | null;
   name: string;
   producer: string | null;
@@ -18,7 +18,7 @@ export type ProductCatalogWineRow = {
 };
 
 export type ProductCatalogWineInsert = {
-  barcode: string;
+  barcode?: string | null;
   systembolaget_product_id?: string | null;
   name: string;
   producer?: string | null;
