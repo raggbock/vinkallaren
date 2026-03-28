@@ -642,6 +642,19 @@ function CellarScreen({ session }: { session: Session }) {
   }
 
   async function startBarcodeScanner() {
+    if (
+      Platform.OS === "web" &&
+      typeof window !== "undefined" &&
+      window.location.hostname !== "localhost" &&
+      window.location.protocol !== "https:"
+    ) {
+      Alert.alert(
+        "Skanning kräver säker anslutning",
+        "På mobilwebb behöver kameraskanning vanligtvis https eller localhost. Testa den hostade sidan eller Expo-appen för att använda kameran."
+      );
+      return;
+    }
+
     if (!cameraPermission?.granted) {
       const permission = await requestCameraPermission();
 
@@ -880,6 +893,9 @@ function CellarScreen({ session }: { session: Session }) {
           <Pressable onPress={startBarcodeScanner} style={styles.secondaryButton}>
             <Text style={styles.secondaryButtonText}>Skanna streckkod</Text>
           </Pressable>
+          <Text style={styles.authFootnote}>
+            På mobilwebb fungerar kameraskanning bäst via https eller i den riktiga mobilappen.
+          </Text>
           <LabeledInput
             label="Systembolaget artikelnummer"
             value={draft.systembolagetProductId}
