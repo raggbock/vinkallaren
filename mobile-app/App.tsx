@@ -1,6 +1,7 @@
 import "react-native-url-polyfill/auto";
 
 import * as ImagePicker from "expo-image-picker";
+import { CameraView, useCameraPermissions } from "expo-camera";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useMemo, useState, type ComponentProps, type ReactNode } from "react";
 import {
@@ -8,6 +9,8 @@ import {
   Alert,
   Image,
   KeyboardAvoidingView,
+  Linking,
+  Modal,
   Platform,
   Pressable,
   SafeAreaView,
@@ -20,6 +23,7 @@ import {
 import type { Session } from "@supabase/supabase-js";
 
 import { supabase, supabaseConfigured } from "./src/lib/supabase";
+import { findCatalogMatch, type ProductCatalogEntry } from "./src/lib/product-catalog";
 import type { WineInsert, WineRecord, WineRow } from "./src/types/wine";
 
 type AuthMode = "signin" | "signup";
@@ -29,13 +33,16 @@ type WineDraft = {
   producer: string;
   country: string;
   region: string;
+  grape: string;
   vintage: string;
   quantity: string;
   type: string;
   drinkBy: string;
   location: string;
   barcode: string;
+  systembolagetProductId: string;
   tags: string;
+  foodPairings: string;
   notes: string;
   imageUri: string;
 };
@@ -45,13 +52,16 @@ const defaultDraft: WineDraft = {
   producer: "",
   country: "",
   region: "",
+  grape: "",
   vintage: "",
   quantity: "1",
   type: "Rött",
   drinkBy: "",
   location: "",
   barcode: "",
+  systembolagetProductId: "",
   tags: "",
+  foodPairings: "",
   notes: "",
   imageUri: "",
 };
@@ -233,8 +243,49 @@ function CellarScreen({ session }: { session: Session }) {
   const [draft, setDraft] = useState<WineDraft>(defaultDraft);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [selectedPairingFilter, setSelectedPairingFilter] = useState("Alla");
+  const [selectedMeal, setSelectedMeal] = useState("lamm");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCountryFilter, setSelectedCountryFilter] = useState("Alla");
+  const [selectedTypeFilter, setSelectedTypeFilter] = useState("Alla");
+  const [scannerVisible, setScannerVisible] = useState(false);
+  const [cameraPermission, requestCameraPermission] = useCameraPermissions();
+  const [catalogSuggestion, setCatalogSuggestion] = useState<ProductCatalogEntry | null>(null);
 
   const stats = useMemo(() => buildStats(wines), [wines]);
+  const pairingOptions = useMemo(() => buildPairingOptions(wines), [wines]);
+  const countryOptions = useMemo(() => buildValueOptions(wines, (wine) => wine.country), [wines]);
+  const typeOptions = useMemo(() => buildValueOptions(wines, (wine) => wine.type), [wines]);
+  const mealSuggestions = useMemo(() => buildMealSuggestions(wines), [wines]);
+  const mealRecommendations = useMemo(
+    () => buildMealRecommendations(wines, selectedMeal),
+    [selectedMeal, wines]
+  );
+  const filteredWines = useMemo(() => {
+    return wines.filter((wine) => {
+      const matchesPairing =
+        selectedPairingFilter === "Alla" || wine.food_pairings.includes(selectedPairingFilter);
+      const matchesCountry = selectedCountryFilter === "Alla" || wine.country === selectedCountryFilter;
+      const matchesType = selectedTypeFilter === "Alla" || wine.type === selectedTypeFilter;
+      const normalizedQuery = searchQuery.trim().toLowerCase();
+      const matchesSearch =
+        normalizedQuery.length === 0 ||
+        [
+          wine.name,
+          wine.producer,
+          wine.country,
+          wine.region,
+          wine.grape,
+          wine.type,
+          ...wine.food_pairings,
+          ...wine.tags,
+        ]
+          .filter(Boolean)
+          .some((value) => String(value).toLowerCase().includes(normalizedQuery));
+
+      return matchesPairing && matchesCountry && matchesType && matchesSearch;
+    });
+  }, [searchQuery, selectedCountryFilter, selectedPairingFilter, selectedTypeFilter, wines]);
 
   useEffect(() => {
     fetchWines();
@@ -279,13 +330,17 @@ function CellarScreen({ session }: { session: Session }) {
         producer: emptyToNull(draft.producer),
         country: emptyToNull(draft.country),
         region: emptyToNull(draft.region),
+        grape: emptyToNull(draft.grape),
         vintage: toNumberOrNull(draft.vintage),
         quantity: Math.max(1, Number(draft.quantity) || 1),
         type: draft.type.trim() || "Rött",
         drink_by_year: toNumberOrNull(draft.drinkBy),
         cellar_location: emptyToNull(draft.location),
         barcode: emptyToNull(draft.barcode),
+        systembolaget_product_id: emptyToNull(draft.systembolagetProductId),
         tags: parseTags(draft.tags),
+        food_pairings: parseTags(draft.foodPairings),
+        pairing_source: "manual",
         notes: emptyToNull(draft.notes),
         image_path: imagePath,
       };
@@ -369,9 +424,132 @@ function CellarScreen({ session }: { session: Session }) {
     }
   }
 
+  function maybeSuggestCatalogMatch(nextDraft: WineDraft) {
+    const match = findCatalogMatch({
+      barcode: nextDraft.barcode,
+      systembolagetProductId: nextDraft.systembolagetProductId,
+    });
+
+    setCatalogSuggestion(match);
+  }
+
+  function applyCatalogSuggestion() {
+    if (!catalogSuggestion) {
+      return;
+    }
+
+    setDraft((current) => ({
+      ...current,
+      name: current.name || catalogSuggestion.name,
+      producer: current.producer || catalogSuggestion.producer || "",
+      country: current.country || catalogSuggestion.country || "",
+      region: current.region || catalogSuggestion.region || "",
+      grape: current.grape || catalogSuggestion.grape || "",
+      type: current.type || catalogSuggestion.type || "Rött",
+      foodPairings:
+        current.foodPairings || (catalogSuggestion.foodPairings ?? []).join(", "),
+      systembolagetProductId:
+        current.systembolagetProductId || catalogSuggestion.systembolagetProductId || "",
+      barcode: current.barcode || catalogSuggestion.barcode || "",
+    }));
+  }
+
+  async function startBarcodeScanner() {
+    if (!cameraPermission?.granted) {
+      const permission = await requestCameraPermission();
+
+      if (!permission.granted) {
+        Alert.alert("Behörighet saknas", "Ge appen kameratillgång för att kunna skanna streckkoder.");
+        return;
+      }
+    }
+
+    setScannerVisible(true);
+  }
+
+  function handleBarcodeScanned({ data }: { data: string }) {
+    setScannerVisible(false);
+
+    const matchedWine = wines.find((wine) => wine.barcode === data);
+
+    setDraft((current) => {
+      const nextDraft = {
+        ...current,
+        barcode: data,
+      };
+
+      if (!matchedWine) {
+        return nextDraft;
+      }
+
+      return {
+        ...nextDraft,
+        name: current.name || matchedWine.name,
+        producer: current.producer || matchedWine.producer || "",
+        country: current.country || matchedWine.country || "",
+        region: current.region || matchedWine.region || "",
+        grape: current.grape || matchedWine.grape || "",
+        type: current.type || matchedWine.type || "Rött",
+        foodPairings:
+          current.foodPairings || matchedWine.food_pairings.join(", "),
+        systembolagetProductId:
+          current.systembolagetProductId || matchedWine.systembolaget_product_id || "",
+      };
+    });
+
+    maybeSuggestCatalogMatch({
+      ...draft,
+      barcode: data,
+    });
+
+    if (matchedWine) {
+      Alert.alert("Förifyllt från din källare", `Jag hittade ${matchedWine.name} med samma streckkod och fyllde i det som gick.`);
+    }
+  }
+
+  async function openSystembolaget(productId: string) {
+    const url = buildSystembolagetProductUrl(productId);
+    const supported = await Linking.canOpenURL(url);
+
+    if (!supported) {
+      Alert.alert("Kunde inte öppna länken", "Det gick inte att öppna Systembolaget just nu.");
+      return;
+    }
+
+    await Linking.openURL(url);
+  }
+
   return (
     <SafeAreaView style={styles.screen}>
       <StatusBar style="light" />
+      <Modal visible={scannerVisible} animationType="slide" presentationStyle="fullScreen">
+        <SafeAreaView style={styles.scannerScreen}>
+          <View style={styles.scannerHeader}>
+            <View style={styles.flex}>
+              <Text style={styles.eyebrow}>Streckkodsskanning</Text>
+              <Text style={styles.scannerTitle}>Rikta kameran mot etiketten</Text>
+            </View>
+            <Pressable onPress={() => setScannerVisible(false)}>
+              <Text style={styles.linkText}>Stäng</Text>
+            </Pressable>
+          </View>
+
+          <View style={styles.scannerFrame}>
+            <CameraView
+              style={styles.camera}
+              facing="back"
+              barcodeScannerSettings={{
+                barcodeTypes: ["ean13", "ean8", "upc_a", "upc_e", "code128"],
+              }}
+              onBarcodeScanned={handleBarcodeScanned}
+            />
+          </View>
+
+          <Text style={styles.scannerHint}>
+            Om koden redan finns i din källare fyller appen i relevanta fält automatiskt.
+          </Text>
+        </SafeAreaView>
+      </Modal>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.heroPanel}>
           <Text style={styles.eyebrow}>Synkad vinkällare</Text>
@@ -395,7 +573,54 @@ function CellarScreen({ session }: { session: Session }) {
 
           <InsightCard label="Mest flaskor från" value={stats.topCountry} />
           <InsightCard label="Vanligaste typ" value={stats.topType} />
+          <InsightCard label="Vanligaste matmatch" value={stats.topPairing} />
           <InsightCard label="Snittårgång" value={stats.averageVintage} />
+        </View>
+
+        <View style={styles.panel}>
+          <View style={styles.panelHeaderRow}>
+            <Text style={styles.panelTitle}>Vad ska vi äta?</Text>
+            <Text style={styles.linkText}>{selectedMeal}</Text>
+          </View>
+
+          <SuggestionRow
+            title="Välj maträtt"
+            options={mealSuggestions}
+            selected={selectedMeal}
+            onSelect={setSelectedMeal}
+          />
+
+          {mealRecommendations.length === 0 ? (
+            <Text style={styles.emptyState}>Inga viner matchar den maten ännu. Lägg till fler matmatchningar på dina flaskor.</Text>
+          ) : (
+            mealRecommendations.map((wine) => (
+              <View key={`meal-${wine.id}`} style={styles.recommendationCard}>
+                <View style={styles.recommendationHeader}>
+                  <View style={styles.flex}>
+                    <Text style={styles.wineType}>{wine.type}</Text>
+                    <Text style={styles.recommendationName}>{wine.name}</Text>
+                    <Text style={styles.wineMeta}>
+                      {[wine.producer, wine.grape, wine.country].filter(Boolean).join(" • ")}
+                    </Text>
+                  </View>
+                  <View style={styles.quantityBadge}>
+                    <Text style={styles.quantityBadgeText}>{wine.quantity} st</Text>
+                  </View>
+                </View>
+
+                <View style={styles.tagRow}>
+                  {wine.food_pairings.map((pairing) => (
+                    <View
+                      key={`recommend-${wine.id}-${pairing}`}
+                      style={[styles.foodPill, pairing === selectedMeal && styles.foodPillActive]}
+                    >
+                      <Text style={[styles.foodText, pairing === selectedMeal && styles.foodTextActive]}>{pairing}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            ))
+          )}
         </View>
 
         <View style={styles.panel}>
@@ -410,6 +635,12 @@ function CellarScreen({ session }: { session: Session }) {
             <LabeledInput label="Land" value={draft.country} onChangeText={(value) => setDraft((current) => ({ ...current, country: value }))} />
             <LabeledInput label="Region" value={draft.region} onChangeText={(value) => setDraft((current) => ({ ...current, region: value }))} />
           </DoubleRow>
+          <LabeledInput
+            label="Druva"
+            value={draft.grape}
+            onChangeText={(value) => setDraft((current) => ({ ...current, grape: value }))}
+            placeholder="Nebbiolo, Chardonnay..."
+          />
           <DoubleRow>
             <LabeledInput
               label="Årgång"
@@ -433,6 +664,16 @@ function CellarScreen({ session }: { session: Session }) {
               keyboardType="number-pad"
             />
           </DoubleRow>
+          <SuggestionRow
+            title="Matförslag"
+            options={getSuggestedPairings(draft.type)}
+            onSelect={(pairing) =>
+              setDraft((current) => ({
+                ...current,
+                foodPairings: mergeTagText(current.foodPairings, pairing),
+              }))
+            }
+          />
           <LabeledInput
             label="Plats i källaren"
             value={draft.location}
@@ -441,13 +682,65 @@ function CellarScreen({ session }: { session: Session }) {
           <LabeledInput
             label="Streckkod"
             value={draft.barcode}
-            onChangeText={(value) => setDraft((current) => ({ ...current, barcode: value }))}
+            onChangeText={(value) =>
+              setDraft((current) => {
+                const nextDraft = { ...current, barcode: value };
+                maybeSuggestCatalogMatch(nextDraft);
+                return nextDraft;
+              })
+            }
           />
+          <Pressable onPress={startBarcodeScanner} style={styles.secondaryButton}>
+            <Text style={styles.secondaryButtonText}>Skanna streckkod</Text>
+          </Pressable>
+          <LabeledInput
+            label="Systembolaget artikelnummer"
+            value={draft.systembolagetProductId}
+            onChangeText={(value) =>
+              setDraft((current) => {
+                const nextDraft = { ...current, systembolagetProductId: value };
+                maybeSuggestCatalogMatch(nextDraft);
+                return nextDraft;
+              })
+            }
+            placeholder="t.ex. 12345"
+          />
+
+          {draft.systembolagetProductId ? (
+            <Pressable
+              onPress={() => openSystembolaget(draft.systembolagetProductId)}
+              style={styles.secondaryButton}
+            >
+              <Text style={styles.secondaryButtonText}>Öppna hos Systembolaget</Text>
+            </Pressable>
+          ) : null}
+
+          {catalogSuggestion ? (
+            <View style={styles.importSuggestionCard}>
+              <Text style={styles.inputLabel}>Importförslag</Text>
+              <Text style={styles.recommendationName}>{catalogSuggestion.name}</Text>
+              <Text style={styles.notesText}>
+                {[catalogSuggestion.producer, catalogSuggestion.country, catalogSuggestion.region]
+                  .filter(Boolean)
+                  .join(" • ")}
+              </Text>
+              <Pressable onPress={applyCatalogSuggestion} style={styles.primaryButton}>
+                <Text style={styles.primaryButtonText}>Fyll i från förslag</Text>
+              </Pressable>
+            </View>
+          ) : null}
+
           <LabeledInput
             label="Etiketter"
             value={draft.tags}
             onChangeText={(value) => setDraft((current) => ({ ...current, tags: value }))}
             placeholder="middag, present, lagring"
+          />
+          <LabeledInput
+            label="Passar till"
+            value={draft.foodPairings}
+            onChangeText={(value) => setDraft((current) => ({ ...current, foodPairings: value }))}
+            placeholder="lamm, ost, svamp, fisk"
           />
           <LabeledInput
             label="Anteckningar"
@@ -475,13 +768,41 @@ function CellarScreen({ session }: { session: Session }) {
             </Pressable>
           </View>
 
+          <LabeledInput
+            label="Sök"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="namn, druva, region, mat..."
+          />
+
+          <SuggestionRow
+            title="Filtrera mat"
+            options={pairingOptions}
+            selected={selectedPairingFilter}
+            onSelect={(pairing) => setSelectedPairingFilter(pairing)}
+          />
+
+          <SuggestionRow
+            title="Filtrera land"
+            options={countryOptions}
+            selected={selectedCountryFilter}
+            onSelect={(country) => setSelectedCountryFilter(country)}
+          />
+
+          <SuggestionRow
+            title="Filtrera typ"
+            options={typeOptions}
+            selected={selectedTypeFilter}
+            onSelect={(type) => setSelectedTypeFilter(type)}
+          />
+
           {loading ? <LoadingInline /> : null}
 
-          {!loading && wines.length === 0 ? (
+          {!loading && filteredWines.length === 0 ? (
             <Text style={styles.emptyState}>Inga viner ännu. Lägg till din första flaska ovan.</Text>
           ) : null}
 
-          {wines.map((wine) => (
+          {filteredWines.map((wine) => (
             <View key={wine.id} style={styles.wineCard}>
               {wine.image_url ? <Image source={{ uri: wine.image_url }} style={styles.wineImage} /> : null}
 
@@ -490,7 +811,7 @@ function CellarScreen({ session }: { session: Session }) {
                   <Text style={styles.wineType}>{wine.type}</Text>
                   <Text style={styles.wineName}>{wine.name}</Text>
                   <Text style={styles.wineMeta}>
-                    {[wine.producer, wine.vintage, [wine.country, wine.region].filter(Boolean).join(", ")]
+                    {[wine.producer, wine.vintage, wine.grape, [wine.country, wine.region].filter(Boolean).join(", ")]
                       .filter(Boolean)
                       .join(" • ")}
                   </Text>
@@ -507,6 +828,32 @@ function CellarScreen({ session }: { session: Session }) {
                       <Text style={styles.tagText}>{tag}</Text>
                     </View>
                   ))}
+                </View>
+              ) : null}
+
+              {wine.food_pairings.length > 0 ? (
+                <View style={styles.foodSection}>
+                  <Text style={styles.inputLabel}>Passar till</Text>
+                  <View style={styles.tagRow}>
+                    {wine.food_pairings.map((pairing) => (
+                      <View key={`${wine.id}-food-${pairing}`} style={styles.foodPill}>
+                        <Text style={styles.foodText}>{pairing}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              ) : null}
+
+              {wine.systembolaget_product_id ? (
+                <View style={styles.foodSection}>
+                  <Text style={styles.inputLabel}>Importkoppling</Text>
+                  <Text style={styles.notesText}>Systembolaget #{wine.systembolaget_product_id}</Text>
+                  <Pressable
+                    onPress={() => openSystembolaget(wine.systembolaget_product_id!)}
+                    style={styles.inlineLinkButton}
+                  >
+                    <Text style={styles.linkText}>Öppna produktsida</Text>
+                  </Pressable>
                 </View>
               ) : null}
 
@@ -560,6 +907,43 @@ function InsightCard({ label, value }: { label: string; value: string }) {
     <View style={styles.insightCard}>
       <Text style={styles.inputLabel}>{label}</Text>
       <Text style={styles.insightValue}>{value}</Text>
+    </View>
+  );
+}
+
+function SuggestionRow({
+  title,
+  options,
+  onSelect,
+  selected,
+}: {
+  title: string;
+  options: string[];
+  onSelect: (value: string) => void;
+  selected?: string;
+}) {
+  if (options.length === 0) {
+    return null;
+  }
+
+  return (
+    <View style={styles.foodSection}>
+      <Text style={styles.inputLabel}>{title}</Text>
+      <View style={styles.tagRow}>
+        {options.map((option) => {
+          const isSelected = selected === option;
+
+          return (
+            <Pressable
+              key={`${title}-${option}`}
+              onPress={() => onSelect(option)}
+              style={[styles.suggestionPill, isSelected && styles.suggestionPillActive]}
+            >
+              <Text style={[styles.suggestionText, isSelected && styles.suggestionTextActive]}>{option}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
     </View>
   );
 }
@@ -619,6 +1003,7 @@ function buildStats(wines: WineRecord[]) {
 
   const byCountry = new Map<string, number>();
   const byType = new Map<string, number>();
+  const byPairing = new Map<string, number>();
   const vintages = wines.map((wine) => wine.vintage).filter((value): value is number => Boolean(value));
 
   for (const wine of wines) {
@@ -627,10 +1012,15 @@ function buildStats(wines: WineRecord[]) {
     }
 
     byType.set(wine.type, (byType.get(wine.type) || 0) + wine.quantity);
+
+    for (const pairing of wine.food_pairings) {
+      byPairing.set(pairing, (byPairing.get(pairing) || 0) + wine.quantity);
+    }
   }
 
   const topCountry = [...byCountry.entries()].sort((a, b) => b[1] - a[1])[0];
   const topType = [...byType.entries()].sort((a, b) => b[1] - a[1])[0];
+  const topPairing = [...byPairing.entries()].sort((a, b) => b[1] - a[1])[0];
 
   return {
     totalBottles,
@@ -638,11 +1028,94 @@ function buildStats(wines: WineRecord[]) {
     drinkSoon,
     topCountry: topCountry ? `${topCountry[0]} (${topCountry[1]})` : "Ingen data",
     topType: topType ? `${topType[0]} (${topType[1]})` : "Ingen data",
+    topPairing: topPairing ? `${topPairing[0]} (${topPairing[1]})` : "Ingen data",
     averageVintage:
       vintages.length > 0
         ? String(Math.round(vintages.reduce((sum, value) => sum + value, 0) / vintages.length))
         : "-",
   };
+}
+
+function buildPairingOptions(wines: WineRecord[]) {
+  const pairings = new Set<string>(["Alla"]);
+
+  for (const wine of wines) {
+    for (const pairing of wine.food_pairings) {
+      pairings.add(pairing);
+    }
+  }
+
+  return [...pairings];
+}
+
+function buildSystembolagetProductUrl(productId: string) {
+  const normalized = productId.trim();
+  return `https://www.systembolaget.se/${encodeURIComponent(normalized)}/`;
+}
+
+function buildMealSuggestions(wines: WineRecord[]) {
+  const defaults = ["lamm", "nöt", "fisk", "skaldjur", "ost", "svamp"];
+  const values = new Set<string>(defaults);
+
+  for (const wine of wines) {
+    for (const pairing of wine.food_pairings) {
+      values.add(pairing);
+    }
+  }
+
+  return [...values];
+}
+
+function buildValueOptions(wines: WineRecord[], selector: (wine: WineRecord) => string | null) {
+  const values = new Set<string>(["Alla"]);
+
+  for (const wine of wines) {
+    const value = selector(wine);
+
+    if (value) {
+      values.add(value);
+    }
+  }
+
+  return [...values];
+}
+
+function buildMealRecommendations(wines: WineRecord[], selectedMeal: string) {
+  return [...wines]
+    .filter((wine) => wine.food_pairings.includes(selectedMeal))
+    .sort((a, b) => {
+      const aReady = a.drink_by_year ? Math.abs(a.drink_by_year - new Date().getFullYear()) : 999;
+      const bReady = b.drink_by_year ? Math.abs(b.drink_by_year - new Date().getFullYear()) : 999;
+
+      if (aReady !== bReady) {
+        return aReady - bReady;
+      }
+
+      return b.quantity - a.quantity;
+    })
+    .slice(0, 5);
+}
+
+function getSuggestedPairings(wineType: string) {
+  const normalized = wineType.trim().toLowerCase();
+
+  if (normalized.includes("vitt")) {
+    return ["fisk", "skaldjur", "sallad", "getost"];
+  }
+
+  if (normalized.includes("mousserande")) {
+    return ["aperitif", "skaldjur", "chips", "ost"];
+  }
+
+  if (normalized.includes("ros")) {
+    return ["grillat", "sallad", "kyckling", "snacks"];
+  }
+
+  if (normalized.includes("dessert")) {
+    return ["dessert", "blåmögelost", "frukt"];
+  }
+
+  return ["lamm", "nöt", "svamp", "lagrad ost"];
 }
 
 function parseTags(input: string) {
@@ -662,6 +1135,16 @@ function emptyToNull(value: string) {
   return trimmed.length > 0 ? trimmed : null;
 }
 
+function mergeTagText(currentValue: string, nextValue: string) {
+  const parts = parseTags(currentValue);
+
+  if (parts.includes(nextValue)) {
+    return currentValue;
+  }
+
+  return [...parts, nextValue].join(", ");
+}
+
 const styles = StyleSheet.create({
   flex: {
     flex: 1,
@@ -676,6 +1159,39 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "#2b1714",
     gap: 12,
+  },
+  scannerScreen: {
+    flex: 1,
+    backgroundColor: "#2b1714",
+    padding: 18,
+    gap: 18,
+  },
+  scannerHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 12,
+  },
+  scannerTitle: {
+    color: "#fff6ee",
+    fontSize: 28,
+    lineHeight: 30,
+    fontWeight: "700",
+  },
+  scannerFrame: {
+    overflow: "hidden",
+    borderRadius: 28,
+    backgroundColor: "#120907",
+    minHeight: 420,
+  },
+  camera: {
+    flex: 1,
+    minHeight: 420,
+  },
+  scannerHint: {
+    color: "#ead8ca",
+    fontSize: 15,
+    lineHeight: 22,
   },
   scrollContent: {
     padding: 18,
@@ -805,6 +1321,9 @@ const styles = StyleSheet.create({
     color: "#6f1d1b",
     fontWeight: "700",
   },
+  inlineLinkButton: {
+    alignSelf: "flex-start",
+  },
   panelHeaderRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -845,10 +1364,34 @@ const styles = StyleSheet.create({
     padding: 14,
     gap: 6,
   },
+  importSuggestionCard: {
+    borderRadius: 18,
+    backgroundColor: "#fff6e7",
+    padding: 14,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: "#f4c38c",
+  },
   insightValue: {
     color: "#231815",
     fontSize: 18,
     fontWeight: "700",
+  },
+  recommendationCard: {
+    borderRadius: 18,
+    backgroundColor: "#fffaf5",
+    padding: 14,
+    gap: 10,
+  },
+  recommendationHeader: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  recommendationName: {
+    color: "#231815",
+    fontSize: 20,
+    fontWeight: "700",
+    marginTop: 2,
   },
   doubleRow: {
     flexDirection: "row",
@@ -903,6 +1446,9 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: 8,
   },
+  foodSection: {
+    gap: 8,
+  },
   tagPill: {
     backgroundColor: "#ead8ca",
     borderRadius: 999,
@@ -913,6 +1459,43 @@ const styles = StyleSheet.create({
     color: "#6f1d1b",
     fontWeight: "700",
     fontSize: 12,
+  },
+  foodPill: {
+    backgroundColor: "#f4c38c",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  foodPillActive: {
+    backgroundColor: "#6f1d1b",
+  },
+  foodText: {
+    color: "#5c1d1b",
+    fontWeight: "700",
+    fontSize: 12,
+  },
+  foodTextActive: {
+    color: "#fffaf5",
+  },
+  suggestionPill: {
+    backgroundColor: "#fffaf5",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: "#e6d7c8",
+  },
+  suggestionPillActive: {
+    backgroundColor: "#6f1d1b",
+    borderColor: "#6f1d1b",
+  },
+  suggestionText: {
+    color: "#6f1d1b",
+    fontWeight: "700",
+    fontSize: 12,
+  },
+  suggestionTextActive: {
+    color: "#fffaf5",
   },
   notesText: {
     color: "#6f6259",
