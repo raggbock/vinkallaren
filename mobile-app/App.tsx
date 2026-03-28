@@ -26,6 +26,7 @@ import { supabase, supabaseConfigured } from "./src/lib/supabase";
 import { cacheCatalogEntry, findCatalogMatch, type ProductCatalogEntry } from "./src/lib/product-catalog";
 import { GRAPE_VARIETIES, WINE_COUNTRIES, WINE_REGIONS } from "./src/lib/reference-data";
 import type { ProductCatalogRow } from "./src/types/product-catalog";
+import type { ReferenceOptionRow } from "./src/types/reference-data";
 import type { StorageSpaceInsert, StorageSpaceRow } from "./src/types/storage-space";
 import type { WineInsert, WineRecord, WineRow } from "./src/types/wine";
 
@@ -416,6 +417,7 @@ function CellarScreen({ session }: { session: Session }) {
   const [storageSpaceDraft, setStorageSpaceDraft] = useState<StorageSpaceDraft>(defaultStorageSpaceDraft);
   const [storageSpaces, setStorageSpaces] = useState<StorageSpaceRow[]>([]);
   const [catalogEntries, setCatalogEntries] = useState<ProductCatalogRow[]>([]);
+  const [referenceOptions, setReferenceOptions] = useState<ReferenceOptionRow[]>([]);
   const [catalogEditorVisible, setCatalogEditorVisible] = useState(false);
   const [catalogEditorDraft, setCatalogEditorDraft] = useState<CatalogEditorDraft | null>(null);
   const [loading, setLoading] = useState(true);
@@ -445,6 +447,30 @@ function CellarScreen({ session }: { session: Session }) {
   const [lookupMessage, setLookupMessage] = useState("");
 
   const stats = useMemo(() => buildStats(wines), [wines]);
+  const grapeReferenceRows = useMemo(
+    () => referenceOptions.filter((option) => option.category === "grape"),
+    [referenceOptions]
+  );
+  const countryReferenceRows = useMemo(
+    () => referenceOptions.filter((option) => option.category === "country"),
+    [referenceOptions]
+  );
+  const regionReferenceRows = useMemo(
+    () => referenceOptions.filter((option) => option.category === "region"),
+    [referenceOptions]
+  );
+  const grapeOptions = useMemo(() => grapeReferenceRows.map((option) => option.name), [grapeReferenceRows]);
+  const countryReferenceOptions = useMemo(
+    () => countryReferenceRows.map((option) => option.name),
+    [countryReferenceRows]
+  );
+  const regionReferenceOptions = useMemo(
+    () => regionReferenceRows.map((option) => option.name),
+    [regionReferenceRows]
+  );
+  const effectiveGrapeOptions = grapeOptions.length > 0 ? grapeOptions : GRAPE_VARIETIES;
+  const effectiveCountryOptions = countryReferenceOptions.length > 0 ? countryReferenceOptions : WINE_COUNTRIES;
+  const effectiveRegionOptions = regionReferenceOptions.length > 0 ? regionReferenceOptions : WINE_REGIONS;
   const pairingOptions = useMemo(() => buildPairingOptions(wines), [wines]);
   const countryOptions = useMemo(() => buildValueOptions(wines, (wine) => wine.country), [wines]);
   const regionOptions = useMemo(() => buildValueOptions(wines, (wine) => wine.region), [wines]);
@@ -514,6 +540,7 @@ function CellarScreen({ session }: { session: Session }) {
     void fetchWines();
     void fetchStorageSpaces();
     void fetchCatalogEntries();
+    void fetchReferenceOptions();
   }, []);
 
   useEffect(() => {
@@ -600,6 +627,22 @@ function CellarScreen({ session }: { session: Session }) {
 
     setCatalogEntries((data ?? []) as ProductCatalogRow[]);
     setLoadingCatalogEntries(false);
+  }
+
+  async function fetchReferenceOptions() {
+    const { data, error } = await supabase
+      .from("reference_options")
+      .select("*")
+      .in("category", ["grape", "country", "region"])
+      .order("category", { ascending: true })
+      .order("sort_order", { ascending: true })
+      .order("name", { ascending: true });
+
+    if (error) {
+      return;
+    }
+
+    setReferenceOptions((data ?? []) as ReferenceOptionRow[]);
   }
 
   function openCatalogEditor(entry: ProductCatalogRow) {
@@ -1170,13 +1213,15 @@ function CellarScreen({ session }: { session: Session }) {
                     label="Land"
                     value={catalogEditorDraft.country}
                     onChangeText={(value) => setCatalogEditorDraft((current) => (current ? { ...current, country: value } : current))}
-                    options={WINE_COUNTRIES}
+                    options={effectiveCountryOptions}
+                    optionRows={countryReferenceRows}
                   />
                   <AutocompleteInput
                     label="Region"
                     value={catalogEditorDraft.region}
                     onChangeText={(value) => setCatalogEditorDraft((current) => (current ? { ...current, region: value } : current))}
-                    options={WINE_REGIONS}
+                    options={effectiveRegionOptions}
+                    optionRows={regionReferenceRows}
                   />
                 </DoubleRow>
                 <DoubleRow>
@@ -1184,7 +1229,8 @@ function CellarScreen({ session }: { session: Session }) {
                     label="Druva"
                     value={catalogEditorDraft.grape}
                     onChangeText={(value) => setCatalogEditorDraft((current) => (current ? { ...current, grape: value } : current))}
-                    options={GRAPE_VARIETIES}
+                    options={effectiveGrapeOptions}
+                    optionRows={grapeReferenceRows}
                   />
                   <LabeledInput
                     label="Årgång"
@@ -1445,14 +1491,16 @@ function CellarScreen({ session }: { session: Session }) {
               label="Land"
               value={draft.country}
               onChangeText={(value) => setDraft((current) => ({ ...current, country: value }))}
-              options={WINE_COUNTRIES}
+              options={effectiveCountryOptions}
+              optionRows={countryReferenceRows}
               placeholder="Skriv t.ex. fr eller it"
             />
             <AutocompleteInput
               label="Region"
               value={draft.region}
               onChangeText={(value) => setDraft((current) => ({ ...current, region: value }))}
-              options={WINE_REGIONS}
+              options={effectiveRegionOptions}
+              optionRows={regionReferenceRows}
               placeholder="Skriv t.ex. bor, rio, nap..."
             />
           </DoubleRow>
@@ -1460,7 +1508,8 @@ function CellarScreen({ session }: { session: Session }) {
             label="Druva"
             value={draft.grape}
             onChangeText={(value) => setDraft((current) => ({ ...current, grape: value }))}
-            options={GRAPE_VARIETIES}
+            options={effectiveGrapeOptions}
+            optionRows={grapeReferenceRows}
             placeholder="Nebbiolo, Chardonnay..."
           />
           <DoubleRow>
@@ -1892,12 +1941,14 @@ function AutocompleteInput({
   value,
   onChangeText,
   options,
+  optionRows,
   placeholder,
 }: {
   label: string;
   value: string;
   onChangeText: (value: string) => void;
   options: string[];
+  optionRows?: ReferenceOptionRow[];
   placeholder?: string;
 }) {
   const [focused, setFocused] = useState(false);
@@ -1909,11 +1960,21 @@ function AutocompleteInput({
       return [];
     }
 
-    return options
-      .filter((option) => normalizeLookupValue(option).includes(query))
+    const searchableOptions = optionRows?.length
+      ? optionRows.map((row) => ({
+          value: row.name,
+          haystack: [row.name, ...(row.aliases ?? []), row.parent_name ?? ""].join(" "),
+        }))
+      : options.map((option) => ({
+          value: option,
+          haystack: option,
+        }));
+
+    return searchableOptions
+      .filter((option) => normalizeLookupValue(option.haystack).includes(query))
       .sort((left, right) => {
-        const leftNormalized = normalizeLookupValue(left);
-        const rightNormalized = normalizeLookupValue(right);
+        const leftNormalized = normalizeLookupValue(left.haystack);
+        const rightNormalized = normalizeLookupValue(right.haystack);
         const leftStarts = leftNormalized.startsWith(query) ? 0 : 1;
         const rightStarts = rightNormalized.startsWith(query) ? 0 : 1;
 
@@ -1921,10 +1982,12 @@ function AutocompleteInput({
           return leftStarts - rightStarts;
         }
 
-        return left.localeCompare(right);
+        return left.value.localeCompare(right.value);
       })
+      .map((option) => option.value)
+      .filter((option, index, values) => values.indexOf(option) === index)
       .slice(0, 8);
-  }, [options, value]);
+  }, [optionRows, options, value]);
 
   const showSuggestions =
     focused &&
