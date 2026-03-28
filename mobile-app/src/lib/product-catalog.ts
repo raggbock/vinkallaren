@@ -7,8 +7,14 @@ export type ProductCatalogEntry = {
   region?: string;
   grape?: string;
   type?: string;
+  vintage?: number;
   foodPairings?: string[];
   sourceLabel: string;
+};
+
+type ProductLookupInput = {
+  barcode?: string;
+  systembolagetProductId?: string;
 };
 
 const systembolagetSeedCatalog: ProductCatalogEntry[] = [
@@ -21,6 +27,7 @@ const systembolagetSeedCatalog: ProductCatalogEntry[] = [
     region: "Piemonte",
     grape: "Nebbiolo",
     type: "Rött",
+    vintage: 2018,
     foodPairings: ["lamm", "nöt", "svamp", "lagrad ost"],
     sourceLabel: "Systembolaget referens",
   },
@@ -33,6 +40,7 @@ const systembolagetSeedCatalog: ProductCatalogEntry[] = [
     region: "Chablis",
     grape: "Chardonnay",
     type: "Vitt",
+    vintage: 2022,
     foodPairings: ["fisk", "skaldjur", "getost", "sallad"],
     sourceLabel: "Systembolaget referens",
   },
@@ -45,6 +53,7 @@ const systembolagetSeedCatalog: ProductCatalogEntry[] = [
     region: "Bourgogne",
     grape: "Pinot Noir, Chardonnay",
     type: "Mousserande",
+    vintage: 2021,
     foodPairings: ["aperitif", "skaldjur", "chips", "ost"],
     sourceLabel: "Systembolaget referens",
   },
@@ -57,6 +66,7 @@ const systembolagetSeedCatalog: ProductCatalogEntry[] = [
     region: "Rioja",
     grape: "Tempranillo",
     type: "Rött",
+    vintage: 2019,
     foodPairings: ["lamm", "grillat", "tapas", "lagrad ost"],
     sourceLabel: "Systembolaget referens",
   },
@@ -69,6 +79,7 @@ const systembolagetSeedCatalog: ProductCatalogEntry[] = [
     region: "Loire",
     grape: "Sauvignon Blanc",
     type: "Vitt",
+    vintage: 2023,
     foodPairings: ["fisk", "getost", "sallad", "skaldjur"],
     sourceLabel: "Systembolaget referens",
   },
@@ -81,6 +92,7 @@ const systembolagetSeedCatalog: ProductCatalogEntry[] = [
     region: "Rhône",
     grape: "Grenache, Syrah, Mourvèdre",
     type: "Rött",
+    vintage: 2021,
     foodPairings: ["grillat", "nöt", "lamm", "svamp"],
     sourceLabel: "Systembolaget referens",
   },
@@ -93,6 +105,7 @@ const systembolagetSeedCatalog: ProductCatalogEntry[] = [
     region: "Mosel",
     grape: "Riesling",
     type: "Vitt",
+    vintage: 2023,
     foodPairings: ["asiatiskt", "fisk", "skaldjur", "kryddigt"],
     sourceLabel: "Systembolaget referens",
   },
@@ -105,6 +118,7 @@ const systembolagetSeedCatalog: ProductCatalogEntry[] = [
     region: "Toscana",
     grape: "Sangiovese",
     type: "Rött",
+    vintage: 2020,
     foodPairings: ["pasta", "pizza", "lamm", "lagrad ost"],
     sourceLabel: "Systembolaget referens",
   },
@@ -117,6 +131,7 @@ const systembolagetSeedCatalog: ProductCatalogEntry[] = [
     region: "Champagne",
     grape: "Pinot Noir, Chardonnay, Pinot Meunier",
     type: "Mousserande",
+    vintage: 2018,
     foodPairings: ["aperitif", "skaldjur", "chips", "ost"],
     sourceLabel: "Systembolaget referens",
   },
@@ -129,12 +144,23 @@ const systembolagetSeedCatalog: ProductCatalogEntry[] = [
     region: "Tokaj",
     grape: "Furmint",
     type: "Dessert",
+    vintage: 2022,
     foodPairings: ["dessert", "blåmögelost", "frukt"],
     sourceLabel: "Systembolaget referens",
   },
 ];
 
-export function findCatalogMatch(input: { barcode?: string; systembolagetProductId?: string }) {
+export async function findCatalogMatch(input: ProductLookupInput) {
+  const localMatch = findLocalCatalogMatch(input);
+
+  if (localMatch) {
+    return localMatch;
+  }
+
+  return findRemoteCatalogMatch(input);
+}
+
+function findLocalCatalogMatch(input: ProductLookupInput) {
   const barcode = input.barcode?.trim();
   const systembolagetProductId = input.systembolagetProductId?.trim();
 
@@ -149,4 +175,31 @@ export function findCatalogMatch(input: { barcode?: string; systembolagetProduct
       return Boolean(barcodeMatch || articleMatch);
     }) ?? null
   );
+}
+
+async function findRemoteCatalogMatch(input: ProductLookupInput) {
+  const endpoint = process.env.EXPO_PUBLIC_PRODUCT_LOOKUP_URL;
+
+  if (!endpoint) {
+    return null;
+  }
+
+  const query = new URLSearchParams();
+
+  if (input.barcode?.trim()) {
+    query.set("barcode", input.barcode.trim());
+  }
+
+  if (input.systembolagetProductId?.trim()) {
+    query.set("systembolagetProductId", input.systembolagetProductId.trim());
+  }
+
+  const response = await fetch(`${endpoint}?${query.toString()}`);
+
+  if (!response.ok) {
+    return null;
+  }
+
+  const data = (await response.json()) as ProductCatalogEntry | null;
+  return data;
 }

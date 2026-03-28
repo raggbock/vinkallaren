@@ -29,6 +29,7 @@ En första riktig Expo-baserad mobilapp för iPhone och Android med Supabase fö
 2. Fyll i:
    - `EXPO_PUBLIC_SUPABASE_URL`
    - `EXPO_PUBLIC_SUPABASE_ANON_KEY`
+   - `EXPO_PUBLIC_PRODUCT_LOOKUP_URL` om du vill koppla extern produktmatchning
 3. Kör migrationen i Supabase
 4. Starta appen:
 

@@ -20,6 +20,7 @@ Only the public client values should go into the Expo app:
 
 - `EXPO_PUBLIC_SUPABASE_URL`
 - `EXPO_PUBLIC_SUPABASE_ANON_KEY`
+- `EXPO_PUBLIC_PRODUCT_LOOKUP_URL` (optional, for external product enrichment)
 
 Do not put your service role key in the mobile app.
 
@@ -48,3 +49,4 @@ That keeps the storage policies simple and makes it easy to scope access to the 
 - Prefer Systembolaget product data where available
 - Treat Vivino as optional enrichment only after confirming an acceptable integration path
 - Avoid scraping Systembolaget's public consumer site directly; prefer official feeds, exports, or explicitly allowed integration paths
+- If you introduce a lookup service, keep it server-side and let the app call it through `EXPO_PUBLIC_PRODUCT_LOOKUP_URL`

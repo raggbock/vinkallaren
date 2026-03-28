@@ -52,6 +52,7 @@ type ImportFieldSelection = {
   producer: boolean;
   country: boolean;
   region: boolean;
+  vintage: boolean;
   grape: boolean;
   type: boolean;
   foodPairings: boolean;
@@ -85,6 +86,7 @@ const defaultImportSelection: ImportFieldSelection = {
   producer: true,
   country: true,
   region: true,
+  vintage: true,
   grape: true,
   type: true,
   foodPairings: true,
@@ -273,17 +275,22 @@ function CellarScreen({ session }: { session: Session }) {
   const [selectedMeal, setSelectedMeal] = useState("lamm");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCountryFilter, setSelectedCountryFilter] = useState("Alla");
+  const [selectedRegionFilter, setSelectedRegionFilter] = useState("Alla");
   const [selectedTypeFilter, setSelectedTypeFilter] = useState("Alla");
+  const [selectedVintageFilter, setSelectedVintageFilter] = useState("Alla");
   const [scannerVisible, setScannerVisible] = useState(false);
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const [catalogSuggestion, setCatalogSuggestion] = useState<ProductCatalogEntry | null>(null);
   const [importSelection, setImportSelection] = useState<ImportFieldSelection>(defaultImportSelection);
   const [importMode, setImportMode] = useState<ImportMode>("custom");
+  const [lookupBusy, setLookupBusy] = useState(false);
 
   const stats = useMemo(() => buildStats(wines), [wines]);
   const pairingOptions = useMemo(() => buildPairingOptions(wines), [wines]);
   const countryOptions = useMemo(() => buildValueOptions(wines, (wine) => wine.country), [wines]);
+  const regionOptions = useMemo(() => buildValueOptions(wines, (wine) => wine.region), [wines]);
   const typeOptions = useMemo(() => buildValueOptions(wines, (wine) => wine.type), [wines]);
+  const vintageOptions = useMemo(() => buildVintageOptions(wines), [wines]);
   const mealSuggestions = useMemo(() => buildMealSuggestions(wines), [wines]);
   const mealRecommendations = useMemo(
     () => buildMealRecommendations(wines, selectedMeal),
@@ -294,7 +301,10 @@ function CellarScreen({ session }: { session: Session }) {
       const matchesPairing =
         selectedPairingFilter === "Alla" || wine.food_pairings.includes(selectedPairingFilter);
       const matchesCountry = selectedCountryFilter === "Alla" || wine.country === selectedCountryFilter;
+      const matchesRegion = selectedRegionFilter === "Alla" || wine.region === selectedRegionFilter;
       const matchesType = selectedTypeFilter === "Alla" || wine.type === selectedTypeFilter;
+      const matchesVintage =
+        selectedVintageFilter === "Alla" || String(wine.vintage ?? "") === selectedVintageFilter;
       const normalizedQuery = searchQuery.trim().toLowerCase();
       const matchesSearch =
         normalizedQuery.length === 0 ||
@@ -311,9 +321,17 @@ function CellarScreen({ session }: { session: Session }) {
           .filter(Boolean)
           .some((value) => String(value).toLowerCase().includes(normalizedQuery));
 
-      return matchesPairing && matchesCountry && matchesType && matchesSearch;
+      return matchesPairing && matchesCountry && matchesRegion && matchesType && matchesVintage && matchesSearch;
     });
-  }, [searchQuery, selectedCountryFilter, selectedPairingFilter, selectedTypeFilter, wines]);
+  }, [
+    searchQuery,
+    selectedCountryFilter,
+    selectedPairingFilter,
+    selectedRegionFilter,
+    selectedTypeFilter,
+    selectedVintageFilter,
+    wines,
+  ]);
 
   useEffect(() => {
     fetchWines();
@@ -452,8 +470,10 @@ function CellarScreen({ session }: { session: Session }) {
     }
   }
 
-  function maybeSuggestCatalogMatch(nextDraft: WineDraft) {
-    const match = findCatalogMatch({
+  async function maybeSuggestCatalogMatch(nextDraft: WineDraft) {
+    setLookupBusy(true);
+
+    const match = await findCatalogMatch({
       barcode: nextDraft.barcode,
       systembolagetProductId: nextDraft.systembolagetProductId,
     });
@@ -461,6 +481,7 @@ function CellarScreen({ session }: { session: Session }) {
     setCatalogSuggestion(match);
     setImportSelection(defaultImportSelection);
     setImportMode("custom");
+    setLookupBusy(false);
   }
 
   function applyCatalogSuggestion(mode: ImportMode = importMode) {
@@ -485,6 +506,11 @@ function CellarScreen({ session }: { session: Session }) {
         current.region,
         catalogSuggestion.region || "",
         shouldApplyField("region", mode, current.region)
+      ),
+      vintage: resolveImportedValue(
+        current.vintage,
+        catalogSuggestion.vintage ? String(catalogSuggestion.vintage) : "",
+        shouldApplyField("vintage", mode, current.vintage)
       ),
       grape: resolveImportedValue(
         current.grape,
@@ -573,7 +599,7 @@ function CellarScreen({ session }: { session: Session }) {
       };
     });
 
-    maybeSuggestCatalogMatch({
+    void maybeSuggestCatalogMatch({
       ...draft,
       barcode: data,
     });
@@ -761,7 +787,7 @@ function CellarScreen({ session }: { session: Session }) {
             onChangeText={(value) =>
               setDraft((current) => {
                 const nextDraft = { ...current, barcode: value };
-                maybeSuggestCatalogMatch(nextDraft);
+                void maybeSuggestCatalogMatch(nextDraft);
                 return nextDraft;
               })
             }
@@ -775,12 +801,14 @@ function CellarScreen({ session }: { session: Session }) {
             onChangeText={(value) =>
               setDraft((current) => {
                 const nextDraft = { ...current, systembolagetProductId: value };
-                maybeSuggestCatalogMatch(nextDraft);
+                void maybeSuggestCatalogMatch(nextDraft);
                 return nextDraft;
               })
             }
             placeholder="t.ex. 12345"
           />
+
+          {lookupBusy ? <Text style={styles.notesText}>Söker produktmatch...</Text> : null}
 
           {draft.systembolagetProductId ? (
             <Pressable
@@ -854,6 +882,11 @@ function CellarScreen({ session }: { session: Session }) {
                 label="Region"
                 selected={importSelection.region}
                 onToggle={() => toggleImportField("region")}
+              />
+              <ImportSelectionRow
+                label="Årgång"
+                selected={importSelection.vintage}
+                onToggle={() => toggleImportField("vintage")}
               />
               <ImportSelectionRow
                 label="Druva"
@@ -943,10 +976,24 @@ function CellarScreen({ session }: { session: Session }) {
           />
 
           <SuggestionRow
+            title="Filtrera region"
+            options={regionOptions}
+            selected={selectedRegionFilter}
+            onSelect={(region) => setSelectedRegionFilter(region)}
+          />
+
+          <SuggestionRow
             title="Filtrera typ"
             options={typeOptions}
             selected={selectedTypeFilter}
             onSelect={(type) => setSelectedTypeFilter(type)}
+          />
+
+          <SuggestionRow
+            title="Filtrera årgång"
+            options={vintageOptions}
+            selected={selectedVintageFilter}
+            onSelect={(vintage) => setSelectedVintageFilter(vintage)}
           />
 
           {loading ? <LoadingInline /> : null}
@@ -1250,6 +1297,28 @@ function buildValueOptions(wines: WineRecord[], selector: (wine: WineRecord) => 
   }
 
   return [...values];
+}
+
+function buildVintageOptions(wines: WineRecord[]) {
+  const values = new Set<string>(["Alla"]);
+
+  for (const wine of wines) {
+    if (wine.vintage) {
+      values.add(String(wine.vintage));
+    }
+  }
+
+  return [...values].sort((a, b) => {
+    if (a === "Alla") {
+      return -1;
+    }
+
+    if (b === "Alla") {
+      return 1;
+    }
+
+    return Number(b) - Number(a);
+  });
 }
 
 function buildMealRecommendations(wines: WineRecord[], selectedMeal: string) {
