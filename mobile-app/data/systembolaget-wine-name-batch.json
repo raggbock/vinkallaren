@@ -4,10 +4,14 @@
     "producer": "Arpepe",
     "country": "Italien",
     "region": "Lombardiet",
-    "vintage": "2019",
     "type": "Rött vin",
+    "vintage": "2019",
     "systembolagetProductId": "7548901",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "arpepe arpepe valtellina superiore stella retica",
+      "7548901"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/arpepe-7548901/"
   },
   {
@@ -15,10 +19,14 @@
     "producer": "Purcari",
     "country": "Moldavien",
     "region": null,
-    "vintage": "2022",
     "type": "Rött vin",
+    "vintage": "2022",
     "systembolagetProductId": "7521801",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "purcari purcari freedom blend",
+      "7521801"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/purcari-7521801/"
   },
   {
@@ -26,10 +34,14 @@
     "producer": "WG Bürgerspital",
     "country": "Tyskland",
     "region": "Franken",
-    "vintage": "2014",
     "type": "Vitt vin",
+    "vintage": "2014",
     "systembolagetProductId": "7280801",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "wg bürgerspital würzburger pfaffenberg silvaner trocken",
+      "7280801"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/wurzburger-pfaffenberg-7280801/"
   },
   {
@@ -37,10 +49,14 @@
     "producer": "WG Bürgerspital",
     "country": "Tyskland",
     "region": "Franken",
-    "vintage": null,
     "type": "Vitt vin",
+    "vintage": null,
     "systembolagetProductId": "7141301",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "wg bürgerspital würzburger silvaner trocken",
+      "7141301"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/wurzburger-7141301/"
   },
   {
@@ -48,10 +64,14 @@
     "producer": "DFJ Vinhos",
     "country": "Portugal",
     "region": "Lisboa",
-    "vintage": "2023",
     "type": "Rött vin",
+    "vintage": "2023",
     "systembolagetProductId": "7249201",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "dfj vinhos escada touriga nacional",
+      "7249201"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/escada-7249201/"
   },
   {
@@ -59,10 +79,14 @@
     "producer": "Apothic Wines",
     "country": "USA",
     "region": "Kalifornien",
-    "vintage": "2023",
     "type": "Rött vin",
+    "vintage": "2023",
     "systembolagetProductId": "642008",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "apothic wines apothic red winemaker's blend",
+      "642008"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/apothic-red-642008/"
   },
   {
@@ -70,10 +94,14 @@
     "producer": "Domaine Roux",
     "country": "Frankrike",
     "region": "Bourgogne",
-    "vintage": "2022",
     "type": "Vitt vin",
+    "vintage": "2022",
     "systembolagetProductId": "556901",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "domaine roux saint-aubin vieilles vignes domaine roux",
+      "556901"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/saint-aubin-vieilles-vignes-556901/"
   },
   {
@@ -81,10 +109,14 @@
     "producer": "Finca Los Frailes",
     "country": "Spanien",
     "region": "Valencia",
-    "vintage": "2024",
     "type": "Vitt vin",
+    "vintage": "2024",
     "systembolagetProductId": "7599401",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "finca los frailes los frailes blanc de trilogía",
+      "7599401"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/los-frailes-7599401/"
   },
   {
@@ -92,10 +124,14 @@
     "producer": "Casa Los Frailes",
     "country": "Spanien",
     "region": "Valencia",
-    "vintage": "2024",
     "type": "Rött vin",
+    "vintage": "2024",
     "systembolagetProductId": "7499101",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "casa los frailes los frailes monastrell",
+      "7499101"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/los-frailes-7499101/"
   },
   {
@@ -103,10 +139,14 @@
     "producer": "Chateau Ste Michelle",
     "country": "USA",
     "region": "Washington State",
-    "vintage": "2023",
     "type": "Vitt vin",
+    "vintage": "2023",
     "systembolagetProductId": "7522501",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "chateau ste michelle chateau ste michelle riesling",
+      "7522501"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/chateau-ste-michelle-7522501/"
   },
   {
@@ -114,10 +154,14 @@
     "producer": "Domaine Vacheron",
     "country": "Frankrike",
     "region": "Loiredalen",
-    "vintage": "2024",
     "type": "Vitt vin",
+    "vintage": "2024",
     "systembolagetProductId": "551401",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "domaine vacheron sancerre les roches domaine vacheron",
+      "551401"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/sancerre-les-roches-551401/"
   },
   {
@@ -125,10 +169,14 @@
     "producer": "Brimoncourt",
     "country": "Frankrike",
     "region": "Champagne",
-    "vintage": null,
     "type": "Mousserande vin",
+    "vintage": null,
     "systembolagetProductId": "7768001",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "brimoncourt brimoncourt extra brut",
+      "7768001"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/brimoncourt-7768001/"
   },
   {
@@ -136,10 +184,14 @@
     "producer": "Medolago Albani",
     "country": "Italien",
     "region": "Lombardiet",
-    "vintage": "2014",
     "type": "Rött vin",
+    "vintage": "2014",
     "systembolagetProductId": "7140001",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "medolago albani medolago albani valcalepio rosso cabernet sauvignon merlot",
+      "7140001"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/medolago-albani-7140001/"
   },
   {
@@ -147,10 +199,14 @@
     "producer": "Cantina Valpolicella Negrar",
     "country": "Italien",
     "region": "Venetien",
-    "vintage": "2022",
     "type": "Rött vin",
+    "vintage": "2022",
     "systembolagetProductId": "7570701",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "cantina valpolicella negrar castelmare amarone della valpolicella classico",
+      "7570701"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/castelmare-7570701/"
   },
   {
@@ -158,10 +214,14 @@
     "producer": "RUMI Wine Company Napa",
     "country": "USA",
     "region": "Kalifornien",
-    "vintage": null,
     "type": "Rött vin",
+    "vintage": null,
     "systembolagetProductId": "7406501",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "rumi wine company napa rumi napa valley red",
+      "7406501"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/rumi-7406501/"
   },
   {
@@ -169,10 +229,14 @@
     "producer": "Avinyó",
     "country": "Spanien",
     "region": "Cava",
-    "vintage": "2021",
     "type": "Mousserande vin",
+    "vintage": "2021",
     "systembolagetProductId": "7750901",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "avinyó avinyó blanc de noirs cava brut nature reserva",
+      "7750901"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/avinyo-7750901/"
   },
   {
@@ -180,10 +244,14 @@
     "producer": "Spirit of Sweden",
     "country": "Sverige",
     "region": null,
-    "vintage": null,
     "type": "Glögg och Glühwein",
+    "vintage": null,
     "systembolagetProductId": "7618401",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "spirit of sweden dufvenkrooks vinglögg",
+      "7618401"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/dufvenkrooks-7618401/"
   },
   {
@@ -191,10 +259,14 @@
     "producer": "Muratie",
     "country": "Sydafrika",
     "region": "Western Cape",
-    "vintage": null,
     "type": "Rött vin",
+    "vintage": null,
     "systembolagetProductId": "7483001",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "muratie muratie ansela van de caab",
+      "7483001"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/muratie-7483001/"
   },
   {
@@ -202,10 +274,14 @@
     "producer": "Von Winning",
     "country": "Tyskland",
     "region": "Pfalz",
-    "vintage": "2023",
     "type": "Vitt vin",
+    "vintage": "2023",
     "systembolagetProductId": "7906401",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "von winning von winning sauvignon blanc 2 trocken",
+      "7906401"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/von-winning-7906401/"
   },
   {
@@ -213,10 +289,14 @@
     "producer": "S.A. Prüm",
     "country": "Tyskland",
     "region": "Mosel",
-    "vintage": "2023",
     "type": "Vitt vin",
+    "vintage": "2023",
     "systembolagetProductId": "7001201",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "s.a. prüm prüm blue riesling trocken",
+      "7001201"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/prum-blue-7001201/"
   },
   {
@@ -224,10 +304,14 @@
     "producer": "Guerrieri Rizzardi",
     "country": "Italien",
     "region": "Venetien",
-    "vintage": "2023",
     "type": "Vitt vin",
+    "vintage": "2023",
     "systembolagetProductId": "7341701",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "guerrieri rizzardi ferra soave classico",
+      "7341701"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/ferra-7341701/"
   },
   {
@@ -235,10 +319,14 @@
     "producer": "Winepartners Nordic AB",
     "country": "Italien",
     "region": null,
-    "vintage": null,
     "type": "Rött vin",
+    "vintage": null,
     "systembolagetProductId": "7478901",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "winepartners nordic ab farmers market organic",
+      "7478901"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/farmers-market-7478901/"
   },
   {
@@ -246,10 +334,14 @@
     "producer": "Ruffino",
     "country": "Italien",
     "region": "Toscana",
-    "vintage": "2022",
     "type": "Rött vin",
+    "vintage": "2022",
     "systembolagetProductId": "7657801",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "ruffino ruffino chianti superiore",
+      "7657801"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/ruffino-7657801/"
   },
   {
@@ -257,10 +349,14 @@
     "producer": "Cordero di Montezemolo",
     "country": "Italien",
     "region": "Piemonte",
-    "vintage": "2023",
     "type": "Vitt vin",
+    "vintage": "2023",
     "systembolagetProductId": "7565501",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "cordero di montezemolo langhe arneis cordero di montezemolo",
+      "7565501"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/langhe-7565501/"
   },
   {
@@ -268,10 +364,14 @@
     "producer": "Cordero di Montezemolo",
     "country": "Italien",
     "region": "Piemonte",
-    "vintage": "2022",
     "type": "Rött vin",
+    "vintage": "2022",
     "systembolagetProductId": "7473601",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "cordero di montezemolo langhe nebbiolo cordero di montezemolo",
+      "7473601"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/langhe-7473601/"
   },
   {
@@ -279,10 +379,14 @@
     "producer": "Tevsjö Destilleri Järvsö",
     "country": "Sverige",
     "region": "Gävleborgs län",
-    "vintage": null,
     "type": "Glögg och Glühwein",
+    "vintage": null,
     "systembolagetProductId": "3074402",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "tevsjö destilleri järvsö järvsö brännvins glögg",
+      "3074402"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/jarvso-3074402/"
   },
   {
@@ -290,10 +394,14 @@
     "producer": "Delas",
     "country": "Frankrike",
     "region": "Rhonedalen",
-    "vintage": "2023",
     "type": "Rött vin",
+    "vintage": "2023",
     "systembolagetProductId": "7183206",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "delas delas frères côtes du rhône saint-esprit",
+      "7183206"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/delas-freres-7183206/"
   },
   {
@@ -301,10 +409,14 @@
     "producer": "Cantine di Ora",
     "country": "Italien",
     "region": "Venetien",
-    "vintage": "2021",
     "type": "Rött vin",
+    "vintage": "2021",
     "systembolagetProductId": "7432508",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "cantine di ora amicale",
+      "7432508"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/amicale-7432508/"
   },
   {
@@ -312,10 +424,14 @@
     "producer": "Bacina Vino",
     "country": "Serbien",
     "region": null,
-    "vintage": "2019",
     "type": "Rosévin",
+    "vintage": "2019",
     "systembolagetProductId": "7442601",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "bacina vino dolina rosé",
+      "7442601"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/dolina-7442601/"
   },
   {
@@ -323,10 +439,14 @@
     "producer": "Azienda Agricola Frassinelli",
     "country": "Italien",
     "region": "Venetien",
-    "vintage": null,
     "type": "Mousserande vin",
+    "vintage": null,
     "systembolagetProductId": "7724401",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "azienda agricola frassinelli frassinelli conegliano valdobbiadene prosecco superiore extra dry",
+      "7724401"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/frassinelli-7724401/"
   },
   {
@@ -334,10 +454,14 @@
     "producer": "Francois Montand",
     "country": "Frankrike",
     "region": null,
-    "vintage": null,
     "type": "Mousserande vin",
+    "vintage": null,
     "systembolagetProductId": "7758601",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "francois montand francois montand blanc de blancs",
+      "7758601"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/francois-montand-7758601/"
   },
   {
@@ -345,10 +469,14 @@
     "producer": "Domaine Fontaine Du Clos",
     "country": "Frankrike",
     "region": "Rhonedalen",
-    "vintage": "2023",
     "type": "Rött vin",
+    "vintage": "2023",
     "systembolagetProductId": "7212201",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "domaine fontaine du clos fontaine du clos côtes-du-rhône",
+      "7212201"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/fontaine-du-clos-7212201/"
   },
   {
@@ -356,21 +484,29 @@
     "producer": "Le Plan des Moines",
     "country": "Frankrike",
     "region": "Rhonedalen",
-    "vintage": "2023",
     "type": "Vitt vin",
+    "vintage": "2023",
     "systembolagetProductId": "7147601",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "le plan des moines côtes du rhône les silénes",
+      "7147601"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/cotes-du-rhone-7147601/"
   },
   {
-    "name": "Palmer \\u0026 Co Blanc de Noirs",
-    "producer": "Palmer \\u0026 Co",
+    "name": "Palmer & Co Blanc de Noirs",
+    "producer": "Palmer & Co",
     "country": "Frankrike",
     "region": "Champagne",
-    "vintage": null,
     "type": "Mousserande vin",
+    "vintage": null,
     "systembolagetProductId": "7579901",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "palmer & co palmer & co blanc de noirs",
+      "7579901"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/palmer-co-7579901/"
   },
   {
@@ -378,10 +514,14 @@
     "producer": "Le Plan des Moines",
     "country": "Frankrike",
     "region": "Rhonedalen",
-    "vintage": "2022",
     "type": "Rött vin",
+    "vintage": "2022",
     "systembolagetProductId": "7348901",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "le plan des moines côtes du rhône la borde",
+      "7348901"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/cotes-du-rhone-7348901/"
   },
   {
@@ -389,10 +529,14 @@
     "producer": "Le Plan des Moines",
     "country": "Frankrike",
     "region": "Rhonedalen",
-    "vintage": "2021",
     "type": "Rött vin",
+    "vintage": "2021",
     "systembolagetProductId": "7354901",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "le plan des moines côtes-du-rhône-villages le pré des suves",
+      "7354901"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/cotes-du-rhone-villages-7354901/"
   },
   {
@@ -400,10 +544,14 @@
     "producer": "Le Plan des Moines",
     "country": "Frankrike",
     "region": "Rhonedalen",
-    "vintage": "2022",
     "type": "Rött vin",
+    "vintage": "2022",
     "systembolagetProductId": "7605901",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "le plan des moines châteauneuf-du-pape le grand pontal",
+      "7605901"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/chateauneuf-du-pape-7605901/"
   },
   {
@@ -411,10 +559,14 @@
     "producer": "Reine Pédauque",
     "country": "Frankrike",
     "region": "Bourgogne",
-    "vintage": "2022",
     "type": "Rött vin",
+    "vintage": "2022",
     "systembolagetProductId": "7228401",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "reine pédauque bourgogne-hautes-côtes de nuits reine pédauque",
+      "7228401"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/bourgogne-hautes-cotes-de-nuits-7228401/"
   },
   {
@@ -422,10 +574,14 @@
     "producer": "Weingut Sander",
     "country": "Tyskland",
     "region": "Rheinhessen",
-    "vintage": "2022",
     "type": "Vitt vin",
+    "vintage": "2022",
     "systembolagetProductId": "7613601",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "weingut sander sander weissburgunder trocken",
+      "7613601"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/sander-7613601/"
   },
   {
@@ -433,10 +589,14 @@
     "producer": "Schloss Gobelsburg",
     "country": "Österrike",
     "region": "Niederösterreich",
-    "vintage": "2021",
     "type": "Rött vin",
+    "vintage": "2021",
     "systembolagetProductId": "7927901",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "schloss gobelsburg domaene gobelsburg zweigelt",
+      "7927901"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/domaene-gobelsburg-7927901/"
   },
   {
@@ -444,32 +604,44 @@
     "producer": "Egly-Ouriet",
     "country": "Frankrike",
     "region": "Champagne",
-    "vintage": null,
     "type": "Mousserande vin",
+    "vintage": null,
     "systembolagetProductId": "7756501",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "egly-ouriet egly-ouriet grand cru",
+      "7756501"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/egly-ouriet-7756501/"
   },
   {
-    "name": "Chablis Premier Cru Fourchaume l'Eglantière Jean Durup \\u0026 Fils",
+    "name": "Chablis Premier Cru Fourchaume l'Eglantière Jean Durup & Fils",
     "producer": "Jean Durup",
     "country": "Frankrike",
     "region": "Bourgogne",
-    "vintage": "2018",
     "type": "Vitt vin",
+    "vintage": "2018",
     "systembolagetProductId": "7314701",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "jean durup chablis premier cru fourchaume l'eglantière jean durup & fils",
+      "7314701"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/chablis-7314701/"
   },
   {
     "name": "Gancia Prosecco Brut",
-    "producer": "F.LLI GANCIA \\u0026 C SpA",
+    "producer": "F.LLI GANCIA & C SpA",
     "country": "Italien",
     "region": "Venetien",
-    "vintage": null,
     "type": "Mousserande vin",
+    "vintage": null,
     "systembolagetProductId": "787904",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "f.lli gancia & c spa gancia prosecco brut",
+      "787904"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/gancia-787904/"
   },
   {
@@ -477,10 +649,14 @@
     "producer": "Ossian Vides y Vinos S.L.",
     "country": "Spanien",
     "region": "Kastilien-León",
-    "vintage": "2012",
     "type": "Vitt vin",
+    "vintage": "2012",
     "systembolagetProductId": "7277701",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "ossian vides y vinos s.l. verdling dulce verdejo",
+      "7277701"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/verdling-7277701/"
   },
   {
@@ -488,10 +664,14 @@
     "producer": "Ossian Vides y Vinos S.L.",
     "country": "Spanien",
     "region": "Kastilien-León",
-    "vintage": "2013",
     "type": "Vitt vin",
+    "vintage": "2013",
     "systembolagetProductId": "7236801",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "ossian vides y vinos s.l. verdling trocken verdejo",
+      "7236801"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/verdling-7236801/"
   },
   {
@@ -499,10 +679,14 @@
     "producer": "Ossian Vides y Vinos S.L.",
     "country": "Spanien",
     "region": "Kastilien-León",
-    "vintage": "2019",
     "type": "Vitt vin",
+    "vintage": "2019",
     "systembolagetProductId": "7254001",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "ossian vides y vinos s.l. quintaluna verdejo",
+      "7254001"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/quintaluna-7254001/"
   },
   {
@@ -510,10 +694,14 @@
     "producer": "Giulia Negri",
     "country": "Italien",
     "region": "Piemonte",
-    "vintage": "2018",
     "type": "Rött vin",
+    "vintage": "2018",
     "systembolagetProductId": "7439301",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "giulia negri barolo serradenari giulia negri",
+      "7439301"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/barolo-serradenari-7439301/"
   },
   {
@@ -521,10 +709,14 @@
     "producer": "Ponzi Vineyards",
     "country": "USA",
     "region": "Oregon",
-    "vintage": "2018",
     "type": "Vitt vin",
+    "vintage": "2018",
     "systembolagetProductId": "7487601",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "ponzi vineyards ponzi pinot gris",
+      "7487601"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/ponzi-7487601/"
   },
   {
@@ -532,21 +724,29 @@
     "producer": "Iconic Wines",
     "country": "Italien",
     "region": "Apulien",
-    "vintage": "2024",
     "type": "Rött vin",
+    "vintage": "2024",
     "systembolagetProductId": "7659801",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "iconic wines viva valentina sangiovese",
+      "7659801"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/viva-valentina-7659801/"
   },
   {
-    "name": "Vinlåda Pi 3,14 Röd \\u0026 Vit",
+    "name": "Vinlåda Pi 3,14 Röd & Vit",
     "producer": "Bodegas Langa",
     "country": "Spanien",
     "region": null,
-    "vintage": null,
     "type": "Vinlåda",
+    "vintage": null,
     "systembolagetProductId": "7445209",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "bodegas langa vinlåda pi 3,14 röd & vit",
+      "7445209"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/vinlada-pi-3-14-rod-vit-7445209/"
   },
   {
@@ -554,10 +754,14 @@
     "producer": "Flera producenter",
     "country": "Spanien",
     "region": null,
-    "vintage": null,
     "type": "Vinlåda",
+    "vintage": null,
     "systembolagetProductId": "7484309",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "flera producenter vinlåda spännande spanien röd",
+      "7484309"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/vinlada-spannande-spanien-rod-7484309/"
   },
   {
@@ -565,10 +769,14 @@
     "producer": "Freixenet",
     "country": "Spanien",
     "region": null,
-    "vintage": null,
     "type": "Mousserande vin",
+    "vintage": null,
     "systembolagetProductId": "7791501",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "freixenet mia pink sparkling moscato",
+      "7791501"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/mia-7791501/"
   },
   {
@@ -576,10 +784,14 @@
     "producer": "Luigi Righetti",
     "country": "Italien",
     "region": "Venetien",
-    "vintage": "2022",
     "type": "Rött vin",
+    "vintage": "2022",
     "systembolagetProductId": "274002",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "luigi righetti amarone della valpolicella classico",
+      "274002"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/amarone-della-valpolicella-classico-274002/"
   },
   {
@@ -587,10 +799,14 @@
     "producer": "Corteforte",
     "country": "Italien",
     "region": "Trevenezie",
-    "vintage": "2016",
     "type": "Rött vin",
+    "vintage": "2016",
     "systembolagetProductId": "7904901",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "corteforte concentus rosso",
+      "7904901"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/concentus-7904901/"
   },
   {
@@ -598,10 +814,14 @@
     "producer": "Corteforte",
     "country": "Italien",
     "region": "Venetien",
-    "vintage": "2021",
     "type": "Rött vin",
+    "vintage": "2021",
     "systembolagetProductId": "7954401",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "corteforte podere bertarole valpolicella ripasso classico superiore",
+      "7954401"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/podere-bertarole-7954401/"
   },
   {
@@ -609,10 +829,14 @@
     "producer": "La Chablisienne",
     "country": "Frankrike",
     "region": "Bourgogne",
-    "vintage": "2023",
     "type": "Vitt vin",
+    "vintage": "2023",
     "systembolagetProductId": "558502",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "la chablisienne petit chablis la chablisienne",
+      "558502"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/petit-chablis-558502/"
   },
   {
@@ -620,10 +844,14 @@
     "producer": "Corteforte",
     "country": "Italien",
     "region": "Venetien",
-    "vintage": "2016",
     "type": "Rött vin",
+    "vintage": "2016",
     "systembolagetProductId": "7680601",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "corteforte terre di san zeno amarone della valpolicella classico",
+      "7680601"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/terre-di-san-zeno-7680601/"
   },
   {
@@ -631,10 +859,14 @@
     "producer": "Corteforte",
     "country": "Italien",
     "region": "Venetien",
-    "vintage": "2015",
     "type": "Rött vin",
+    "vintage": "2015",
     "systembolagetProductId": "7930101",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "corteforte vigneti di osan amarone della valpolicella classico",
+      "7930101"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/vigneti-di-osan-7930101/"
   },
   {
@@ -642,10 +874,14 @@
     "producer": "Corteforte",
     "country": "Italien",
     "region": "Venetien",
-    "vintage": "2014",
     "type": "Rött vin",
+    "vintage": "2014",
     "systembolagetProductId": "7943802",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "corteforte recioto della valpolicella classico corteforte",
+      "7943802"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/recioto-della-valpolicella-classico-7943802/"
   },
   {
@@ -653,10 +889,14 @@
     "producer": "Du Toitskloof Cellar",
     "country": "Sydafrika",
     "region": "Western Cape",
-    "vintage": "2025",
     "type": "Vitt vin",
+    "vintage": "2025",
     "systembolagetProductId": "500601",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "du toitskloof cellar dimension chardonnay",
+      "500601"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/dimension-500601/"
   },
   {
@@ -664,10 +904,14 @@
     "producer": "Champagne Mathelin",
     "country": "Frankrike",
     "region": "Champagne",
-    "vintage": null,
     "type": "Mousserande vin",
+    "vintage": null,
     "systembolagetProductId": "7791601",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "champagne mathelin mathelin brut reserve",
+      "7791601"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/mathelin-7791601/"
   },
   {
@@ -675,32 +919,44 @@
     "producer": "Domaine Wines",
     "country": "Italien",
     "region": "Venetien",
-    "vintage": "2023",
     "type": "Rött vin",
+    "vintage": "2023",
     "systembolagetProductId": "7912501",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "domaine wines ecoltura valpolicella",
+      "7912501"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/ecoltura-7912501/"
   },
   {
-    "name": "Boërl \\u0026 Kroff Cuvée Sélectionnée Brut",
+    "name": "Boërl & Kroff Cuvée Sélectionnée Brut",
     "producer": "Drappier",
     "country": "Frankrike",
     "region": "Champagne",
-    "vintage": "2006",
     "type": "Mousserande vin",
+    "vintage": "2006",
     "systembolagetProductId": "7722006",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "drappier boërl & kroff cuvée sélectionnée brut",
+      "7722006"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/boerl-kroff-7722006/"
   },
   {
-    "name": "Boërl \\u0026 Kroff Cuvée Sélectionnée Brut Rosé",
+    "name": "Boërl & Kroff Cuvée Sélectionnée Brut Rosé",
     "producer": "Drappier",
     "country": "Frankrike",
     "region": "Champagne",
-    "vintage": null,
     "type": "Mousserande vin",
+    "vintage": null,
     "systembolagetProductId": "7724306",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "drappier boërl & kroff cuvée sélectionnée brut rosé",
+      "7724306"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/boerl-kroff-7724306/"
   },
   {
@@ -708,10 +964,14 @@
     "producer": "Hugues de La Bourdonnaye",
     "country": "Frankrike",
     "region": "Champagne",
-    "vintage": null,
     "type": "Mousserande vin",
+    "vintage": null,
     "systembolagetProductId": "7783301",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "hugues de la bourdonnaye comte hugues de la bourdonnaye brut nature",
+      "7783301"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/comte-hugues-de-la-bourdonnaye-7783301/"
   },
   {
@@ -719,10 +979,14 @@
     "producer": "Hugues de La Bourdonnaye",
     "country": "Frankrike",
     "region": "Champagne",
-    "vintage": null,
     "type": "Mousserande vin",
+    "vintage": null,
     "systembolagetProductId": "7796601",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "hugues de la bourdonnaye comte hugues de la bourdonnaye blanc de blancs brut nature",
+      "7796601"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/comte-hugues-de-la-bourdonnaye-7796601/"
   },
   {
@@ -730,10 +994,14 @@
     "producer": "WG Albert Kallfelz",
     "country": "Tyskland",
     "region": "Mosel",
-    "vintage": "2023",
     "type": "Vitt vin",
+    "vintage": "2023",
     "systembolagetProductId": "7009901",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "wg albert kallfelz kallfelz sensus riesling-hochgewächs trocken",
+      "7009901"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/kallfelz-7009901/"
   },
   {
@@ -741,10 +1009,14 @@
     "producer": "Ferrari",
     "country": "Italien",
     "region": "Trentino-Alto Adige",
-    "vintage": "2015",
     "type": "Mousserande vin",
+    "vintage": "2015",
     "systembolagetProductId": "7706101",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "ferrari ferrari riserva lunelli",
+      "7706101"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/ferrari-7706101/"
   },
   {
@@ -752,10 +1024,14 @@
     "producer": "Bodegas Sanviver",
     "country": "Spanien",
     "region": null,
+    "type": "Smaksatt vin & fruktvin",
     "vintage": null,
-    "type": "Smaksatt vin \\u0026 fruktvin",
     "systembolagetProductId": "793001",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "bodegas sanviver solybiza rosé sangria organic",
+      "793001"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/solybiza-793001/"
   },
   {
@@ -763,10 +1039,14 @@
     "producer": "Contemporary Wines AB",
     "country": "Italien",
     "region": null,
-    "vintage": null,
     "type": "Mousserande vin",
+    "vintage": null,
     "systembolagetProductId": "7280901",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "contemporary wines ab perfect day bubbles spumante cuvée extra dry",
+      "7280901"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/perfect-day-7280901/"
   },
   {
@@ -774,10 +1054,14 @@
     "producer": "Marchesi Mazzei",
     "country": "Italien",
     "region": "Toscana",
-    "vintage": "2023",
     "type": "Rött vin",
+    "vintage": "2023",
     "systembolagetProductId": "7293901",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "marchesi mazzei tirrenico marchesi mazzei",
+      "7293901"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/tirrenico-7293901/"
   },
   {
@@ -785,10 +1069,14 @@
     "producer": "François Lurton",
     "country": "Frankrike",
     "region": "Frankrike sydväst",
-    "vintage": "2023",
     "type": "Vitt vin",
+    "vintage": "2023",
     "systembolagetProductId": "7730301",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "françois lurton domaine les fumées blanches sauvignon blanc",
+      "7730301"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/domaine-les-fumees-blanches-7730301/"
   },
   {
@@ -796,10 +1084,14 @@
     "producer": "Avinyó",
     "country": "Spanien",
     "region": "Cava",
-    "vintage": null,
     "type": "Vinlåda",
+    "vintage": null,
     "systembolagetProductId": "7795609",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "avinyó cavas avinyó mixlåda",
+      "7795609"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/cavas-avinyo-mixlada-7795609/"
   },
   {
@@ -807,10 +1099,14 @@
     "producer": "Black Stallion Estate Winery",
     "country": "USA",
     "region": "Kalifornien",
-    "vintage": "2021",
     "type": "Rött vin",
+    "vintage": "2021",
     "systembolagetProductId": "7515901",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "black stallion estate winery black stallion limited release napa valley cabernet sauvignon",
+      "7515901"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/black-stallion-7515901/"
   },
   {
@@ -818,10 +1114,14 @@
     "producer": "Black Stallion Estate Winery",
     "country": "USA",
     "region": "Kalifornien",
-    "vintage": "2021",
     "type": "Vitt vin",
+    "vintage": "2021",
     "systembolagetProductId": "7536001",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "black stallion estate winery black stallion napa valley chardonnay",
+      "7536001"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/black-stallion-napa-valley-7536001/"
   },
   {
@@ -829,10 +1129,14 @@
     "producer": "Bodegas Godelia",
     "country": "Spanien",
     "region": "Kastilien-León",
-    "vintage": "2016",
     "type": "Rött vin",
+    "vintage": "2016",
     "systembolagetProductId": "7557901",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "bodegas godelia godelia selección mencía",
+      "7557901"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/godelia-7557901/"
   },
   {
@@ -840,10 +1144,14 @@
     "producer": "Cascina Vigna",
     "country": "Italien",
     "region": "Piemonte",
-    "vintage": "2020",
     "type": "Rött vin",
+    "vintage": "2020",
     "systembolagetProductId": "7585601",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "cascina vigna barbera d'asti cascina vigna",
+      "7585601"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/barbera-d-asti-7585601/"
   },
   {
@@ -851,10 +1159,14 @@
     "producer": "Cascina Vigna",
     "country": "Italien",
     "region": "Piemonte",
-    "vintage": "2021",
     "type": "Rött vin",
+    "vintage": "2021",
     "systembolagetProductId": "7335101",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "cascina vigna barbera d'asti superiore cascina vigna",
+      "7335101"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/barbera-d-asti-superiore-7335101/"
   },
   {
@@ -862,32 +1174,44 @@
     "producer": "Deutz",
     "country": "Frankrike",
     "region": "Champagne",
-    "vintage": null,
     "type": "Mousserande vin",
+    "vintage": null,
     "systembolagetProductId": "748706",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "deutz deutz brut classic",
+      "748706"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/deutz-748706/"
   },
   {
     "name": "R Dumont Brut Millésimé",
-    "producer": "R. Dumont \\u0026 Fils",
+    "producer": "R. Dumont & Fils",
     "country": "Frankrike",
     "region": "Champagne",
-    "vintage": "2012",
     "type": "Mousserande vin",
+    "vintage": "2012",
     "systembolagetProductId": "7750101",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "r. dumont & fils r dumont brut millésimé",
+      "7750101"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/r-dumont-7750101/"
   },
   {
     "name": "R Dumont Rosé Brut",
-    "producer": "R. Dumont \\u0026 Fils",
+    "producer": "R. Dumont & Fils",
     "country": "Frankrike",
     "region": "Champagne",
-    "vintage": null,
     "type": "Mousserande vin",
+    "vintage": null,
     "systembolagetProductId": "7769301",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "r. dumont & fils r dumont rosé brut",
+      "7769301"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/r-dumont-7769301/"
   },
   {
@@ -895,10 +1219,14 @@
     "producer": "Weingut Leitz",
     "country": "Tyskland",
     "region": "Rheingau",
-    "vintage": "2024",
     "type": "Rosévin",
+    "vintage": "2024",
     "systembolagetProductId": "7539601",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "weingut leitz eins zwei dry pinot noir rosé",
+      "7539601"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/eins-zwei-dry-7539601/"
   },
   {
@@ -906,10 +1234,14 @@
     "producer": "Maison Rijckaert",
     "country": "Frankrike",
     "region": "Jura",
-    "vintage": "2022",
     "type": "Vitt vin",
+    "vintage": "2022",
     "systembolagetProductId": "7501201",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "maison rijckaert maison rijckaert arbois en paradis vieilles vignes",
+      "7501201"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/maison-rijckaert-7501201/"
   },
   {
@@ -917,10 +1249,14 @@
     "producer": "Clotilde Davenne",
     "country": "Frankrike",
     "region": "Bourgogne",
-    "vintage": null,
     "type": "Mousserande vin",
+    "vintage": null,
     "systembolagetProductId": "7774106",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "clotilde davenne clotilde davenne cremant de bourgogne extra brut",
+      "7774106"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/clotilde-davenne-7774106/"
   },
   {
@@ -928,21 +1264,29 @@
     "producer": "GFA Font Mars",
     "country": "Frankrike",
     "region": "Languedoc-Roussillon",
-    "vintage": "2023",
     "type": "Vitt vin",
+    "vintage": "2023",
     "systembolagetProductId": "7533001",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "gfa font mars picpoulet de pinet",
+      "7533001"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/picpoulet-de-pinet-7533001/"
   },
   {
     "name": "Guldkula White Grand Cru Blanc de Blancs",
-    "producer": "R \\u0026 L Legras",
+    "producer": "R & L Legras",
     "country": "Frankrike",
     "region": "Champagne",
-    "vintage": null,
     "type": "Mousserande vin",
+    "vintage": null,
     "systembolagetProductId": "7524801",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "r & l legras guldkula white grand cru blanc de blancs",
+      "7524801"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/guldkula-white-7524801/"
   },
   {
@@ -950,10 +1294,14 @@
     "producer": "Antigua Bodega Stagnari",
     "country": "Uruguay",
     "region": "Canelones",
-    "vintage": "2017",
     "type": "Rött vin",
+    "vintage": "2017",
     "systembolagetProductId": "7445301",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "antigua bodega stagnari del pedregal seleccion tannat",
+      "7445301"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/del-pedregal-seleccion-7445301/"
   },
   {
@@ -961,10 +1309,14 @@
     "producer": "Muratie",
     "country": "Sydafrika",
     "region": "Western Cape",
-    "vintage": "2014",
     "type": "Vitt vin",
+    "vintage": "2014",
     "systembolagetProductId": "7167901",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "muratie muratie laurens campher",
+      "7167901"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/muratie-7167901/"
   },
   {
@@ -972,10 +1324,14 @@
     "producer": "Muratie",
     "country": "Sydafrika",
     "region": "Western Cape",
-    "vintage": null,
     "type": "Rött vin",
+    "vintage": null,
     "systembolagetProductId": "7463501",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "muratie muratie george paul canitz pinot noir",
+      "7463501"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/muratie-7463501/"
   },
   {
@@ -983,10 +1339,14 @@
     "producer": "El Coto de Rioja",
     "country": "Spanien",
     "region": "Rioja",
-    "vintage": "2022",
     "type": "Rött vin",
+    "vintage": "2022",
     "systembolagetProductId": "1267001",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "el coto de rioja el coto crianza",
+      "1267001"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/el-coto-1267001/"
   },
   {
@@ -994,10 +1354,14 @@
     "producer": "Quinta do Tedo",
     "country": "Portugal",
     "region": "Douro",
-    "vintage": null,
     "type": "Starkvin",
+    "vintage": null,
     "systembolagetProductId": "7166101",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "quinta do tedo quinta do tedo fine tawny",
+      "7166101"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/quinta-do-tedo-7166101/"
   },
   {
@@ -1005,10 +1369,14 @@
     "producer": "Domaine des Pasquiers",
     "country": "Frankrike",
     "region": "Rhonedalen",
-    "vintage": "2023",
     "type": "Rött vin",
+    "vintage": "2023",
     "systembolagetProductId": "229801",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "domaine des pasquiers domaine des pasquiers plan de dieu",
+      "229801"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/domaine-des-pasquiers-229801/"
   },
   {
@@ -1016,10 +1384,14 @@
     "producer": "Kano Brewery",
     "country": "Japan",
     "region": null,
-    "vintage": null,
     "type": "Sake",
+    "vintage": null,
     "systembolagetProductId": "7119501",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "kano brewery jokigen yamahai junmai",
+      "7119501"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/jokigen-7119501/"
   },
   {
@@ -1027,10 +1399,14 @@
     "producer": "Champagne Canard-Duchêne",
     "country": "Frankrike",
     "region": "Champagne",
-    "vintage": null,
     "type": "Mousserande vin",
+    "vintage": null,
     "systembolagetProductId": "7762001",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "champagne canard-duchêne canard duchêne charles vii blanc de noirs brut",
+      "7762001"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/canard-duchene-charles-vii-7762001/"
   },
   {
@@ -1038,10 +1414,14 @@
     "producer": "J M Brocard",
     "country": "Frankrike",
     "region": "Bourgogne",
-    "vintage": "2023",
     "type": "Vitt vin",
+    "vintage": "2023",
     "systembolagetProductId": "7608301",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "j m brocard bourgogne chardonnay j m brocard",
+      "7608301"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/bourgogne-chardonnay-7608301/"
   },
   {
@@ -1049,10 +1429,14 @@
     "producer": "Fürst von Metternich",
     "country": "Tyskland",
     "region": null,
-    "vintage": null,
     "type": "Mousserande vin",
+    "vintage": null,
     "systembolagetProductId": "7796201",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "fürst von metternich fürst von metternich riesling sekt trocken",
+      "7796201"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/furst-von-metternich-7796201/"
   },
   {
@@ -1060,10 +1444,14 @@
     "producer": "Weingut Bründlmayer",
     "country": "Österrike",
     "region": "Niederösterreich",
-    "vintage": "2023",
     "type": "Vitt vin",
+    "vintage": "2023",
     "systembolagetProductId": "243901",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "weingut bründlmayer bründlmayer langenloiser steinmassl 1ötw riesling",
+      "243901"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/brundlmayer-243901/"
   },
   {
@@ -1071,10 +1459,14 @@
     "producer": "Nordic Sea Winery",
     "country": "Sydafrika",
     "region": null,
-    "vintage": null,
     "type": "Vitt vin",
+    "vintage": null,
     "systembolagetProductId": "7016008",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "nordic sea winery levante colombard chardonnay",
+      "7016008"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/levante-7016008/"
   },
   {
@@ -1082,10 +1474,14 @@
     "producer": "Gustave Lorentz",
     "country": "Frankrike",
     "region": "Alsace",
-    "vintage": "2023",
     "type": "Vitt vin",
+    "vintage": "2023",
     "systembolagetProductId": "7587501",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "gustave lorentz gustave lorentz evidence riesling",
+      "7587501"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/gustave-lorentz-7587501/"
   },
   {
@@ -1093,10 +1489,14 @@
     "producer": "Gustave Lorentz",
     "country": "Frankrike",
     "region": "Alsace",
-    "vintage": "2023",
     "type": "Vitt vin",
+    "vintage": "2023",
     "systembolagetProductId": "7575601",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "gustave lorentz gustave  lorentz riesling lieu dit burg",
+      "7575601"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/gustave-lorentz-7575601/"
   },
   {
@@ -1104,10 +1504,14 @@
     "producer": "Gustave Lorentz",
     "country": "Frankrike",
     "region": "Alsace",
-    "vintage": "2019",
     "type": "Vitt vin",
+    "vintage": "2019",
     "systembolagetProductId": "7407301",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "gustave lorentz gustave lorentz pinot gris lieu dit schofweg",
+      "7407301"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/gustave-lorentz-7407301/"
   },
   {
@@ -1115,10 +1519,14 @@
     "producer": "Rust en Vrede Estate",
     "country": "Sydafrika",
     "region": "Western Cape",
-    "vintage": "2022",
     "type": "Rött vin",
+    "vintage": "2022",
     "systembolagetProductId": "7212901",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "rust en vrede estate rust en vrede estate syrah",
+      "7212901"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/rust-en-vrede-estate-7212901/"
   },
   {
@@ -1126,10 +1534,14 @@
     "producer": "San Silvestro",
     "country": "Italien",
     "region": "Piemonte",
-    "vintage": "2024",
     "type": "Rött vin",
+    "vintage": "2024",
     "systembolagetProductId": "7278201",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "san silvestro piemonte barbera",
+      "7278201"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/piemonte-7278201/"
   },
   {
@@ -1137,10 +1549,14 @@
     "producer": "Maison Louis Jadot",
     "country": "Frankrike",
     "region": "Bourgogne",
-    "vintage": "2024",
     "type": "Vitt vin",
+    "vintage": "2024",
     "systembolagetProductId": "7180801",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "maison louis jadot louis jadot coteaux bourguignons blanc",
+      "7180801"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/louis-jadot-7180801/"
   },
   {
@@ -1148,10 +1564,14 @@
     "producer": "Kutjevo",
     "country": "Kroatien",
     "region": "Kontinentalna",
-    "vintage": "2024",
     "type": "Vitt vin",
+    "vintage": "2024",
     "systembolagetProductId": "640501",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "kutjevo graševina kutjevo",
+      "640501"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/grasevina-640501/"
   },
   {
@@ -1159,10 +1579,14 @@
     "producer": "Penfolds",
     "country": "Australien",
     "region": "South Australia",
-    "vintage": "2024",
     "type": "Vitt vin",
+    "vintage": "2024",
     "systembolagetProductId": "646301",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "penfolds penfolds koonunga hill chardonnay",
+      "646301"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/penfolds-koonunga-hill-646301/"
   },
   {
@@ -1170,10 +1594,14 @@
     "producer": "Calvet",
     "country": "Frankrike",
     "region": "Bordeaux",
-    "vintage": "2024",
     "type": "Vitt vin",
+    "vintage": "2024",
     "systembolagetProductId": "7472501",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "calvet calvet reserve sauvignon blanc",
+      "7472501"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/calvet-reserve-7472501/"
   },
   {
@@ -1181,10 +1609,14 @@
     "producer": "Louis Bouillot",
     "country": "Frankrike",
     "region": "Bourgogne",
-    "vintage": "2022",
     "type": "Mousserande vin",
+    "vintage": "2022",
     "systembolagetProductId": "7786501",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "louis bouillot louis bouillot crémant de bourgogne brut grand millésimé",
+      "7786501"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/louis-bouillot-7786501/"
   },
   {
@@ -1192,10 +1624,14 @@
     "producer": "Bodega Chozas Carrascal S.L.",
     "country": "Spanien",
     "region": null,
-    "vintage": "2018",
     "type": "Rött vin",
+    "vintage": "2018",
     "systembolagetProductId": "7505001",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "bodega chozas carrascal s.l. las ocho vino de pago",
+      "7505001"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/las-ocho-7505001/"
   },
   {
@@ -1203,631 +1639,149 @@
     "producer": "Diebolt-Vallois",
     "country": "Frankrike",
     "region": "Champagne",
-    "vintage": null,
     "type": "Mousserande vin",
+    "vintage": null,
     "systembolagetProductId": "772306",
-    "sourceLabel": "Systembolaget",
+    "aliases": [
+      "diebolt-vallois diebolt-vallois prestige extra brut",
+      "772306"
+    ],
+    "sourceLabel": "Systembolaget public product page",
     "sourceUrl": "https://www.systembolaget.se/produkt/vin/diebolt-vallois-772306/"
   },
   {
-    "name": "Catena Malbec",
-    "producer": "Bodega Catena Zapata",
-    "country": "Argentina",
-    "region": "Mendoza",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://catenazapata.com/catena-wines/"
-  },
-  {
-    "name": "Catena Cabernet Sauvignon",
-    "producer": "Bodega Catena Zapata",
-    "country": "Argentina",
-    "region": "Mendoza",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://catenazapata.com/catena-wines/"
-  },
-  {
-    "name": "Catena Chardonnay",
-    "producer": "Bodega Catena Zapata",
-    "country": "Argentina",
-    "region": "Mendoza",
-    "type": "Vitt",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://catenazapata.com/catena-wines/"
-  },
-  {
-    "name": "Catena Alta Malbec",
-    "producer": "Bodega Catena Zapata",
-    "country": "Argentina",
-    "region": "Mendoza",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://catenazapata.com/catena-wines/"
-  },
-  {
-    "name": "Catena Alta Cabernet Sauvignon",
-    "producer": "Bodega Catena Zapata",
-    "country": "Argentina",
-    "region": "Mendoza",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://catenazapata.com/catena-wines/"
-  },
-  {
-    "name": "Catena Alta Chardonnay",
-    "producer": "Bodega Catena Zapata",
-    "country": "Argentina",
-    "region": "Mendoza",
-    "type": "Vitt",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://catenazapata.com/catena-wines/"
-  },
-  {
-    "name": "Catena Appellation Lunlunta Malbec",
-    "producer": "Bodega Catena Zapata",
-    "country": "Argentina",
-    "region": "Lunlunta, Mendoza",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://catenazapata.com/catena-wines/"
-  },
-  {
-    "name": "Catena Appellation La Consulta Malbec",
-    "producer": "Bodega Catena Zapata",
-    "country": "Argentina",
-    "region": "La Consulta, Mendoza",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://catenazapata.com/catena-wines/"
-  },
-  {
-    "name": "Catena Appellation Vista Flores Malbec",
-    "producer": "Bodega Catena Zapata",
-    "country": "Argentina",
-    "region": "Vista Flores, Mendoza",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://catenazapata.com/catena-wines/"
-  },
-  {
-    "name": "Catena Appellation Paraje Altamira Malbec",
-    "producer": "Bodega Catena Zapata",
-    "country": "Argentina",
-    "region": "Paraje Altamira, Mendoza",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://catenazapata.com/catena-wines/"
-  },
-  {
-    "name": "Catena Appellation Agrelo Cabernet Sauvignon",
-    "producer": "Bodega Catena Zapata",
-    "country": "Argentina",
-    "region": "Agrelo, Mendoza",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://catenazapata.com/catena-wines/"
-  },
-  {
-    "name": "Catena Appellation San Carlos Cabernet Franc",
-    "producer": "Bodega Catena Zapata",
-    "country": "Argentina",
-    "region": "San Carlos, Mendoza",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://catenazapata.com/catena-wines/"
-  },
-  {
-    "name": "Catena Appellation Tupungato Chardonnay",
-    "producer": "Bodega Catena Zapata",
-    "country": "Argentina",
-    "region": "Tupungato, Mendoza",
-    "type": "Vitt",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://catenazapata.com/catena-wines/"
-  },
-  {
-    "name": "Catena Appellation Luján de Cuyo White Clay",
-    "producer": "Bodega Catena Zapata",
-    "country": "Argentina",
-    "region": "Luján de Cuyo, Mendoza",
-    "type": "Vitt",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://catenazapata.com/catena-wines/"
-  },
-  {
-    "name": "Nicolás Catena Zapata",
-    "producer": "Bodega Catena Zapata",
-    "country": "Argentina",
-    "region": "Mendoza",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://catenazapata.com/catena-wines/"
-  },
-  {
-    "name": "Malbec Argentino",
-    "producer": "Bodega Catena Zapata",
-    "country": "Argentina",
-    "region": "Mendoza",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://catenazapata.com/catena-wines/"
-  },
-  {
-    "name": "Birth of Cabernet",
-    "producer": "Bodega Catena Zapata",
-    "country": "Argentina",
-    "region": "Mendoza",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://catenazapata.com/catena-wines/"
-  },
-  {
-    "name": "Nicola Catena",
-    "producer": "Bodega Catena Zapata",
-    "country": "Argentina",
-    "region": "Mendoza",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://catenazapata.com/catena-wines/"
-  },
-  {
-    "name": "Angélica Zapata Malbec Alta",
-    "producer": "Bodega Catena Zapata",
-    "country": "Argentina",
-    "region": "Mendoza",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://catenazapata.com/catena-wines/"
-  },
-  {
-    "name": "Angélica Zapata Cabernet Franc Alta",
-    "producer": "Bodega Catena Zapata",
-    "country": "Argentina",
-    "region": "Mendoza",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://catenazapata.com/catena-wines/"
-  },
-  {
-    "name": "Angélica Zapata Cabernet Sauvignon Alta",
-    "producer": "Bodega Catena Zapata",
-    "country": "Argentina",
-    "region": "Mendoza",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://catenazapata.com/catena-wines/"
-  },
-  {
-    "name": "Angélica Zapata Merlot Alta",
-    "producer": "Bodega Catena Zapata",
-    "country": "Argentina",
-    "region": "Mendoza",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://catenazapata.com/catena-wines/"
-  },
-  {
-    "name": "Angélica Zapata Chardonnay Alta",
-    "producer": "Bodega Catena Zapata",
-    "country": "Argentina",
-    "region": "Mendoza",
-    "type": "Vitt",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://catenazapata.com/catena-wines/"
-  },
-  {
-    "name": "DV Catena Cabernet Sauvignon La Pirámide Vineyard Designated",
-    "producer": "Bodega Catena Zapata",
-    "country": "Argentina",
-    "region": "La Pirámide Vineyard, Agrelo, Mendoza",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://catenazapata.com/dv-catena-wines/"
-  },
-  {
-    "name": "DV Catena Cabernet–Cabernet",
-    "producer": "Bodega Catena Zapata",
-    "country": "Argentina",
-    "region": "Mendoza",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://catenazapata.com/dv-catena-wines/"
-  },
-  {
-    "name": "DV Catena Malbec–Malbec",
-    "producer": "Bodega Catena Zapata",
-    "country": "Argentina",
-    "region": "Mendoza",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://catenazapata.com/dv-catena-wines/"
-  },
-  {
-    "name": "DV Catena Syrah–Syrah",
-    "producer": "Bodega Catena Zapata",
-    "country": "Argentina",
-    "region": "Mendoza",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://catenazapata.com/dv-catena-wines/"
-  },
-  {
-    "name": "DV Catena Pinot Noir–Pinot Noir",
-    "producer": "Bodega Catena Zapata",
-    "country": "Argentina",
-    "region": "Mendoza",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://catenazapata.com/dv-catena-wines/"
-  },
-  {
-    "name": "DV Catena Cabernet–Malbec",
-    "producer": "Bodega Catena Zapata",
-    "country": "Argentina",
-    "region": "Mendoza",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://catenazapata.com/dv-catena-wines/"
-  },
-  {
-    "name": "DV Catena Chardonnay–Chardonnay",
-    "producer": "Bodega Catena Zapata",
-    "country": "Argentina",
-    "region": "Mendoza",
-    "type": "Vitt",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://catenazapata.com/dv-catena-wines/"
-  },
-  {
-    "name": "Saint Felicien Malbec",
-    "producer": "Bodega Catena Zapata",
-    "country": "Argentina",
-    "region": "Mendoza",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://catenazapata.com/dv-catena-wines/"
-  },
-  {
-    "name": "Saint Felicien Cabernet Sauvignon",
-    "producer": "Bodega Catena Zapata",
-    "country": "Argentina",
-    "region": "Mendoza",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://catenazapata.com/dv-catena-wines/"
-  },
-  {
-    "name": "Saint Felicien Cabernet–Merlot",
-    "producer": "Bodega Catena Zapata",
-    "country": "Argentina",
-    "region": "Mendoza",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://catenazapata.com/dv-catena-wines/"
-  },
-  {
-    "name": "Saint Felicien Cabernet Franc",
-    "producer": "Bodega Catena Zapata",
-    "country": "Argentina",
-    "region": "Mendoza",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://catenazapata.com/dv-catena-wines/"
-  },
-  {
-    "name": "Saint Felicien Syrah",
-    "producer": "Bodega Catena Zapata",
-    "country": "Argentina",
-    "region": "Mendoza",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://catenazapata.com/dv-catena-wines/"
-  },
-  {
-    "name": "Saint Felicien Sauvignon Blanc",
-    "producer": "Bodega Catena Zapata",
-    "country": "Argentina",
-    "region": "Mendoza",
-    "type": "Vitt",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://catenazapata.com/dv-catena-wines/"
-  },
-  {
-    "name": "Saint Felicien Chardonnay Barrel Fermented",
-    "producer": "Bodega Catena Zapata",
-    "country": "Argentina",
-    "region": "Mendoza",
-    "type": "Vitt",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://catenazapata.com/dv-catena-wines/"
-  },
-  {
-    "name": "Saint Felicien Semillon Doux",
-    "producer": "Bodega Catena Zapata",
-    "country": "Argentina",
-    "region": "Mendoza",
-    "type": "Sött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://catenazapata.com/dv-catena-wines/"
-  },
-  {
-    "name": "Côte-Rôtie Château d'Ampuis",
-    "producer": "E. Guigal",
+    "name": "Catch & Release Sauvignon Blanc",
+    "producer": "Les Domaines Auriol",
     "country": "Frankrike",
-    "region": "Côte-Rôtie, Rhône",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://www.guigal.com/en/"
-  },
-  {
-    "name": "Côte-Rôtie La Mouline",
-    "producer": "E. Guigal",
-    "country": "Frankrike",
-    "region": "Côte-Rôtie, Rhône",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://www.guigal.com/en/"
-  },
-  {
-    "name": "Côte-Rôtie La Turque",
-    "producer": "E. Guigal",
-    "country": "Frankrike",
-    "region": "Côte-Rôtie, Rhône",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://www.guigal.com/en/"
-  },
-  {
-    "name": "Côte-Rôtie La Landonne",
-    "producer": "E. Guigal",
-    "country": "Frankrike",
-    "region": "Côte-Rôtie, Rhône",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://www.guigal.com/en/"
-  },
-  {
-    "name": "Condrieu La Doriane",
-    "producer": "E. Guigal",
-    "country": "Frankrike",
-    "region": "Condrieu, Rhône",
-    "type": "Vitt",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://www.guigal.com/en/"
-  },
-  {
-    "name": "Condrieu Luminescence",
-    "producer": "E. Guigal",
-    "country": "Frankrike",
-    "region": "Condrieu, Rhône",
-    "type": "Vitt",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://www.guigal.com/en/"
-  },
-  {
-    "name": "Ermitage Ex-Voto Red",
-    "producer": "E. Guigal",
-    "country": "Frankrike",
-    "region": "Hermitage, Rhône",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://www.guigal.com/en/"
-  },
-  {
-    "name": "Ermitage Ex-Voto White",
-    "producer": "E. Guigal",
-    "country": "Frankrike",
-    "region": "Hermitage, Rhône",
-    "type": "Vitt",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://www.guigal.com/en/"
-  },
-  {
-    "name": "Saint-Joseph Lieu dit Red",
-    "producer": "E. Guigal",
-    "country": "Frankrike",
-    "region": "Saint-Joseph, Rhône",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://www.guigal.com/en/"
-  },
-  {
-    "name": "Saint-Joseph Lieu dit White",
-    "producer": "E. Guigal",
-    "country": "Frankrike",
-    "region": "Saint-Joseph, Rhône",
-    "type": "Vitt",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://www.guigal.com/en/"
-  },
-  {
-    "name": "Saint-Joseph Vignes de l'Hospice",
-    "producer": "E. Guigal",
-    "country": "Frankrike",
-    "region": "Saint-Joseph, Rhône",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://www.guigal.com/en/"
-  },
-  {
-    "name": "Côte-Rôtie Brune & Blonde de Guigal",
-    "producer": "E. Guigal",
-    "country": "Frankrike",
-    "region": "Côte-Rôtie, Rhône",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://www.guigal.com/en/"
-  },
-  {
-    "name": "Hermitage Red",
-    "producer": "E. Guigal",
-    "country": "Frankrike",
-    "region": "Hermitage, Rhône",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://www.guigal.com/en/"
-  },
-  {
-    "name": "Hermitage White",
-    "producer": "E. Guigal",
-    "country": "Frankrike",
-    "region": "Hermitage, Rhône",
-    "type": "Vitt",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://www.guigal.com/en/"
-  },
-  {
-    "name": "Crozes-Hermitage Red",
-    "producer": "E. Guigal",
-    "country": "Frankrike",
-    "region": "Crozes-Hermitage, Rhône",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://www.guigal.com/en/"
-  },
-  {
-    "name": "Crozes-Hermitage White",
-    "producer": "E. Guigal",
-    "country": "Frankrike",
-    "region": "Crozes-Hermitage, Rhône",
-    "type": "Vitt",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://www.guigal.com/en/"
-  },
-  {
-    "name": "Châteauneuf-du-Pape Red",
-    "producer": "E. Guigal",
-    "country": "Frankrike",
-    "region": "Châteauneuf-du-Pape, Rhône",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://www.guigal.com/en/"
-  },
-  {
-    "name": "Châteauneuf-du-Pape White",
-    "producer": "E. Guigal",
-    "country": "Frankrike",
-    "region": "Châteauneuf-du-Pape, Rhône",
-    "type": "Vitt",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://www.guigal.com/en/"
-  },
-  {
-    "name": "Gigondas Red",
-    "producer": "E. Guigal",
-    "country": "Frankrike",
-    "region": "Gigondas, Rhône",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://www.guigal.com/en/"
-  },
-  {
-    "name": "Tavel",
-    "producer": "E. Guigal",
-    "country": "Frankrike",
-    "region": "Tavel, Rhône",
-    "type": "Rosé",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://www.guigal.com/en/"
-  },
-  {
-    "name": "Côtes du Rhône Red",
-    "producer": "E. Guigal",
-    "country": "Frankrike",
-    "region": "Rhône",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://www.guigal.com/en/"
-  },
-  {
-    "name": "Côtes du Rhône Rose",
-    "producer": "E. Guigal",
-    "country": "Frankrike",
-    "region": "Rhône",
-    "type": "Rosé",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://www.guigal.com/en/"
-  },
-  {
-    "name": "Côtes du Rhône White",
-    "producer": "E. Guigal",
-    "country": "Frankrike",
-    "region": "Rhône",
-    "type": "Vitt",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://www.guigal.com/en/"
-  },
-  {
-    "name": "Penfolds St Henri Shiraz",
-    "producer": "Penfolds",
-    "country": "Australien",
-    "region": "South Australia",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://www.penfolds.com/wines/the-penfolds-collection"
-  },
-  {
-    "name": "Penfolds Bin 389 Cabernet Shiraz",
-    "producer": "Penfolds",
-    "country": "Australien",
-    "region": "South Australia",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://www.penfolds.com/wines/the-penfolds-collection"
-  },
-  {
-    "name": "Penfolds Bin 28 Shiraz",
-    "producer": "Penfolds",
-    "country": "Australien",
-    "region": "South Australia",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://www.penfolds.com/wines/the-penfolds-collection"
-  },
-  {
-    "name": "Penfolds Reserve Bin A Chardonnay",
-    "producer": "Penfolds",
-    "country": "Australien",
     "region": null,
-    "type": "Vitt",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://www.penfolds.com/wines/the-penfolds-collection"
+    "type": "Vitt vin",
+    "vintage": "2024",
+    "systembolagetProductId": "7558601",
+    "aliases": [
+      "les domaines auriol catch & release sauvignon blanc",
+      "7558601"
+    ],
+    "sourceLabel": "Systembolaget public product page",
+    "sourceUrl": "https://www.systembolaget.se/produkt/vin/catch-release-7558601/"
   },
   {
-    "name": "Penfolds Bin 311 Chardonnay",
-    "producer": "Penfolds",
-    "country": "Australien",
+    "name": "Chablis Bouchard Aîné & Fils",
+    "producer": "Bouchard Aîné et Fils",
+    "country": "Frankrike",
+    "region": "Bourgogne",
+    "type": "Vitt vin",
+    "vintage": "2024",
+    "systembolagetProductId": "7513101",
+    "aliases": [
+      "bouchard aîné et fils chablis bouchard aîné & fils",
+      "7513101"
+    ],
+    "sourceLabel": "Systembolaget public product page",
+    "sourceUrl": "https://www.systembolaget.se/produkt/vin/chablis-7513101/"
+  },
+  {
+    "name": "Baigorri Crianza Tempranillo",
+    "producer": "Baigorri",
+    "country": "Spanien",
+    "region": "Rioja",
+    "type": "Rött vin",
+    "vintage": "2020",
+    "systembolagetProductId": "7632301",
+    "aliases": [
+      "baigorri baigorri crianza tempranillo",
+      "7632301"
+    ],
+    "sourceLabel": "Systembolaget public product page",
+    "sourceUrl": "https://www.systembolaget.se/produkt/vin/baigorri-7632301/"
+  },
+  {
+    "name": "Villa Righetti Ripasso",
+    "producer": "Luigi Righetti",
+    "country": "Italien",
+    "region": "Venetien",
+    "type": "Rött vin",
+    "vintage": "2023",
+    "systembolagetProductId": "7630802",
+    "aliases": [
+      "luigi righetti villa righetti ripasso",
+      "7630802"
+    ],
+    "sourceLabel": "Systembolaget public product page",
+    "sourceUrl": "https://www.systembolaget.se/produkt/vin/villa-righetti-7630802/"
+  },
+  {
+    "name": "La Rocca 33",
+    "producer": "Vicara",
+    "country": "Italien",
+    "region": "Piemonte",
+    "type": "Rött vin",
+    "vintage": "2017",
+    "systembolagetProductId": "7044501",
+    "aliases": [
+      "vicara la rocca 33",
+      "7044501"
+    ],
+    "sourceLabel": "Systembolaget public product page",
+    "sourceUrl": "https://www.systembolaget.se/produkt/vin/la-rocca-33-7044501/"
+  },
+  {
+    "name": "Sensazioni Monferrato",
+    "producer": "Luca Ferraris",
+    "country": "Italien",
+    "region": "Piemonte",
+    "type": "Vitt vin",
+    "vintage": "2018",
+    "systembolagetProductId": "7148801",
+    "aliases": [
+      "luca ferraris sensazioni monferrato",
+      "7148801"
+    ],
+    "sourceLabel": "Systembolaget public product page",
+    "sourceUrl": "https://www.systembolaget.se/produkt/vin/sensazioni-7148801/"
+  },
+  {
+    "name": "Pierre Olivier Blanc de Blancs Prestige Brut",
+    "producer": "Pierre Olivier",
+    "country": "Frankrike",
     "region": null,
-    "type": "Vitt",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://www.penfolds.com/wines/the-penfolds-collection"
+    "type": "Mousserande vin",
+    "vintage": null,
+    "systembolagetProductId": "7714101",
+    "aliases": [
+      "pierre olivier pierre olivier blanc de blancs prestige brut",
+      "7714101"
+    ],
+    "sourceLabel": "Systembolaget public product page",
+    "sourceUrl": "https://www.systembolaget.se/produkt/vin/pierre-olivier-7714101/"
   },
   {
-    "name": "Penfolds Bin 51 Eden Valley Riesling",
-    "producer": "Penfolds",
-    "country": "Australien",
-    "region": "Eden Valley",
-    "type": "Vitt",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://www.penfolds.com/wines/the-penfolds-collection"
+    "name": "Le Gessaie Vermentino",
+    "producer": "Le Sode Sant'Angelo",
+    "country": "Italien",
+    "region": "Toscana",
+    "type": "Vitt vin",
+    "vintage": "2014",
+    "systembolagetProductId": "7616501",
+    "aliases": [
+      "le sode sant'angelo le gessaie vermentino",
+      "7616501"
+    ],
+    "sourceLabel": "Systembolaget public product page",
+    "sourceUrl": "https://www.systembolaget.se/produkt/vin/le-gessaie-7616501/"
   },
   {
-    "name": "Penfolds Bin 8 Shiraz Cabernet",
-    "producer": "Penfolds",
-    "country": "Australien",
-    "region": "South Australia",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://www.penfolds.com/on/demandware.static/-/Library-Sites-PenfoldsSharedLibrary/default/dw31696dc4/2-Documents/Tasting_Notes/The_Penfolds_Collection/Bin_8/Penfolds_The_Penfolds_Collection_Bin_8_Cabernet_Shiraz_2018.pdf"
-  },
-  {
-    "name": "Penfolds Bin 600 Cabernet Shiraz",
-    "producer": "Penfolds",
-    "country": "USA",
-    "region": "California",
-    "type": "Rött",
-    "sourceLabel": "Producer seed",
-    "sourceUrl": "https://www.penfolds.com/on/demandware.static/-/Sites-twe-master-catalog/default/dw0e2eab93/tasting-notes/Penfolds/Penfolds%202025/Penfolds%20Bin%20600%20Cabernet%20Shiraz%202022%20Tasting%20Note.pdf"
+    "name": "Kleine Zalze Family Reserve Chenin Blanc",
+    "producer": "Kleine Zalze",
+    "country": "Sydafrika",
+    "region": "Western Cape",
+    "type": "Vitt vin",
+    "vintage": "2023",
+    "systembolagetProductId": "7671901",
+    "aliases": [
+      "kleine zalze kleine zalze family reserve chenin blanc",
+      "7671901"
+    ],
+    "sourceLabel": "Systembolaget public product page",
+    "sourceUrl": "https://www.systembolaget.se/produkt/vin/kleine-zalze-7671901/"
   }
 ]
