@@ -93,7 +93,7 @@ export function CatalogEditorModal({
           </Pressable>
         </View>
 
-        <ScrollView contentContainerStyle={styles.catalogEditorContent}>
+        <ScrollView contentContainerStyle={styles.catalogEditorContent} keyboardShouldPersistTaps="handled">
           {draft ? (
             <>
               <LabeledInput label="Namn" value={draft.name} onChangeText={(value) => onChange({ name: value })} />

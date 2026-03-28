@@ -416,15 +416,15 @@ function CellarScreen({ session }: { session: Session }) {
 
   const stats = useMemo(() => buildStats(wines), [wines]);
   const grapeReferenceRows = useMemo(
-    () => referenceOptions.filter((option) => option.category === "grape"),
+    () => mergeReferenceRows(referenceOptions.filter((option) => option.category === "grape")),
     [referenceOptions]
   );
   const countryReferenceRows = useMemo(
-    () => referenceOptions.filter((option) => option.category === "country"),
+    () => mergeReferenceRows(referenceOptions.filter((option) => option.category === "country")),
     [referenceOptions]
   );
   const regionReferenceRows = useMemo(
-    () => referenceOptions.filter((option) => option.category === "region"),
+    () => mergeReferenceRows(referenceOptions.filter((option) => option.category === "region")),
     [referenceOptions]
   );
   const grapeOptions = useMemo(() => grapeReferenceRows.map((option) => option.name), [grapeReferenceRows]);
@@ -1146,7 +1146,12 @@ function CellarScreen({ session }: { session: Session }) {
         onSave={saveCatalogEditor}
         onChange={(patch) => setCatalogEditorDraft((current) => (current ? { ...current, ...patch } : current))}
       />
-      <ScrollView ref={scrollRef} stickyHeaderIndices={[1]} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        ref={scrollRef}
+        stickyHeaderIndices={[1]}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={styles.heroPanel} onLayout={registerSectionOffset("overview")}>
           <Text style={styles.eyebrow}>Synkad vinkällare</Text>
           <Text style={styles.heroTitle}>Alla flaskor, alltid med dig.</Text>
@@ -1405,6 +1410,63 @@ function mergeDraftWithCatalogSuggestion(
     ),
     barcode: resolveImportedValue(current.barcode, suggestion.barcode || "", shouldApply("barcode", current.barcode)),
   };
+}
+
+const COUNTRY_NAME_OVERRIDES: Record<string, string> = {
+  argentina: "Argentina",
+  australia: "Australien",
+  austria: "Österrike",
+  chile: "Chile",
+  england: "England",
+  france: "Frankrike",
+  frankrike: "Frankrike",
+  germany: "Tyskland",
+  greece: "Grekland",
+  hungary: "Ungern",
+  italy: "Italien",
+  italien: "Italien",
+  "new zealand": "Nya Zeeland",
+  portugal: "Portugal",
+  "south africa": "Sydafrika",
+  spain: "Spanien",
+  sweden: "Sverige",
+  usa: "USA",
+  "united states": "USA",
+};
+
+function mergeReferenceRows(rows: ReferenceOptionRow[]) {
+  const merged = new Map<string, ReferenceOptionRow>();
+
+  for (const row of rows) {
+    const displayName =
+      row.category === "country" ? COUNTRY_NAME_OVERRIDES[normalizeLookupValue(row.name)] ?? row.name : row.name;
+    const key = normalizeLookupValue(displayName);
+    const existing = merged.get(key);
+
+    if (!existing) {
+      merged.set(key, {
+        ...row,
+        name: displayName,
+        aliases: [...new Set([row.name, ...(row.aliases ?? [])].filter(Boolean))],
+      });
+      continue;
+    }
+
+    merged.set(key, {
+      ...existing,
+      aliases: [...new Set([existing.name, row.name, ...(existing.aliases ?? []), ...(row.aliases ?? [])].filter(Boolean))],
+      sort_order: Math.min(existing.sort_order, row.sort_order),
+      parent_name: existing.parent_name ?? row.parent_name,
+    });
+  }
+
+  return [...merged.values()].sort((left, right) => {
+    if (left.sort_order !== right.sort_order) {
+      return left.sort_order - right.sort_order;
+    }
+
+    return left.name.localeCompare(right.name, "sv");
+  });
 }
 
 const styles = StyleSheet.create({

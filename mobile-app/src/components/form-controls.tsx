@@ -1,5 +1,5 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
-import { useMemo, useState, type ComponentProps, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ComponentProps, type ReactNode } from "react";
 
 import type { ReferenceOptionRow } from "../types/reference-data";
 import type { StorageSpaceRow } from "../types/storage-space";
@@ -34,6 +34,15 @@ export function AutocompleteInput({
   placeholder?: string;
 }) {
   const [focused, setFocused] = useState(false);
+  const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (blurTimeoutRef.current) {
+        clearTimeout(blurTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const suggestions = useMemo(() => {
     const query = normalizeLookupValue(value);
@@ -80,21 +89,34 @@ export function AutocompleteInput({
   return (
     <View style={styles.inputGroup}>
       <Text style={styles.inputLabel}>{label}</Text>
-      <TextInput
-        placeholder={placeholder}
-        placeholderTextColor="#8f8178"
-        style={styles.input}
-        value={value}
-        onChangeText={onChangeText}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-      />
+      <View style={styles.autocompleteWrapper}>
+        <TextInput
+          placeholder={placeholder}
+          placeholderTextColor="#8f8178"
+          style={styles.input}
+          value={value}
+          onChangeText={onChangeText}
+          onFocus={() => {
+            if (blurTimeoutRef.current) {
+              clearTimeout(blurTimeoutRef.current);
+            }
+            setFocused(true);
+          }}
+          onBlur={() => {
+            blurTimeoutRef.current = setTimeout(() => {
+              setFocused(false);
+            }, 120);
+          }}
+        />
       {showSuggestions ? (
         <View style={styles.autocompleteList}>
           {suggestions.map((option) => (
             <Pressable
               key={`${label}-${option}`}
-              onPress={() => {
+              onPressIn={() => {
+                if (blurTimeoutRef.current) {
+                  clearTimeout(blurTimeoutRef.current);
+                }
                 onChangeText(option);
                 setFocused(false);
               }}
@@ -105,6 +127,7 @@ export function AutocompleteInput({
           ))}
         </View>
       ) : null}
+      </View>
     </View>
   );
 }
@@ -266,23 +289,35 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#e6d7c8",
   },
+  autocompleteWrapper: {
+    position: "relative",
+    zIndex: 20,
+  },
   textarea: {
     minHeight: 96,
     textAlignVertical: "top",
   },
   autocompleteList: {
-    marginTop: 6,
+    position: "absolute",
+    top: 58,
+    left: 0,
+    right: 0,
     borderRadius: 16,
     backgroundColor: "#fffaf5",
     borderWidth: 1,
     borderColor: "#e6d7c8",
     overflow: "hidden",
+    zIndex: 50,
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
   },
   autocompleteItem: {
     paddingHorizontal: 14,
     paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: "#f2e7db",
+    backgroundColor: "#fffaf5",
   },
   autocompleteText: {
     color: "#231815",
