@@ -281,13 +281,19 @@ function mapOpenFoodFactsProduct(barcode: string, product: NonNullable<OpenFoodF
 
   const country = firstNonEmpty([product.countries, product.origins]);
   const type = inferWineType(name, product.categories);
+  const region = inferRegion(name, product.categories);
+  const grape = inferGrape(name, product.categories);
+  const vintage = inferVintage(name);
 
   return {
     barcode,
     name,
     producer: cleanValue(product.brands),
     country: cleanValue(country),
+    region,
+    grape,
     type,
+    vintage,
     foodPairings: inferFoodPairings(name, product.categories, type),
     sourceLabel: "Open Food Facts",
   };
@@ -374,6 +380,59 @@ function inferFoodPairings(name: string, categories?: string, type?: string) {
   }
 
   return ["middag"];
+}
+
+function inferRegion(name: string, categories?: string) {
+  const haystack = normalizeForLookup(`${name} ${categories ?? ""}`);
+
+  const regionMatches: Array<[string, string[]]> = [
+    ["Piemonte", ["piemonte", "barolo", "barbaresco"]],
+    ["Toscana", ["toscana", "chianti", "brunello", "bolgheri"]],
+    ["Rioja", ["rioja"]],
+    ["Bourgogne", ["bourgogne", "burgundy", "chablis"]],
+    ["Champagne", ["champagne"]],
+    ["Loire", ["loire", "sancerre", "pouilly-fume", "pouilly fumé"]],
+    ["Mosel", ["mosel"]],
+    ["Rhône", ["rhone", "rhône", "chateauneuf-du-pape", "cotes du rhone"]],
+    ["Napa Valley", ["napa"]],
+    ["Marlborough", ["marlborough"]],
+    ["Priorat", ["priorat"]],
+    ["Ribera del Duero", ["ribera del duero"]],
+  ];
+
+  return regionMatches.find(([, needles]) => matchesAny(haystack, needles))?.[0];
+}
+
+function inferGrape(name: string, categories?: string) {
+  const haystack = normalizeForLookup(`${name} ${categories ?? ""}`);
+
+  const grapeMatches: Array<[string, string[]]> = [
+    ["Nebbiolo", ["nebbiolo", "barolo", "barbaresco"]],
+    ["Chardonnay", ["chardonnay", "chablis", "meursault"]],
+    ["Sauvignon Blanc", ["sauvignon blanc", "sancerre", "pouilly-fume", "pouilly fumé"]],
+    ["Riesling", ["riesling"]],
+    ["Tempranillo", ["tempranillo", "rioja", "ribera del duero"]],
+    ["Sangiovese", ["sangiovese", "chianti", "brunello"]],
+    ["Pinot Noir", ["pinot noir", "bourgogne rouge", "burgundy red"]],
+    ["Cabernet Sauvignon", ["cabernet sauvignon", "cabernet"]],
+    ["Merlot", ["merlot"]],
+    ["Syrah", ["syrah", "shiraz"]],
+    ["Grenache", ["grenache", "garnacha"]],
+    ["Pinot Noir, Chardonnay", ["champagne", "cremant", "crémant"]],
+  ];
+
+  return grapeMatches.find(([, needles]) => matchesAny(haystack, needles))?.[0];
+}
+
+function inferVintage(name: string) {
+  const match = name.match(/\b(19\d{2}|20\d{2})\b/);
+
+  if (!match) {
+    return undefined;
+  }
+
+  const value = Number(match[1]);
+  return Number.isFinite(value) ? value : undefined;
 }
 
 function matchesAny(value: string, needles: string[]) {
