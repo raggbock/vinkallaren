@@ -412,6 +412,10 @@ function CellarScreen({ session }: { session: Session }) {
   const [drinkNotes, setDrinkNotes] = useState("");
   const [drinkConsumedDate, setDrinkConsumedDate] = useState("");
   const [drinkImageUri, setDrinkImageUri] = useState("");
+  const [tastingMode, setTastingMode] = useState(false);
+  const [tastingRating, setTastingRating] = useState("");
+  const [tastingDate, setTastingDate] = useState(new Date().toISOString().slice(0, 10));
+  const [savingTasting, setSavingTasting] = useState(false);
   const [catalogBackfillDone, setCatalogBackfillDone] = useState(false);
   const [editWineVisible, setEditWineVisible] = useState(false);
   const [editingWine, setEditingWine] = useState<WineRecord | null>(null);
@@ -1014,6 +1018,56 @@ function CellarScreen({ session }: { session: Session }) {
     }
   }
 
+  async function saveTasting() {
+    if (!draft.name.trim()) {
+      Alert.alert("Namn saknas", "Skriv in vilket vin du provade.");
+      return;
+    }
+
+    setSavingTasting(true);
+
+    try {
+      let imagePath: string | null = null;
+
+      if (draft.imageUri) {
+        imagePath = await uploadWineImage(session.user.id, draft.imageUri);
+      }
+
+      const payload: WineHistoryInsert = {
+        user_id: session.user.id,
+        name: draft.name.trim(),
+        producer: emptyToNull(draft.producer),
+        country: emptyToNull(draft.country),
+        region: emptyToNull(draft.region),
+        grape: emptyToNull(draft.grape),
+        vintage: toNumberOrNull(draft.vintage),
+        type: draft.type.trim() || "Rött",
+        barcode: emptyToNull(draft.barcode),
+        systembolaget_product_id: emptyToNull(draft.systembolagetProductId),
+        image_path: imagePath,
+        quantity_consumed: 1,
+        rating: tastingRating ? Number(tastingRating) : null,
+        tasting_notes: emptyToNull(draft.notes),
+        consumed_at: tastingDate || null,
+      };
+
+      const { error } = await supabase.from("wine_history").insert(payload);
+
+      if (error) {
+        throw error;
+      }
+
+      setDraft(defaultDraft);
+      setTastingRating("");
+      setTastingDate(new Date().toISOString().slice(0, 10));
+      await fetchHistoryEntries();
+    } catch (error) {
+      Alert.alert("Kunde inte spara", error instanceof Error ? error.message : "Försök igen.");
+    } finally {
+      setSavingTasting(false);
+    }
+  }
+
   async function saveStorageSpace() {
     if (!storageSpaceDraft.name.trim()) {
       Alert.alert("Namn saknas", "Skriv in namnet på förvaringsplatsen.");
@@ -1599,6 +1653,14 @@ function CellarScreen({ session }: { session: Session }) {
         onChooseImage={chooseImage}
         onTakePhoto={takeWinePhoto}
         onSaveWine={saveWine}
+        tastingMode={tastingMode}
+        onTastingModeChange={setTastingMode}
+        tastingRating={tastingRating}
+        onTastingRatingChange={setTastingRating}
+        tastingDate={tastingDate}
+        onTastingDateChange={setTastingDate}
+        onSaveTasting={saveTasting}
+        savingTasting={savingTasting}
       />
     );
   }

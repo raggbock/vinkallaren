@@ -262,6 +262,14 @@ export function AddWinePanel({
   onChooseImage,
   onTakePhoto,
   onSaveWine,
+  tastingMode,
+  onTastingModeChange,
+  tastingRating,
+  onTastingRatingChange,
+  tastingDate,
+  onTastingDateChange,
+  onSaveTasting,
+  savingTasting,
 }: {
   styles: SharedStyles;
   draft: WineDraft;
@@ -301,6 +309,14 @@ export function AddWinePanel({
   onChooseImage: () => void;
   onTakePhoto: () => void;
   onSaveWine: () => void;
+  tastingMode: boolean;
+  onTastingModeChange: (value: boolean) => void;
+  tastingRating: string;
+  onTastingRatingChange: (value: string) => void;
+  tastingDate: string;
+  onTastingDateChange: (value: string) => void;
+  onSaveTasting: () => void;
+  savingTasting: boolean;
 }) {
   const isLockedByCatalog = (field: keyof ProductCatalogWineRow) => {
     if (!selectedCatalogNameEntry) {
@@ -319,6 +335,17 @@ export function AddWinePanel({
   return (
     <View style={styles.panel}>
       <Text style={styles.panelTitle}>Lägg till vin</Text>
+
+      {/* --- Mode toggle: Källare vs Vinprovning --- */}
+      <SuggestionRow
+        title="Läge"
+        options={["Källare", "Vinprovning"]}
+        selected={tastingMode ? "Vinprovning" : "Källare"}
+        onSelect={(value) => onTastingModeChange(value === "Vinprovning")}
+      />
+      {tastingMode ? (
+        <Text style={styles.notesText}>Vinet sparas direkt i din historik — det läggs inte till i källaren.</Text>
+      ) : null}
 
       {/* --- Barcode & SB article number at top --- */}
       <View style={styles.importSuggestionCard}>
@@ -446,10 +473,14 @@ export function AddWinePanel({
         placeholder="Nebbiolo, Chardonnay..."
         editable={!isLockedByCatalog("grape")}
       />
-      <DoubleRow>
+      {tastingMode ? (
         <LabeledInput label="Årgång" value={draft.vintage} onChangeText={(value) => onDraftChange({ vintage: value })} keyboardType="number-pad" />
-        <LabeledInput label="Antal" value={draft.quantity} onChangeText={(value) => onDraftChange({ quantity: value })} keyboardType="number-pad" />
-      </DoubleRow>
+      ) : (
+        <DoubleRow>
+          <LabeledInput label="Årgång" value={draft.vintage} onChangeText={(value) => onDraftChange({ vintage: value })} keyboardType="number-pad" />
+          <LabeledInput label="Antal" value={draft.quantity} onChangeText={(value) => onDraftChange({ quantity: value })} keyboardType="number-pad" />
+        </DoubleRow>
+      )}
       <SuggestionRow
         title="Vintyp"
         options={WINE_TYPE_OPTIONS}
@@ -457,57 +488,69 @@ export function AddWinePanel({
         onSelect={(value) => onDraftChange({ type: value })}
         disabled={isLockedByCatalog("type")}
       />
-      <DoubleRow>
-        <LabeledInput label="Drick senast (år)" value={draft.drinkBy} onChangeText={(value) => onDraftChange({ drinkBy: value })} keyboardType="number-pad" placeholder="t.ex. 2028" />
-        <DateInput label="Inköpt" value={draft.acquiredAt} onChangeText={(value) => onDraftChange({ acquiredAt: value })} />
-      </DoubleRow>
-
-      {/* --- Food pairing: suggestions + free text together --- */}
-      <SuggestionRow
-        title="Matförslag"
-        options={getSuggestedPairings(draft.type)}
-        selected={parseTags(draft.foodPairings)}
-        onSelect={(pairing) => onDraftChange({ foodPairings: mergeTagText(draft.foodPairings, pairing) })}
-      />
-      <LabeledInput
-        label="Passar till"
-        value={draft.foodPairings}
-        onChangeText={(value) => onDraftChange({ foodPairings: value })}
-        placeholder="lamm, ost, svamp, fisk"
-        editable={!isLockedByCatalog("food_pairings")}
-      />
-
-      {/* --- Storage --- */}
-      {storageSpaces.length > 0 ? (
-        <View style={styles.foodSection}>
-          <Text style={styles.inputLabel}>Förvaringsplats</Text>
-          <Text style={styles.notesText}>Välj plats, rad och slot. Fri platsnotering kan användas som extra stöd.</Text>
-          <StorageSpaceSelector title="" spaces={storageSpaces} selectedId={selectedStorageSpaceId} onSelect={onStorageSpaceChange} clearLabel="Ingen plats" />
-          {selectedStorageSpace ? (
-            <>
-              <SuggestionRow title="Rad" options={buildNumericOptions(selectedStorageSpace.row_count)} selected={selectedStorageRow} onSelect={onStorageRowChange} />
-              <SuggestionRow title="Plats" options={buildNumericOptions(selectedStorageSpace.slots_per_row)} selected={selectedStorageSlot} onSelect={onStorageSlotChange} />
-              <Text style={styles.notesText}>
-                Vald placering:{" "}
-                {getWineStoragePlacementLabel(
-                  {
-                    storage_space_id: selectedStorageSpaceId,
-                    storage_row: Number(selectedStorageRow),
-                    storage_slot: Number(selectedStorageSlot),
-                  },
-                  storageSpaceById
-                )}
-              </Text>
-            </>
-          ) : null}
-        </View>
+      {tastingMode ? (
+        <>
+          {/* --- Tasting-specific fields --- */}
+          <DateInput label="Provningsdatum" value={tastingDate} onChangeText={onTastingDateChange} />
+          <SuggestionRow title="Betyg" options={["1", "2", "3", "4", "5"]} selected={tastingRating} onSelect={onTastingRatingChange} />
+          <LabeledInput label="Smaknotering" value={draft.notes} onChangeText={(value) => onDraftChange({ notes: value })} placeholder="t.ex. mörk frukt, bra syra, gärna igen" multiline />
+        </>
       ) : (
-        <Text style={styles.notesText}>Skapa en förvaringsplats nedan för att kunna välja rad och plats.</Text>
-      )}
+        <>
+          {/* --- Cellar-specific fields --- */}
+          <DoubleRow>
+            <LabeledInput label="Drick senast (år)" value={draft.drinkBy} onChangeText={(value) => onDraftChange({ drinkBy: value })} keyboardType="number-pad" placeholder="t.ex. 2028" />
+            <DateInput label="Inköpt" value={draft.acquiredAt} onChangeText={(value) => onDraftChange({ acquiredAt: value })} />
+          </DoubleRow>
 
-      <LabeledInput label="Fri platsnotering" value={draft.location} onChangeText={(value) => onDraftChange({ location: value })} placeholder="t.ex. längst bak, överst i kylen" />
-      <LabeledInput label="Etiketter" value={draft.tags} onChangeText={(value) => onDraftChange({ tags: value })} placeholder="middag, present, lagring" />
-      <LabeledInput label="Anteckningar" value={draft.notes} onChangeText={(value) => onDraftChange({ notes: value })} multiline />
+          {/* --- Food pairing: suggestions + free text together --- */}
+          <SuggestionRow
+            title="Matförslag"
+            options={getSuggestedPairings(draft.type)}
+            selected={parseTags(draft.foodPairings)}
+            onSelect={(pairing) => onDraftChange({ foodPairings: mergeTagText(draft.foodPairings, pairing) })}
+          />
+          <LabeledInput
+            label="Passar till"
+            value={draft.foodPairings}
+            onChangeText={(value) => onDraftChange({ foodPairings: value })}
+            placeholder="lamm, ost, svamp, fisk"
+            editable={!isLockedByCatalog("food_pairings")}
+          />
+
+          {/* --- Storage --- */}
+          {storageSpaces.length > 0 ? (
+            <View style={styles.foodSection}>
+              <Text style={styles.inputLabel}>Förvaringsplats</Text>
+              <Text style={styles.notesText}>Välj plats, rad och slot. Fri platsnotering kan användas som extra stöd.</Text>
+              <StorageSpaceSelector title="" spaces={storageSpaces} selectedId={selectedStorageSpaceId} onSelect={onStorageSpaceChange} clearLabel="Ingen plats" />
+              {selectedStorageSpace ? (
+                <>
+                  <SuggestionRow title="Rad" options={buildNumericOptions(selectedStorageSpace.row_count)} selected={selectedStorageRow} onSelect={onStorageRowChange} />
+                  <SuggestionRow title="Plats" options={buildNumericOptions(selectedStorageSpace.slots_per_row)} selected={selectedStorageSlot} onSelect={onStorageSlotChange} />
+                  <Text style={styles.notesText}>
+                    Vald placering:{" "}
+                    {getWineStoragePlacementLabel(
+                      {
+                        storage_space_id: selectedStorageSpaceId,
+                        storage_row: Number(selectedStorageRow),
+                        storage_slot: Number(selectedStorageSlot),
+                      },
+                      storageSpaceById
+                    )}
+                  </Text>
+                </>
+              ) : null}
+            </View>
+          ) : (
+            <Text style={styles.notesText}>Skapa en förvaringsplats nedan för att kunna välja rad och plats.</Text>
+          )}
+
+          <LabeledInput label="Fri platsnotering" value={draft.location} onChangeText={(value) => onDraftChange({ location: value })} placeholder="t.ex. längst bak, överst i kylen" />
+          <LabeledInput label="Etiketter" value={draft.tags} onChangeText={(value) => onDraftChange({ tags: value })} placeholder="middag, present, lagring" />
+          <LabeledInput label="Anteckningar" value={draft.notes} onChangeText={(value) => onDraftChange({ notes: value })} multiline />
+        </>
+      )}
 
       <View style={styles.imageButtonRow}>
         <Pressable onPress={onTakePhoto} style={styles.secondaryButton}>
@@ -520,9 +563,15 @@ export function AddWinePanel({
 
       {draft.imageUri ? <Image source={{ uri: draft.imageUri }} style={styles.wineImage} /> : null}
 
-      <Pressable onPress={onSaveWine} style={styles.primaryButton} disabled={saving}>
-        <Text style={styles.primaryButtonText}>{saving ? "Sparar..." : "Spara i källaren"}</Text>
-      </Pressable>
+      {tastingMode ? (
+        <Pressable onPress={onSaveTasting} style={styles.primaryButton} disabled={savingTasting}>
+          <Text style={styles.primaryButtonText}>{savingTasting ? "Sparar..." : "Spara i historik"}</Text>
+        </Pressable>
+      ) : (
+        <Pressable onPress={onSaveWine} style={styles.primaryButton} disabled={saving}>
+          <Text style={styles.primaryButtonText}>{saving ? "Sparar..." : "Spara i källaren"}</Text>
+        </Pressable>
+      )}
     </View>
   );
 }
