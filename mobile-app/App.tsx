@@ -411,6 +411,7 @@ function CellarScreen({ session }: { session: Session }) {
   const [drinkRating, setDrinkRating] = useState("");
   const [drinkNotes, setDrinkNotes] = useState("");
   const [drinkConsumedDate, setDrinkConsumedDate] = useState("");
+  const [drinkImageUri, setDrinkImageUri] = useState("");
   const [catalogBackfillDone, setCatalogBackfillDone] = useState(false);
   const [editWineVisible, setEditWineVisible] = useState(false);
   const [editingWine, setEditingWine] = useState<WineRecord | null>(null);
@@ -1070,6 +1071,7 @@ function CellarScreen({ session }: { session: Session }) {
     setDrinkRating("");
     setDrinkNotes("");
     setDrinkConsumedDate(new Date().toISOString().slice(0, 10));
+    setDrinkImageUri("");
     setDrinkModalVisible(true);
   }
 
@@ -1108,6 +1110,11 @@ function CellarScreen({ session }: { session: Session }) {
     setSavingDrinkHistory(true);
 
     try {
+      let imagePath = selectedDrinkWine.image_path;
+      if (drinkImageUri) {
+        imagePath = await uploadWineImage(session.user.id, drinkImageUri);
+      }
+
       const payload: WineHistoryInsert = {
         user_id: session.user.id,
         wine_id: selectedDrinkWine.id,
@@ -1124,7 +1131,7 @@ function CellarScreen({ session }: { session: Session }) {
         storage_row: selectedDrinkWine.storage_row,
         storage_slot: selectedDrinkWine.storage_slot,
         cellar_location: selectedDrinkWine.cellar_location,
-        image_path: selectedDrinkWine.image_path,
+        image_path: imagePath,
         quantity_consumed: 1,
         rating: drinkRating ? Number(drinkRating) : null,
         tasting_notes: emptyToNull(drinkNotes),
@@ -1270,23 +1277,51 @@ function CellarScreen({ session }: { session: Session }) {
     }
   }
 
-  async function chooseImage() {
+  async function pickImageFromLibrary(): Promise<string | null> {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
     if (!permission.granted) {
-      Alert.alert("Behörighet saknas", "Ge appen tillgång till bilder för att välja en flaskbild.");
-      return;
+      Alert.alert("Behörighet saknas", "Ge appen tillgång till bilder.");
+      return null;
     }
-
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
       allowsEditing: true,
       quality: 0.8,
     });
+    return result.canceled ? null : result.assets[0].uri;
+  }
 
-    if (!result.canceled) {
-      setDraft((current) => ({ ...current, imageUri: result.assets[0].uri }));
+  async function takePhoto(): Promise<string | null> {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert("Behörighet saknas", "Ge appen tillgång till kameran.");
+      return null;
     }
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      quality: 0.8,
+    });
+    return result.canceled ? null : result.assets[0].uri;
+  }
+
+  async function chooseImage() {
+    const uri = await pickImageFromLibrary();
+    if (uri) setDraft((current) => ({ ...current, imageUri: uri }));
+  }
+
+  async function takeWinePhoto() {
+    const uri = await takePhoto();
+    if (uri) setDraft((current) => ({ ...current, imageUri: uri }));
+  }
+
+  async function chooseDrinkImage() {
+    const uri = await pickImageFromLibrary();
+    if (uri) setDrinkImageUri(uri);
+  }
+
+  async function takeDrinkPhoto() {
+    const uri = await takePhoto();
+    if (uri) setDrinkImageUri(uri);
   }
 
   async function maybeSuggestCatalogMatch(nextDraft: WineDraft) {
@@ -1562,6 +1597,7 @@ function CellarScreen({ session }: { session: Session }) {
         onApplyCatalogSuggestion={applyCatalogSuggestion}
         onToggleImportField={toggleImportField}
         onChooseImage={chooseImage}
+        onTakePhoto={takeWinePhoto}
         onSaveWine={saveWine}
       />
     );
@@ -1609,11 +1645,14 @@ function CellarScreen({ session }: { session: Session }) {
         rating={drinkRating}
         notes={drinkNotes}
         consumedDate={drinkConsumedDate}
+        imageUri={drinkImageUri}
         saving={savingDrinkHistory}
         onClose={closeDrinkModal}
         onRatingChange={setDrinkRating}
         onNotesChange={setDrinkNotes}
         onConsumedDateChange={setDrinkConsumedDate}
+        onChooseImage={chooseDrinkImage}
+        onTakePhoto={takeDrinkPhoto}
         onConfirm={saveDrinkHistory}
       />
       <EditWineModal
@@ -2389,12 +2428,17 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontSize: 15,
   },
+  imageButtonRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
   secondaryButton: {
     backgroundColor: "#ead8ca",
     borderRadius: 999,
     paddingVertical: 12,
     paddingHorizontal: 16,
     alignItems: "center",
+    flex: 1,
   },
   secondaryButtonText: {
     color: "#6f1d1b",

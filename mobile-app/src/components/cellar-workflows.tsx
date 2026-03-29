@@ -260,6 +260,7 @@ export function AddWinePanel({
   onApplyCatalogSuggestion,
   onToggleImportField,
   onChooseImage,
+  onTakePhoto,
   onSaveWine,
 }: {
   styles: SharedStyles;
@@ -298,6 +299,7 @@ export function AddWinePanel({
   onApplyCatalogSuggestion: (mode: ImportMode) => void;
   onToggleImportField: (field: keyof ImportFieldSelection) => void;
   onChooseImage: () => void;
+  onTakePhoto: () => void;
   onSaveWine: () => void;
 }) {
   const isLockedByCatalog = (field: keyof ProductCatalogWineRow) => {
@@ -507,9 +509,14 @@ export function AddWinePanel({
       <LabeledInput label="Etiketter" value={draft.tags} onChangeText={(value) => onDraftChange({ tags: value })} placeholder="middag, present, lagring" />
       <LabeledInput label="Anteckningar" value={draft.notes} onChangeText={(value) => onDraftChange({ notes: value })} multiline />
 
-      <Pressable onPress={onChooseImage} style={styles.secondaryButton}>
-        <Text style={styles.secondaryButtonText}>{draft.imageUri ? "Byt bild" : "Välj flaskbild"}</Text>
-      </Pressable>
+      <View style={styles.imageButtonRow}>
+        <Pressable onPress={onTakePhoto} style={styles.secondaryButton}>
+          <Text style={styles.secondaryButtonText}>Ta foto av etiketten</Text>
+        </Pressable>
+        <Pressable onPress={onChooseImage} style={styles.secondaryButton}>
+          <Text style={styles.secondaryButtonText}>{draft.imageUri ? "Byt bild" : "Välj flaskbild"}</Text>
+        </Pressable>
+      </View>
 
       {draft.imageUri ? <Image source={{ uri: draft.imageUri }} style={styles.wineImage} /> : null}
 
@@ -527,11 +534,14 @@ export function DrinkWineModal({
   rating,
   notes,
   consumedDate,
+  imageUri,
   saving,
   onClose,
   onRatingChange,
   onNotesChange,
   onConsumedDateChange,
+  onChooseImage,
+  onTakePhoto,
   onConfirm,
 }: {
   visible: boolean;
@@ -540,11 +550,14 @@ export function DrinkWineModal({
   rating: string;
   notes: string;
   consumedDate: string;
+  imageUri: string;
   saving: boolean;
   onClose: () => void;
   onRatingChange: (value: string) => void;
   onNotesChange: (value: string) => void;
   onConsumedDateChange: (value: string) => void;
+  onChooseImage: () => void;
+  onTakePhoto: () => void;
   onConfirm: () => void;
 }) {
   return (
@@ -561,10 +574,6 @@ export function DrinkWineModal({
         </View>
 
         <ScrollView contentContainerStyle={styles.catalogEditorContent} keyboardShouldPersistTaps="handled">
-          <Text style={styles.notesText}>
-            Sätt gärna ett betyg direkt. Om det var sista flaskan hamnar vinet ändå kvar i historiken.
-          </Text>
-
           <DateInput label="Datum" value={consumedDate} onChangeText={onConsumedDateChange} />
 
           <SuggestionRow title="Betyg" options={["1", "2", "3", "4", "5"]} selected={rating} onSelect={onRatingChange} />
@@ -576,6 +585,16 @@ export function DrinkWineModal({
             placeholder="t.ex. mörk frukt, bra syra, gärna igen"
             multiline
           />
+
+          <View style={styles.modalActionRow}>
+            <Pressable onPress={onTakePhoto} style={styles.secondaryButton}>
+              <Text style={styles.secondaryButtonText}>Ta foto</Text>
+            </Pressable>
+            <Pressable onPress={onChooseImage} style={styles.secondaryButton}>
+              <Text style={styles.secondaryButtonText}>Välj bild</Text>
+            </Pressable>
+          </View>
+          {imageUri ? <Image source={{ uri: imageUri }} style={styles.wineImage} /> : null}
 
           <View style={styles.modalActionRow}>
             <Pressable onPress={onClose} style={styles.secondaryButton} disabled={saving}>
