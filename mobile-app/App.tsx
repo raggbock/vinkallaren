@@ -31,16 +31,12 @@ import {
 } from "./src/lib/cellar-helpers";
 import {
   LabeledInput,
-  MetricCard,
 } from "./src/components/form-controls";
 import {
-  CellarSectionNav,
+  BottomTabBar,
   HistoryPanel,
   MealPlannerPanel,
-  ProductCatalogPanel,
-  StatsPanel,
-  StorageSpacesPanel,
-  WineCollectionPanel,
+  MinKallarePanel,
 } from "./src/components/cellar-sections";
 import { AddWinePanel, BarcodeScannerModal, CatalogEditorModal, DrinkWineModal, EditWineModal, VintagePickerModal } from "./src/components/cellar-workflows";
 import { CELLAR_SECTIONS, type CellarSection } from "./src/types/cellar";
@@ -408,7 +404,7 @@ function CellarScreen({ session }: { session: Session }) {
   const [importMode, setImportMode] = useState<ImportMode>("custom");
   const [lookupBusy, setLookupBusy] = useState(false);
   const [lookupMessage, setLookupMessage] = useState("");
-  const [activeSection, setActiveSection] = useState<CellarSection>("overview");
+  const [activeSection, setActiveSection] = useState<CellarSection>("cellar");
   const [drinkModalVisible, setDrinkModalVisible] = useState(false);
   const [selectedDrinkWine, setSelectedDrinkWine] = useState<WineRecord | null>(null);
   const [drinkRating, setDrinkRating] = useState("");
@@ -1447,40 +1443,48 @@ function CellarScreen({ session }: { session: Session }) {
     await Linking.openURL(url);
   }
 
-  let activePanel = <StatsPanel stats={stats} styles={styles} onRefresh={fetchWines} />;
+  let activePanel = (
+    <MinKallarePanel
+      styles={styles}
+      stats={stats}
+      searchQuery={searchQuery}
+      selectedPairingFilter={selectedPairingFilter}
+      selectedCountryFilter={selectedCountryFilter}
+      selectedRegionFilter={selectedRegionFilter}
+      selectedTypeFilter={selectedTypeFilter}
+      selectedVintageFilter={selectedVintageFilter}
+      pairingOptions={pairingOptions}
+      countryOptions={countryOptions}
+      regionOptions={regionOptions}
+      typeOptions={typeOptions}
+      vintageOptions={vintageOptions}
+      storageSpaces={storageSpaces}
+      storageSpaceBottleCounts={storageSpaceBottleCounts}
+      filteredWines={filteredWines}
+      loading={loading}
+      storageSpaceById={storageSpaceById}
+      onRefreshStats={fetchWines}
+      onSearchChange={setSearchQuery}
+      onPairingChange={setSelectedPairingFilter}
+      onCountryChange={setSelectedCountryFilter}
+      onRegionChange={setSelectedRegionFilter}
+      onTypeChange={setSelectedTypeFilter}
+      onVintageChange={setSelectedVintageFilter}
+      onSignOut={signOut}
+      onOpenSystembolaget={openSystembolaget}
+      onEditWine={openEditWineModal}
+      onDrinkWine={openDrinkModal}
+      onDeleteWine={deleteWine}
+    />
+  );
 
-  if (activeSection === "storage") {
-    activePanel = (
-      <StorageSpacesPanel
-        styles={styles}
-        storageSpaces={storageSpaces}
-        storageSpaceBottleCounts={storageSpaceBottleCounts}
-        storageSpaceDraft={storageSpaceDraft}
-        loadingStorageSpaces={loadingStorageSpaces}
-        savingStorageSpace={savingStorageSpace}
-        onDraftChange={(patch) => setStorageSpaceDraft((current) => ({ ...current, ...patch }))}
-        onSave={saveStorageSpace}
-        onDelete={deleteStorageSpace}
-      />
-    );
-  } else if (activeSection === "history") {
+  if (activeSection === "history") {
     activePanel = (
       <HistoryPanel
         styles={styles}
         historyEntries={historyEntries}
         loadingHistory={loadingHistory}
         storageSpaceById={storageSpaceById}
-      />
-    );
-  } else if (activeSection === "catalog") {
-    activePanel = (
-      <ProductCatalogPanel
-        styles={styles}
-        loadingCatalogEntries={loadingCatalogEntries}
-        catalogEntries={catalogEntries}
-        onRefresh={fetchCatalogEntries}
-        onEdit={openCatalogEditor}
-        onDelete={deleteCatalogEntry}
       />
     );
   } else if (activeSection === "meal") {
@@ -1549,40 +1553,6 @@ function CellarScreen({ session }: { session: Session }) {
         onToggleImportField={toggleImportField}
         onChooseImage={chooseImage}
         onSaveWine={saveWine}
-      />
-    );
-  } else if (activeSection === "cellar") {
-    activePanel = (
-      <WineCollectionPanel
-        styles={styles}
-        searchQuery={searchQuery}
-        selectedPairingFilter={selectedPairingFilter}
-        selectedCountryFilter={selectedCountryFilter}
-        selectedRegionFilter={selectedRegionFilter}
-        selectedTypeFilter={selectedTypeFilter}
-        selectedVintageFilter={selectedVintageFilter}
-        selectedStorageSpaceFilterId={selectedStorageSpaceFilterId}
-        pairingOptions={pairingOptions}
-        countryOptions={countryOptions}
-        regionOptions={regionOptions}
-        typeOptions={typeOptions}
-        vintageOptions={vintageOptions}
-        storageSpaces={storageSpaces}
-        filteredWines={filteredWines}
-        loading={loading}
-        storageSpaceById={storageSpaceById}
-        onSearchChange={setSearchQuery}
-        onPairingChange={setSelectedPairingFilter}
-        onCountryChange={setSelectedCountryFilter}
-        onRegionChange={setSelectedRegionFilter}
-        onTypeChange={setSelectedTypeFilter}
-        onVintageChange={setSelectedVintageFilter}
-        onStorageSpaceFilterChange={setSelectedStorageSpaceFilterId}
-        onSignOut={signOut}
-        onOpenSystembolaget={openSystembolaget}
-        onEditWine={openEditWineModal}
-        onDrinkWine={openDrinkModal}
-        onDeleteWine={deleteWine}
       />
     );
   }
@@ -1665,23 +1635,10 @@ function CellarScreen({ session }: { session: Session }) {
         }
         onSave={saveWineEdit}
       />
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-        <View style={styles.heroPanel}>
-          <Text style={styles.eyebrow}>Synkad vinkällare</Text>
-          <Text style={styles.heroTitle}>Alla flaskor, alltid med dig.</Text>
-          <Text style={styles.heroText}>{session.user.email}</Text>
-
-          <View style={styles.metricsRow}>
-            <MetricCard value={String(stats.totalBottles)} label="Flaskor" />
-            <MetricCard value={String(stats.totalLabels)} label="Olika viner" />
-            <MetricCard value={String(stats.drinkSoon)} label="Drick snart" />
-          </View>
-        </View>
-
-        <CellarSectionNav activeSection={activeSection} sections={CELLAR_SECTIONS} styles={styles} onSelect={goToSection} />
-
+      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" style={styles.scrollFlex}>
         {activePanel}
       </ScrollView>
+      <BottomTabBar activeSection={activeSection} sections={CELLAR_SECTIONS} styles={styles} onSelect={goToSection} />
     </SafeAreaView>
   );
 }
@@ -2293,31 +2250,76 @@ const styles = StyleSheet.create({
   segmentTextActive: {
     color: "#fffaf5",
   },
-  sectionNavWrapper: {
-    marginTop: -4,
-    marginHorizontal: -18,
+  scrollFlex: {
+    flex: 1,
   },
-  sectionNav: {
+  bottomTabBar: {
+    flexDirection: "row",
+    backgroundColor: "#f8f1e8",
+    borderTopWidth: 1,
+    borderTopColor: "#e6d7c8",
+    paddingBottom: Platform.OS === "ios" ? 20 : 8,
+    paddingTop: 8,
+  },
+  bottomTab: {
+    flex: 1,
+    alignItems: "center",
+    gap: 2,
+  },
+  bottomTabIcon: {
+    fontSize: 20,
+    color: "#ead8ca",
+  },
+  bottomTabIconActive: {
+    color: "#6f1d1b",
+  },
+  bottomTabLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#ead8ca",
+  },
+  bottomTabLabelActive: {
+    color: "#6f1d1b",
+  },
+  statsSummaryBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#ead8ca",
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  statsSummaryText: {
+    color: "#6f1d1b",
+    fontWeight: "600",
+    fontSize: 14,
+  },
+  statsSummaryToggle: {
+    color: "#6f1d1b",
+    fontSize: 12,
+  },
+  statsGrid: {
+    gap: 8,
+  },
+  statsGridRow: {
     flexDirection: "row",
     gap: 8,
-    paddingHorizontal: 18,
-    paddingBottom: 4,
   },
-  sectionPill: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 999,
+  storageCard: {
     backgroundColor: "#ead8ca",
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
   },
-  sectionPillActive: {
-    backgroundColor: "#6f1d1b",
+  storageCardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
   },
-  sectionPillText: {
-    color: "#6f1d1b",
-    fontWeight: "700",
-  },
-  sectionPillTextActive: {
-    color: "#fffaf5",
+  storageCardRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   inputGroup: {
     gap: 6,

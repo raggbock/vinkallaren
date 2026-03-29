@@ -1,16 +1,16 @@
+import { useState } from "react";
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
 
-import { buildSystembolagetProductUrl, getWineStoragePlacementLabel } from "../lib/cellar-helpers";
-import type { ProductCatalogWineRow } from "../types/product-catalog";
+import { getWineStoragePlacementLabel } from "../lib/cellar-helpers";
 import type { StorageSpaceRow } from "../types/storage-space";
 import type { WineHistoryRecord } from "../types/wine-history";
 import type { WineRecord } from "../types/wine";
 import type { CellarSection } from "../types/cellar";
-import { DoubleRow, InsightCard, LabeledInput, LoadingInline, MetricCard, StorageSpaceSelector, SuggestionRow } from "./form-controls";
+import { InsightCard, LabeledInput, LoadingInline, SuggestionRow } from "./form-controls";
 
 type SharedStyles = any;
 
-export function CellarSectionNav({
+export function BottomTabBar({
   activeSection,
   sections,
   styles,
@@ -21,228 +21,37 @@ export function CellarSectionNav({
   styles: SharedStyles;
   onSelect: (section: CellarSection) => void;
 }) {
-  return (
-    <View style={styles.sectionNavWrapper}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.sectionNav}>
-        {sections.map((section) => {
-          const isActive = activeSection === section.key;
-
-          return (
-            <Pressable
-              key={section.key}
-              onPress={() => onSelect(section.key)}
-              style={[styles.sectionPill, isActive && styles.sectionPillActive]}
-            >
-              <Text style={[styles.sectionPillText, isActive && styles.sectionPillTextActive]}>{section.label}</Text>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
-    </View>
-  );
-}
-
-export function StatsPanel({
-  stats,
-  styles,
-  onRefresh,
-}: {
-  stats: {
-    topCountry: string;
-    topType: string;
-    topPairing: string;
-    averageVintage: string;
+  const TAB_ICONS: Record<string, string> = {
+    cellar: "🍷",
+    add: "＋",
+    meal: "🍽",
+    history: "📖",
   };
-  styles: SharedStyles;
-  onRefresh: () => void;
-}) {
+
   return (
-    <View style={styles.panel}>
-      <View style={styles.panelHeaderRow}>
-        <Text style={styles.panelTitle}>Statistik</Text>
-        <Pressable onPress={onRefresh}>
-          <Text style={styles.linkText}>Uppdatera</Text>
-        </Pressable>
-      </View>
-
-      <InsightCard label="Mest flaskor från" value={stats.topCountry} />
-      <InsightCard label="Vanligaste typ" value={stats.topType} />
-      <InsightCard label="Vanligaste matmatch" value={stats.topPairing} />
-      <InsightCard label="Snittårgång" value={stats.averageVintage} />
-    </View>
-  );
-}
-
-export function StorageSpacesPanel({
-  styles,
-  storageSpaces,
-  storageSpaceBottleCounts,
-  storageSpaceDraft,
-  loadingStorageSpaces,
-  savingStorageSpace,
-  onDraftChange,
-  onSave,
-  onDelete,
-}: {
-  styles: SharedStyles;
-  storageSpaces: StorageSpaceRow[];
-  storageSpaceBottleCounts: Map<string, number>;
-  storageSpaceDraft: {
-    name: string;
-    spaceType: string;
-    rowCount: string;
-    slotsPerRow: string;
-    notes: string;
-  };
-  loadingStorageSpaces: boolean;
-  savingStorageSpace: boolean;
-  onDraftChange: (patch: Partial<{ name: string; spaceType: string; rowCount: string; slotsPerRow: string; notes: string }>) => void;
-  onSave: () => void;
-  onDelete: (id: string) => void;
-}) {
-  return (
-    <View style={styles.panel}>
-      <View style={styles.panelHeaderRow}>
-        <Text style={styles.panelTitle}>Förvaringsplatser</Text>
-        <Text style={styles.linkText}>{storageSpaces.length} st</Text>
-      </View>
-
-      <Text style={styles.notesText}>
-        Skapa en plats för varje vinkyl, källare eller annan zon. Varje plats får egna rader och platser per rad.
-      </Text>
-
-      <LabeledInput
-        label="Namn"
-        value={storageSpaceDraft.name}
-        onChangeText={(value) => onDraftChange({ name: value })}
-        placeholder="Vinkyl i köket"
-      />
-      <DoubleRow>
-        <LabeledInput
-          label="Typ"
-          value={storageSpaceDraft.spaceType}
-          onChangeText={(value) => onDraftChange({ spaceType: value })}
-          placeholder="kallare, vinkyl, party cooler"
-        />
-        <LabeledInput
-          label="Rader"
-          value={storageSpaceDraft.rowCount}
-          onChangeText={(value) => onDraftChange({ rowCount: value })}
-          keyboardType="number-pad"
-        />
-      </DoubleRow>
-      <LabeledInput
-        label="Platser per rad"
-        value={storageSpaceDraft.slotsPerRow}
-        onChangeText={(value) => onDraftChange({ slotsPerRow: value })}
-        keyboardType="number-pad"
-      />
-      <LabeledInput
-        label="Anteckning"
-        value={storageSpaceDraft.notes}
-        onChangeText={(value) => onDraftChange({ notes: value })}
-        placeholder="t.ex. översta hyllan blir varm"
-      />
-
-      <Pressable onPress={onSave} style={styles.primaryButton} disabled={savingStorageSpace}>
-        <Text style={styles.primaryButtonText}>{savingStorageSpace ? "Sparar..." : "Lägg till plats"}</Text>
-      </Pressable>
-
-      {loadingStorageSpaces ? <LoadingInline label="Laddar förvaringsplatser..." /> : null}
-
-      {!loadingStorageSpaces && storageSpaces.length === 0 ? (
-        <Text style={styles.emptyState}>Inga förvaringsplatser ännu. Skapa din första ovan.</Text>
-      ) : null}
-
-      {storageSpaces.map((space) => {
-        const bottleCount = storageSpaceBottleCounts.get(space.id) || 0;
+    <View style={styles.bottomTabBar}>
+      {sections.map((section) => {
+        const isActive = activeSection === section.key;
 
         return (
-          <View key={space.id} style={styles.storageSpaceCard}>
-            <View style={styles.storageSpaceHeader}>
-              <View style={styles.flex}>
-                <Text style={styles.wineType}>{space.space_type}</Text>
-                <Text style={styles.wineName}>{space.name}</Text>
-                <Text style={styles.wineMeta}>
-                  {space.row_count} rader • {space.slots_per_row} platser per rad
-                </Text>
-              </View>
-              <View style={styles.quantityBadge}>
-                <Text style={styles.quantityBadgeText}>{bottleCount} st</Text>
-              </View>
-            </View>
-
-            {space.notes ? <Text style={styles.notesText}>{space.notes}</Text> : null}
-
-            <View style={styles.actionRow}>
-              <Pressable onPress={() => onDelete(space.id)}>
-                <Text style={styles.dangerText}>Ta bort</Text>
-              </Pressable>
-            </View>
-          </View>
+          <Pressable
+            key={section.key}
+            onPress={() => onSelect(section.key)}
+            style={styles.bottomTab}
+          >
+            <Text style={[styles.bottomTabIcon, isActive && styles.bottomTabIconActive]}>
+              {TAB_ICONS[section.key] || "•"}
+            </Text>
+            <Text style={[styles.bottomTabLabel, isActive && styles.bottomTabLabelActive]}>
+              {section.label}
+            </Text>
+          </Pressable>
         );
       })}
     </View>
   );
 }
 
-export function ProductCatalogPanel({
-  styles,
-  loadingCatalogEntries,
-  catalogEntries,
-  onRefresh,
-  onEdit,
-  onDelete,
-}: {
-  styles: SharedStyles;
-  loadingCatalogEntries: boolean;
-  catalogEntries: ProductCatalogWineRow[];
-  onRefresh: () => void;
-  onEdit: (entry: ProductCatalogWineRow) => void;
-  onDelete: (entry: ProductCatalogWineRow) => void;
-}) {
-  return (
-    <View style={styles.panel}>
-      <View style={styles.panelHeaderRow}>
-        <Text style={styles.panelTitle}>Produktkatalog</Text>
-        <Pressable onPress={onRefresh}>
-          <Text style={styles.linkText}>Uppdatera</Text>
-        </Pressable>
-      </View>
-
-      <Text style={styles.notesText}>
-        Här syns produkter appen redan känner igen. Om en streckkod inte ger träff kan du fylla i flaskan och spara den hit.
-      </Text>
-
-      {loadingCatalogEntries ? <LoadingInline label="Laddar produktkatalog..." /> : null}
-
-      {!loadingCatalogEntries && catalogEntries.length === 0 ? (
-        <Text style={styles.emptyState}>Katalogen är tom ännu. Första säkra träffen eller manuella sparning hamnar här.</Text>
-      ) : null}
-
-      {catalogEntries.map((entry) => (
-        <View key={entry.id} style={styles.storageSpaceCard}>
-          <Text style={styles.wineType}>{entry.source_label || "Katalog"}</Text>
-          <Text style={styles.recommendationName}>{entry.name}</Text>
-          <Text style={styles.notesText}>{[entry.producer, entry.country, entry.region, entry.grape].filter(Boolean).join(" • ")}</Text>
-          <Text style={styles.notesText}>
-            {[entry.barcode, entry.systembolaget_product_id ? `Art.nr ${entry.systembolaget_product_id}` : ""]
-              .filter(Boolean)
-              .join(" • ")}
-          </Text>
-          <View style={styles.actionRow}>
-            <Pressable onPress={() => onEdit(entry)}>
-              <Text style={styles.linkText}>Redigera</Text>
-            </Pressable>
-            <Pressable onPress={() => onDelete(entry)}>
-              <Text style={styles.dangerText}>Ta bort</Text>
-            </Pressable>
-          </View>
-        </View>
-      ))}
-    </View>
-  );
-}
 
 export function MealPlannerPanel({
   styles,
@@ -296,31 +105,124 @@ export function MealPlannerPanel({
   );
 }
 
-export function WineCollectionPanel({
+function WineCard({
+  wine,
   styles,
+  storageSpaceById,
+  onOpenSystembolaget,
+  onEditWine,
+  onDrinkWine,
+  onDeleteWine,
+}: {
+  wine: WineRecord;
+  styles: SharedStyles;
+  storageSpaceById: Map<string, StorageSpaceRow>;
+  onOpenSystembolaget: (productId: string) => void;
+  onEditWine: (wine: WineRecord) => void;
+  onDrinkWine: (wine: WineRecord) => void;
+  onDeleteWine: (wineId: string, imagePath: string | null) => void;
+}) {
+  return (
+    <View style={styles.wineCard}>
+      {wine.image_url ? <Image source={{ uri: wine.image_url }} style={styles.wineImage} /> : null}
+
+      <View style={styles.wineCardHeader}>
+        <View style={styles.flex}>
+          <Text style={styles.wineType}>{wine.type}</Text>
+          <Text style={styles.wineName}>{wine.name}</Text>
+          <Text style={styles.wineMeta}>
+            {[wine.producer, wine.vintage, wine.grape, [wine.country, wine.region].filter(Boolean).join(", ")]
+              .filter(Boolean)
+              .join(" • ")}
+          </Text>
+          <Text style={styles.locationText}>
+            {getWineStoragePlacementLabel(wine, storageSpaceById) || wine.cellar_location || "Ingen plats angiven"}
+          </Text>
+          {wine.cellar_location && getWineStoragePlacementLabel(wine, storageSpaceById) ? (
+            <Text style={styles.notesText}>{wine.cellar_location}</Text>
+          ) : null}
+        </View>
+        <View style={styles.quantityBadge}>
+          <Text style={styles.quantityBadgeText}>{wine.quantity} st</Text>
+        </View>
+      </View>
+
+      {wine.tags.length > 0 ? (
+        <View style={styles.tagRow}>
+          {wine.tags.map((tag) => (
+            <View key={`${wine.id}-${tag}`} style={styles.tagPill}>
+              <Text style={styles.tagText}>{tag}</Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
+
+      {wine.food_pairings.length > 0 ? (
+        <View style={styles.foodSection}>
+          <Text style={styles.inputLabel}>Passar till</Text>
+          <View style={styles.tagRow}>
+            {wine.food_pairings.map((pairing) => (
+              <View key={`${wine.id}-food-${pairing}`} style={styles.foodPill}>
+                <Text style={styles.foodText}>{pairing}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      ) : null}
+
+      {wine.systembolaget_product_id ? (
+        <View style={styles.foodSection}>
+          <Text style={styles.inputLabel}>Importkoppling</Text>
+          <Text style={styles.notesText}>Systembolaget #{wine.systembolaget_product_id}</Text>
+          <Pressable onPress={() => onOpenSystembolaget(wine.systembolaget_product_id!)} style={styles.inlineLinkButton}>
+            <Text style={styles.linkText}>Öppna produktsida</Text>
+          </Pressable>
+        </View>
+      ) : null}
+
+      <Text style={styles.notesText}>{wine.notes || "Ingen anteckning ännu."}</Text>
+
+      <View style={styles.actionRow}>
+        <Pressable onPress={() => onEditWine(wine)}>
+          <Text style={styles.linkText}>Redigera</Text>
+        </Pressable>
+        <Pressable onPress={() => onDrinkWine(wine)} style={styles.secondaryButton}>
+          <Text style={styles.secondaryButtonText}>Drack 1 flaska</Text>
+        </Pressable>
+        <Pressable onPress={() => onDeleteWine(wine.id, wine.image_path)}>
+          <Text style={styles.dangerText}>Ta bort</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
+export function MinKallarePanel({
+  styles,
+  stats,
   searchQuery,
   selectedPairingFilter,
   selectedCountryFilter,
   selectedRegionFilter,
   selectedTypeFilter,
   selectedVintageFilter,
-  selectedStorageSpaceFilterId,
   pairingOptions,
   countryOptions,
   regionOptions,
   typeOptions,
   vintageOptions,
   storageSpaces,
+  storageSpaceBottleCounts,
   filteredWines,
   loading,
   storageSpaceById,
+  onRefreshStats,
   onSearchChange,
   onPairingChange,
   onCountryChange,
   onRegionChange,
   onTypeChange,
   onVintageChange,
-  onStorageSpaceFilterChange,
   onSignOut,
   onOpenSystembolaget,
   onEditWine,
@@ -328,35 +230,84 @@ export function WineCollectionPanel({
   onDeleteWine,
 }: {
   styles: SharedStyles;
+  stats: {
+    totalBottles: number;
+    totalLabels: number;
+    topCountry: string;
+    topType: string;
+    topPairing: string;
+    averageVintage: string;
+  };
   searchQuery: string;
   selectedPairingFilter: string;
   selectedCountryFilter: string;
   selectedRegionFilter: string;
   selectedTypeFilter: string;
   selectedVintageFilter: string;
-  selectedStorageSpaceFilterId: string;
   pairingOptions: string[];
   countryOptions: string[];
   regionOptions: string[];
   typeOptions: string[];
   vintageOptions: string[];
   storageSpaces: StorageSpaceRow[];
+  storageSpaceBottleCounts: Map<string, number>;
   filteredWines: WineRecord[];
   loading: boolean;
   storageSpaceById: Map<string, StorageSpaceRow>;
+  onRefreshStats: () => void;
   onSearchChange: (value: string) => void;
   onPairingChange: (value: string) => void;
   onCountryChange: (value: string) => void;
   onRegionChange: (value: string) => void;
   onTypeChange: (value: string) => void;
   onVintageChange: (value: string) => void;
-  onStorageSpaceFilterChange: (value: string) => void;
   onSignOut: () => void;
   onOpenSystembolaget: (productId: string) => void;
   onEditWine: (wine: WineRecord) => void;
   onDrinkWine: (wine: WineRecord) => void;
   onDeleteWine: (wineId: string, imagePath: string | null) => void;
 }) {
+  const [statsExpanded, setStatsExpanded] = useState(false);
+  const [expandedSpaceIds, setExpandedSpaceIds] = useState<Set<string>>(new Set());
+
+  function toggleSpace(spaceId: string) {
+    setExpandedSpaceIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(spaceId)) next.delete(spaceId);
+      else next.add(spaceId);
+      return next;
+    });
+  }
+
+  // Group filtered wines by storage space
+  const winesBySpace = new Map<string, WineRecord[]>();
+  const unplacedWines: WineRecord[] = [];
+
+  for (const wine of filteredWines) {
+    if (wine.storage_space_id) {
+      const list = winesBySpace.get(wine.storage_space_id) || [];
+      list.push(wine);
+      winesBySpace.set(wine.storage_space_id, list);
+    } else {
+      unplacedWines.push(wine);
+    }
+  }
+
+  // Build ordered list of spaces that have wines (or exist)
+  const spaceCards: Array<{ id: string; name: string; spaceType: string; wines: WineRecord[]; bottleCount: number }> = [];
+
+  for (const space of storageSpaces) {
+    const wines = winesBySpace.get(space.id) || [];
+    const bottleCount = storageSpaceBottleCounts.get(space.id) || 0;
+    if (wines.length > 0 || bottleCount > 0) {
+      spaceCards.push({ id: space.id, name: space.name, spaceType: space.space_type, wines, bottleCount });
+    }
+  }
+
+  const totalCountries = new Set(filteredWines.map((w) => w.country).filter(Boolean)).size;
+
+  const summaryText = `${stats.totalBottles} flaskor · ${totalCountries} länder · snitt ${stats.averageVintage}`;
+
   return (
     <View style={styles.panel}>
       <View style={styles.panelHeaderRow}>
@@ -366,6 +317,29 @@ export function WineCollectionPanel({
         </Pressable>
       </View>
 
+      {/* Stats summary bar — tap to toggle */}
+      <Pressable onPress={() => setStatsExpanded((v) => !v)} style={styles.statsSummaryBar}>
+        <Text style={styles.statsSummaryText}>{summaryText}</Text>
+        <Text style={styles.statsSummaryToggle}>{statsExpanded ? "▲" : "▼"}</Text>
+      </Pressable>
+
+      {statsExpanded ? (
+        <View style={styles.statsGrid}>
+          <View style={styles.statsGridRow}>
+            <InsightCard label="Mest flaskor från" value={stats.topCountry} />
+            <InsightCard label="Vanligaste typ" value={stats.topType} />
+          </View>
+          <View style={styles.statsGridRow}>
+            <InsightCard label="Vanligaste matmatch" value={stats.topPairing} />
+            <InsightCard label="Snittårgång" value={stats.averageVintage} />
+          </View>
+          <Pressable onPress={onRefreshStats}>
+            <Text style={styles.linkText}>Uppdatera statistik</Text>
+          </Pressable>
+        </View>
+      ) : null}
+
+      {/* Search + filters */}
       <LabeledInput label="Sök" value={searchQuery} onChangeText={onSearchChange} placeholder="namn, druva, region, mat..." />
 
       <SuggestionRow title="Filtrera mat" options={pairingOptions} selected={selectedPairingFilter} onSelect={onPairingChange} />
@@ -374,95 +348,84 @@ export function WineCollectionPanel({
       <SuggestionRow title="Filtrera typ" options={typeOptions} selected={selectedTypeFilter} onSelect={onTypeChange} />
       <SuggestionRow title="Filtrera årgång" options={vintageOptions} selected={selectedVintageFilter} onSelect={onVintageChange} />
 
-      {storageSpaces.length > 0 ? (
-        <StorageSpaceSelector
-          title="Filtrera plats"
-          spaces={storageSpaces}
-          selectedId={selectedStorageSpaceFilterId}
-          onSelect={onStorageSpaceFilterChange}
-          clearLabel="Alla"
-        />
-      ) : null}
-
       {loading ? <LoadingInline /> : null}
 
-      {!loading && filteredWines.length === 0 ? (
-        <Text style={styles.emptyState}>Inga viner ännu. Lägg till din första flaska ovan.</Text>
+      {/* Storage space cards */}
+      {!loading && spaceCards.length === 0 && unplacedWines.length === 0 ? (
+        <Text style={styles.emptyState}>Inga viner ännu. Lägg till din första flaska.</Text>
       ) : null}
 
-      {filteredWines.map((wine) => (
-        <View key={wine.id} style={styles.wineCard}>
-          {wine.image_url ? <Image source={{ uri: wine.image_url }} style={styles.wineImage} /> : null}
+      {spaceCards.map((card) => {
+        const isExpanded = expandedSpaceIds.has(card.id);
 
-          <View style={styles.wineCardHeader}>
-            <View style={styles.flex}>
-              <Text style={styles.wineType}>{wine.type}</Text>
-              <Text style={styles.wineName}>{wine.name}</Text>
-              <Text style={styles.wineMeta}>
-                {[wine.producer, wine.vintage, wine.grape, [wine.country, wine.region].filter(Boolean).join(", ")]
-                  .filter(Boolean)
-                  .join(" • ")}
-              </Text>
-              <Text style={styles.locationText}>
-                {getWineStoragePlacementLabel(wine, storageSpaceById) || wine.cellar_location || "Ingen plats angiven"}
-              </Text>
-              {wine.cellar_location && getWineStoragePlacementLabel(wine, storageSpaceById) ? (
-                <Text style={styles.notesText}>{wine.cellar_location}</Text>
-              ) : null}
-            </View>
-            <View style={styles.quantityBadge}>
-              <Text style={styles.quantityBadgeText}>{wine.quantity} st</Text>
-            </View>
-          </View>
-
-          {wine.tags.length > 0 ? (
-            <View style={styles.tagRow}>
-              {wine.tags.map((tag) => (
-                <View key={`${wine.id}-${tag}`} style={styles.tagPill}>
-                  <Text style={styles.tagText}>{tag}</Text>
+        return (
+          <View key={card.id}>
+            <Pressable onPress={() => toggleSpace(card.id)} style={styles.storageCard}>
+              <View style={styles.storageCardHeader}>
+                <View style={styles.flex}>
+                  <Text style={styles.wineType}>{card.spaceType}</Text>
+                  <Text style={styles.wineName}>{card.name}</Text>
                 </View>
-              ))}
-            </View>
-          ) : null}
-
-          {wine.food_pairings.length > 0 ? (
-            <View style={styles.foodSection}>
-              <Text style={styles.inputLabel}>Passar till</Text>
-              <View style={styles.tagRow}>
-                {wine.food_pairings.map((pairing) => (
-                  <View key={`${wine.id}-food-${pairing}`} style={styles.foodPill}>
-                    <Text style={styles.foodText}>{pairing}</Text>
+                <View style={styles.storageCardRight}>
+                  <View style={styles.quantityBadge}>
+                    <Text style={styles.quantityBadgeText}>{card.bottleCount} st</Text>
                   </View>
-                ))}
+                  <Text style={styles.statsSummaryToggle}>{isExpanded ? "▲" : "▼"}</Text>
+                </View>
+              </View>
+            </Pressable>
+
+            {isExpanded
+              ? card.wines.map((wine) => (
+                  <WineCard
+                    key={wine.id}
+                    wine={wine}
+                    styles={styles}
+                    storageSpaceById={storageSpaceById}
+                    onOpenSystembolaget={onOpenSystembolaget}
+                    onEditWine={onEditWine}
+                    onDrinkWine={onDrinkWine}
+                    onDeleteWine={onDeleteWine}
+                  />
+                ))
+              : null}
+          </View>
+        );
+      })}
+
+      {unplacedWines.length > 0 ? (
+        <View>
+          <Pressable onPress={() => toggleSpace("__unplaced__")} style={styles.storageCard}>
+            <View style={styles.storageCardHeader}>
+              <View style={styles.flex}>
+                <Text style={styles.wineType}>Utan plats</Text>
+                <Text style={styles.wineName}>Ej tilldelade</Text>
+              </View>
+              <View style={styles.storageCardRight}>
+                <View style={styles.quantityBadge}>
+                  <Text style={styles.quantityBadgeText}>{unplacedWines.length} st</Text>
+                </View>
+                <Text style={styles.statsSummaryToggle}>{expandedSpaceIds.has("__unplaced__") ? "▲" : "▼"}</Text>
               </View>
             </View>
-          ) : null}
+          </Pressable>
 
-          {wine.systembolaget_product_id ? (
-            <View style={styles.foodSection}>
-              <Text style={styles.inputLabel}>Importkoppling</Text>
-              <Text style={styles.notesText}>Systembolaget #{wine.systembolaget_product_id}</Text>
-              <Pressable onPress={() => onOpenSystembolaget(wine.systembolaget_product_id!)} style={styles.inlineLinkButton}>
-                <Text style={styles.linkText}>Öppna produktsida</Text>
-              </Pressable>
-            </View>
-          ) : null}
-
-          <Text style={styles.notesText}>{wine.notes || "Ingen anteckning ännu."}</Text>
-
-          <View style={styles.actionRow}>
-            <Pressable onPress={() => onEditWine(wine)}>
-              <Text style={styles.linkText}>Redigera</Text>
-            </Pressable>
-            <Pressable onPress={() => onDrinkWine(wine)} style={styles.secondaryButton}>
-              <Text style={styles.secondaryButtonText}>Drack 1 flaska</Text>
-            </Pressable>
-            <Pressable onPress={() => onDeleteWine(wine.id, wine.image_path)}>
-              <Text style={styles.dangerText}>Ta bort</Text>
-            </Pressable>
-          </View>
+          {expandedSpaceIds.has("__unplaced__")
+            ? unplacedWines.map((wine) => (
+                <WineCard
+                  key={wine.id}
+                  wine={wine}
+                  styles={styles}
+                  storageSpaceById={storageSpaceById}
+                  onOpenSystembolaget={onOpenSystembolaget}
+                  onEditWine={onEditWine}
+                  onDrinkWine={onDrinkWine}
+                  onDeleteWine={onDeleteWine}
+                />
+              ))
+            : null}
         </View>
-      ))}
+      ) : null}
     </View>
   );
 }
