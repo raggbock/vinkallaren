@@ -127,6 +127,10 @@ function extractVintage(name) {
   return match ? match[0] : null;
 }
 
+function stripTrailingYear(name) {
+  return name.replace(/\s+(18|19|20)\d{2}\s*$/, "").trim();
+}
+
 function parseProductCards(html) {
   const cards = [...html.matchAll(/<div class='item-4 js-product'>([\s\S]*?)<div><\/div><\/article><\/div>/g)];
 
@@ -141,7 +145,8 @@ function parseProductCards(html) {
       }
 
       const producer = normalizeText(stripTags(producerMatch[1]));
-      const name = normalizeText(stripTags(nameMatch[2]));
+      const rawName = normalizeText(stripTags(nameMatch[2]));
+      const name = stripTrailingYear(rawName);
       const href = nameMatch[1].startsWith("http") ? nameMatch[1] : `https://www.winefinder.se${nameMatch[1]}`;
       const location = normalizeText(stripTags(locationMatch[1]));
       const [country, ...regionParts] = location.split(",").map((part) => part.trim()).filter(Boolean);
@@ -156,7 +161,7 @@ function parseProductCards(html) {
         producer,
         country,
         region,
-        vintage: extractVintage(name),
+        vintage: extractVintage(rawName),
         type: "Rott vin",
         sourceLabel: "Winefinder",
         sourceUrl: href,
