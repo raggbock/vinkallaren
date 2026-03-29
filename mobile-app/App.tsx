@@ -12,7 +12,6 @@ import { cacheCatalogEntry, findCatalogMatch, type ProductCatalogEntry } from ".
 import { GRAPE_VARIETIES, WINE_COUNTRIES, WINE_REGIONS } from "./src/lib/reference-data";
 import {
   buildMealRecommendations,
-  buildMealSuggestions,
   buildNumericOptions,
   buildPairingOptions,
   buildStats,
@@ -405,6 +404,7 @@ function CellarScreen({ session }: { session: Session }) {
   const [lookupBusy, setLookupBusy] = useState(false);
   const [lookupMessage, setLookupMessage] = useState("");
   const [activeSection, setActiveSection] = useState<CellarSection>("cellar");
+  const [highlightedWineId, setHighlightedWineId] = useState<string | null>(null);
   const [drinkModalVisible, setDrinkModalVisible] = useState(false);
   const [selectedDrinkWine, setSelectedDrinkWine] = useState<WineRecord | null>(null);
   const [drinkRating, setDrinkRating] = useState("");
@@ -500,7 +500,7 @@ function CellarScreen({ session }: { session: Session }) {
   const selectedStorageSpace = storageSpaces.find((space) => space.id === selectedStorageSpaceId) ?? null;
   const selectedEditStorageSpace =
     storageSpaces.find((space) => space.id === (editWineDraft?.storageSpaceId || "")) ?? null;
-  const mealSuggestions = useMemo(() => buildMealSuggestions(wines), [wines]);
+
   const mealRecommendations = useMemo(
     () => buildMealRecommendations(wines, selectedMeal),
     [selectedMeal, wines]
@@ -1475,6 +1475,8 @@ function CellarScreen({ session }: { session: Session }) {
       onEditWine={openEditWineModal}
       onDrinkWine={openDrinkModal}
       onDeleteWine={deleteWine}
+      highlightedWineId={highlightedWineId}
+      onClearHighlight={() => setHighlightedWineId(null)}
     />
   );
 
@@ -1492,9 +1494,12 @@ function CellarScreen({ session }: { session: Session }) {
       <MealPlannerPanel
         styles={styles}
         selectedMeal={selectedMeal}
-        mealSuggestions={mealSuggestions}
         mealRecommendations={mealRecommendations}
         onSelectMeal={setSelectedMeal}
+        onWinePress={(wine) => {
+          setHighlightedWineId(wine.id);
+          setActiveSection("cellar");
+        }}
       />
     );
   } else if (activeSection === "add") {
@@ -2535,6 +2540,13 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     gap: 12,
   },
+  wineCardHighlighted: {
+    backgroundColor: "#fff3e0",
+    borderRadius: 16,
+    padding: 12,
+    borderWidth: 2,
+    borderColor: "#f4c38c",
+  },
   wineImage: {
     width: "100%",
     aspectRatio: 16 / 10,
@@ -2613,6 +2625,26 @@ const styles = StyleSheet.create({
   },
   foodTextActive: {
     color: "#fffaf5",
+  },
+  foodCategoryGroup: {
+    gap: 6,
+  },
+  foodCategoryLabel: {
+    color: "#6f6259",
+    fontSize: 11,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
+  },
+  mealSelectedLabel: {
+    color: "#6f1d1b",
+    fontWeight: "700",
+    fontSize: 14,
+    backgroundColor: "#f4c38c",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    overflow: "hidden",
   },
   suggestionPill: {
     backgroundColor: "#fffaf5",

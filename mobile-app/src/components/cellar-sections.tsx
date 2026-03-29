@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
 
-import { getWineStoragePlacementLabel } from "../lib/cellar-helpers";
+import { FOOD_CATEGORIES, getWineStoragePlacementLabel } from "../lib/cellar-helpers";
 import type { StorageSpaceRow } from "../types/storage-space";
 import type { WineHistoryRecord } from "../types/wine-history";
 import type { WineRecord } from "../types/wine";
@@ -56,51 +56,69 @@ export function BottomTabBar({
 export function MealPlannerPanel({
   styles,
   selectedMeal,
-  mealSuggestions,
   mealRecommendations,
   onSelectMeal,
+  onWinePress,
 }: {
   styles: SharedStyles;
   selectedMeal: string;
-  mealSuggestions: string[];
   mealRecommendations: WineRecord[];
   onSelectMeal: (value: string) => void;
+  onWinePress?: (wine: WineRecord) => void;
 }) {
   return (
     <View style={styles.panel}>
       <View style={styles.panelHeaderRow}>
         <Text style={styles.panelTitle}>Vad ska vi äta?</Text>
-        <Text style={styles.linkText}>{selectedMeal}</Text>
+        {selectedMeal ? <Text style={styles.mealSelectedLabel}>{selectedMeal}</Text> : null}
       </View>
 
-      <SuggestionRow title="Välj maträtt" options={mealSuggestions} selected={selectedMeal} onSelect={onSelectMeal} />
+      {FOOD_CATEGORIES.map((category) => (
+        <View key={category.label} style={styles.foodCategoryGroup}>
+          <Text style={styles.foodCategoryLabel}>{category.label}</Text>
+          <View style={styles.tagRow}>
+            {category.items.map((item) => {
+              const isSelected = selectedMeal === item;
+              return (
+                <Pressable
+                  key={`food-${item}`}
+                  onPress={() => onSelectMeal(isSelected ? "" : item)}
+                  style={[styles.foodPill, isSelected && styles.foodPillActive]}
+                >
+                  <Text style={[styles.foodText, isSelected && styles.foodTextActive]}>{item}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+      ))}
 
-      {mealRecommendations.length === 0 ? (
-        <Text style={styles.emptyState}>Inga viner matchar den maten ännu. Lägg till fler matmatchningar på dina flaskor.</Text>
-      ) : (
-        mealRecommendations.map((wine) => (
-          <View key={`meal-${wine.id}`} style={styles.recommendationCard}>
-            <View style={styles.recommendationHeader}>
-              <View style={styles.flex}>
-                <Text style={styles.wineType}>{wine.type}</Text>
-                <Text style={styles.recommendationName}>{wine.name}</Text>
-                <Text style={styles.wineMeta}>{[wine.producer, wine.grape, wine.country].filter(Boolean).join(" • ")}</Text>
-              </View>
-              <View style={styles.quantityBadge}>
-                <Text style={styles.quantityBadgeText}>{wine.quantity} st</Text>
-              </View>
+      {selectedMeal && mealRecommendations.length === 0 ? (
+        <Text style={styles.emptyState}>Inga viner matchar "{selectedMeal}" ännu.</Text>
+      ) : null}
+
+      {mealRecommendations.map((wine) => (
+        <Pressable key={`meal-${wine.id}`} onPress={() => onWinePress?.(wine)} style={styles.recommendationCard}>
+          <View style={styles.recommendationHeader}>
+            <View style={styles.flex}>
+              <Text style={styles.wineType}>{wine.type}</Text>
+              <Text style={styles.recommendationName}>{wine.name}</Text>
+              <Text style={styles.wineMeta}>{[wine.producer, wine.grape, wine.country].filter(Boolean).join(" • ")}</Text>
             </View>
-
-            <View style={styles.tagRow}>
-              {wine.food_pairings.map((pairing) => (
-                <View key={`recommend-${wine.id}-${pairing}`} style={[styles.foodPill, pairing === selectedMeal && styles.foodPillActive]}>
-                  <Text style={[styles.foodText, pairing === selectedMeal && styles.foodTextActive]}>{pairing}</Text>
-                </View>
-              ))}
+            <View style={styles.quantityBadge}>
+              <Text style={styles.quantityBadgeText}>{wine.quantity} st</Text>
             </View>
           </View>
-        ))
-      )}
+
+          <View style={styles.tagRow}>
+            {wine.food_pairings.map((pairing) => (
+              <View key={`recommend-${wine.id}-${pairing}`} style={[styles.foodPill, pairing === selectedMeal && styles.foodPillActive]}>
+                <Text style={[styles.foodText, pairing === selectedMeal && styles.foodTextActive]}>{pairing}</Text>
+              </View>
+            ))}
+          </View>
+        </Pressable>
+      ))}
     </View>
   );
 }
@@ -108,6 +126,7 @@ export function MealPlannerPanel({
 function WineCard({
   wine,
   styles,
+  highlighted,
   storageSpaceById,
   onOpenSystembolaget,
   onEditWine,
@@ -116,6 +135,7 @@ function WineCard({
 }: {
   wine: WineRecord;
   styles: SharedStyles;
+  highlighted?: boolean;
   storageSpaceById: Map<string, StorageSpaceRow>;
   onOpenSystembolaget: (productId: string) => void;
   onEditWine: (wine: WineRecord) => void;
@@ -123,7 +143,7 @@ function WineCard({
   onDeleteWine: (wineId: string, imagePath: string | null) => void;
 }) {
   return (
-    <View style={styles.wineCard}>
+    <View style={[styles.wineCard, highlighted && styles.wineCardHighlighted]}>
       {wine.image_url ? <Image source={{ uri: wine.image_url }} style={styles.wineImage} /> : null}
 
       <View style={styles.wineCardHeader}>
@@ -228,6 +248,8 @@ export function MinKallarePanel({
   onEditWine,
   onDrinkWine,
   onDeleteWine,
+  highlightedWineId,
+  onClearHighlight,
 }: {
   styles: SharedStyles;
   stats: {
@@ -266,6 +288,8 @@ export function MinKallarePanel({
   onEditWine: (wine: WineRecord) => void;
   onDrinkWine: (wine: WineRecord) => void;
   onDeleteWine: (wineId: string, imagePath: string | null) => void;
+  highlightedWineId?: string | null;
+  onClearHighlight?: () => void;
 }) {
   const [statsExpanded, setStatsExpanded] = useState(false);
   const [expandedSpaceIds, setExpandedSpaceIds] = useState<Set<string>>(new Set());
@@ -303,6 +327,26 @@ export function MinKallarePanel({
       spaceCards.push({ id: space.id, name: space.name, spaceType: space.space_type, wines, bottleCount });
     }
   }
+
+  // Auto-expand the storage card containing the highlighted wine
+  useEffect(() => {
+    if (!highlightedWineId) return;
+
+    const highlightedWine = filteredWines.find((w) => w.id === highlightedWineId);
+    if (!highlightedWine) return;
+
+    const spaceId = highlightedWine.storage_space_id || "__unplaced__";
+    setExpandedSpaceIds((prev) => {
+      if (prev.has(spaceId)) return prev;
+      const next = new Set(prev);
+      next.add(spaceId);
+      return next;
+    });
+
+    // Clear highlight after a delay
+    const timer = setTimeout(() => onClearHighlight?.(), 3000);
+    return () => clearTimeout(timer);
+  }, [highlightedWineId, filteredWines, onClearHighlight]);
 
   const totalCountries = new Set(filteredWines.map((w) => w.country).filter(Boolean)).size;
 
@@ -381,6 +425,7 @@ export function MinKallarePanel({
                     key={wine.id}
                     wine={wine}
                     styles={styles}
+                    highlighted={wine.id === highlightedWineId}
                     storageSpaceById={storageSpaceById}
                     onOpenSystembolaget={onOpenSystembolaget}
                     onEditWine={onEditWine}
@@ -416,6 +461,7 @@ export function MinKallarePanel({
                   key={wine.id}
                   wine={wine}
                   styles={styles}
+                  highlighted={wine.id === highlightedWineId}
                   storageSpaceById={storageSpaceById}
                   onOpenSystembolaget={onOpenSystembolaget}
                   onEditWine={onEditWine}

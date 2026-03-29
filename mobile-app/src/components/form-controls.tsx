@@ -70,14 +70,18 @@ export function AutocompleteInput({
     return searchableOptions
       .filter((option) => normalizeLookupValue(option.haystack).includes(query))
       .sort((left, right) => {
-        const leftNormalized = normalizeLookupValue(left.haystack);
-        const rightNormalized = normalizeLookupValue(right.haystack);
-        const leftStarts = leftNormalized.startsWith(query) ? 0 : 1;
-        const rightStarts = rightNormalized.startsWith(query) ? 0 : 1;
+        const leftName = normalizeLookupValue(left.value);
+        const rightName = normalizeLookupValue(right.value);
 
-        if (leftStarts !== rightStarts) {
-          return leftStarts - rightStarts;
-        }
+        // Tier 1: name starts with query
+        const leftNameStarts = leftName.startsWith(query) ? 0 : 1;
+        const rightNameStarts = rightName.startsWith(query) ? 0 : 1;
+        if (leftNameStarts !== rightNameStarts) return leftNameStarts - rightNameStarts;
+
+        // Tier 2: haystack starts with query (catches alias/producer matches)
+        const leftHaystackStarts = normalizeLookupValue(left.haystack).startsWith(query) ? 0 : 1;
+        const rightHaystackStarts = normalizeLookupValue(right.haystack).startsWith(query) ? 0 : 1;
+        if (leftHaystackStarts !== rightHaystackStarts) return leftHaystackStarts - rightHaystackStarts;
 
         return left.value.localeCompare(right.value);
       })

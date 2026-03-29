@@ -93,6 +93,15 @@ export function buildSystembolagetProductUrl(productId: string) {
   return `https://www.systembolaget.se/${encodeURIComponent(normalized)}/`;
 }
 
+export const FOOD_CATEGORIES: Array<{ label: string; items: string[] }> = [
+  { label: "Kött", items: ["lamm", "nöt", "fläsk", "vilt", "kyckling", "grillat"] },
+  { label: "Fisk & skaldjur", items: ["fisk", "skaldjur", "lax", "tonfisk"] },
+  { label: "Ost", items: ["ost", "lagrad ost", "getost", "blåmögelost"] },
+  { label: "Grönt & övrigt", items: ["sallad", "svamp", "pasta", "pizza", "soppa", "risotto"] },
+  { label: "Tilltugg", items: ["aperitif", "snacks", "chips", "charkuterier"] },
+  { label: "Sött", items: ["dessert", "choklad", "frukt"] },
+];
+
 export function buildMealSuggestions(wines: WineRecord[]) {
   const defaults = ["lamm", "nöt", "fisk", "skaldjur", "ost", "svamp"];
   const values = new Set<string>(defaults);
