@@ -58,6 +58,7 @@ const defaultDraft: WineDraft = {
   quantity: "1",
   type: "Rött",
   drinkBy: "",
+  acquiredAt: "",
   location: "",
   storageSpaceId: "",
   storageRow: "1",
@@ -409,6 +410,7 @@ function CellarScreen({ session }: { session: Session }) {
   const [selectedDrinkWine, setSelectedDrinkWine] = useState<WineRecord | null>(null);
   const [drinkRating, setDrinkRating] = useState("");
   const [drinkNotes, setDrinkNotes] = useState("");
+  const [drinkConsumedDate, setDrinkConsumedDate] = useState("");
   const [catalogBackfillDone, setCatalogBackfillDone] = useState(false);
   const [editWineVisible, setEditWineVisible] = useState(false);
   const [editingWine, setEditingWine] = useState<WineRecord | null>(null);
@@ -979,6 +981,7 @@ function CellarScreen({ session }: { session: Session }) {
         quantity: Math.max(1, Number(draft.quantity) || 1),
         type: draft.type.trim() || "Rött",
         drink_by_year: toNumberOrNull(draft.drinkBy),
+        acquired_at: emptyToNull(draft.acquiredAt),
         cellar_location: emptyToNull(draft.location),
         storage_space_id: emptyToNull(selectedStorageSpaceId),
         storage_row: selectedStorageSpaceId ? toNumberOrNull(selectedStorageRow) : null,
@@ -1066,6 +1069,7 @@ function CellarScreen({ session }: { session: Session }) {
     setSelectedDrinkWine(wine);
     setDrinkRating("");
     setDrinkNotes("");
+    setDrinkConsumedDate(new Date().toISOString().slice(0, 10));
     setDrinkModalVisible(true);
   }
 
@@ -1124,6 +1128,7 @@ function CellarScreen({ session }: { session: Session }) {
         quantity_consumed: 1,
         rating: drinkRating ? Number(drinkRating) : null,
         tasting_notes: emptyToNull(drinkNotes),
+        consumed_at: drinkConsumedDate || null,
       };
 
       const { error: historyError } = await supabase.from("wine_history").insert(payload);
@@ -1603,10 +1608,12 @@ function CellarScreen({ session }: { session: Session }) {
         wine={selectedDrinkWine}
         rating={drinkRating}
         notes={drinkNotes}
+        consumedDate={drinkConsumedDate}
         saving={savingDrinkHistory}
         onClose={closeDrinkModal}
         onRatingChange={setDrinkRating}
         onNotesChange={setDrinkNotes}
+        onConsumedDateChange={setDrinkConsumedDate}
         onConfirm={saveDrinkHistory}
       />
       <EditWineModal
@@ -1855,6 +1862,7 @@ function toWineDraft(wine: WineRecord): WineDraft {
     quantity: String(wine.quantity),
     type: wine.type || "Rött",
     drinkBy: wine.drink_by_year ? String(wine.drink_by_year) : "",
+    acquiredAt: wine.acquired_at ?? "",
     location: wine.cellar_location ?? "",
     storageSpaceId: wine.storage_space_id ?? "",
     storageRow: wine.storage_row ? String(wine.storage_row) : "1",
@@ -1885,6 +1893,7 @@ function buildWineInsertFromDraft(
     quantity: Math.max(1, Number(draft.quantity) || 1),
     type: draft.type.trim() || "Rött",
     drink_by_year: toNumberOrNull(draft.drinkBy),
+    acquired_at: emptyToNull(draft.acquiredAt),
     cellar_location: emptyToNull(draft.location),
     storage_space_id: emptyToNull(storageSpaceId),
     storage_row: storageSpaceId ? toNumberOrNull(storageRow) : null,

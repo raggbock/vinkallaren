@@ -47,4 +47,5 @@ export type WineHistoryInsert = {
   quantity_consumed?: number;
   rating?: number | null;
   tasting_notes?: string | null;
+  consumed_at?: string | null;
 };

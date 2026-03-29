@@ -1,4 +1,4 @@
-import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { Children, useEffect, useMemo, useRef, useState, type ComponentProps, type ReactNode } from "react";
 
 import type { ReferenceOptionRow } from "../types/reference-data";
@@ -13,6 +13,37 @@ export function LabeledInput({ label, multiline, ...props }: ComponentProps<type
         style={[styles.input, multiline && styles.textarea]}
         multiline={multiline}
         {...props}
+      />
+    </View>
+  );
+}
+
+export function DateInput({ label, value, onChangeText }: { label: string; value: string; onChangeText: (value: string) => void }) {
+  if (Platform.OS === "web") {
+    return (
+      <View style={styles.inputGroup}>
+        <Text style={styles.inputLabel}>{label}</Text>
+        <TextInput
+          value={value}
+          onChangeText={onChangeText}
+          placeholder="ÅÅÅÅ-MM-DD"
+          placeholderTextColor="#8f8178"
+          style={styles.input}
+          {...({ type: "date" } as any)}
+        />
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.inputGroup}>
+      <Text style={styles.inputLabel}>{label}</Text>
+      <TextInput
+        value={value}
+        onChangeText={onChangeText}
+        placeholder="ÅÅÅÅ-MM-DD"
+        placeholderTextColor="#8f8178"
+        style={styles.input}
       />
     </View>
   );
@@ -82,10 +113,14 @@ export function AutocompleteInput({
         const rightNameStarts = rightName.startsWith(query) ? 0 : 1;
         if (leftNameStarts !== rightNameStarts) return leftNameStarts - rightNameStarts;
 
-        // Tier 2: any word in the name starts with query
-        const leftWordStarts = wordStartsWithQuery(leftName) ? 0 : 1;
-        const rightWordStarts = wordStartsWithQuery(rightName) ? 0 : 1;
+        // Tier 2: any word in the name starts with query — rank by position of match
+        const leftWordIdx = leftName.split(/\s+/).findIndex((w) => w.startsWith(query));
+        const rightWordIdx = rightName.split(/\s+/).findIndex((w) => w.startsWith(query));
+        const leftWordStarts = leftWordIdx >= 0 ? 0 : 1;
+        const rightWordStarts = rightWordIdx >= 0 ? 0 : 1;
         if (leftWordStarts !== rightWordStarts) return leftWordStarts - rightWordStarts;
+        // Within word matches, prefer earlier word position
+        if (leftWordIdx >= 0 && rightWordIdx >= 0 && leftWordIdx !== rightWordIdx) return leftWordIdx - rightWordIdx;
 
         // Tier 3: haystack starts with query (catches alias/producer matches)
         const leftHaystackStarts = normalizeLookupValue(left.haystack).startsWith(query) ? 0 : 1;

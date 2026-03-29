@@ -8,6 +8,7 @@ export type WineDraft = {
   quantity: string;
   type: string;
   drinkBy: string;
+  acquiredAt: string;
   location: string;
   storageSpaceId: string;
   storageRow: string;
@@ -69,6 +70,7 @@ export const defaultDraft: WineDraft = {
   quantity: "1",
   type: "Rött",
   drinkBy: "",
+  acquiredAt: "",
   location: "",
   storageSpaceId: "",
   storageRow: "1",

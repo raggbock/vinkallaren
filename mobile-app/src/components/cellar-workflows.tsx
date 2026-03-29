@@ -8,7 +8,7 @@ import type { ReferenceOptionRow } from "../types/reference-data";
 import type { StorageSpaceRow } from "../types/storage-space";
 import type { CatalogEditorDraft, ImportFieldSelection, ImportMode, WineDraft } from "../types/cellar-drafts";
 import type { WineRecord } from "../types/wine";
-import { AutocompleteInput, DoubleRow, ImportSelectionRow, LabeledInput, StorageSpaceSelector, SuggestionRow } from "./form-controls";
+import { AutocompleteInput, DateInput, DoubleRow, ImportSelectionRow, LabeledInput, StorageSpaceSelector, SuggestionRow } from "./form-controls";
 
 type SharedStyles = any;
 const WINE_TYPE_OPTIONS = ["Rött", "Vitt", "Mousserande", "Sött"];
@@ -455,7 +455,10 @@ export function AddWinePanel({
         onSelect={(value) => onDraftChange({ type: value })}
         disabled={isLockedByCatalog("type")}
       />
-      <LabeledInput label="Drick senast" value={draft.drinkBy} onChangeText={(value) => onDraftChange({ drinkBy: value })} keyboardType="number-pad" />
+      <DoubleRow>
+        <LabeledInput label="Drick senast (år)" value={draft.drinkBy} onChangeText={(value) => onDraftChange({ drinkBy: value })} keyboardType="number-pad" placeholder="t.ex. 2028" />
+        <DateInput label="Inköpt" value={draft.acquiredAt} onChangeText={(value) => onDraftChange({ acquiredAt: value })} />
+      </DoubleRow>
 
       {/* --- Food pairing: suggestions + free text together --- */}
       <SuggestionRow
@@ -523,10 +526,12 @@ export function DrinkWineModal({
   wine,
   rating,
   notes,
+  consumedDate,
   saving,
   onClose,
   onRatingChange,
   onNotesChange,
+  onConsumedDateChange,
   onConfirm,
 }: {
   visible: boolean;
@@ -534,10 +539,12 @@ export function DrinkWineModal({
   wine: WineRecord | null;
   rating: string;
   notes: string;
+  consumedDate: string;
   saving: boolean;
   onClose: () => void;
   onRatingChange: (value: string) => void;
   onNotesChange: (value: string) => void;
+  onConsumedDateChange: (value: string) => void;
   onConfirm: () => void;
 }) {
   return (
@@ -557,6 +564,8 @@ export function DrinkWineModal({
           <Text style={styles.notesText}>
             Sätt gärna ett betyg direkt. Om det var sista flaskan hamnar vinet ändå kvar i historiken.
           </Text>
+
+          <DateInput label="Datum" value={consumedDate} onChangeText={onConsumedDateChange} />
 
           <SuggestionRow title="Betyg" options={["1", "2", "3", "4", "5"]} selected={rating} onSelect={onRatingChange} />
 
@@ -681,7 +690,10 @@ export function EditWineModal({
                 <LabeledInput label="Antal" value={draft.quantity} onChangeText={(value) => onDraftChange({ quantity: value })} keyboardType="number-pad" />
               </DoubleRow>
               <SuggestionRow title="Vintyp" options={WINE_TYPE_OPTIONS} selected={draft.type} onSelect={(value) => onDraftChange({ type: value })} />
-              <LabeledInput label="Drick senast" value={draft.drinkBy} onChangeText={(value) => onDraftChange({ drinkBy: value })} keyboardType="number-pad" />
+              <DoubleRow>
+                <LabeledInput label="Drick senast (år)" value={draft.drinkBy} onChangeText={(value) => onDraftChange({ drinkBy: value })} keyboardType="number-pad" placeholder="t.ex. 2028" />
+                <DateInput label="Inköpt" value={draft.acquiredAt} onChangeText={(value) => onDraftChange({ acquiredAt: value })} />
+              </DoubleRow>
 
               {storageSpaces.length > 0 ? (
                 <View style={styles.foodSection}>
