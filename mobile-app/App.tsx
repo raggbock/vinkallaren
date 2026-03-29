@@ -2273,7 +2273,7 @@ const styles = StyleSheet.create({
   },
   bottomTabIcon: {
     fontSize: 20,
-    color: "#ead8ca",
+    color: "#a0928a",
   },
   bottomTabIconActive: {
     color: "#6f1d1b",
@@ -2281,7 +2281,7 @@ const styles = StyleSheet.create({
   bottomTabLabel: {
     fontSize: 11,
     fontWeight: "600",
-    color: "#ead8ca",
+    color: "#a0928a",
   },
   bottomTabLabelActive: {
     color: "#6f1d1b",
