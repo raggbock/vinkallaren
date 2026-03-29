@@ -317,6 +317,87 @@ export function AddWinePanel({
   return (
     <View style={styles.panel}>
       <Text style={styles.panelTitle}>Lägg till vin</Text>
+
+      {/* --- Barcode & SB article number at top --- */}
+      <View style={styles.importSuggestionCard}>
+        <Text style={styles.inputLabel}>Snabbimport</Text>
+        <Text style={styles.notesText}>
+          Har du en streckkod eller ett Systembolaget-artikelnummer? Fyll i det så försöker vi hämta resten automatiskt.
+        </Text>
+        <LabeledInput
+          label="Streckkod"
+          value={draft.barcode}
+          onChangeText={onBarcodeChange}
+          editable={!isLockedByCatalog("barcode")}
+        />
+        <Pressable onPress={onStartBarcodeScanner} style={styles.secondaryButton}>
+          <Text style={styles.secondaryButtonText}>Skanna streckkod</Text>
+        </Pressable>
+        <LabeledInput
+          label="Systembolaget artikelnummer"
+          value={draft.systembolagetProductId}
+          onChangeText={onArticleNumberChange}
+          placeholder="t.ex. 12345"
+          editable={!isLockedByCatalog("systembolaget_product_id")}
+        />
+      </View>
+
+      {lookupBusy ? <Text style={styles.notesText}>Söker produktmatch...</Text> : null}
+      {!lookupBusy && lookupMessage ? <Text style={styles.notesText}>{lookupMessage}</Text> : null}
+
+      {draft.systembolagetProductId ? (
+        <Pressable onPress={() => onOpenSystembolaget(draft.systembolagetProductId)} style={styles.secondaryButton}>
+          <Text style={styles.secondaryButtonText}>Öppna hos Systembolaget</Text>
+        </Pressable>
+      ) : null}
+
+      {catalogSuggestion ? (
+        <View style={styles.importSuggestionCard}>
+          <Text style={styles.inputLabel}>Importförslag</Text>
+          <Text style={styles.recommendationName}>{catalogSuggestion.name}</Text>
+          <Text style={styles.linkText}>{catalogSuggestion.sourceLabel}</Text>
+          <Text style={styles.notesText}>{[catalogSuggestion.producer, catalogSuggestion.country, catalogSuggestion.region].filter(Boolean).join(" • ")}</Text>
+          <View style={styles.importModeRow}>
+            <Pressable onPress={() => { onSetImportMode("all"); onApplyCatalogSuggestion("all"); }} style={[styles.quickImportButton, importMode === "all" && styles.quickImportButtonActive]}>
+              <Text style={[styles.quickImportText, importMode === "all" && styles.quickImportTextActive]}>Importera allt</Text>
+            </Pressable>
+            <Pressable onPress={() => { onSetImportMode("empty"); onApplyCatalogSuggestion("empty"); }} style={[styles.quickImportButton, importMode === "empty" && styles.quickImportButtonActive]}>
+              <Text style={[styles.quickImportText, importMode === "empty" && styles.quickImportTextActive]}>Bara tomma fält</Text>
+            </Pressable>
+            <Pressable onPress={() => onSetImportMode("custom")} style={[styles.quickImportButton, importMode === "custom" && styles.quickImportButtonActive]}>
+              <Text style={[styles.quickImportText, importMode === "custom" && styles.quickImportTextActive]}>Välj själv</Text>
+            </Pressable>
+          </View>
+          {importMode === "custom" ? (
+            <>
+              <ImportSelectionRow label="Namn" selected={importSelection.name} onToggle={() => onToggleImportField("name")} />
+              <ImportSelectionRow label="Producent" selected={importSelection.producer} onToggle={() => onToggleImportField("producer")} />
+              <ImportSelectionRow label="Land" selected={importSelection.country} onToggle={() => onToggleImportField("country")} />
+              <ImportSelectionRow label="Region" selected={importSelection.region} onToggle={() => onToggleImportField("region")} />
+              <ImportSelectionRow label="Årgång" selected={importSelection.vintage} onToggle={() => onToggleImportField("vintage")} />
+              <ImportSelectionRow label="Druva" selected={importSelection.grape} onToggle={() => onToggleImportField("grape")} />
+              <ImportSelectionRow label="Typ" selected={importSelection.type} onToggle={() => onToggleImportField("type")} />
+              <ImportSelectionRow label="Matmatchning" selected={importSelection.foodPairings} onToggle={() => onToggleImportField("foodPairings")} />
+              <ImportSelectionRow label="Artikelnummer" selected={importSelection.systembolagetProductId} onToggle={() => onToggleImportField("systembolagetProductId")} />
+              <ImportSelectionRow label="Streckkod" selected={importSelection.barcode} onToggle={() => onToggleImportField("barcode")} />
+              <Pressable onPress={() => onApplyCatalogSuggestion("custom")} style={styles.primaryButton}>
+                <Text style={styles.primaryButtonText}>Fyll i från förslag</Text>
+              </Pressable>
+            </>
+          ) : null}
+        </View>
+      ) : null}
+
+      {!catalogSuggestion && (draft.barcode.trim() || draft.systembolagetProductId.trim()) ? (
+        <View style={styles.importSuggestionCard}>
+          <Text style={styles.inputLabel}>Ingen träff ännu?</Text>
+          <Text style={styles.notesText}>
+            Fyll i resten av uppgifterna och spara som vanligt. Lägg gärna till streckkod eller artikelnummer så kan vi matcha nästa gång.
+          </Text>
+        </View>
+      ) : null}
+
+      {/* --- Wine details --- */}
       <AutocompleteInput
         label="Namn"
         value={draft.name}
@@ -376,6 +457,22 @@ export function AddWinePanel({
       />
       <LabeledInput label="Drick senast" value={draft.drinkBy} onChangeText={(value) => onDraftChange({ drinkBy: value })} keyboardType="number-pad" />
 
+      {/* --- Food pairing: suggestions + free text together --- */}
+      <SuggestionRow
+        title="Matförslag"
+        options={getSuggestedPairings(draft.type)}
+        selected={parseTags(draft.foodPairings)[0] || ""}
+        onSelect={(pairing) => onDraftChange({ foodPairings: mergeTagText(draft.foodPairings, pairing) })}
+      />
+      <LabeledInput
+        label="Passar till"
+        value={draft.foodPairings}
+        onChangeText={(value) => onDraftChange({ foodPairings: value })}
+        placeholder="lamm, ost, svamp, fisk"
+        editable={!isLockedByCatalog("food_pairings")}
+      />
+
+      {/* --- Storage --- */}
       {storageSpaces.length > 0 ? (
         <View style={styles.foodSection}>
           <Text style={styles.inputLabel}>Förvaringsplats</Text>
@@ -403,95 +500,8 @@ export function AddWinePanel({
         <Text style={styles.notesText}>Skapa en förvaringsplats nedan för att kunna välja rad och plats.</Text>
       )}
 
-      <SuggestionRow
-        title="Matförslag"
-        options={getSuggestedPairings(draft.type)}
-        selected={parseTags(draft.foodPairings)[0] || ""}
-        onSelect={(pairing) => onDraftChange({ foodPairings: mergeTagText(draft.foodPairings, pairing) })}
-      />
-
       <LabeledInput label="Fri platsnotering" value={draft.location} onChangeText={(value) => onDraftChange({ location: value })} placeholder="t.ex. längst bak, överst i kylen" />
-      <LabeledInput
-        label="Streckkod"
-        value={draft.barcode}
-        onChangeText={onBarcodeChange}
-        editable={!isLockedByCatalog("barcode")}
-      />
-      <Pressable onPress={onStartBarcodeScanner} style={styles.secondaryButton}>
-        <Text style={styles.secondaryButtonText}>Skanna streckkod</Text>
-      </Pressable>
-      <Text style={styles.authFootnote}>På mobilwebb fungerar kameraskanning bäst via https eller i den riktiga mobilappen.</Text>
-      <LabeledInput
-        label="Systembolaget artikelnummer"
-        value={draft.systembolagetProductId}
-        onChangeText={onArticleNumberChange}
-        placeholder="t.ex. 12345"
-        editable={!isLockedByCatalog("systembolaget_product_id")}
-      />
-
-      {lookupBusy ? <Text style={styles.notesText}>Söker produktmatch...</Text> : null}
-      {!lookupBusy && lookupMessage ? <Text style={styles.notesText}>{lookupMessage}</Text> : null}
-
-      {draft.systembolagetProductId ? (
-        <Pressable onPress={() => onOpenSystembolaget(draft.systembolagetProductId)} style={styles.secondaryButton}>
-          <Text style={styles.secondaryButtonText}>Öppna hos Systembolaget</Text>
-        </Pressable>
-      ) : null}
-
-      {catalogSuggestion ? (
-        <View style={styles.importSuggestionCard}>
-          <Text style={styles.inputLabel}>Importförslag</Text>
-          <Text style={styles.recommendationName}>{catalogSuggestion.name}</Text>
-          <Text style={styles.linkText}>{catalogSuggestion.sourceLabel}</Text>
-          <Text style={styles.notesText}>{[catalogSuggestion.producer, catalogSuggestion.country, catalogSuggestion.region].filter(Boolean).join(" • ")}</Text>
-          <View style={styles.importModeRow}>
-            <Pressable onPress={() => { onSetImportMode("all"); onApplyCatalogSuggestion("all"); }} style={[styles.quickImportButton, importMode === "all" && styles.quickImportButtonActive]}>
-              <Text style={[styles.quickImportText, importMode === "all" && styles.quickImportTextActive]}>Importera allt</Text>
-            </Pressable>
-            <Pressable onPress={() => { onSetImportMode("empty"); onApplyCatalogSuggestion("empty"); }} style={[styles.quickImportButton, importMode === "empty" && styles.quickImportButtonActive]}>
-              <Text style={[styles.quickImportText, importMode === "empty" && styles.quickImportTextActive]}>Bara tomma fält</Text>
-            </Pressable>
-            <Pressable onPress={() => onSetImportMode("custom")} style={[styles.quickImportButton, importMode === "custom" && styles.quickImportButtonActive]}>
-              <Text style={[styles.quickImportText, importMode === "custom" && styles.quickImportTextActive]}>Välj själv</Text>
-            </Pressable>
-          </View>
-          {importMode === "custom" ? (
-            <>
-              <ImportSelectionRow label="Namn" selected={importSelection.name} onToggle={() => onToggleImportField("name")} />
-              <ImportSelectionRow label="Producent" selected={importSelection.producer} onToggle={() => onToggleImportField("producer")} />
-              <ImportSelectionRow label="Land" selected={importSelection.country} onToggle={() => onToggleImportField("country")} />
-              <ImportSelectionRow label="Region" selected={importSelection.region} onToggle={() => onToggleImportField("region")} />
-              <ImportSelectionRow label="Årgång" selected={importSelection.vintage} onToggle={() => onToggleImportField("vintage")} />
-              <ImportSelectionRow label="Druva" selected={importSelection.grape} onToggle={() => onToggleImportField("grape")} />
-              <ImportSelectionRow label="Typ" selected={importSelection.type} onToggle={() => onToggleImportField("type")} />
-              <ImportSelectionRow label="Matmatchning" selected={importSelection.foodPairings} onToggle={() => onToggleImportField("foodPairings")} />
-              <ImportSelectionRow label="Artikelnummer" selected={importSelection.systembolagetProductId} onToggle={() => onToggleImportField("systembolagetProductId")} />
-              <ImportSelectionRow label="Streckkod" selected={importSelection.barcode} onToggle={() => onToggleImportField("barcode")} />
-              <Pressable onPress={() => onApplyCatalogSuggestion("custom")} style={styles.primaryButton}>
-                <Text style={styles.primaryButtonText}>Fyll i från förslag</Text>
-              </Pressable>
-            </>
-          ) : null}
-        </View>
-      ) : null}
-
-      {!catalogSuggestion && (draft.barcode.trim() || draft.systembolagetProductId.trim()) ? (
-        <View style={styles.importSuggestionCard}>
-          <Text style={styles.inputLabel}>Ingen träff ännu?</Text>
-          <Text style={styles.notesText}>
-            Fyll i resten av uppgifterna och spara som vanligt. Om posten är tillräckligt komplett läggs den automatiskt i katalogen också.
-          </Text>
-        </View>
-      ) : null}
-
       <LabeledInput label="Etiketter" value={draft.tags} onChangeText={(value) => onDraftChange({ tags: value })} placeholder="middag, present, lagring" />
-      <LabeledInput
-        label="Passar till"
-        value={draft.foodPairings}
-        onChangeText={(value) => onDraftChange({ foodPairings: value })}
-        placeholder="lamm, ost, svamp, fisk"
-        editable={!isLockedByCatalog("food_pairings")}
-      />
       <LabeledInput label="Anteckningar" value={draft.notes} onChangeText={(value) => onDraftChange({ notes: value })} multiline />
 
       <Pressable onPress={onChooseImage} style={styles.secondaryButton}>
