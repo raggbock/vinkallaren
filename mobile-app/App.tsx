@@ -2595,6 +2595,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
+  ratingBadge: {
+    alignSelf: "flex-start",
+  },
+  ratingBadgeText: {
+    fontSize: 18,
+    color: "#f4c38c",
+    letterSpacing: 2,
+  },
   quantityBadgeText: {
     color: "#6f1d1b",
     fontWeight: "700",

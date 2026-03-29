@@ -494,10 +494,6 @@ export function HistoryPanel({
         <Text style={styles.linkText}>{historyEntries.length} poster</Text>
       </View>
 
-      <Text style={styles.notesText}>
-        Här hamnar flaskor du har druckit upp. De försvinner alltså inte ur minnet bara för att lagersaldot går ner till noll.
-      </Text>
-
       {loadingHistory ? <LoadingInline label="Laddar historik..." /> : null}
 
       {!loadingHistory && historyEntries.length === 0 ? (
@@ -517,20 +513,19 @@ export function HistoryPanel({
                   .filter(Boolean)
                   .join(" • ")}
               </Text>
-              <Text style={styles.locationText}>
-                {getWineStoragePlacementLabel(entry, storageSpaceById) || entry.cellar_location || "Ingen plats sparad"}
-              </Text>
             </View>
-            <View style={styles.quantityBadge}>
-              <Text style={styles.quantityBadgeText}>{entry.rating ? `${entry.rating}/5` : "Ej betygsatt"}</Text>
-            </View>
+            {entry.rating ? (
+              <View style={styles.ratingBadge}>
+                <Text style={styles.ratingBadgeText}>{"★".repeat(entry.rating)}{"☆".repeat(5 - entry.rating)}</Text>
+              </View>
+            ) : null}
           </View>
 
           <Text style={styles.notesText}>
             Dracks {new Date(entry.consumed_at).toLocaleDateString("sv-SE")} • {entry.quantity_consumed} flaska
             {entry.quantity_consumed > 1 ? "r" : ""}
           </Text>
-          <Text style={styles.notesText}>{entry.tasting_notes || "Ingen smaknotering ännu."}</Text>
+          {entry.tasting_notes ? <Text style={styles.notesText}>{entry.tasting_notes}</Text> : null}
         </View>
       ))}
     </View>
