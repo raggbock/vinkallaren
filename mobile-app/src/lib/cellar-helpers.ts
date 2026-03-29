@@ -171,22 +171,23 @@ export function getSuggestedPairings(wineType: string) {
   const normalized = wineType.trim().toLowerCase();
 
   if (normalized.includes("vitt")) {
-    return ["fisk", "skaldjur", "sallad", "getost"];
+    return ["fisk", "skaldjur", "kyckling", "sallad", "getost", "ost", "pasta", "risotto", "soppa", "aperitif"];
   }
 
   if (normalized.includes("mousserande")) {
-    return ["aperitif", "skaldjur", "chips", "ost"];
+    return ["aperitif", "skaldjur", "fisk", "ost", "chips", "snacks", "sushi", "charkuterier", "frukt", "dessert"];
   }
 
   if (normalized.includes("ros")) {
-    return ["grillat", "sallad", "kyckling", "snacks"];
+    return ["grillat", "sallad", "kyckling", "fisk", "snacks", "pizza", "pasta", "charkuterier", "getost", "aperitif"];
   }
 
-  if (normalized.includes("dessert")) {
-    return ["dessert", "blåmögelost", "frukt"];
+  if (normalized.includes("dessert") || normalized.includes("sött")) {
+    return ["dessert", "blåmögelost", "frukt", "choklad", "ost", "foie gras", "nötter"];
   }
 
-  return ["lamm", "nöt", "svamp", "lagrad ost"];
+  // Rött (default)
+  return ["lamm", "nöt", "vilt", "grillat", "svamp", "lagrad ost", "pasta", "pizza", "charkuterier", "fläsk"];
 }
 
 export function parseTags(input: string) {

@@ -461,7 +461,7 @@ export function AddWinePanel({
       <SuggestionRow
         title="Matförslag"
         options={getSuggestedPairings(draft.type)}
-        selected={parseTags(draft.foodPairings)[0] || ""}
+        selected={parseTags(draft.foodPairings)}
         onSelect={(pairing) => onDraftChange({ foodPairings: mergeTagText(draft.foodPairings, pairing) })}
       />
       <LabeledInput

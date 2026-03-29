@@ -207,7 +207,7 @@ export function SuggestionRow({
 }: {
   title: string;
   options: string[];
-  selected?: string;
+  selected?: string | string[];
   onSelect: (value: string) => void;
   disabled?: boolean;
 }) {
@@ -216,7 +216,7 @@ export function SuggestionRow({
       <Text style={styles.inputLabel}>{title}</Text>
       <View style={styles.tagRow}>
         {options.map((option) => {
-          const isSelected = selected === option;
+          const isSelected = Array.isArray(selected) ? selected.includes(option) : selected === option;
 
           return (
             <Pressable
