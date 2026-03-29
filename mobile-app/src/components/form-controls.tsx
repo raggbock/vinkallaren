@@ -67,6 +67,10 @@ export function AutocompleteInput({
           haystack: option,
         }));
 
+    function wordStartsWithQuery(text: string) {
+      return text.split(/\s+/).some((word) => word.startsWith(query));
+    }
+
     return searchableOptions
       .filter((option) => normalizeLookupValue(option.haystack).includes(query))
       .sort((left, right) => {
@@ -78,7 +82,12 @@ export function AutocompleteInput({
         const rightNameStarts = rightName.startsWith(query) ? 0 : 1;
         if (leftNameStarts !== rightNameStarts) return leftNameStarts - rightNameStarts;
 
-        // Tier 2: haystack starts with query (catches alias/producer matches)
+        // Tier 2: any word in the name starts with query
+        const leftWordStarts = wordStartsWithQuery(leftName) ? 0 : 1;
+        const rightWordStarts = wordStartsWithQuery(rightName) ? 0 : 1;
+        if (leftWordStarts !== rightWordStarts) return leftWordStarts - rightWordStarts;
+
+        // Tier 3: haystack starts with query (catches alias/producer matches)
         const leftHaystackStarts = normalizeLookupValue(left.haystack).startsWith(query) ? 0 : 1;
         const rightHaystackStarts = normalizeLookupValue(right.haystack).startsWith(query) ? 0 : 1;
         if (leftHaystackStarts !== rightHaystackStarts) return leftHaystackStarts - rightHaystackStarts;
