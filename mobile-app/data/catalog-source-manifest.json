@@ -5,7 +5,8 @@
     "files": [
       "./data/wine-name-seeds.json",
       "./data/systembolaget-wine-name-batch.json",
-      "./data/systembolaget-wine-name-batch-2.json"
+      "./data/systembolaget-wine-name-batch-2.json",
+      "./data/catalog-sources/systembolaget-wine-batch.json"
     ]
   },
   {
@@ -28,6 +29,13 @@
     "priority": 4,
     "files": [
       "./data/catalog-sources/vildmedvin-wine-batch.json"
+    ]
+  },
+  {
+    "source": "Munskänkarna",
+    "priority": 5,
+    "files": [
+      "./data/catalog-sources/munskankarna-wine-batch.json"
     ]
   }
 ]

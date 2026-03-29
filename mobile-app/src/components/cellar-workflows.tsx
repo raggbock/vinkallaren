@@ -177,6 +177,52 @@ export function CatalogEditorModal({
   );
 }
 
+export function VintagePickerModal({
+  visible,
+  wineName,
+  vintages,
+  onSelectVintage,
+  onAddNew,
+  onClose,
+  styles,
+}: {
+  visible: boolean;
+  wineName: string;
+  vintages: { year: string; entry: ProductCatalogWineRow }[];
+  onSelectVintage: (entry: ProductCatalogWineRow) => void;
+  onAddNew: () => void;
+  onClose: () => void;
+  styles: SharedStyles;
+}) {
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <View style={{ backgroundColor: "#fff", borderRadius: 12, padding: 20, width: "80%", maxHeight: "60%" }}>
+          <Text style={{ fontSize: 18, fontWeight: "600", marginBottom: 12 }}>{wineName}</Text>
+          <Text style={{ fontSize: 14, color: "#666", marginBottom: 16 }}>Välj årtal:</Text>
+          <ScrollView>
+            {vintages.map(({ year, entry }) => (
+              <Pressable
+                key={entry.id}
+                onPress={() => onSelectVintage(entry)}
+                style={{ paddingVertical: 12, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: "#eee" }}
+              >
+                <Text style={{ fontSize: 16 }}>{year}</Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+          <Pressable
+            onPress={onAddNew}
+            style={{ marginTop: 12, paddingVertical: 12, alignItems: "center", backgroundColor: "#f0f0f0", borderRadius: 8 }}
+          >
+            <Text style={{ fontSize: 16, color: "#333" }}>Lägg till nytt</Text>
+          </Pressable>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
 export function AddWinePanel({
   styles,
   draft,

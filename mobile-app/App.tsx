@@ -42,7 +42,7 @@ import {
   StorageSpacesPanel,
   WineCollectionPanel,
 } from "./src/components/cellar-sections";
-import { AddWinePanel, BarcodeScannerModal, CatalogEditorModal, DrinkWineModal, EditWineModal } from "./src/components/cellar-workflows";
+import { AddWinePanel, BarcodeScannerModal, CatalogEditorModal, DrinkWineModal, EditWineModal, VintagePickerModal } from "./src/components/cellar-workflows";
 import { CELLAR_SECTIONS, type CellarSection } from "./src/types/cellar";
 import type { CatalogEditorDraft, ImportFieldSelection, ImportMode, StorageSpaceDraft, WineDraft } from "./src/types/cellar-drafts";
 import type { ProductCatalogWineRow } from "./src/types/product-catalog";
@@ -419,13 +419,27 @@ function CellarScreen({ session }: { session: Session }) {
   const [editWineDraft, setEditWineDraft] = useState<WineDraft | null>(null);
   const [savingWineEdit, setSavingWineEdit] = useState(false);
   const [selectedCatalogNameEntry, setSelectedCatalogNameEntry] = useState<ProductCatalogWineRow | null>(null);
+  const [vintagePickerVisible, setVintagePickerVisible] = useState(false);
+  const [vintagePickerWineName, setVintagePickerWineName] = useState("");
+  const [vintagePickerOptions, setVintagePickerOptions] = useState<{ year: string; entry: ProductCatalogWineRow }[]>([]);
 
   const stats = useMemo(() => buildStats(wines), [wines]);
   const grapeReferenceRows = useMemo(
     () => mergeReferenceRows(referenceOptions.filter((option) => option.category === "grape")),
     [referenceOptions]
   );
-  const catalogWineNameReferenceRows = useMemo(() => toWineNameReferenceRows(catalogNameEntries, "catalog-wine-name"), [catalogNameEntries]);
+  const catalogWineNameReferenceRows = useMemo(() => {
+    // Deduplicate: one reference row per unique wine name
+    const bestByName = new Map<string, ProductCatalogWineRow>();
+    for (const entry of catalogNameEntries) {
+      const key = normalizeLookupValue(entry.name);
+      const existing = bestByName.get(key);
+      if (!existing || scoreCatalogCompleteness(entry) > scoreCatalogCompleteness(existing)) {
+        bestByName.set(key, entry);
+      }
+    }
+    return toWineNameReferenceRows([...bestByName.values()], "catalog-wine-name");
+  }, [catalogNameEntries]);
   const wineNameReferenceRows = useMemo(
     () => mergeReferenceRows([...catalogWineNameReferenceRows]),
     [catalogWineNameReferenceRows]
@@ -442,6 +456,19 @@ function CellarScreen({ session }: { session: Session }) {
       }
     }
 
+    return map;
+  }, [catalogNameEntries]);
+  const catalogEntriesByName = useMemo(() => {
+    const map = new Map<string, ProductCatalogWineRow[]>();
+    for (const entry of catalogNameEntries) {
+      const key = normalizeLookupValue(entry.name);
+      const existing = map.get(key);
+      if (existing) {
+        existing.push(entry);
+      } else {
+        map.set(key, [entry]);
+      }
+    }
     return map;
   }, [catalogNameEntries]);
   const countryReferenceRows = useMemo(
@@ -499,27 +526,90 @@ function CellarScreen({ session }: { session: Session }) {
   }
 
   function handleWineNameSelected(name: string) {
-    const selectedEntry = catalogNameEntryByName.get(normalizeLookupValue(name)) ?? null;
-    setSelectedCatalogNameEntry(selectedEntry);
+    const entries = catalogEntriesByName.get(normalizeLookupValue(name)) ?? [];
 
-    if (!selectedEntry) {
+    if (entries.length === 0) {
+      setSelectedCatalogNameEntry(null);
       setDraft((current) => ({ ...current, name }));
       return;
     }
 
+    // Collect unique vintages
+    const vintageMap = new Map<string, ProductCatalogWineRow>();
+    for (const entry of entries) {
+      const year = entry.vintage ? String(entry.vintage) : "";
+      if (!vintageMap.has(year) || scoreCatalogCompleteness(entry) > scoreCatalogCompleteness(vintageMap.get(year)!)) {
+        vintageMap.set(year, entry);
+      }
+    }
+
+    const uniqueVintages = [...vintageMap.entries()]
+      .filter(([year]) => year !== "")
+      .map(([year, entry]) => ({ year, entry }))
+      .sort((a, b) => b.year.localeCompare(a.year));
+
+    if (uniqueVintages.length <= 1) {
+      // Single vintage or no vintage — auto-fill as before
+      const bestEntry = entries.reduce((best, e) =>
+        scoreCatalogCompleteness(e) > scoreCatalogCompleteness(best) ? e : best
+      );
+      applySelectedCatalogEntry(bestEntry);
+      return;
+    }
+
+    // Multiple vintages — show picker
+    setVintagePickerWineName(entries[0].name);
+    setVintagePickerOptions(uniqueVintages);
+    setVintagePickerVisible(true);
+    // Set the name in draft immediately so the user sees it
+    setDraft((current) => ({ ...current, name: entries[0].name }));
+  }
+
+  function applySelectedCatalogEntry(entry: ProductCatalogWineRow) {
+    setSelectedCatalogNameEntry(entry);
     setDraft((current) => ({
       ...current,
-      name: selectedEntry.name,
-      producer: selectedEntry.producer ?? "",
-      country: selectedEntry.country ?? "",
-      region: selectedEntry.region ?? "",
-      grape: selectedEntry.grape ?? "",
-      vintage: selectedEntry.vintage ? String(selectedEntry.vintage) : "",
-      type: selectedEntry.type ?? current.type,
-      barcode: selectedEntry.barcode ?? "",
-      systembolagetProductId: selectedEntry.systembolaget_product_id ?? "",
-      foodPairings: selectedEntry.food_pairings.join(", "),
+      name: entry.name,
+      producer: entry.producer ?? "",
+      country: entry.country ?? "",
+      region: entry.region ?? "",
+      grape: entry.grape ?? "",
+      vintage: entry.vintage ? String(entry.vintage) : "",
+      type: entry.type ?? current.type,
+      barcode: entry.barcode ?? "",
+      systembolagetProductId: entry.systembolaget_product_id ?? "",
+      foodPairings: entry.food_pairings.join(", "),
     }));
+  }
+
+  function handleVintageSelected(entry: ProductCatalogWineRow) {
+    setVintagePickerVisible(false);
+    applySelectedCatalogEntry(entry);
+  }
+
+  function handleVintageAddNew() {
+    setVintagePickerVisible(false);
+    // Fill from best entry but leave vintage empty
+    const entries = catalogEntriesByName.get(normalizeLookupValue(vintagePickerWineName)) ?? [];
+    if (entries.length > 0) {
+      const bestEntry = entries.reduce((best, e) =>
+        scoreCatalogCompleteness(e) > scoreCatalogCompleteness(best) ? e : best
+      );
+      setSelectedCatalogNameEntry(bestEntry);
+      setDraft((current) => ({
+        ...current,
+        name: bestEntry.name,
+        producer: bestEntry.producer ?? "",
+        country: bestEntry.country ?? "",
+        region: bestEntry.region ?? "",
+        grape: bestEntry.grape ?? "",
+        vintage: "",
+        type: bestEntry.type ?? current.type,
+        barcode: "",
+        systembolagetProductId: "",
+        foodPairings: bestEntry.food_pairings.join(", "),
+      }));
+    }
   }
 
   const filteredWines = useMemo(() => {
@@ -723,17 +813,26 @@ function CellarScreen({ session }: { session: Session }) {
   }
 
   async function fetchCatalogNameEntries() {
-    const { data, error } = await supabase
-      .from("product_catalog_wines")
-      .select("*")
-      .order("name", { ascending: true })
-      .limit(5000);
+    const allEntries: ProductCatalogWineRow[] = [];
+    let offset = 0;
+    const pageSize = 5000;
 
-    if (error) {
-      return;
+    while (true) {
+      const { data, error } = await supabase
+        .from("product_catalog_wines")
+        .select("*")
+        .order("name", { ascending: true })
+        .range(offset, offset + pageSize - 1);
+
+      if (error) return;
+
+      allEntries.push(...(data as ProductCatalogWineRow[]));
+
+      if (data.length < pageSize) break;
+      offset += pageSize;
     }
 
-    setCatalogNameEntries((data ?? []) as ProductCatalogWineRow[]);
+    setCatalogNameEntries(allEntries);
   }
 
   async function fetchReferenceOptions() {
@@ -1496,6 +1595,15 @@ function CellarScreen({ session }: { session: Session }) {
         styles={styles}
         onClose={() => setScannerVisible(false)}
         onBarcodeScanned={handleBarcodeScanned}
+      />
+      <VintagePickerModal
+        visible={vintagePickerVisible}
+        wineName={vintagePickerWineName}
+        vintages={vintagePickerOptions}
+        onSelectVintage={handleVintageSelected}
+        onAddNew={handleVintageAddNew}
+        onClose={() => setVintagePickerVisible(false)}
+        styles={styles}
       />
       <CatalogEditorModal
         visible={catalogEditorVisible}
