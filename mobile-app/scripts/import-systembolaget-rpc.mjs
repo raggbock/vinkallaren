@@ -66,6 +66,11 @@ const normalized = wines
     if (w.systembolagetProductId && existingIds.has(w.systembolagetProductId)) {
       return false;
     }
+    // Skip wines without producer or vintage — required by unique index
+    if (!w.name || !w.producer) return false;
+    const hasVintage = (w.vintage && /^\d{4}$/.test(String(w.vintage))) ||
+      (w.name && w.name.match(/\s+((?:18|19|20)\d{2})\s*$/));
+    if (!hasVintage) return false;
     return true;
   })
   .map((w) => {

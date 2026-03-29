@@ -15,14 +15,19 @@ const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.error("Missing EXPO_PUBLIC_SUPABASE_URL or EXPO_PUBLIC_SUPABASE_ANON_KEY in .env");
+  console.error(
+    "Missing EXPO_PUBLIC_SUPABASE_URL or EXPO_PUBLIC_SUPABASE_ANON_KEY in .env",
+  );
   process.exit(1);
 }
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-const [, , inputArg = "./data/catalog-sources/munskankarna-wine-batch.json"] =
-  process.argv;
+const [
+  ,
+  ,
+  inputArg = "./data/catalog-sources/vivino-wine-batch.json",
+] = process.argv;
 const inputPath = path.resolve(process.cwd(), inputArg);
 
 if (!fs.existsSync(inputPath)) {
@@ -45,39 +50,44 @@ function normalizeType(value) {
   return t;
 }
 
-const normalized = wines.filter((w) => {
-  // Skip wines without name, producer, or vintage — required by unique index
-  if (!w.name || !w.producer) return false;
-  const v = w.vintage && /^\d{4}$/.test(w.vintage) ? w.vintage : null;
-  if (!v) {
-    const yearMatch = w.name && w.name.match(/\s+((?:18|19|20)\d{2})\s*$/);
-    if (!yearMatch) return false;
-  }
-  return true;
-}).map((w) => {
-  let name = w.name;
-  let vintage = w.vintage && /^\d{4}$/.test(w.vintage) ? w.vintage : null;
+const normalized = wines
+  .filter((w) => {
+    // Skip wines without name, producer, or vintage — required by unique index
+    if (!w.name || !w.producer) return false;
+    if (!w.vintage || !/^\d{4}$/.test(String(w.vintage))) return false;
+    return true;
+  })
+  .map((w) => {
+    let name = w.name;
+    let vintage =
+      w.vintage && /^\d{4}$/.test(String(w.vintage))
+        ? String(w.vintage)
+        : null;
 
-  // Strip trailing year from name, populate vintage if missing
-  const yearMatch = name && name.match(/\s+((?:18|19|20)\d{2})\s*$/);
-  if (yearMatch) {
-    if (!vintage) vintage = yearMatch[1];
-    name = name.replace(/\s+(18|19|20)\d{2}\s*$/, '');
-  }
+    const yearMatch = name && name.match(/\s+((?:18|19|20)\d{2})\s*$/);
+    if (yearMatch) {
+      if (!vintage) vintage = yearMatch[1];
+      name = name.replace(/\s+(18|19|20)\d{2}\s*$/, "");
+    }
 
-  return {
-    name,
-    producer: w.producer || null,
-    country: w.country || null,
-    region: w.region || null,
-    type: normalizeType(w.type),
-    vintage,
-    grape: w.grape || null,
-    systembolagetProductId: w.systembolagetProductId || null,
-    sourceLabel: w.sourceLabel || "Munskänkarna",
-    sourceConfidence: "catalog",
-  };
-});
+    return {
+      name,
+      producer: w.producer || null,
+      country: w.country || null,
+      region: w.region || null,
+      type: normalizeType(w.type),
+      vintage,
+      grape: w.grape || null,
+      systembolagetProductId: null,
+      sourceLabel: w.sourceLabel || "Vivino",
+      sourceConfidence: "catalog",
+    };
+  });
+
+console.log(
+  `${wines.length - normalized.length} wines skipped (missing name/producer/vintage)`,
+);
+console.log(`${normalized.length} wines to import`);
 
 const BATCH_SIZE = 200;
 let totalImported = 0;
@@ -90,7 +100,10 @@ for (let i = 0; i < normalized.length; i += BATCH_SIZE) {
   });
 
   if (error) {
-    console.error(`Batch ${Math.floor(i / BATCH_SIZE) + 1} failed:`, error.message);
+    console.error(
+      `Batch ${Math.floor(i / BATCH_SIZE) + 1} failed:`,
+      error.message,
+    );
     continue;
   }
 

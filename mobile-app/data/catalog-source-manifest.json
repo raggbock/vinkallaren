@@ -37,5 +37,12 @@
     "files": [
       "./data/catalog-sources/munskankarna-wine-batch.json"
     ]
+  },
+  {
+    "source": "Vivino",
+    "priority": 6,
+    "files": [
+      "./data/catalog-sources/vivino-wine-batch.json"
+    ]
   }
 ]

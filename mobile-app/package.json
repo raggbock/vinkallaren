@@ -24,6 +24,8 @@
     "catalog:munskankarna:rpc": "node ./scripts/import-munskankarna-rpc.mjs ./data/catalog-sources/munskankarna-wine-batch.json",
     "catalog:systembolaget:fetch": "node ./scripts/fetch-systembolaget.mjs ./data/catalog-sources/systembolaget-wine-batch.json",
     "catalog:systembolaget:rpc": "node ./scripts/import-systembolaget-rpc.mjs ./data/catalog-sources/systembolaget-wine-batch.json",
+    "catalog:vivino:fetch": "node ./scripts/fetch-vivino-batch.mjs ./data/catalog-sources/vivino-wine-batch.json",
+    "catalog:vivino:rpc": "node ./scripts/import-vivino-rpc.mjs ./data/catalog-sources/vivino-wine-batch.json",
     "catalog:alko:sql": "node ./scripts/import-product-catalog-source-batches.mjs ./data/catalog-source-manifest.json --alko --sql",
     "catalog:alko:apply": "node ./scripts/import-product-catalog-source-batches.mjs ./data/catalog-source-manifest.json --alko --apply",
     "wine-names:seed:sql": "node ./scripts/import-reference-option-seeds.mjs ./data/wine-name-seeds.json wine_name --sql",
