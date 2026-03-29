@@ -1,10 +1,10 @@
 import "react-native-url-polyfill/auto";
 
 import * as ImagePicker from "expo-image-picker";
-import { CameraView, useCameraPermissions } from "expo-camera";
+import { useCameraPermissions } from "expo-camera";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Alert, Image, KeyboardAvoidingView, Linking, Modal, Platform, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Linking, Platform, Pressable, SafeAreaView, ScrollView } from "react-native";
 import type { Session } from "@supabase/supabase-js";
 
 import { supabase, supabaseConfigured } from "./src/lib/supabase";
@@ -12,7 +12,6 @@ import { cacheCatalogEntry, findCatalogMatch, type ProductCatalogEntry } from ".
 import { GRAPE_VARIETIES, WINE_COUNTRIES, WINE_REGIONS } from "./src/lib/reference-data";
 import {
   buildMealRecommendations,
-  buildNumericOptions,
   buildPairingOptions,
   buildStats,
   buildStorageSpaceBottleCounts,
@@ -20,17 +19,29 @@ import {
   buildValueOptions,
   buildVintageOptions,
   emptyToNull,
-  getSuggestedPairings,
   getWineStoragePlacementLabel,
-  mergeTagText,
   normalizeLookupValue,
   parseTags,
-  resolveImportedValue,
   toNumberOrNull,
 } from "./src/lib/cellar-helpers";
 import {
-  LabeledInput,
-} from "./src/components/form-controls";
+  applyCatalogLocksToDraft,
+  buildWineInsertFromDraft,
+  cacheWineDraftAsCatalogEntry,
+  cacheWineRecordAsCatalogEntry,
+  canBeSavedAsCatalogEntry,
+  getMissingCatalogFields,
+  hydrateWineHistoryRecords,
+  hydrateWineRecords,
+  mergeDraftWithCatalogSuggestion,
+  mergeReferenceRows,
+  scoreCatalogCompleteness,
+  syncCatalogEntryForEditedWine,
+  toCatalogEditorDraft,
+  toWineDraft,
+  toWineNameReferenceRows,
+  uploadWineImage,
+} from "./src/lib/wine-helpers";
 import {
   BottomTabBar,
   HistoryPanel,
@@ -39,76 +50,14 @@ import {
 } from "./src/components/cellar-sections";
 import { AddWinePanel, BarcodeScannerModal, CatalogEditorModal, DrinkWineModal, EditWineModal, VintagePickerModal } from "./src/components/cellar-workflows";
 import { CELLAR_SECTIONS, type CellarSection } from "./src/types/cellar";
-import type { CatalogEditorDraft, ImportFieldSelection, ImportMode, StorageSpaceDraft, WineDraft } from "./src/types/cellar-drafts";
+import type { ImportFieldSelection, ImportMode, StorageSpaceDraft, WineDraft } from "./src/types/cellar-drafts";
+import { defaultDraft, defaultImportSelection, defaultStorageSpaceDraft } from "./src/types/cellar-drafts";
 import type { ProductCatalogWineRow } from "./src/types/product-catalog";
-import type { ReferenceOptionRow } from "./src/types/reference-data";
 import type { StorageSpaceInsert, StorageSpaceRow } from "./src/types/storage-space";
-import type { WineHistoryInsert, WineHistoryRecord, WineHistoryRow } from "./src/types/wine-history";
+import type { WineHistoryInsert, WineHistoryRow } from "./src/types/wine-history";
 import type { WineInsert, WineRecord, WineRow } from "./src/types/wine";
-
-type AuthMode = "signin" | "signup";
-
-const defaultDraft: WineDraft = {
-  name: "",
-  producer: "",
-  country: "",
-  region: "",
-  grape: "",
-  vintage: "",
-  quantity: "1",
-  type: "Rött",
-  drinkBy: "",
-  acquiredAt: "",
-  location: "",
-  storageSpaceId: "",
-  storageRow: "1",
-  storageSlot: "1",
-  barcode: "",
-  systembolagetProductId: "",
-  tags: "",
-  foodPairings: "",
-  notes: "",
-  imageUri: "",
-};
-
-const defaultStorageSpaceDraft: StorageSpaceDraft = {
-  name: "",
-  spaceType: "kallare",
-  rowCount: "6",
-  slotsPerRow: "6",
-  notes: "",
-};
-
-const defaultImportSelection: ImportFieldSelection = {
-  name: true,
-  producer: true,
-  country: true,
-  region: true,
-  vintage: true,
-  grape: true,
-  type: true,
-  foodPairings: true,
-  systembolagetProductId: true,
-  barcode: true,
-};
-
-function toCatalogEditorDraft(entry: ProductCatalogWineRow): CatalogEditorDraft {
-  return {
-    id: entry.id,
-    barcode: entry.barcode ?? "",
-    systembolagetProductId: entry.systembolaget_product_id ?? "",
-    name: entry.name,
-    producer: entry.producer ?? "",
-    country: entry.country ?? "",
-    region: entry.region ?? "",
-    grape: entry.grape ?? "",
-    type: entry.type ?? "",
-    vintage: entry.vintage ? String(entry.vintage) : "",
-    foodPairings: entry.food_pairings.join(", "),
-    sourceLabel: entry.source_label ?? "",
-    sourceConfidence: entry.source_confidence ?? "high",
-  };
-}
+import { styles } from "./src/styles/theme";
+import { AuthScreen, LoadingScreen, SetupScreen } from "./src/screens/auth";
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -154,230 +103,17 @@ export default function App() {
   return <CellarScreen session={session} />;
 }
 
-function SetupScreen() {
-  return (
-    <SafeAreaView style={styles.screen}>
-      <StatusBar style="light" />
-      <View style={styles.heroPanel}>
-        <Text style={styles.eyebrow}>Mobilapp under uppbyggnad</Text>
-        <Text style={styles.heroTitle}>Koppla in Supabase för att börja.</Text>
-        <Text style={styles.heroText}>
-          Lägg in <Text style={styles.mono}>EXPO_PUBLIC_SUPABASE_URL</Text> och{" "}
-          <Text style={styles.mono}>EXPO_PUBLIC_SUPABASE_ANON_KEY</Text> i en lokal{" "}
-          <Text style={styles.mono}>.env</Text>-fil i appmappen. När de finns på plats får du inloggning, synkad databas
-          och lagring i molnet.
-        </Text>
-        <View style={styles.infoBox}>
-          <Text style={styles.infoLabel}>Appmapp</Text>
-          <Text style={styles.infoValue}>C:\Projects\vinkällaren\mobile-app</Text>
-        </View>
-      </View>
-    </SafeAreaView>
-  );
-}
-
-function LoadingScreen({ label }: { label: string }) {
-  return (
-    <SafeAreaView style={styles.screenCentered}>
-      <StatusBar style="light" />
-      <ActivityIndicator size="large" color="#f4c38c" />
-      <Text style={styles.loadingText}>{label}</Text>
-    </SafeAreaView>
-  );
-}
-
-function AuthScreen() {
-  const [mode, setMode] = useState<AuthMode>("signin");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [guestBusy, setGuestBusy] = useState(false);
-  const [signupNotice, setSignupNotice] = useState("");
-  const [awaitingVerification, setAwaitingVerification] = useState(false);
-
-  async function handleAuth() {
-    if (!email.trim() || !password.trim()) {
-      Alert.alert("Saknar uppgifter", "Fyll i både e-post och lösenord.");
-      return;
-    }
-
-    setBusy(true);
-    setSignupNotice("");
-
-    try {
-      if (mode === "signup") {
-        const { data, error } = await supabase.auth.signUp({
-          email: email.trim(),
-          password: password.trim(),
-        });
-
-        if (error) {
-          throw error;
-        }
-
-        const confirmationMessage =
-          "Kontot är skapat. Kolla din e-post och bekräfta adressen innan du loggar in.";
-
-        setSignupNotice(confirmationMessage);
-        setAwaitingVerification(!data.session);
-
-        Alert.alert(
-          "Konto skapat",
-          data.session
-            ? "Kontot skapades och du är nu inloggad."
-            : confirmationMessage
-        );
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
-          password: password.trim(),
-        });
-
-        if (error) {
-          throw error;
-        }
-      }
-    } catch (error) {
-      Alert.alert("Inloggning misslyckades", error instanceof Error ? error.message : "Försök igen.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function handleGuestSignIn() {
-    setGuestBusy(true);
-    setSignupNotice("");
-
-    try {
-      const { error } = await supabase.auth.signInAnonymously();
-
-      if (error) {
-        throw error;
-      }
-    } catch (error) {
-      Alert.alert(
-        "Gästläge gick inte att starta",
-        error instanceof Error
-          ? `${error.message} Aktivera Anonymous Sign-Ins i Supabase Authentication om du vill använda gästläge.`
-          : "Aktivera Anonymous Sign-Ins i Supabase Authentication om du vill använda gästläge."
-      );
-    } finally {
-      setGuestBusy(false);
-    }
-  }
-
-  if (awaitingVerification) {
-    return (
-      <SafeAreaView style={styles.screen}>
-        <StatusBar style="light" />
-        <View style={styles.scrollContent}>
-          <View style={styles.heroPanel}>
-            <Text style={styles.eyebrow}>Verifiera din e-post</Text>
-            <Text style={styles.heroTitle}>Ett steg kvar innan du kan logga in.</Text>
-            <Text style={styles.heroText}>
-              Vi har skickat ett bekräftelsemail till {email}. Öppna mailet och klicka på länken, kom sedan tillbaka och logga in.
-            </Text>
-          </View>
-
-          <View style={styles.panel}>
-            <Text style={styles.authNotice}>
-              Hittar du inget mail? Kolla skräppost eller försök registrera igen om adressen blev fel.
-            </Text>
-
-            <Pressable
-              onPress={() => {
-                setAwaitingVerification(false);
-                setMode("signin");
-              }}
-              style={styles.primaryButton}
-            >
-              <Text style={styles.primaryButtonText}>Jag har verifierat min mail</Text>
-            </Pressable>
-
-            <Pressable onPress={handleGuestSignIn} style={styles.secondaryButton} disabled={guestBusy}>
-              <Text style={styles.secondaryButtonText}>
-                {guestBusy ? "Startar gästläge..." : "Fortsätt som gäst i stället"}
-              </Text>
-            </Pressable>
-          </View>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  return (
-    <SafeAreaView style={styles.screen}>
-      <StatusBar style="light" />
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.flex}>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.heroPanel}>
-            <Text style={styles.eyebrow}>Vinkällaren</Text>
-            <Text style={styles.heroTitle}>En riktig mobilapp för din samling.</Text>
-            <Text style={styles.heroText}>
-              Logga in för att synka alla flaskor mellan enheter och bygga upp din källare i molnet.
-            </Text>
-          </View>
-
-          <View style={styles.panel}>
-            <View style={styles.segment}>
-              <Pressable
-                onPress={() => setMode("signin")}
-                style={[styles.segmentButton, mode === "signin" && styles.segmentButtonActive]}
-              >
-                <Text style={[styles.segmentText, mode === "signin" && styles.segmentTextActive]}>Logga in</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => setMode("signup")}
-                style={[styles.segmentButton, mode === "signup" && styles.segmentButtonActive]}
-              >
-                <Text style={[styles.segmentText, mode === "signup" && styles.segmentTextActive]}>Skapa konto</Text>
-              </Pressable>
-            </View>
-
-            <LabeledInput
-              label="E-post"
-              value={email}
-              onChangeText={setEmail}
-              autoCapitalize="none"
-              keyboardType="email-address"
-            />
-            <LabeledInput label="Lösenord" value={password} onChangeText={setPassword} secureTextEntry />
-
-            <Pressable onPress={handleAuth} style={styles.primaryButton} disabled={busy}>
-              <Text style={styles.primaryButtonText}>
-                {busy ? "Arbetar..." : mode === "signup" ? "Skapa konto" : "Logga in"}
-              </Text>
-            </Pressable>
-
-            {signupNotice ? <Text style={styles.authNotice}>{signupNotice}</Text> : null}
-
-            <Pressable onPress={handleGuestSignIn} style={styles.secondaryButton} disabled={guestBusy}>
-              <Text style={styles.secondaryButtonText}>
-                {guestBusy ? "Startar gästläge..." : "Fortsätt som gäst"}
-              </Text>
-            </Pressable>
-
-            <Text style={styles.authFootnote}>
-              Gästläge kräver att Anonymous Sign-Ins är aktiverat i ditt Supabase-projekt.
-            </Text>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
-  );
-}
-
 function CellarScreen({ session }: { session: Session }) {
   const [wines, setWines] = useState<WineRecord[]>([]);
-  const [historyEntries, setHistoryEntries] = useState<WineHistoryRecord[]>([]);
+  const [historyEntries, setHistoryEntries] = useState<import("./src/types/wine-history").WineHistoryRecord[]>([]);
   const [draft, setDraft] = useState<WineDraft>(defaultDraft);
   const [storageSpaceDraft, setStorageSpaceDraft] = useState<StorageSpaceDraft>(defaultStorageSpaceDraft);
   const [storageSpaces, setStorageSpaces] = useState<StorageSpaceRow[]>([]);
   const [catalogEntries, setCatalogEntries] = useState<ProductCatalogWineRow[]>([]);
   const [catalogNameEntries, setCatalogNameEntries] = useState<ProductCatalogWineRow[]>([]);
-  const [referenceOptions, setReferenceOptions] = useState<ReferenceOptionRow[]>([]);
+  const [referenceOptions, setReferenceOptions] = useState<import("./src/types/reference-data").ReferenceOptionRow[]>([]);
   const [catalogEditorVisible, setCatalogEditorVisible] = useState(false);
-  const [catalogEditorDraft, setCatalogEditorDraft] = useState<CatalogEditorDraft | null>(null);
+  const [catalogEditorDraft, setCatalogEditorDraft] = useState<import("./src/types/cellar-drafts").CatalogEditorDraft | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [loadingStorageSpaces, setLoadingStorageSpaces] = useState(true);
@@ -426,13 +162,14 @@ function CellarScreen({ session }: { session: Session }) {
   const [vintagePickerWineName, setVintagePickerWineName] = useState("");
   const [vintagePickerOptions, setVintagePickerOptions] = useState<{ year: string; entry: ProductCatalogWineRow }[]>([]);
 
+  // --- Derived data ---
+
   const stats = useMemo(() => buildStats(wines), [wines]);
   const grapeReferenceRows = useMemo(
     () => mergeReferenceRows(referenceOptions.filter((option) => option.category === "grape")),
     [referenceOptions]
   );
   const catalogWineNameReferenceRows = useMemo(() => {
-    // Deduplicate: one reference row per unique wine name
     const bestByName = new Map<string, ProductCatalogWineRow>();
     for (const entry of catalogNameEntries) {
       const key = normalizeLookupValue(entry.name);
@@ -513,6 +250,8 @@ function CellarScreen({ session }: { session: Session }) {
     [selectedMeal, wines]
   );
 
+  // --- Event handlers ---
+
   function goToSection(section: CellarSection) {
     setActiveSection(section);
   }
@@ -537,7 +276,6 @@ function CellarScreen({ session }: { session: Session }) {
       return;
     }
 
-    // Collect unique vintages
     const vintageMap = new Map<string, ProductCatalogWineRow>();
     for (const entry of entries) {
       const year = entry.vintage ? String(entry.vintage) : "";
@@ -552,7 +290,6 @@ function CellarScreen({ session }: { session: Session }) {
       .sort((a, b) => b.year.localeCompare(a.year));
 
     if (uniqueVintages.length <= 1) {
-      // Single vintage or no vintage — auto-fill as before
       const bestEntry = entries.reduce((best, e) =>
         scoreCatalogCompleteness(e) > scoreCatalogCompleteness(best) ? e : best
       );
@@ -560,11 +297,9 @@ function CellarScreen({ session }: { session: Session }) {
       return;
     }
 
-    // Multiple vintages — show picker
     setVintagePickerWineName(entries[0].name);
     setVintagePickerOptions(uniqueVintages);
     setVintagePickerVisible(true);
-    // Set the name in draft immediately so the user sees it
     setDraft((current) => ({ ...current, name: entries[0].name }));
   }
 
@@ -592,7 +327,6 @@ function CellarScreen({ session }: { session: Session }) {
 
   function handleVintageAddNew() {
     setVintagePickerVisible(false);
-    // Fill from best entry but leave vintage empty
     const entries = catalogEntriesByName.get(normalizeLookupValue(vintagePickerWineName)) ?? [];
     if (entries.length > 0) {
       const bestEntry = entries.reduce((best, e) =>
@@ -614,6 +348,8 @@ function CellarScreen({ session }: { session: Session }) {
       }));
     }
   }
+
+  // --- Filtering ---
 
   const filteredWines = useMemo(() => {
     return wines.filter((wine) => {
@@ -666,6 +402,8 @@ function CellarScreen({ session }: { session: Session }) {
     storageSpaceById,
     wines,
   ]);
+
+  // --- Effects ---
 
   useEffect(() => {
     void fetchWines();
@@ -740,6 +478,8 @@ function CellarScreen({ session }: { session: Session }) {
       setSelectedStorageSlot("1");
     }
   }, [selectedStorageRow, selectedStorageSlot, selectedStorageSpaceId, storageSpaces]);
+
+  // --- Data fetching ---
 
   async function fetchWines() {
     setLoading(true);
@@ -851,8 +591,10 @@ function CellarScreen({ session }: { session: Session }) {
       return;
     }
 
-    setReferenceOptions((data ?? []) as ReferenceOptionRow[]);
+    setReferenceOptions((data ?? []) as import("./src/types/reference-data").ReferenceOptionRow[]);
   }
+
+  // --- Catalog editor ---
 
   function openCatalogEditor(entry: ProductCatalogWineRow) {
     setCatalogEditorDraft(toCatalogEditorDraft(entry));
@@ -946,6 +688,8 @@ function CellarScreen({ session }: { session: Session }) {
       setSavingCatalogEdit(false);
     }
   }
+
+  // --- Save operations ---
 
   async function saveWine() {
     if (!draft.name.trim()) {
@@ -1119,6 +863,8 @@ function CellarScreen({ session }: { session: Session }) {
       setSavingStorageSpace(false);
     }
   }
+
+  // --- Modal operations ---
 
   function openDrinkModal(wine: WineRecord) {
     setSelectedDrinkWine(wine);
@@ -1331,6 +1077,8 @@ function CellarScreen({ session }: { session: Session }) {
     }
   }
 
+  // --- Image handling ---
+
   async function pickImageFromLibrary(): Promise<string | null> {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
@@ -1378,6 +1126,8 @@ function CellarScreen({ session }: { session: Session }) {
     if (uri) setDrinkImageUri(uri);
   }
 
+  // --- Catalog lookup ---
+
   async function maybeSuggestCatalogMatch(nextDraft: WineDraft) {
     const barcode = nextDraft.barcode.trim();
     const systembolagetProductId = nextDraft.systembolagetProductId.trim();
@@ -1395,6 +1145,7 @@ function CellarScreen({ session }: { session: Session }) {
         barcode,
         systembolagetProductId,
       });
+
       const normalizedMatch = match && !match.barcode && barcode ? { ...match, barcode } : match;
 
       setCatalogSuggestion(normalizedMatch);
@@ -1432,18 +1183,6 @@ function CellarScreen({ session }: { session: Session }) {
       [field]: !current[field],
     }));
     setImportMode("custom");
-  }
-
-  function shouldApplyField(field: keyof ImportFieldSelection, mode: ImportMode, currentValue: string) {
-    if (mode === "all") {
-      return true;
-    }
-
-    if (mode === "empty") {
-      return !currentValue.trim();
-    }
-
-    return importSelection[field];
   }
 
   async function startBarcodeScanner() {
@@ -1536,6 +1275,8 @@ function CellarScreen({ session }: { session: Session }) {
 
     await Linking.openURL(url);
   }
+
+  // --- Render ---
 
   let activePanel = (
     <MinKallarePanel
@@ -1755,1060 +1496,3 @@ function CellarScreen({ session }: { session: Session }) {
     </SafeAreaView>
   );
 }
-
-function toWineNameReferenceRows(
-  seeds: Array<{ name: string; producer?: string | null; country?: string | null; region?: string | null }>,
-  idPrefix: string
-): ReferenceOptionRow[] {
-  return seeds
-    .filter((seed) => Boolean(seed.name?.trim()))
-    .map((seed, index) => ({
-    id: `${idPrefix}-${index}`,
-    name: seed.name,
-    category: "wine_name" as const,
-    aliases: [seed.producer, seed.country, seed.region].filter((value): value is string => Boolean(value)),
-    parent_name: seed.producer ?? null,
-    sort_order: index,
-    created_at: "",
-    updated_at: "",
-  }));
-}
-
-async function hydrateWineRecords(rows: WineRow[]): Promise<WineRecord[]> {
-  const paths = rows.map((row) => row.image_path).filter((value): value is string => Boolean(value));
-  const signedUrlMap = new Map<string, string>();
-
-  if (paths.length > 0) {
-    const { data } = await supabase.storage.from("wine-images").createSignedUrls(paths, 60 * 60);
-
-    for (const entry of data ?? []) {
-      if (entry.path && entry.signedUrl) {
-        signedUrlMap.set(entry.path, entry.signedUrl);
-      }
-    }
-  }
-
-  return rows.map((row) => ({
-    ...row,
-    image_url: row.image_path ? signedUrlMap.get(row.image_path) ?? null : null,
-  }));
-}
-
-async function hydrateWineHistoryRecords(rows: WineHistoryRow[]): Promise<WineHistoryRecord[]> {
-  const paths = rows.map((row) => row.image_path).filter((value): value is string => Boolean(value));
-  const signedUrlMap = new Map<string, string>();
-
-  if (paths.length > 0) {
-    const { data } = await supabase.storage.from("wine-images").createSignedUrls(paths, 60 * 60);
-
-    for (const entry of data ?? []) {
-      if (entry.path && entry.signedUrl) {
-        signedUrlMap.set(entry.path, entry.signedUrl);
-      }
-    }
-  }
-
-  return rows.map((row) => ({
-    ...row,
-    image_url: row.image_path ? signedUrlMap.get(row.image_path) ?? null : null,
-  }));
-}
-
-async function uploadWineImage(userId: string, uri: string) {
-  const response = await fetch(uri);
-  const blob = await response.blob();
-  const extension = blob.type.split("/")[1] || "jpg";
-  const filePath = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${extension}`;
-
-  const { error } = await supabase.storage.from("wine-images").upload(filePath, blob, {
-    contentType: blob.type || "image/jpeg",
-    upsert: false,
-  });
-
-  if (error) {
-    throw error;
-  }
-
-  return filePath;
-}
-
-async function cacheWineDraftAsCatalogEntry(payload: WineInsert, userId: string) {
-  const barcode = payload.barcode?.trim();
-  const systembolagetProductId = payload.systembolaget_product_id?.trim();
-
-  if (!payload.name.trim()) {
-    return;
-  }
-
-  if (!canBeSavedAsCatalogEntry(payload)) {
-    return;
-  }
-
-  await cacheCatalogEntry(
-    {
-      barcode,
-      systembolagetProductId,
-      name: payload.name,
-      producer: payload.producer ?? undefined,
-      country: payload.country ?? undefined,
-      region: payload.region ?? undefined,
-      grape: payload.grape ?? undefined,
-      type: payload.type ?? undefined,
-      vintage: payload.vintage ?? undefined,
-      foodPairings: payload.food_pairings ?? [],
-      sourceLabel: "MinVinkällare",
-      sourceConfidence: "high",
-    },
-    userId
-  );
-}
-
-async function cacheWineRecordAsCatalogEntry(wine: WineRecord, userId: string) {
-  await cacheCatalogEntry(
-    {
-      barcode: wine.barcode?.trim() || undefined,
-      systembolagetProductId: wine.systembolaget_product_id?.trim() || undefined,
-      name: wine.name,
-      producer: wine.producer ?? undefined,
-      country: wine.country ?? undefined,
-      region: wine.region ?? undefined,
-      grape: wine.grape ?? undefined,
-      type: wine.type ?? undefined,
-      vintage: wine.vintage ?? undefined,
-      foodPairings: wine.food_pairings ?? [],
-      sourceLabel: "MinVinkällare",
-      sourceConfidence: "high",
-    },
-    userId
-  );
-}
-
-async function syncCatalogEntryForEditedWine(previousWine: WineRecord, nextWine: WineRow, userId: string) {
-  if (!canBeSavedAsCatalogEntry(nextWine)) {
-    return;
-  }
-
-  const nextPayload = {
-    name: nextWine.name.trim(),
-    producer: nextWine.producer ?? null,
-    country: nextWine.country ?? null,
-    region: nextWine.region ?? null,
-    grape: nextWine.grape ?? null,
-    type: nextWine.type ?? null,
-    vintage: nextWine.vintage ?? null,
-    food_pairings: nextWine.food_pairings ?? [],
-    source_label: "MinVinkällare",
-    source_confidence: "high",
-    barcode: nextWine.barcode?.trim() || null,
-    systembolaget_product_id: nextWine.systembolaget_product_id?.trim() || null,
-    created_by: userId,
-  };
-
-  const previousBarcode = previousWine.barcode?.trim();
-  const previousArticleNumber = previousWine.systembolaget_product_id?.trim();
-
-  let lookup = supabase.from("product_catalog_wines").select("id").limit(1);
-
-  if (previousBarcode) {
-    lookup = lookup.eq("barcode", previousBarcode);
-  } else if (previousArticleNumber) {
-    lookup = lookup.eq("systembolaget_product_id", previousArticleNumber);
-  } else {
-    lookup = lookup.eq("name", previousWine.name);
-    lookup = applyNullableCatalogFilter(lookup, "producer", previousWine.producer ?? null);
-    lookup = applyNullableCatalogFilter(lookup, "country", previousWine.country ?? null);
-    lookup = applyNullableCatalogFilter(lookup, "region", previousWine.region ?? null);
-    lookup = applyNullableCatalogFilter(lookup, "grape", previousWine.grape ?? null);
-    lookup = applyNullableCatalogFilter(lookup, "type", previousWine.type ?? null);
-    lookup = applyNullableCatalogFilter(lookup, "vintage", previousWine.vintage ?? null);
-  }
-
-  const { data, error } = await lookup.maybeSingle();
-
-  if (!error && data?.id) {
-    const { error: updateError } = await supabase.from("product_catalog_wines").update(nextPayload).eq("id", data.id);
-
-    if (!updateError) {
-      return;
-    }
-  }
-
-  await cacheCatalogEntry(
-    {
-      barcode: nextPayload.barcode || undefined,
-      systembolagetProductId: nextPayload.systembolaget_product_id || undefined,
-      name: nextPayload.name,
-      producer: nextPayload.producer || undefined,
-      country: nextPayload.country || undefined,
-      region: nextPayload.region || undefined,
-      grape: nextPayload.grape || undefined,
-      type: nextPayload.type || undefined,
-      vintage: nextPayload.vintage || undefined,
-      foodPairings: nextPayload.food_pairings,
-      sourceLabel: "MinVinkällare",
-      sourceConfidence: "high",
-    },
-    userId
-  );
-}
-
-function toWineDraft(wine: WineRecord): WineDraft {
-  return {
-    name: wine.name,
-    producer: wine.producer ?? "",
-    country: wine.country ?? "",
-    region: wine.region ?? "",
-    grape: wine.grape ?? "",
-    vintage: wine.vintage ? String(wine.vintage) : "",
-    quantity: String(wine.quantity),
-    type: wine.type || "Rött",
-    drinkBy: wine.drink_by_year ? String(wine.drink_by_year) : "",
-    acquiredAt: wine.acquired_at ?? "",
-    location: wine.cellar_location ?? "",
-    storageSpaceId: wine.storage_space_id ?? "",
-    storageRow: wine.storage_row ? String(wine.storage_row) : "1",
-    storageSlot: wine.storage_slot ? String(wine.storage_slot) : "1",
-    barcode: wine.barcode ?? "",
-    systembolagetProductId: wine.systembolaget_product_id ?? "",
-    tags: wine.tags.join(", "),
-    foodPairings: wine.food_pairings.join(", "),
-    notes: wine.notes ?? "",
-    imageUri: wine.image_url ?? "",
-  };
-}
-
-function buildWineInsertFromDraft(
-  draft: WineDraft,
-  storageSpaceId: string,
-  storageRow: string,
-  storageSlot: string,
-  imagePath: string | null
-): Omit<WineInsert, "user_id"> {
-  return {
-    name: draft.name.trim(),
-    producer: emptyToNull(draft.producer),
-    country: emptyToNull(draft.country),
-    region: emptyToNull(draft.region),
-    grape: emptyToNull(draft.grape),
-    vintage: toNumberOrNull(draft.vintage),
-    quantity: Math.max(1, Number(draft.quantity) || 1),
-    type: draft.type.trim() || "Rött",
-    drink_by_year: toNumberOrNull(draft.drinkBy),
-    acquired_at: emptyToNull(draft.acquiredAt),
-    cellar_location: emptyToNull(draft.location),
-    storage_space_id: emptyToNull(storageSpaceId),
-    storage_row: storageSpaceId ? toNumberOrNull(storageRow) : null,
-    storage_slot: storageSpaceId ? toNumberOrNull(storageSlot) : null,
-    barcode: emptyToNull(draft.barcode),
-    systembolaget_product_id: emptyToNull(draft.systembolagetProductId),
-    tags: parseTags(draft.tags),
-    food_pairings: parseTags(draft.foodPairings),
-    pairing_source: "manual",
-    notes: emptyToNull(draft.notes),
-    image_path: imagePath,
-  };
-}
-
-function applyCatalogLocksToDraft(
-  current: WineDraft,
-  patch: Partial<WineDraft>,
-  selectedCatalogEntry: ProductCatalogWineRow | null
-) {
-  if (!selectedCatalogEntry) {
-    return { ...current, ...patch };
-  }
-
-  const nextDraft = { ...current, ...patch };
-
-  if (selectedCatalogEntry.name) {
-    nextDraft.name = selectedCatalogEntry.name;
-  }
-
-  if (selectedCatalogEntry.producer) {
-    nextDraft.producer = selectedCatalogEntry.producer;
-  }
-
-  if (selectedCatalogEntry.country) {
-    nextDraft.country = selectedCatalogEntry.country;
-  }
-
-  if (selectedCatalogEntry.region) {
-    nextDraft.region = selectedCatalogEntry.region;
-  }
-
-  if (selectedCatalogEntry.grape) {
-    nextDraft.grape = selectedCatalogEntry.grape;
-  }
-
-  if (selectedCatalogEntry.vintage) {
-    nextDraft.vintage = String(selectedCatalogEntry.vintage);
-  }
-
-  if (selectedCatalogEntry.type) {
-    nextDraft.type = selectedCatalogEntry.type;
-  }
-
-  if (selectedCatalogEntry.barcode) {
-    nextDraft.barcode = selectedCatalogEntry.barcode;
-  }
-
-  if (selectedCatalogEntry.systembolaget_product_id) {
-    nextDraft.systembolagetProductId = selectedCatalogEntry.systembolaget_product_id;
-  }
-
-  if (selectedCatalogEntry.food_pairings.length > 0) {
-    nextDraft.foodPairings = selectedCatalogEntry.food_pairings.join(", ");
-  }
-
-  return nextDraft;
-}
-
-function scoreCatalogCompleteness(entry: ProductCatalogWineRow) {
-  return [
-    entry.name,
-    entry.producer,
-    entry.country,
-    entry.region,
-    entry.grape,
-    entry.type,
-    entry.vintage,
-    entry.barcode,
-    entry.systembolaget_product_id,
-    entry.food_pairings.length > 0 ? "pairings" : null,
-  ].filter(Boolean).length;
-}
-
-function applyNullableCatalogFilter<
-  TQuery extends { eq: (column: string, value: any) => TQuery; is: (column: string, value: null) => TQuery }
->(query: TQuery, column: string, value: string | number | null) {
-  if (value === null) {
-    return query.is(column, null);
-  }
-
-  return query.eq(column, value);
-}
-
-function getMissingCatalogFields(source: Pick<WineDraft, "producer" | "country" | "region" | "grape" | "type">) {
-  const missing: string[] = [];
-
-  if (!source.producer.trim()) {
-    missing.push("producent");
-  }
-
-  if (!source.country.trim()) {
-    missing.push("land");
-  }
-
-  if (!source.region.trim()) {
-    missing.push("region");
-  }
-
-  if (!source.grape.trim()) {
-    missing.push("druva");
-  }
-
-  if (!source.type.trim()) {
-    missing.push("vintyp");
-  }
-
-  return missing;
-}
-
-function canBeSavedAsCatalogEntry(payload: WineInsert) {
-  return Boolean(
-    payload.name.trim() &&
-      payload.producer?.trim() &&
-      payload.country?.trim() &&
-      payload.region?.trim() &&
-      payload.grape?.trim() &&
-      payload.type?.trim()
-  );
-}
-
-function mergeDraftWithCatalogSuggestion(
-  current: WineDraft,
-  suggestion: ProductCatalogEntry,
-  mode: ImportMode,
-  selection: ImportFieldSelection
-) {
-  const shouldApply = (field: keyof ImportFieldSelection, currentValue: string) => {
-    if (mode === "all") {
-      return true;
-    }
-
-    if (mode === "empty") {
-      return !currentValue.trim();
-    }
-
-    return selection[field];
-  };
-
-  return {
-    ...current,
-    name: resolveImportedValue(current.name, suggestion.name, shouldApply("name", current.name)),
-    producer: resolveImportedValue(current.producer, suggestion.producer || "", shouldApply("producer", current.producer)),
-    country: resolveImportedValue(current.country, suggestion.country || "", shouldApply("country", current.country)),
-    region: resolveImportedValue(current.region, suggestion.region || "", shouldApply("region", current.region)),
-    vintage: resolveImportedValue(
-      current.vintage,
-      suggestion.vintage ? String(suggestion.vintage) : "",
-      shouldApply("vintage", current.vintage)
-    ),
-    grape: resolveImportedValue(current.grape, suggestion.grape || "", shouldApply("grape", current.grape)),
-    type: resolveImportedValue(current.type, suggestion.type || "Rött", shouldApply("type", current.type)),
-    foodPairings: resolveImportedValue(
-      current.foodPairings,
-      (suggestion.foodPairings ?? []).join(", "),
-      shouldApply("foodPairings", current.foodPairings)
-    ),
-    systembolagetProductId: resolveImportedValue(
-      current.systembolagetProductId,
-      suggestion.systembolagetProductId || "",
-      shouldApply("systembolagetProductId", current.systembolagetProductId)
-    ),
-    barcode: resolveImportedValue(current.barcode, suggestion.barcode || "", shouldApply("barcode", current.barcode)),
-  };
-}
-
-const COUNTRY_NAME_OVERRIDES: Record<string, string> = {
-  argentina: "Argentina",
-  australia: "Australien",
-  austria: "Österrike",
-  chile: "Chile",
-  england: "England",
-  france: "Frankrike",
-  frankrike: "Frankrike",
-  germany: "Tyskland",
-  greece: "Grekland",
-  hungary: "Ungern",
-  italy: "Italien",
-  italien: "Italien",
-  "new zealand": "Nya Zeeland",
-  portugal: "Portugal",
-  "south africa": "Sydafrika",
-  spain: "Spanien",
-  sweden: "Sverige",
-  usa: "USA",
-  "united states": "USA",
-};
-
-function mergeReferenceRows(rows: ReferenceOptionRow[]) {
-  const merged = new Map<string, ReferenceOptionRow>();
-
-  for (const row of rows) {
-    const displayName =
-      row.category === "country" ? COUNTRY_NAME_OVERRIDES[normalizeLookupValue(row.name)] ?? row.name : row.name;
-    const key = normalizeLookupValue(displayName);
-    const existing = merged.get(key);
-
-    if (!existing) {
-      merged.set(key, {
-        ...row,
-        name: displayName,
-        aliases: [...new Set([row.name, ...(row.aliases ?? [])].filter(Boolean))],
-      });
-      continue;
-    }
-
-    merged.set(key, {
-      ...existing,
-      aliases: [...new Set([existing.name, row.name, ...(existing.aliases ?? []), ...(row.aliases ?? [])].filter(Boolean))],
-      sort_order: Math.min(existing.sort_order, row.sort_order),
-      parent_name: existing.parent_name ?? row.parent_name,
-    });
-  }
-
-  return [...merged.values()].sort((left, right) => {
-    if (left.sort_order !== right.sort_order) {
-      return left.sort_order - right.sort_order;
-    }
-
-    return left.name.localeCompare(right.name, "sv");
-  });
-}
-
-const styles = StyleSheet.create({
-  flex: {
-    flex: 1,
-  },
-  screen: {
-    flex: 1,
-    backgroundColor: "#2b1714",
-  },
-  screenCentered: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#2b1714",
-    gap: 12,
-  },
-  scannerScreen: {
-    flex: 1,
-    backgroundColor: "#2b1714",
-    padding: 18,
-    gap: 18,
-  },
-  catalogEditorContent: {
-    gap: 14,
-    paddingBottom: 24,
-  },
-  scannerHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    gap: 12,
-  },
-  scannerTitle: {
-    color: "#fff6ee",
-    fontSize: 28,
-    lineHeight: 30,
-    fontWeight: "700",
-  },
-  scannerFrame: {
-    overflow: "hidden",
-    borderRadius: 28,
-    backgroundColor: "#120907",
-    minHeight: 420,
-  },
-  camera: {
-    flex: 1,
-    minHeight: 420,
-  },
-  scannerHint: {
-    color: "#ead8ca",
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  modalActionRow: {
-    flexDirection: "row",
-    gap: 12,
-    marginTop: 4,
-  },
-  scrollContent: {
-    padding: 18,
-    gap: 18,
-  },
-  heroPanel: {
-    backgroundColor: "#5c1d1b",
-    borderRadius: 28,
-    padding: 22,
-    gap: 12,
-  },
-  eyebrow: {
-    color: "#f4c38c",
-    letterSpacing: 2,
-    fontSize: 12,
-    fontWeight: "700",
-    textTransform: "uppercase",
-  },
-  heroTitle: {
-    color: "#fff6ee",
-    fontSize: 34,
-    lineHeight: 36,
-    fontWeight: "700",
-  },
-  heroText: {
-    color: "#ead8ca",
-    fontSize: 15,
-    lineHeight: 23,
-  },
-  mono: {
-    fontFamily: Platform.select({ ios: "Menlo", android: "monospace", default: "monospace" }),
-    color: "#fff6ee",
-  },
-  infoBox: {
-    marginTop: 6,
-    padding: 14,
-    borderRadius: 18,
-    backgroundColor: "rgba(255,255,255,0.12)",
-    gap: 6,
-  },
-  infoLabel: {
-    color: "#f4c38c",
-    fontSize: 12,
-    fontWeight: "700",
-    textTransform: "uppercase",
-  },
-  infoValue: {
-    color: "#fff6ee",
-    fontSize: 14,
-  },
-  loadingText: {
-    color: "#fff6ee",
-    fontSize: 16,
-  },
-  panel: {
-    backgroundColor: "#f8f1e8",
-    borderRadius: 24,
-    padding: 16,
-    gap: 14,
-  },
-  segment: {
-    flexDirection: "row",
-    backgroundColor: "#ead8ca",
-    borderRadius: 999,
-    padding: 4,
-  },
-  segmentButton: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 999,
-    alignItems: "center",
-  },
-  segmentButtonActive: {
-    backgroundColor: "#6f1d1b",
-  },
-  segmentText: {
-    color: "#6f6259",
-    fontWeight: "700",
-  },
-  segmentTextActive: {
-    color: "#fffaf5",
-  },
-  scrollFlex: {
-    flex: 1,
-  },
-  bottomTabBar: {
-    flexDirection: "row",
-    backgroundColor: "#f8f1e8",
-    borderTopWidth: 1,
-    borderTopColor: "#e6d7c8",
-    paddingBottom: Platform.OS === "ios" ? 20 : 8,
-    paddingTop: 8,
-  },
-  bottomTab: {
-    flex: 1,
-    alignItems: "center",
-    gap: 2,
-  },
-  bottomTabIcon: {
-    fontSize: 20,
-    color: "#a0928a",
-  },
-  bottomTabIconActive: {
-    color: "#6f1d1b",
-  },
-  bottomTabLabel: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: "#a0928a",
-  },
-  bottomTabLabelActive: {
-    color: "#6f1d1b",
-  },
-  statsSummaryBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#ead8ca",
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-  },
-  statsSummaryText: {
-    color: "#6f1d1b",
-    fontWeight: "600",
-    fontSize: 14,
-  },
-  statsSummaryToggle: {
-    color: "#6f1d1b",
-    fontSize: 12,
-  },
-  statsGrid: {
-    gap: 8,
-  },
-  statsGridRow: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  storageCard: {
-    backgroundColor: "#ead8ca",
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-  },
-  storageCardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  storageCardRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  inputGroup: {
-    gap: 6,
-    flex: 1,
-  },
-  inputLabel: {
-    color: "#6f6259",
-    fontSize: 12,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.6,
-  },
-  input: {
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 13,
-    backgroundColor: "#fffaf5",
-    color: "#231815",
-    fontSize: 15,
-    borderWidth: 1,
-    borderColor: "#e6d7c8",
-  },
-  autocompleteList: {
-    marginTop: 6,
-    borderRadius: 16,
-    backgroundColor: "#fffaf5",
-    borderWidth: 1,
-    borderColor: "#e6d7c8",
-    overflow: "hidden",
-  },
-  autocompleteItem: {
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: "#f2e7db",
-  },
-  autocompleteText: {
-    color: "#231815",
-    fontSize: 15,
-  },
-  textarea: {
-    minHeight: 96,
-    textAlignVertical: "top",
-  },
-  primaryButton: {
-    backgroundColor: "#6f1d1b",
-    borderRadius: 999,
-    paddingVertical: 14,
-    alignItems: "center",
-  },
-  primaryButtonText: {
-    color: "#fffaf5",
-    fontWeight: "700",
-    fontSize: 15,
-  },
-  imageButtonRow: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  secondaryButton: {
-    backgroundColor: "#ead8ca",
-    borderRadius: 999,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    alignItems: "center",
-    flex: 1,
-  },
-  secondaryButtonText: {
-    color: "#6f1d1b",
-    fontWeight: "700",
-  },
-  authNotice: {
-    color: "#6f1d1b",
-    lineHeight: 21,
-  },
-  authFootnote: {
-    color: "#6f6259",
-    lineHeight: 21,
-    fontSize: 13,
-  },
-  inlineLinkButton: {
-    alignSelf: "flex-start",
-  },
-  panelHeaderRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  panelTitle: {
-    color: "#231815",
-    fontSize: 24,
-    fontWeight: "700",
-  },
-  linkText: {
-    color: "#6f1d1b",
-    fontWeight: "700",
-  },
-  metricsRow: {
-    flexDirection: "row",
-    gap: 10,
-  },
-  metricCard: {
-    flex: 1,
-    backgroundColor: "rgba(255,255,255,0.12)",
-    borderRadius: 18,
-    padding: 12,
-    gap: 4,
-  },
-  metricValue: {
-    color: "#fffaf5",
-    fontSize: 22,
-    fontWeight: "700",
-  },
-  metricLabel: {
-    color: "#ead8ca",
-    fontSize: 12,
-  },
-  insightCard: {
-    borderRadius: 18,
-    backgroundColor: "#fffaf5",
-    padding: 14,
-    gap: 6,
-  },
-  importSuggestionCard: {
-    borderRadius: 18,
-    backgroundColor: "#fff6e7",
-    padding: 14,
-    gap: 8,
-    borderWidth: 1,
-    borderColor: "#f4c38c",
-  },
-  importModeRow: {
-    gap: 8,
-  },
-  quickImportButton: {
-    backgroundColor: "#fffaf5",
-    borderRadius: 14,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: "#ead8ca",
-  },
-  quickImportButtonActive: {
-    backgroundColor: "#6f1d1b",
-    borderColor: "#6f1d1b",
-  },
-  quickImportText: {
-    color: "#6f1d1b",
-    fontWeight: "700",
-    textAlign: "center",
-  },
-  quickImportTextActive: {
-    color: "#fffaf5",
-  },
-  importOptionRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 14,
-    backgroundColor: "#fffaf5",
-  },
-  importOptionRowActive: {
-    backgroundColor: "#f4c38c",
-  },
-  importOptionText: {
-    color: "#231815",
-    fontWeight: "600",
-  },
-  importOptionState: {
-    color: "#6f6259",
-    fontWeight: "700",
-  },
-  importOptionTextActive: {
-    color: "#5c1d1b",
-  },
-  insightValue: {
-    color: "#231815",
-    fontSize: 18,
-    fontWeight: "700",
-  },
-  recommendationCard: {
-    borderRadius: 18,
-    backgroundColor: "#fffaf5",
-    padding: 14,
-    gap: 10,
-  },
-  storageSpaceCard: {
-    borderRadius: 18,
-    backgroundColor: "#fffaf5",
-    padding: 14,
-    gap: 10,
-    borderWidth: 1,
-    borderColor: "#ead8ca",
-  },
-  recommendationHeader: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  storageSpaceHeader: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  recommendationName: {
-    color: "#231815",
-    fontSize: 20,
-    fontWeight: "700",
-    marginTop: 2,
-  },
-  doubleRow: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  wineCard: {
-    borderTopWidth: 1,
-    borderTopColor: "#ead8ca",
-    paddingTop: 16,
-    gap: 12,
-  },
-  wineCardHighlighted: {
-    backgroundColor: "#fff3e0",
-    borderRadius: 16,
-    padding: 12,
-    borderWidth: 2,
-    borderColor: "#f4c38c",
-  },
-  wineImage: {
-    width: "100%",
-    aspectRatio: 16 / 10,
-    borderRadius: 20,
-    backgroundColor: "#ead8ca",
-  },
-  wineCardHeader: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  wineType: {
-    color: "#6f1d1b",
-    fontSize: 11,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 1.2,
-  },
-  wineName: {
-    color: "#231815",
-    fontSize: 24,
-    fontWeight: "700",
-    marginTop: 2,
-  },
-  wineMeta: {
-    color: "#6f6259",
-    marginTop: 4,
-  },
-  locationText: {
-    color: "#6f1d1b",
-    marginTop: 6,
-    fontWeight: "600",
-  },
-  quantityBadge: {
-    backgroundColor: "#ead8ca",
-    alignSelf: "flex-start",
-    borderRadius: 18,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  ratingBadge: {
-    alignSelf: "flex-start",
-  },
-  ratingBadgeText: {
-    fontSize: 18,
-    color: "#f4c38c",
-    letterSpacing: 2,
-  },
-  quantityBadgeText: {
-    color: "#6f1d1b",
-    fontWeight: "700",
-  },
-  tagRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  foodSection: {
-    gap: 8,
-  },
-  tagPill: {
-    backgroundColor: "#ead8ca",
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  tagText: {
-    color: "#6f1d1b",
-    fontWeight: "700",
-    fontSize: 12,
-  },
-  foodPill: {
-    backgroundColor: "#f4c38c",
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  foodPillActive: {
-    backgroundColor: "#6f1d1b",
-  },
-  foodText: {
-    color: "#5c1d1b",
-    fontWeight: "700",
-    fontSize: 12,
-  },
-  foodTextActive: {
-    color: "#fffaf5",
-  },
-  foodCategoryGroup: {
-    gap: 6,
-  },
-  foodCategoryLabel: {
-    color: "#6f6259",
-    fontSize: 11,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.6,
-  },
-  mealSelectedLabel: {
-    color: "#6f1d1b",
-    fontWeight: "700",
-    fontSize: 14,
-    backgroundColor: "#f4c38c",
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    overflow: "hidden",
-  },
-  suggestionPill: {
-    backgroundColor: "#fffaf5",
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: "#e6d7c8",
-  },
-  suggestionPillActive: {
-    backgroundColor: "#6f1d1b",
-    borderColor: "#6f1d1b",
-  },
-  suggestionText: {
-    color: "#6f1d1b",
-    fontWeight: "700",
-    fontSize: 12,
-  },
-  suggestionTextActive: {
-    color: "#fffaf5",
-  },
-  notesText: {
-    color: "#6f6259",
-    lineHeight: 21,
-  },
-  actionRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  dangerText: {
-    color: "#9c3d31",
-    fontWeight: "700",
-  },
-  emptyState: {
-    color: "#6f6259",
-    lineHeight: 21,
-  },
-  loadingInline: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-});
