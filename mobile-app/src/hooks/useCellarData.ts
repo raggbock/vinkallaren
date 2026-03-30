@@ -19,9 +19,8 @@ import {
   hydrateWineHistoryRecords,
   hydrateWineRecords,
   mergeReferenceRows,
-  scoreCatalogCompleteness,
-  toWineNameReferenceRows,
 } from "../lib/wine-helpers";
+import type { Suggestion } from "../components/form-controls";
 import type { StorageSpaceDraft } from "../types/cellar-drafts";
 import { defaultStorageSpaceDraft } from "../types/cellar-drafts";
 import type { ProductCatalogWineRow } from "../types/product-catalog";
@@ -35,7 +34,6 @@ export function useCellarData(userId: string) {
   const [historyEntries, setHistoryEntries] = useState<WineHistoryRecord[]>([]);
   const [storageSpaces, setStorageSpaces] = useState<StorageSpaceRow[]>([]);
   const [catalogEntries, setCatalogEntries] = useState<ProductCatalogWineRow[]>([]);
-  const [catalogNameEntries, setCatalogNameEntries] = useState<ProductCatalogWineRow[]>([]);
   const [referenceOptions, setReferenceOptions] = useState<ReferenceOptionRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingHistory, setLoadingHistory] = useState(true);
@@ -95,21 +93,40 @@ export function useCellarData(userId: string) {
     setLoadingCatalogEntries(false);
   }
 
-  async function fetchCatalogNameEntries() {
-    const allEntries: ProductCatalogWineRow[] = [];
-    let offset = 0;
-    const pageSize = 1000;
-    while (true) {
-      const { data, error } = await supabase.from("product_catalog_wines").select("*").order("name", { ascending: true }).range(offset, offset + pageSize - 1);
-      if (error) {
-        Alert.alert("Kunde inte hämta katalognamn", error.message);
-        return;
-      }
-      allEntries.push(...(data as ProductCatalogWineRow[]));
-      if (data.length < pageSize) break;
-      offset += pageSize;
+  async function searchCatalogWineNames(query: string): Promise<Suggestion[]> {
+    const { data, error } = await supabase
+      .from("product_catalog_wines")
+      .select("name, producer")
+      .ilike("name", `%${query}%`)
+      .order("name", { ascending: true })
+      .limit(200);
+    if (error) return [];
+    const seen = new Set<string>();
+    const results: Suggestion[] = [];
+    for (const row of data ?? []) {
+      const key = normalizeLookupValue(row.name) + "|" + normalizeLookupValue(row.producer ?? "");
+      if (seen.has(key)) continue;
+      seen.add(key);
+      results.push({ name: row.name, parentName: row.producer ?? null });
     }
-    setCatalogNameEntries(allEntries);
+    // Sort: name starts with query first, then alphabetical
+    results.sort((a, b) => {
+      const aStarts = normalizeLookupValue(a.name).startsWith(query) ? 0 : 1;
+      const bStarts = normalizeLookupValue(b.name).startsWith(query) ? 0 : 1;
+      if (aStarts !== bStarts) return aStarts - bStarts;
+      return a.name.localeCompare(b.name);
+    });
+    return results.slice(0, 20);
+  }
+
+  async function fetchCatalogEntriesByName(name: string): Promise<ProductCatalogWineRow[]> {
+    const { data, error } = await supabase
+      .from("product_catalog_wines")
+      .select("*")
+      .ilike("name", name)
+      .order("updated_at", { ascending: false });
+    if (error) return [];
+    return (data ?? []) as ProductCatalogWineRow[];
   }
 
   async function fetchReferenceOptions() {
@@ -194,14 +211,13 @@ export function useCellarData(userId: string) {
     void fetchHistoryEntries();
     void fetchStorageSpaces();
     void fetchCatalogEntries();
-    void fetchCatalogNameEntries();
     void fetchReferenceOptions();
   }, []);
 
   // --- Catalog backfill ---
 
   useEffect(() => {
-    if (catalogBackfillDone || loadingCatalogEntries || wines.length === 0) return;
+    if (catalogBackfillDone || loading || wines.length === 0) return;
     const completeWines = wines.filter((wine) => canBeSavedAsCatalogEntry(wine));
     if (completeWines.length === 0) {
       setCatalogBackfillDone(true);
@@ -211,22 +227,16 @@ export function useCellarData(userId: string) {
     const runBackfill = async () => {
       for (const wine of completeWines) {
         if (cancelled) return;
-        const alreadyKnown = catalogNameEntries.some(
-          (entry) =>
-            normalizeLookupValue(entry.name) === normalizeLookupValue(wine.name) &&
-            normalizeLookupValue(entry.producer ?? "") === normalizeLookupValue(wine.producer ?? "")
-        );
-        if (alreadyKnown) continue;
         await cacheWineRecordAsCatalogEntry(wine, userId);
       }
       if (!cancelled) {
-        await Promise.all([fetchCatalogEntries(), fetchCatalogNameEntries()]);
+        await fetchCatalogEntries();
         setCatalogBackfillDone(true);
       }
     };
     void runBackfill();
     return () => { cancelled = true; };
-  }, [catalogBackfillDone, loadingCatalogEntries, catalogNameEntries, userId, wines]);
+  }, [catalogBackfillDone, loading, userId, wines]);
 
   // --- Derived data ---
 
@@ -253,51 +263,11 @@ export function useCellarData(userId: string) {
     () => mergeReferenceRows(referenceOptions.filter((o) => o.category === "region")),
     [referenceOptions]
   );
-  const catalogWineNameReferenceRows = useMemo(() => {
-    const bestByNameProducer = new Map<string, ProductCatalogWineRow>();
-    for (const entry of catalogNameEntries) {
-      const key = normalizeLookupValue(entry.name) + "|" + normalizeLookupValue(entry.producer ?? "");
-      const existing = bestByNameProducer.get(key);
-      if (!existing || scoreCatalogCompleteness(entry) > scoreCatalogCompleteness(existing)) {
-        bestByNameProducer.set(key, entry);
-      }
-    }
-    return toWineNameReferenceRows([...bestByNameProducer.values()], "catalog-wine-name");
-  }, [catalogNameEntries]);
-  const wineNameReferenceRows = catalogWineNameReferenceRows;
-  const catalogNameEntryByName = useMemo(() => {
-    const map = new Map<string, ProductCatalogWineRow>();
-    for (const entry of catalogNameEntries) {
-      const key = normalizeLookupValue(entry.name);
-      const existing = map.get(key);
-      if (!existing || scoreCatalogCompleteness(entry) > scoreCatalogCompleteness(existing)) {
-        map.set(key, entry);
-      }
-    }
-    return map;
-  }, [catalogNameEntries]);
-  const catalogEntriesByName = useMemo(() => {
-    const map = new Map<string, ProductCatalogWineRow[]>();
-    for (const entry of catalogNameEntries) {
-      const key = normalizeLookupValue(entry.name);
-      const existing = map.get(key);
-      if (existing) {
-        existing.push(entry);
-      } else {
-        map.set(key, [entry]);
-      }
-    }
-    return map;
-  }, [catalogNameEntries]);
-
   const grapeOptions = useMemo(() => grapeReferenceRows.map((o) => o.name), [grapeReferenceRows]);
-  const wineNameOptions = useMemo(() => wineNameReferenceRows.map((o) => o.name), [wineNameReferenceRows]);
   const countryReferenceOptions = useMemo(() => countryReferenceRows.map((o) => o.name), [countryReferenceRows]);
   const regionReferenceOptions = useMemo(() => regionReferenceRows.map((o) => o.name), [regionReferenceRows]);
 
   const effectiveGrapeOptions = grapeOptions.length > 0 ? grapeOptions : GRAPE_VARIETIES;
-  const effectiveWineNameOptions = wineNameOptions;
-  const effectiveWineNameReferenceRows = wineNameReferenceRows;
   const effectiveCountryOptions = countryReferenceOptions.length > 0 ? countryReferenceOptions : WINE_COUNTRIES;
   const effectiveRegionOptions = regionReferenceOptions.length > 0 ? regionReferenceOptions : WINE_REGIONS;
 
@@ -308,7 +278,6 @@ export function useCellarData(userId: string) {
     historyEntries,
     storageSpaces,
     catalogEntries,
-    catalogNameEntries,
     referenceOptions,
 
     // Loading states
@@ -322,8 +291,11 @@ export function useCellarData(userId: string) {
     fetchHistoryEntries,
     fetchStorageSpaces,
     fetchCatalogEntries,
-    fetchCatalogNameEntries,
     fetchReferenceOptions,
+
+    // Catalog search (server-side, debounced by caller)
+    searchCatalogWineNames,
+    fetchCatalogEntriesByName,
 
     // Storage space management
     storageSpaceDraft,
@@ -347,14 +319,9 @@ export function useCellarData(userId: string) {
     grapeReferenceRows,
     countryReferenceRows,
     regionReferenceRows,
-    wineNameReferenceRows,
-    catalogNameEntryByName,
-    catalogEntriesByName,
 
     // Effective options (with fallbacks)
     effectiveGrapeOptions,
-    effectiveWineNameOptions,
-    effectiveWineNameReferenceRows,
     effectiveCountryOptions,
     effectiveRegionOptions,
 

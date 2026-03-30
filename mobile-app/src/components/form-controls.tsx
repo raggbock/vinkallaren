@@ -1,11 +1,16 @@
-import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { Children, useEffect, useMemo, useRef, useState, type ComponentProps, type ReactNode } from "react";
 
 const BLUR_DELAY_MS = 220;
+const INITIAL_VISIBLE = 5;
+const MAX_SUGGESTIONS = 20;
+const SEARCH_DEBOUNCE_MS = 300;
 
 import { normalizeLookupValue } from "../lib/cellar-helpers";
 import type { ReferenceOptionRow } from "../types/reference-data";
 import type { StorageSpaceRow } from "../types/storage-space";
+
+export type Suggestion = { name: string; parentName: string | null };
 
 export function LabeledInput({ label, multiline, ...props }: ComponentProps<typeof TextInput> & { label: string }) {
   return (
@@ -60,6 +65,7 @@ export function AutocompleteInput({
   onOptionSelected,
   options,
   optionRows,
+  searchAsync,
   placeholder,
   minimumQueryLength = 1,
   editable = true,
@@ -70,30 +76,46 @@ export function AutocompleteInput({
   onOptionSelected?: (value: string, parentName?: string | null) => void;
   options: string[];
   optionRows?: ReferenceOptionRow[];
+  searchAsync?: (query: string) => Promise<Suggestion[]>;
   placeholder?: string;
   minimumQueryLength?: number;
   editable?: boolean;
 }) {
   const [focused, setFocused] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [asyncResults, setAsyncResults] = useState<Suggestion[]>([]);
   const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     return () => {
-      if (blurTimeoutRef.current) {
-        clearTimeout(blurTimeoutRef.current);
-      }
+      if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
     };
   }, []);
 
-  type Suggestion = { name: string; parentName: string | null };
-
-  const suggestions = useMemo((): Suggestion[] => {
+  // Debounced server search
+  useEffect(() => {
+    if (!searchAsync) return;
     const query = normalizeLookupValue(value);
-
     if (!query || query.length < minimumQueryLength) {
-      return [];
+      setAsyncResults([]);
+      return;
     }
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    searchTimeoutRef.current = setTimeout(() => {
+      void searchAsync(query).then(setAsyncResults);
+    }, SEARCH_DEBOUNCE_MS);
+    return () => {
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    };
+  }, [value, searchAsync, minimumQueryLength]);
+
+  // Client-side filtering (used when searchAsync is not provided)
+  const clientSuggestions = useMemo((): Suggestion[] => {
+    if (searchAsync) return [];
+    const query = normalizeLookupValue(value);
+    if (!query || query.length < minimumQueryLength) return [];
 
     const searchableOptions = optionRows?.length
       ? optionRows.map((row) => ({
@@ -107,42 +129,33 @@ export function AutocompleteInput({
           haystack: option,
         }));
 
-    const filtered = searchableOptions
+    return searchableOptions
       .filter((option) => normalizeLookupValue(option.haystack).includes(query))
       .sort((left, right) => {
         const leftName = normalizeLookupValue(left.name);
         const rightName = normalizeLookupValue(right.name);
-
-        // Tier 1: name starts with query
         const leftNameStarts = leftName.startsWith(query) ? 0 : 1;
         const rightNameStarts = rightName.startsWith(query) ? 0 : 1;
         if (leftNameStarts !== rightNameStarts) return leftNameStarts - rightNameStarts;
-
-        // Tier 2: any word in the name starts with query — rank by position of match
         const leftWordIdx = leftName.split(/\s+/).findIndex((w) => w.startsWith(query));
         const rightWordIdx = rightName.split(/\s+/).findIndex((w) => w.startsWith(query));
         const leftWordStarts = leftWordIdx >= 0 ? 0 : 1;
         const rightWordStarts = rightWordIdx >= 0 ? 0 : 1;
         if (leftWordStarts !== rightWordStarts) return leftWordStarts - rightWordStarts;
         if (leftWordIdx >= 0 && rightWordIdx >= 0 && leftWordIdx !== rightWordIdx) return leftWordIdx - rightWordIdx;
-
-        // Tier 3: haystack starts with query (catches alias/producer matches)
         const leftHaystackStarts = normalizeLookupValue(left.haystack).startsWith(query) ? 0 : 1;
         const rightHaystackStarts = normalizeLookupValue(right.haystack).startsWith(query) ? 0 : 1;
         if (leftHaystackStarts !== rightHaystackStarts) return leftHaystackStarts - rightHaystackStarts;
-
         return left.name.localeCompare(right.name);
       })
       .filter((option, index, all) => {
         const key = normalizeLookupValue(option.name) + "|" + normalizeLookupValue(option.parentName ?? "");
         return all.findIndex((o) => normalizeLookupValue(o.name) + "|" + normalizeLookupValue(o.parentName ?? "") === key) === index;
       })
-      .slice(0, 50);
+      .slice(0, MAX_SUGGESTIONS);
+  }, [searchAsync, minimumQueryLength, optionRows, options, value]);
 
-    return filtered;
-  }, [minimumQueryLength, optionRows, options, value]);
-
-  const INITIAL_VISIBLE = 5;
+  const suggestions = searchAsync ? asyncResults : clientSuggestions;
   const visibleSuggestions = expanded ? suggestions : suggestions.slice(0, INITIAL_VISIBLE);
   const hiddenCount = suggestions.length - visibleSuggestions.length;
 
@@ -152,10 +165,12 @@ export function AutocompleteInput({
     suggestions.length > 0 &&
     !(suggestions.length === 1 && normalizeLookupValue(suggestions[0].name) === normalizeLookupValue(value));
 
+  function cancelBlur() {
+    if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+  }
+
   function selectOption(option: Suggestion) {
-    if (blurTimeoutRef.current) {
-      clearTimeout(blurTimeoutRef.current);
-    }
+    cancelBlur();
     onChangeText(option.name);
     onOptionSelected?.(option.name, option.parentName);
     setFocused(false);
@@ -177,9 +192,7 @@ export function AutocompleteInput({
             setFocused(true);
           }}
           onFocus={() => {
-            if (blurTimeoutRef.current) {
-              clearTimeout(blurTimeoutRef.current);
-            }
+            cancelBlur();
             setFocused(true);
           }}
           onBlur={() => {
@@ -189,21 +202,13 @@ export function AutocompleteInput({
           }}
         />
         {editable && showSuggestions ? (
-          <View style={styles.autocompleteListInline}>
+          <ScrollView style={styles.autocompleteListInline} nestedScrollEnabled>
             {visibleSuggestions.map((option) => (
               <Pressable
                 key={`${label}-${option.name}-${option.parentName ?? ""}`}
                 onPress={() => selectOption(option)}
-                onPressIn={() => {
-                  if (blurTimeoutRef.current) {
-                    clearTimeout(blurTimeoutRef.current);
-                  }
-                }}
-                onResponderGrant={() => {
-                  if (blurTimeoutRef.current) {
-                    clearTimeout(blurTimeoutRef.current);
-                  }
-                }}
+                onPressIn={cancelBlur}
+                onResponderGrant={cancelBlur}
                 style={(state) => [
                   styles.autocompleteItem,
                   ("hovered" in state && (state as { hovered?: boolean }).hovered) && styles.autocompleteItemHover,
@@ -218,11 +223,7 @@ export function AutocompleteInput({
             {hiddenCount > 0 ? (
               <Pressable
                 onPress={() => setExpanded(true)}
-                onPressIn={() => {
-                  if (blurTimeoutRef.current) {
-                    clearTimeout(blurTimeoutRef.current);
-                  }
-                }}
+                onPressIn={cancelBlur}
                 style={styles.autocompleteShowMore}
               >
                 <Text style={styles.autocompleteShowMoreText}>
@@ -230,7 +231,7 @@ export function AutocompleteInput({
                 </Text>
               </Pressable>
             ) : null}
-          </View>
+          </ScrollView>
         ) : null}
       </View>
     </View>

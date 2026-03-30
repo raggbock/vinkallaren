@@ -150,16 +150,11 @@ function CellarScreen({ session }: { session: Session }) {
   // --- Draft & catalog helpers ---
 
   function updateAddWineDraft(patch: Partial<WineDraft>) {
-    let lockedEntry = selectedCatalogNameEntry;
-    if (typeof patch.name === "string") {
-      lockedEntry = data.catalogNameEntryByName.get(normalizeLookupValue(patch.name)) ?? null;
-      setSelectedCatalogNameEntry(lockedEntry);
-    }
-    setDraft((current) => applyCatalogLocksToDraft(current, patch, lockedEntry));
+    setDraft((current) => applyCatalogLocksToDraft(current, patch, selectedCatalogNameEntry));
   }
 
-  function handleWineNameSelected(name: string, producer?: string | null) {
-    let entries = data.catalogEntriesByName.get(normalizeLookupValue(name)) ?? [];
+  async function handleWineNameSelected(name: string, producer?: string | null) {
+    let entries = await data.fetchCatalogEntriesByName(name);
     if (producer) {
       const filtered = entries.filter((e) => normalizeLookupValue(e.producer ?? "") === normalizeLookupValue(producer));
       if (filtered.length > 0) entries = filtered;
@@ -213,9 +208,9 @@ function CellarScreen({ session }: { session: Session }) {
     applySelectedCatalogEntry(entry);
   }
 
-  function handleVintageAddNew() {
+  async function handleVintageAddNew() {
     setVintagePickerVisible(false);
-    const entries = data.catalogEntriesByName.get(normalizeLookupValue(vintagePickerWineName)) ?? [];
+    const entries = await data.fetchCatalogEntriesByName(vintagePickerWineName);
     if (entries.length > 0) {
       const bestEntry = entries.reduce((best, e) => scoreCatalogCompleteness(e) > scoreCatalogCompleteness(best) ? e : best);
       setSelectedCatalogNameEntry(bestEntry);
@@ -357,7 +352,7 @@ function CellarScreen({ session }: { session: Session }) {
       }).eq("id", catalogEditorDraft.id);
       if (error) throw error;
       closeCatalogEditor();
-      await Promise.all([data.fetchCatalogEntries(), data.fetchCatalogNameEntries()]);
+      await data.fetchCatalogEntries();
     } catch (error) {
       Alert.alert("Kunde inte spara ändringen", error instanceof Error ? error.message : "Försök igen.");
     } finally {
@@ -371,7 +366,7 @@ function CellarScreen({ session }: { session: Session }) {
       const { error } = await supabase.from("product_catalog_wines").delete().eq("id", id);
       if (error) throw error;
       if (catalogEditorDraft?.id === id) closeCatalogEditor();
-      await Promise.all([data.fetchCatalogEntries(), data.fetchCatalogNameEntries()]);
+      await data.fetchCatalogEntries();
     } catch (error) {
       Alert.alert("Kunde inte ta bort produkt", error instanceof Error ? error.message : "Försök igen.");
     } finally {
@@ -440,11 +435,8 @@ function CellarScreen({ session }: { session: Session }) {
       Alert.alert("Namn saknas", "Skriv in vilket vin du vill lägga till.");
       return;
     }
-    const knownCatalogName = data.effectiveWineNameReferenceRows.some(
-      (option) => normalizeLookupValue(option.name) === normalizeLookupValue(draft.name)
-    );
     const missingCatalogFields = getMissingCatalogFields(draft);
-    if (!knownCatalogName && missingCatalogFields.length > 0) {
+    if (!selectedCatalogNameEntry && missingCatalogFields.length > 0) {
       Alert.alert("Komplettera vinet", `Om vinet inte redan finns i katalogen behöver du fylla i: ${missingCatalogFields.join(", ")}. Då kan appen spara det i katalogen också.`);
       return;
     }
@@ -481,7 +473,7 @@ function CellarScreen({ session }: { session: Session }) {
       await cacheWineDraftAsCatalogEntry(payload, session.user.id);
       setDraft(defaultDraft);
       setSelectedCatalogNameEntry(null);
-      await Promise.all([data.fetchWines(), data.fetchCatalogEntries(), data.fetchCatalogNameEntries(), data.fetchReferenceOptions()]);
+      await Promise.all([data.fetchWines(), data.fetchCatalogEntries(), data.fetchReferenceOptions()]);
     } catch (error) {
       Alert.alert("Kunde inte spara", error instanceof Error ? error.message : "Försök igen.");
     } finally {
@@ -583,11 +575,8 @@ function CellarScreen({ session }: { session: Session }) {
       Alert.alert("Namn saknas", "Skriv in vilket vin du vill spara.");
       return;
     }
-    const knownCatalogName = data.effectiveWineNameReferenceRows.some(
-      (option) => normalizeLookupValue(option.name) === normalizeLookupValue(editWineDraft.name)
-    );
     const missingCatalogFields = getMissingCatalogFields(editWineDraft);
-    if (!knownCatalogName && missingCatalogFields.length > 0) {
+    if (missingCatalogFields.length > 0) {
       Alert.alert("Komplettera vinet", `Om vinet inte redan finns i katalogen behöver du fylla i: ${missingCatalogFields.join(", ")}. Då kan appen spara det i katalogen också.`);
       return;
     }
@@ -602,7 +591,7 @@ function CellarScreen({ session }: { session: Session }) {
         const [hydrated] = await hydrateWineRecords([updatedWine]);
         data.setWines((current) => current.map((wine) => (wine.id === editingWine.id ? hydrated : wine)));
       }
-      await Promise.all([data.fetchCatalogEntries(), data.fetchCatalogNameEntries()]);
+      await data.fetchCatalogEntries();
       closeEditWineModal();
     } catch (error) {
       Alert.alert("Kunde inte spara ändringen", error instanceof Error ? error.message : "Försök igen.");
@@ -698,11 +687,10 @@ function CellarScreen({ session }: { session: Session }) {
         selectedStorageRow={selectedStorageRow}
         selectedStorageSlot={selectedStorageSlot}
         storageSpaceById={data.storageSpaceById}
-        effectiveWineNameOptions={data.effectiveWineNameOptions}
+        searchWineNames={data.searchCatalogWineNames}
         effectiveCountryOptions={data.effectiveCountryOptions}
         effectiveRegionOptions={data.effectiveRegionOptions}
         effectiveGrapeOptions={data.effectiveGrapeOptions}
-        wineNameReferenceRows={data.effectiveWineNameReferenceRows}
         countryReferenceRows={data.countryReferenceRows}
         regionReferenceRows={data.regionReferenceRows}
         grapeReferenceRows={data.grapeReferenceRows}
@@ -766,11 +754,10 @@ function CellarScreen({ session }: { session: Session }) {
         styles={styles}
         draft={catalogEditorDraft}
         saving={savingCatalogEdit}
-        effectiveWineNameOptions={data.effectiveWineNameOptions}
+        searchWineNames={data.searchCatalogWineNames}
         effectiveCountryOptions={data.effectiveCountryOptions}
         effectiveRegionOptions={data.effectiveRegionOptions}
         effectiveGrapeOptions={data.effectiveGrapeOptions}
-        wineNameReferenceRows={data.effectiveWineNameReferenceRows}
         countryReferenceRows={data.countryReferenceRows}
         regionReferenceRows={data.regionReferenceRows}
         grapeReferenceRows={data.grapeReferenceRows}
@@ -802,11 +789,10 @@ function CellarScreen({ session }: { session: Session }) {
         storageSpaces={data.storageSpaces}
         selectedStorageSpace={selectedEditStorageSpace}
         storageSpaceById={data.storageSpaceById}
-        effectiveWineNameOptions={data.effectiveWineNameOptions}
+        searchWineNames={data.searchCatalogWineNames}
         effectiveCountryOptions={data.effectiveCountryOptions}
         effectiveRegionOptions={data.effectiveRegionOptions}
         effectiveGrapeOptions={data.effectiveGrapeOptions}
-        wineNameReferenceRows={data.effectiveWineNameReferenceRows}
         countryReferenceRows={data.countryReferenceRows}
         regionReferenceRows={data.regionReferenceRows}
         grapeReferenceRows={data.grapeReferenceRows}

@@ -8,7 +8,7 @@ import type { ReferenceOptionRow } from "../types/reference-data";
 import type { StorageSpaceRow } from "../types/storage-space";
 import type { CatalogEditorDraft, ImportFieldSelection, ImportMode, WineDraft } from "../types/cellar-drafts";
 import type { WineRecord } from "../types/wine";
-import { AutocompleteInput, DateInput, DoubleRow, ImportSelectionRow, LabeledInput, StorageSpaceSelector, SuggestionRow } from "./form-controls";
+import { AutocompleteInput, DateInput, DoubleRow, ImportSelectionRow, LabeledInput, StorageSpaceSelector, SuggestionRow, type Suggestion } from "./form-controls";
 
 import type { styles as themeStyles } from "../styles/theme";
 type SharedStyles = typeof themeStyles;
@@ -60,11 +60,10 @@ export function CatalogEditorModal({
   styles,
   draft,
   saving,
-  effectiveWineNameOptions,
+  searchWineNames,
   effectiveCountryOptions,
   effectiveRegionOptions,
   effectiveGrapeOptions,
-  wineNameReferenceRows,
   countryReferenceRows,
   regionReferenceRows,
   grapeReferenceRows,
@@ -76,11 +75,10 @@ export function CatalogEditorModal({
   styles: SharedStyles;
   draft: CatalogEditorDraft | null;
   saving: boolean;
-  effectiveWineNameOptions: string[];
+  searchWineNames: (query: string) => Promise<Suggestion[]>;
   effectiveCountryOptions: string[];
   effectiveRegionOptions: string[];
   effectiveGrapeOptions: string[];
-  wineNameReferenceRows: ReferenceOptionRow[];
   countryReferenceRows: ReferenceOptionRow[];
   regionReferenceRows: ReferenceOptionRow[];
   grapeReferenceRows: ReferenceOptionRow[];
@@ -108,8 +106,8 @@ export function CatalogEditorModal({
                 label="Namn"
                 value={draft.name}
                 onChangeText={(value) => onChange({ name: value })}
-                options={effectiveWineNameOptions}
-                optionRows={wineNameReferenceRows}
+                options={[]}
+                searchAsync={searchWineNames}
                 placeholder="Skriv minst 4 bokstäver"
                 minimumQueryLength={4}
               />
@@ -233,11 +231,10 @@ export function AddWinePanel({
   selectedStorageRow,
   selectedStorageSlot,
   storageSpaceById,
-  effectiveWineNameOptions,
+  searchWineNames,
   effectiveCountryOptions,
   effectiveRegionOptions,
   effectiveGrapeOptions,
-  wineNameReferenceRows,
   countryReferenceRows,
   regionReferenceRows,
   grapeReferenceRows,
@@ -280,11 +277,10 @@ export function AddWinePanel({
   selectedStorageRow: string;
   selectedStorageSlot: string;
   storageSpaceById: Map<string, StorageSpaceRow>;
-  effectiveWineNameOptions: string[];
+  searchWineNames: (query: string) => Promise<Suggestion[]>;
   effectiveCountryOptions: string[];
   effectiveRegionOptions: string[];
   effectiveGrapeOptions: string[];
-  wineNameReferenceRows: ReferenceOptionRow[];
   countryReferenceRows: ReferenceOptionRow[];
   regionReferenceRows: ReferenceOptionRow[];
   grapeReferenceRows: ReferenceOptionRow[];
@@ -433,8 +429,8 @@ export function AddWinePanel({
         value={draft.name}
         onChangeText={(value) => onDraftChange({ name: value })}
         onOptionSelected={onNameSelected}
-        options={effectiveWineNameOptions}
-        optionRows={wineNameReferenceRows}
+        options={[]}
+        searchAsync={searchWineNames}
         placeholder="Skriv minst 4 bokstäver"
         minimumQueryLength={4}
       />
@@ -666,11 +662,10 @@ export function EditWineModal({
   storageSpaces,
   selectedStorageSpace,
   storageSpaceById,
-  effectiveWineNameOptions,
+  searchWineNames,
   effectiveCountryOptions,
   effectiveRegionOptions,
   effectiveGrapeOptions,
-  wineNameReferenceRows,
   countryReferenceRows,
   regionReferenceRows,
   grapeReferenceRows,
@@ -688,11 +683,10 @@ export function EditWineModal({
   storageSpaces: StorageSpaceRow[];
   selectedStorageSpace?: StorageSpaceRow | null;
   storageSpaceById: Map<string, StorageSpaceRow>;
-  effectiveWineNameOptions: string[];
+  searchWineNames: (query: string) => Promise<Suggestion[]>;
   effectiveCountryOptions: string[];
   effectiveRegionOptions: string[];
   effectiveGrapeOptions: string[];
-  wineNameReferenceRows: ReferenceOptionRow[];
   countryReferenceRows: ReferenceOptionRow[];
   regionReferenceRows: ReferenceOptionRow[];
   grapeReferenceRows: ReferenceOptionRow[];
@@ -724,8 +718,8 @@ export function EditWineModal({
                 label="Namn"
                 value={draft.name}
                 onChangeText={(value) => onDraftChange({ name: value })}
-                options={effectiveWineNameOptions}
-                optionRows={wineNameReferenceRows}
+                options={[]}
+                searchAsync={searchWineNames}
                 placeholder="Skriv minst 4 bokstäver"
                 minimumQueryLength={4}
               />
