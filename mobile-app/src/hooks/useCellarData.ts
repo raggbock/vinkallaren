@@ -253,10 +253,7 @@ export function useCellarData(userId: string) {
     }
     return toWineNameReferenceRows([...bestByNameProducer.values()], "catalog-wine-name");
   }, [catalogNameEntries]);
-  const wineNameReferenceRows = useMemo(
-    () => mergeReferenceRows([...catalogWineNameReferenceRows]),
-    [catalogWineNameReferenceRows]
-  );
+  const wineNameReferenceRows = catalogWineNameReferenceRows;
   const catalogNameEntryByName = useMemo(() => {
     const map = new Map<string, ProductCatalogWineRow>();
     for (const entry of catalogNameEntries) {
