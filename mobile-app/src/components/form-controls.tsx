@@ -131,14 +131,14 @@ export function AutocompleteInput({
       })
       .map((option) => option.value)
       .filter((option, index, values) => values.indexOf(option) === index)
-      .slice(0, 8);
+      .slice(0, 12);
   }, [minimumQueryLength, optionRows, options, value]);
 
   const showSuggestions =
     focused &&
     value.trim().length > 0 &&
     suggestions.length > 0 &&
-    !suggestions.some((option) => normalizeLookupValue(option) === normalizeLookupValue(value));
+    !(suggestions.length === 1 && normalizeLookupValue(suggestions[0]) === normalizeLookupValue(value));
 
   function selectOption(option: string) {
     if (blurTimeoutRef.current) {
