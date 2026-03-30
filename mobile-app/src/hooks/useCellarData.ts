@@ -116,7 +116,7 @@ export function useCellarData(userId: string) {
       if (aStarts !== bStarts) return aStarts - bStarts;
       return a.name.localeCompare(b.name);
     });
-    return results.slice(0, 50);
+    return results.slice(0, 200);
   }
 
   async function fetchCatalogEntriesByName(name: string): Promise<ProductCatalogWineRow[]> {
