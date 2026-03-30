@@ -98,7 +98,7 @@ export function useCellarData(userId: string) {
   async function fetchCatalogNameEntries() {
     const allEntries: ProductCatalogWineRow[] = [];
     let offset = 0;
-    const pageSize = 5000;
+    const pageSize = 1000;
     while (true) {
       const { data, error } = await supabase.from("product_catalog_wines").select("*").order("name", { ascending: true }).range(offset, offset + pageSize - 1);
       if (error) {

@@ -107,7 +107,7 @@ export function AutocompleteInput({
           haystack: option,
         }));
 
-    return searchableOptions
+    const filtered = searchableOptions
       .filter((option) => normalizeLookupValue(option.haystack).includes(query))
       .sort((left, right) => {
         const leftName = normalizeLookupValue(left.name);
@@ -138,6 +138,8 @@ export function AutocompleteInput({
         return all.findIndex((o) => normalizeLookupValue(o.name) + "|" + normalizeLookupValue(o.parentName ?? "") === key) === index;
       })
       .slice(0, 50);
+
+    return filtered;
   }, [minimumQueryLength, optionRows, options, value]);
 
   const INITIAL_VISIBLE = 5;
