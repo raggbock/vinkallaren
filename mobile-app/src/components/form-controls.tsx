@@ -235,6 +235,11 @@ export function AutocompleteInput({
                 </Text>
               </Pressable>
             ))}
+            {visibleCount < suggestions.length ? (
+              <Text style={styles.autocompleteMoreHint}>
+                {`${suggestions.length - visibleCount} till \u2193`}
+              </Text>
+            ) : null}
           </ScrollView>
         ) : null}
       </View>
@@ -435,6 +440,12 @@ const styles = StyleSheet.create({
   autocompleteParent: {
     color: "#8f8178",
     fontSize: 13,
+  },
+  autocompleteMoreHint: {
+    textAlign: "center",
+    color: "#8f8178",
+    fontSize: 12,
+    paddingVertical: 8,
   },
   doubleRow: {
     flexDirection: "row",
