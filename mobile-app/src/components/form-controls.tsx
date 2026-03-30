@@ -63,7 +63,7 @@ export function AutocompleteInput({
   label: string;
   value: string;
   onChangeText: (value: string) => void;
-  onOptionSelected?: (value: string) => void;
+  onOptionSelected?: (value: string, parentName?: string | null) => void;
   options: string[];
   optionRows?: ReferenceOptionRow[];
   placeholder?: string;
@@ -81,7 +81,9 @@ export function AutocompleteInput({
     };
   }, []);
 
-  const suggestions = useMemo(() => {
+  type Suggestion = { name: string; parentName: string | null };
+
+  const suggestions = useMemo((): Suggestion[] => {
     const query = normalizeLookupValue(value);
 
     if (!query || query.length < minimumQueryLength) {
@@ -90,23 +92,21 @@ export function AutocompleteInput({
 
     const searchableOptions = optionRows?.length
       ? optionRows.map((row) => ({
-          value: row.name,
+          name: row.name,
+          parentName: row.parent_name ?? null,
           haystack: [row.name, ...(row.aliases ?? []), row.parent_name ?? ""].join(" "),
         }))
       : options.map((option) => ({
-          value: option,
+          name: option,
+          parentName: null as string | null,
           haystack: option,
         }));
-
-    function wordStartsWithQuery(text: string) {
-      return text.split(/\s+/).some((word) => word.startsWith(query));
-    }
 
     return searchableOptions
       .filter((option) => normalizeLookupValue(option.haystack).includes(query))
       .sort((left, right) => {
-        const leftName = normalizeLookupValue(left.value);
-        const rightName = normalizeLookupValue(right.value);
+        const leftName = normalizeLookupValue(left.name);
+        const rightName = normalizeLookupValue(right.name);
 
         // Tier 1: name starts with query
         const leftNameStarts = leftName.startsWith(query) ? 0 : 1;
@@ -119,7 +119,6 @@ export function AutocompleteInput({
         const leftWordStarts = leftWordIdx >= 0 ? 0 : 1;
         const rightWordStarts = rightWordIdx >= 0 ? 0 : 1;
         if (leftWordStarts !== rightWordStarts) return leftWordStarts - rightWordStarts;
-        // Within word matches, prefer earlier word position
         if (leftWordIdx >= 0 && rightWordIdx >= 0 && leftWordIdx !== rightWordIdx) return leftWordIdx - rightWordIdx;
 
         // Tier 3: haystack starts with query (catches alias/producer matches)
@@ -127,10 +126,12 @@ export function AutocompleteInput({
         const rightHaystackStarts = normalizeLookupValue(right.haystack).startsWith(query) ? 0 : 1;
         if (leftHaystackStarts !== rightHaystackStarts) return leftHaystackStarts - rightHaystackStarts;
 
-        return left.value.localeCompare(right.value);
+        return left.name.localeCompare(right.name);
       })
-      .map((option) => option.value)
-      .filter((option, index, values) => values.indexOf(option) === index)
+      .filter((option, index, all) => {
+        const key = normalizeLookupValue(option.name) + "|" + normalizeLookupValue(option.parentName ?? "");
+        return all.findIndex((o) => normalizeLookupValue(o.name) + "|" + normalizeLookupValue(o.parentName ?? "") === key) === index;
+      })
       .slice(0, 12);
   }, [minimumQueryLength, optionRows, options, value]);
 
@@ -138,14 +139,14 @@ export function AutocompleteInput({
     focused &&
     value.trim().length > 0 &&
     suggestions.length > 0 &&
-    !(suggestions.length === 1 && normalizeLookupValue(suggestions[0]) === normalizeLookupValue(value));
+    !(suggestions.length === 1 && normalizeLookupValue(suggestions[0].name) === normalizeLookupValue(value));
 
-  function selectOption(option: string) {
+  function selectOption(option: Suggestion) {
     if (blurTimeoutRef.current) {
       clearTimeout(blurTimeoutRef.current);
     }
-    onChangeText(option);
-    onOptionSelected?.(option);
+    onChangeText(option.name);
+    onOptionSelected?.(option.name, option.parentName);
     setFocused(false);
   }
 
@@ -179,7 +180,7 @@ export function AutocompleteInput({
           <View style={styles.autocompleteListInline}>
             {suggestions.map((option) => (
               <Pressable
-                key={`${label}-${option}`}
+                key={`${label}-${option.name}-${option.parentName ?? ""}`}
                 onPress={() => selectOption(option)}
                 onPressIn={() => {
                   if (blurTimeoutRef.current) {
@@ -196,7 +197,10 @@ export function AutocompleteInput({
                   ("hovered" in state && (state as { hovered?: boolean }).hovered) && styles.autocompleteItemHover,
                 ]}
               >
-                <Text style={styles.autocompleteText}>{option}</Text>
+                <Text style={styles.autocompleteText}>
+                  {option.name}
+                  {option.parentName ? <Text style={styles.autocompleteParent}>{` (${option.parentName})`}</Text> : null}
+                </Text>
               </Pressable>
             ))}
           </View>
@@ -401,6 +405,10 @@ const styles = StyleSheet.create({
   autocompleteText: {
     color: "#231815",
     fontSize: 15,
+  },
+  autocompleteParent: {
+    color: "#8f8178",
+    fontSize: 13,
   },
   doubleRow: {
     flexDirection: "row",

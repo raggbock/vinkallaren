@@ -295,7 +295,7 @@ export function AddWinePanel({
   importSelection: ImportFieldSelection;
   saving: boolean;
   onDraftChange: (patch: Partial<WineDraft>) => void;
-  onNameSelected: (value: string) => void;
+  onNameSelected: (value: string, producer?: string | null) => void;
   onBarcodeChange: (value: string) => void;
   onArticleNumberChange: (value: string) => void;
   onStorageSpaceChange: (spaceId: string) => void;

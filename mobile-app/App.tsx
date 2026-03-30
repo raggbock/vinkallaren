@@ -158,8 +158,12 @@ function CellarScreen({ session }: { session: Session }) {
     setDraft((current) => applyCatalogLocksToDraft(current, patch, lockedEntry));
   }
 
-  function handleWineNameSelected(name: string) {
-    const entries = data.catalogEntriesByName.get(normalizeLookupValue(name)) ?? [];
+  function handleWineNameSelected(name: string, producer?: string | null) {
+    let entries = data.catalogEntriesByName.get(normalizeLookupValue(name)) ?? [];
+    if (producer) {
+      const filtered = entries.filter((e) => normalizeLookupValue(e.producer ?? "") === normalizeLookupValue(producer));
+      if (filtered.length > 0) entries = filtered;
+    }
     if (entries.length === 0) {
       setSelectedCatalogNameEntry(null);
       setDraft((current) => ({ ...current, name }));
