@@ -1,5 +1,5 @@
 import { CameraView } from "expo-camera";
-import { ActivityIndicator, Image, Modal, Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Image, Modal, Platform, Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
 
 import { buildNumericOptions, getSuggestedPairings, getWineStoragePlacementLabel, mergeTagText, parseTags } from "../lib/cellar-helpers";
 import { buildWsatSummary, type WsatTastingData } from "../lib/wsat-data";
@@ -54,9 +54,11 @@ export function BarcodeScannerModal({
 
         <Text style={styles.scannerHint}>Om koden redan finns i din källare fyller appen i relevanta fält automatiskt.</Text>
 
-        <Pressable onPress={onLabelPhoto} style={styles.secondaryButton}>
-          <Text style={styles.secondaryButtonText}>Fotografera etiketten</Text>
-        </Pressable>
+        {Platform.OS !== "web" ? (
+          <Pressable onPress={onLabelPhoto} style={styles.secondaryButton}>
+            <Text style={styles.secondaryButtonText}>Fotografera etiketten</Text>
+          </Pressable>
+        ) : null}
       </SafeAreaView>
     </Modal>
   );
