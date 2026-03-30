@@ -436,7 +436,6 @@ export function AddWinePanel({
         optionRows={wineNameReferenceRows}
         placeholder="Skriv minst 4 bokstäver"
         minimumQueryLength={4}
-        editable={!isLockedByCatalog("name")}
       />
       <LabeledInput
         label="Producent"

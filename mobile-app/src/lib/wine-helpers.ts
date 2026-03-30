@@ -93,7 +93,7 @@ export function applyCatalogLocksToDraft(
 
   const nextDraft = { ...current, ...patch };
 
-  if (selectedCatalogEntry.name) {
+  if (selectedCatalogEntry.name && !("name" in patch)) {
     nextDraft.name = selectedCatalogEntry.name;
   }
 

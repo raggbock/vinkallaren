@@ -191,7 +191,10 @@ export function AutocompleteInput({
                     clearTimeout(blurTimeoutRef.current);
                   }
                 }}
-                style={styles.autocompleteItem}
+                style={(state) => [
+                  styles.autocompleteItem,
+                  ("hovered" in state && (state as { hovered?: boolean }).hovered) && styles.autocompleteItemHover,
+                ]}
               >
                 <Text style={styles.autocompleteText}>{option}</Text>
               </Pressable>
@@ -390,6 +393,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 12,
     backgroundColor: "#fffaf5",
+    cursor: "pointer" as unknown as undefined,
+  },
+  autocompleteItemHover: {
+    backgroundColor: "#f2e7db",
   },
   autocompleteText: {
     color: "#231815",
