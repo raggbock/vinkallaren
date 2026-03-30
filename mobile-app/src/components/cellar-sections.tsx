@@ -146,7 +146,7 @@ function WineCard({
 }) {
   return (
     <View style={[styles.wineCard, highlighted && styles.wineCardHighlighted]}>
-      {wine.image_url ? <Image source={{ uri: wine.image_url }} style={styles.wineImage} /> : null}
+      {wine.image_url ? <Image source={{ uri: wine.image_url }} style={styles.wineImage} resizeMode="contain" /> : null}
 
       <View style={styles.wineCardHeader}>
         <View style={styles.flex}>
@@ -530,7 +530,7 @@ export function HistoryPanel({
 
       {filteredEntries.map((entry) => (
         <View key={entry.id} style={styles.wineCard}>
-          {entry.image_url ? <Image source={{ uri: entry.image_url }} style={styles.wineImage} /> : null}
+          {entry.image_url ? <Image source={{ uri: entry.image_url }} style={styles.wineImage} resizeMode="contain" /> : null}
 
           <View style={styles.wineCardHeader}>
             <View style={styles.flex}>

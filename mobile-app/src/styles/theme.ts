@@ -437,10 +437,9 @@ export const styles = StyleSheet.create({
   },
   wineImage: {
     width: "100%",
-    maxHeight: 200,
+    height: 200,
     borderRadius: 20,
     backgroundColor: "#ead8ca",
-    resizeMode: "contain" as const,
   },
   wineCardHeader: {
     flexDirection: "row",

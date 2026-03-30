@@ -602,7 +602,7 @@ export function AddWinePanel({
         </Pressable>
       </View>
 
-      {draft.imageUri ? <Image source={{ uri: draft.imageUri }} style={styles.wineImage} /> : null}
+      {draft.imageUri ? <Image source={{ uri: draft.imageUri }} style={styles.wineImage} resizeMode="contain" /> : null}
 
       {tastingMode ? (
         <Pressable onPress={onSaveTasting} style={styles.primaryButton} disabled={savingTasting}>
@@ -684,7 +684,7 @@ export function DrinkWineModal({
               <Text style={styles.secondaryButtonText}>Välj bild</Text>
             </Pressable>
           </View>
-          {imageUri ? <Image source={{ uri: imageUri }} style={styles.wineImage} /> : null}
+          {imageUri ? <Image source={{ uri: imageUri }} style={styles.wineImage} resizeMode="contain" /> : null}
 
           <View style={styles.modalActionRow}>
             <Pressable onPress={onClose} style={styles.secondaryButton} disabled={saving}>
@@ -856,7 +856,7 @@ export function EditWineModal({
                     </Pressable>
                   ) : null}
                 </View>
-                {draft.imageUri ? <Image source={{ uri: draft.imageUri }} style={styles.wineImage} /> : null}
+                {draft.imageUri ? <Image source={{ uri: draft.imageUri }} style={styles.wineImage} resizeMode="contain" /> : null}
               </View>
 
               <View style={styles.modalActionRow}>
