@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
-import { Image, Pressable, ScrollView, Text, View } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { Image, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 
 import { FOOD_CATEGORIES, getWineStoragePlacementLabel } from "../lib/cellar-helpers";
+import { buildWsatSummary, type WsatTastingData } from "../lib/wsat-data";
 import type { StorageSpaceRow } from "../types/storage-space";
 import type { WineHistoryRecord } from "../types/wine-history";
 import type { WineRecord } from "../types/wine";
@@ -488,12 +489,34 @@ export function HistoryPanel({
   loadingHistory: boolean;
   storageSpaceById: Map<string, StorageSpaceRow>;
 }) {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredEntries = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return historyEntries;
+    return historyEntries.filter((entry) => {
+      const haystack = [entry.name, entry.producer, entry.vintage?.toString()].filter(Boolean).join(" ").toLowerCase();
+      return q.split(/\s+/).every((term) => haystack.includes(term));
+    });
+  }, [historyEntries, searchQuery]);
+
   return (
     <View style={styles.panel}>
       <View style={styles.panelHeaderRow}>
         <Text style={styles.panelTitle}>Historik</Text>
-        <Text style={styles.linkText}>{historyEntries.length} poster</Text>
+        <Text style={styles.linkText}>{filteredEntries.length} av {historyEntries.length} poster</Text>
       </View>
+
+      {historyEntries.length > 0 ? (
+        <TextInput
+          style={styles.input}
+          placeholder="Sök namn, producent, årgång..."
+          placeholderTextColor="#8f8178"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          autoCorrect={false}
+        />
+      ) : null}
 
       {loadingHistory ? <LoadingInline label="Laddar historik..." /> : null}
 
@@ -501,7 +524,11 @@ export function HistoryPanel({
         <Text style={styles.emptyState}>Ingen historik ännu. När du markerar att du druckit en flaska kan du sätta betyg här.</Text>
       ) : null}
 
-      {historyEntries.map((entry) => (
+      {!loadingHistory && historyEntries.length > 0 && filteredEntries.length === 0 ? (
+        <Text style={styles.emptyState}>Inga träffar för "{searchQuery}"</Text>
+      ) : null}
+
+      {filteredEntries.map((entry) => (
         <View key={entry.id} style={styles.wineCard}>
           {entry.image_url ? <Image source={{ uri: entry.image_url }} style={styles.wineImage} /> : null}
 
@@ -527,6 +554,12 @@ export function HistoryPanel({
             {entry.quantity_consumed > 1 ? "r" : ""}
           </Text>
           {entry.tasting_notes ? <Text style={styles.notesText}>{entry.tasting_notes}</Text> : null}
+          {entry.tasting_data ? (
+            <View style={{ marginTop: 6, paddingTop: 6, borderTopWidth: 1, borderTopColor: "#3d2220" }}>
+              <Text style={[styles.notesText, { color: "#f4c38c", fontWeight: "600", marginBottom: 2 }]}>WSET Tasting</Text>
+              <Text style={styles.notesText}>{buildWsatSummary(entry.tasting_data as WsatTastingData)}</Text>
+            </View>
+          ) : null}
         </View>
       ))}
     </View>
