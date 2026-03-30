@@ -289,28 +289,26 @@ export async function cacheCatalogEntry(entry: ProductCatalogEntry, userId?: str
 
   let error: { message: string } | null = null;
 
+  // Find existing entry by barcode, systembolaget_product_id, or name+producer+vintage
+  let existingId: string | null = null;
   if (payload.barcode) {
-    const result = await supabase.from("product_catalog_wines").upsert(payload, {
-      onConflict: "barcode",
-      ignoreDuplicates: false,
-    });
-    error = result.error;
-  } else if (payload.systembolaget_product_id) {
-    const result = await supabase.from("product_catalog_wines").upsert(payload, {
-      onConflict: "systembolaget_product_id",
-      ignoreDuplicates: false,
-    });
+    const { data: found } = await supabase.from("product_catalog_wines").select("id").eq("barcode", payload.barcode).maybeSingle();
+    existingId = found?.id ?? null;
+  }
+  if (!existingId && payload.systembolaget_product_id) {
+    const { data: found } = await supabase.from("product_catalog_wines").select("id").eq("systembolaget_product_id", payload.systembolaget_product_id).maybeSingle();
+    existingId = found?.id ?? null;
+  }
+  if (!existingId) {
+    existingId = await findExistingManualCatalogEntryId(payload);
+  }
+
+  if (existingId) {
+    const result = await supabase.from("product_catalog_wines").update(payload).eq("id", existingId);
     error = result.error;
   } else {
-    const existingId = await findExistingManualCatalogEntryId(payload);
-
-    if (existingId) {
-      const result = await supabase.from("product_catalog_wines").update(payload).eq("id", existingId);
-      error = result.error;
-    } else {
-      const result = await supabase.from("product_catalog_wines").insert(payload);
-      error = result.error;
-    }
+    const result = await supabase.from("product_catalog_wines").insert(payload);
+    error = result.error;
   }
 
   if (error) {
