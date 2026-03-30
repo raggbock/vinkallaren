@@ -98,6 +98,7 @@ export const FOOD_CATEGORIES: Array<{ label: string; items: string[] }> = [
   { label: "Fisk & skaldjur", items: ["fisk", "skaldjur", "lax", "tonfisk"] },
   { label: "Ost", items: ["ost", "lagrad ost", "getost", "blåmögelost"] },
   { label: "Grönt & övrigt", items: ["sallad", "svamp", "pasta", "pizza", "soppa", "risotto"] },
+  { label: "Asiatiskt", items: ["sushi", "thaimat", "indiskt", "kinesiskt", "koreanskt", "ramen"] },
   { label: "Tilltugg", items: ["aperitif", "snacks", "chips", "charkuterier"] },
   { label: "Sött", items: ["dessert", "choklad", "frukt"] },
 ];
@@ -171,7 +172,7 @@ export function getSuggestedPairings(wineType: string) {
   const normalized = wineType.trim().toLowerCase();
 
   if (normalized.includes("vitt")) {
-    return ["fisk", "skaldjur", "kyckling", "sallad", "getost", "ost", "pasta", "risotto", "soppa", "aperitif"];
+    return ["fisk", "skaldjur", "kyckling", "sallad", "getost", "ost", "pasta", "risotto", "sushi", "thaimat", "soppa", "aperitif"];
   }
 
   if (normalized.includes("mousserande")) {
@@ -179,7 +180,7 @@ export function getSuggestedPairings(wineType: string) {
   }
 
   if (normalized.includes("ros")) {
-    return ["grillat", "sallad", "kyckling", "fisk", "snacks", "pizza", "pasta", "charkuterier", "getost", "aperitif"];
+    return ["grillat", "sallad", "kyckling", "fisk", "snacks", "pizza", "pasta", "thaimat", "charkuterier", "getost", "aperitif"];
   }
 
   if (normalized.includes("dessert") || normalized.includes("sött")) {
