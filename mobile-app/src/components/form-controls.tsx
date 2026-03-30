@@ -207,15 +207,19 @@ export function AutocompleteInput({
     });
   }
 
+  // Prefetch next server page when 80% of loaded results are visible
+  const prefetchThreshold = Math.floor(suggestions.length * 0.8);
+
   function handleScroll(event: NativeSyntheticEvent<NativeScrollEvent>) {
     const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
     const distanceFromBottom = contentSize.height - layoutMeasurement.height - contentOffset.y;
     if (distanceFromBottom < SCROLL_THRESHOLD) {
       if (visibleCount < suggestions.length) {
         setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, suggestions.length));
-      } else if (searchAsync && asyncHasMore && !loadingMore) {
-        loadMoreAsync();
       }
+    }
+    if (searchAsync && asyncHasMore && !loadingMore && visibleCount >= prefetchThreshold) {
+      loadMoreAsync();
     }
   }
 
