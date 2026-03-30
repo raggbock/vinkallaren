@@ -584,4 +584,12 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
   },
+  storageSpaceForm: {
+    backgroundColor: "#fffaf5",
+    borderRadius: 18,
+    padding: 14,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: "#ead8ca",
+  },
 });

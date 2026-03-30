@@ -7,9 +7,9 @@ import type { ProductCatalogEntry } from "../lib/product-catalog";
 import type { ProductCatalogWineRow } from "../types/product-catalog";
 import type { ReferenceOptionRow } from "../types/reference-data";
 import type { StorageSpaceRow } from "../types/storage-space";
-import type { CatalogEditorDraft, ImportFieldSelection, ImportMode, WineDraft } from "../types/cellar-drafts";
+import type { CatalogEditorDraft, ImportFieldSelection, ImportMode, StorageSpaceDraft, WineDraft } from "../types/cellar-drafts";
 import type { WineRecord } from "../types/wine";
-import { AutocompleteInput, DateInput, DoubleRow, GroupedSuggestionRow, ImportSelectionRow, LabeledInput, StorageSpaceSelector, SuggestionRow, type Suggestion } from "./form-controls";
+import { AutocompleteInput, DateInput, DoubleRow, GroupedSuggestionRow, ImportSelectionRow, LabeledInput, StorageSpaceForm, StorageSpaceSelector, SuggestionRow, type Suggestion } from "./form-controls";
 
 import type { styles as themeStyles } from "../styles/theme";
 type SharedStyles = typeof themeStyles;
@@ -241,6 +241,10 @@ export function AddWinePanel({
   selectedStorageSlot,
   storageSpaceById,
   occupiedPositions,
+  storageSpaceDraft,
+  savingStorageSpace,
+  onStorageSpaceDraftChange,
+  onSaveStorageSpace,
   searchWineNames,
   effectiveCountryOptions,
   effectiveRegionOptions,
@@ -290,6 +294,10 @@ export function AddWinePanel({
   selectedStorageSlot: string;
   storageSpaceById: Map<string, StorageSpaceRow>;
   occupiedPositions: { occupiedRows: Set<string>; occupiedSlots: Set<string> };
+  storageSpaceDraft: StorageSpaceDraft;
+  savingStorageSpace: boolean;
+  onStorageSpaceDraftChange: (patch: Partial<StorageSpaceDraft>) => void;
+  onSaveStorageSpace: () => void;
   searchWineNames: (query: string, offset?: number) => Promise<{ suggestions: Suggestion[]; hasMore: boolean; nextOffset: number }>;
   effectiveCountryOptions: string[];
   effectiveRegionOptions: string[];
@@ -562,32 +570,34 @@ export function AddWinePanel({
           />
 
           {/* --- Storage --- */}
-          {storageSpaces.length > 0 ? (
-            <View style={styles.foodSection}>
-              <Text style={styles.inputLabel}>Förvaringsplats</Text>
-              <Text style={styles.notesText}>Välj plats, rad och slot. Fri platsnotering kan användas som extra stöd.</Text>
-              <StorageSpaceSelector title="" spaces={storageSpaces} selectedId={selectedStorageSpaceId} onSelect={onStorageSpaceChange} clearLabel="Ingen plats" />
-              {selectedStorageSpace ? (
-                <>
-                  <SuggestionRow title="Rad" options={buildNumericOptions(selectedStorageSpace.row_count)} selected={selectedStorageRow} onSelect={onStorageRowChange} disabledOptions={occupiedPositions.occupiedRows} />
-                  <SuggestionRow title="Plats" options={buildNumericOptions(selectedStorageSpace.slots_per_row)} selected={selectedStorageSlot} onSelect={onStorageSlotChange} disabledOptions={occupiedPositions.occupiedSlots} />
-                  <Text style={styles.notesText}>
-                    Vald placering:{" "}
-                    {getWineStoragePlacementLabel(
-                      {
-                        storage_space_id: selectedStorageSpaceId,
-                        storage_row: Number(selectedStorageRow),
-                        storage_slot: Number(selectedStorageSlot),
-                      },
-                      storageSpaceById
-                    )}
-                  </Text>
-                </>
-              ) : null}
-            </View>
-          ) : (
-            <Text style={styles.notesText}>Skapa en förvaringsplats nedan för att kunna välja rad och plats.</Text>
-          )}
+          <View style={styles.foodSection}>
+            <Text style={styles.inputLabel}>Förvaringsplats</Text>
+            {storageSpaces.length > 0 ? (
+              <>
+                <StorageSpaceSelector title="" spaces={storageSpaces} selectedId={selectedStorageSpaceId} onSelect={onStorageSpaceChange} clearLabel="Ingen plats" />
+                {selectedStorageSpace ? (
+                  <>
+                    <SuggestionRow title="Rad" options={buildNumericOptions(selectedStorageSpace.row_count)} selected={selectedStorageRow} onSelect={onStorageRowChange} disabledOptions={occupiedPositions.occupiedRows} />
+                    <SuggestionRow title="Plats" options={buildNumericOptions(selectedStorageSpace.slots_per_row)} selected={selectedStorageSlot} onSelect={onStorageSlotChange} disabledOptions={occupiedPositions.occupiedSlots} />
+                    <Text style={styles.notesText}>
+                      Vald placering:{" "}
+                      {getWineStoragePlacementLabel(
+                        {
+                          storage_space_id: selectedStorageSpaceId,
+                          storage_row: Number(selectedStorageRow),
+                          storage_slot: Number(selectedStorageSlot),
+                        },
+                        storageSpaceById
+                      )}
+                    </Text>
+                  </>
+                ) : null}
+              </>
+            ) : (
+              <Text style={styles.notesText}>Skapa en förvaringsplats för att kunna välja rad och plats.</Text>
+            )}
+            <StorageSpaceForm draft={storageSpaceDraft} saving={savingStorageSpace} onDraftChange={onStorageSpaceDraftChange} onSave={onSaveStorageSpace} />
+          </View>
 
           <LabeledInput label="Fri platsnotering" value={draft.location} onChangeText={(value) => onDraftChange({ location: value })} placeholder="t.ex. längst bak, överst i kylen" />
           <LabeledInput label="Etiketter" value={draft.tags} onChangeText={(value) => onDraftChange({ tags: value })} placeholder="middag, present, lagring" />
@@ -710,6 +720,10 @@ export function EditWineModal({
   selectedStorageSpace,
   storageSpaceById,
   occupiedPositions,
+  storageSpaceDraft,
+  savingStorageSpace,
+  onStorageSpaceDraftChange,
+  onSaveStorageSpace,
   searchWineNames,
   effectiveCountryOptions,
   effectiveRegionOptions,
@@ -735,6 +749,10 @@ export function EditWineModal({
   selectedStorageSpace?: StorageSpaceRow | null;
   storageSpaceById: Map<string, StorageSpaceRow>;
   occupiedPositions: { occupiedRows: Set<string>; occupiedSlots: Set<string> };
+  storageSpaceDraft: StorageSpaceDraft;
+  savingStorageSpace: boolean;
+  onStorageSpaceDraftChange: (patch: Partial<StorageSpaceDraft>) => void;
+  onSaveStorageSpace: () => void;
   searchWineNames: (query: string, offset?: number) => Promise<{ suggestions: Suggestion[]; hasMore: boolean; nextOffset: number }>;
   effectiveCountryOptions: string[];
   effectiveRegionOptions: string[];
@@ -833,8 +851,14 @@ export function EditWineModal({
                       </Text>
                     </>
                   ) : null}
+                  <StorageSpaceForm draft={storageSpaceDraft} saving={savingStorageSpace} onDraftChange={onStorageSpaceDraftChange} onSave={onSaveStorageSpace} />
                 </View>
-              ) : null}
+              ) : (
+                <View style={styles.foodSection}>
+                  <Text style={styles.inputLabel}>Förvaringsplats</Text>
+                  <StorageSpaceForm draft={storageSpaceDraft} saving={savingStorageSpace} onDraftChange={onStorageSpaceDraftChange} onSave={onSaveStorageSpace} />
+                </View>
+              )}
 
               <LabeledInput label="Fri platsnotering" value={draft.location} onChangeText={(value) => onDraftChange({ location: value })} />
               <DoubleRow>

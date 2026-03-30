@@ -452,6 +452,61 @@ export function StorageSpaceSelector({
   );
 }
 
+const SPACE_TYPE_OPTIONS = ["Vinkyl", "Vinställ", "Källare", "Övrigt"];
+const SPACE_TYPE_VALUES: Record<string, string> = { "Vinkyl": "vinkyl", "Vinställ": "vinstall", "Källare": "kallare", "Övrigt": "ovrigt" };
+const SPACE_TYPE_LABELS: Record<string, string> = Object.fromEntries(Object.entries(SPACE_TYPE_VALUES).map(([k, v]) => [v, k]));
+
+export function StorageSpaceForm({
+  draft,
+  saving,
+  onDraftChange,
+  onSave,
+}: {
+  draft: { name: string; spaceType: string; rowCount: string; slotsPerRow: string; notes: string };
+  saving: boolean;
+  onDraftChange: (patch: Partial<{ name: string; spaceType: string; rowCount: string; slotsPerRow: string; notes: string }>) => void;
+  onSave: () => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+
+  if (!expanded) {
+    return (
+      <Pressable onPress={() => setExpanded(true)} style={styles.secondaryButton}>
+        <Text style={styles.secondaryButtonText}>＋ Ny förvaringsplats</Text>
+      </Pressable>
+    );
+  }
+
+  return (
+    <View style={styles.storageSpaceForm}>
+      <Text style={styles.inputLabel}>Ny förvaringsplats</Text>
+      <LabeledInput label="Namn" value={draft.name} onChangeText={(v) => onDraftChange({ name: v })} placeholder="t.ex. Vinkyl köket" />
+      <SuggestionRow
+        title="Typ"
+        options={SPACE_TYPE_OPTIONS}
+        selected={SPACE_TYPE_LABELS[draft.spaceType] || "Källare"}
+        onSelect={(v) => onDraftChange({ spaceType: SPACE_TYPE_VALUES[v] || "kallare" })}
+      />
+      <View style={styles.doubleRow}>
+        <View style={styles.doubleRowItem}>
+          <LabeledInput label="Antal rader" value={draft.rowCount} onChangeText={(v) => onDraftChange({ rowCount: v })} keyboardType="number-pad" />
+        </View>
+        <View style={styles.doubleRowItem}>
+          <LabeledInput label="Platser per rad" value={draft.slotsPerRow} onChangeText={(v) => onDraftChange({ slotsPerRow: v })} keyboardType="number-pad" />
+        </View>
+      </View>
+      <View style={styles.doubleRow}>
+        <Pressable onPress={onSave} style={[styles.primaryButton, { flex: 1 }]} disabled={saving}>
+          <Text style={styles.primaryButtonText}>{saving ? "Sparar..." : "Spara plats"}</Text>
+        </Pressable>
+        <Pressable onPress={() => setExpanded(false)} style={[styles.secondaryButton, { flex: 0 }]}>
+          <Text style={styles.secondaryButtonText}>Avbryt</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
 export function ImportSelectionRow({
   label,
   selected,
@@ -647,5 +702,35 @@ const styles = StyleSheet.create({
   notesText: {
     color: "#6f6259",
     lineHeight: 21,
+  },
+  primaryButton: {
+    backgroundColor: "#6f1d1b",
+    borderRadius: 999,
+    paddingVertical: 14,
+    alignItems: "center",
+  },
+  primaryButtonText: {
+    color: "#fffaf5",
+    fontWeight: "700",
+    fontSize: 15,
+  },
+  secondaryButton: {
+    backgroundColor: "#ead8ca",
+    borderRadius: 999,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignItems: "center",
+  },
+  secondaryButtonText: {
+    color: "#6f1d1b",
+    fontWeight: "700",
+  },
+  storageSpaceForm: {
+    backgroundColor: "#fffaf5",
+    borderRadius: 18,
+    padding: 14,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: "#ead8ca",
   },
 });

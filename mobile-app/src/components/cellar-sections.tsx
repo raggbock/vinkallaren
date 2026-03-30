@@ -7,7 +7,8 @@ import type { StorageSpaceRow } from "../types/storage-space";
 import type { WineHistoryRecord } from "../types/wine-history";
 import type { WineRecord } from "../types/wine";
 import type { CellarSection } from "../types/cellar";
-import { InsightCard, LabeledInput, LoadingInline, SuggestionRow } from "./form-controls";
+import type { StorageSpaceDraft } from "../types/cellar-drafts";
+import { InsightCard, LabeledInput, LoadingInline, StorageSpaceForm, SuggestionRow } from "./form-controls";
 
 import type { styles as themeStyles } from "../styles/theme";
 type SharedStyles = typeof themeStyles;
@@ -251,6 +252,10 @@ export function MinKallarePanel({
   onEditWine,
   onDrinkWine,
   onDeleteWine,
+  storageSpaceDraft,
+  savingStorageSpace,
+  onStorageSpaceDraftChange,
+  onSaveStorageSpace,
   highlightedWineId,
   onClearHighlight,
 }: {
@@ -291,6 +296,10 @@ export function MinKallarePanel({
   onEditWine: (wine: WineRecord) => void;
   onDrinkWine: (wine: WineRecord) => void;
   onDeleteWine: (wineId: string, imagePath: string | null) => void;
+  storageSpaceDraft: StorageSpaceDraft;
+  savingStorageSpace: boolean;
+  onStorageSpaceDraftChange: (patch: Partial<StorageSpaceDraft>) => void;
+  onSaveStorageSpace: () => void;
   highlightedWineId?: string | null;
   onClearHighlight?: () => void;
 }) {
@@ -396,6 +405,9 @@ export function MinKallarePanel({
       <SuggestionRow title="Filtrera årgång" options={vintageOptions} selected={selectedVintageFilter} onSelect={onVintageChange} />
 
       {loading ? <LoadingInline /> : null}
+
+      {/* Create storage space */}
+      <StorageSpaceForm draft={storageSpaceDraft} saving={savingStorageSpace} onDraftChange={onStorageSpaceDraftChange} onSave={onSaveStorageSpace} />
 
       {/* Storage space cards */}
       {!loading && spaceCards.length === 0 && unplacedWines.length === 0 ? (

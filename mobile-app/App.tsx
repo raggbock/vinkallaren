@@ -818,6 +818,10 @@ function CellarScreen({ session }: { session: Session }) {
       onEditWine={openEditWineModal}
       onDrinkWine={openDrinkModal}
       onDeleteWine={data.deleteWine}
+      storageSpaceDraft={data.storageSpaceDraft}
+      savingStorageSpace={data.savingStorageSpace}
+      onStorageSpaceDraftChange={(patch) => data.setStorageSpaceDraft((current) => ({ ...current, ...patch }))}
+      onSaveStorageSpace={() => data.saveStorageSpace(selectedStorageSpaceId, setSelectedStorageSpaceId, setSelectedStorageRow, setSelectedStorageSlot)}
       highlightedWineId={highlightedWineId}
       onClearHighlight={() => setHighlightedWineId(null)}
     />
@@ -897,6 +901,10 @@ function CellarScreen({ session }: { session: Session }) {
           setSelectedStorageSlot("1");
         }}
         onStorageSlotChange={setSelectedStorageSlot}
+        storageSpaceDraft={data.storageSpaceDraft}
+        savingStorageSpace={data.savingStorageSpace}
+        onStorageSpaceDraftChange={(patch) => data.setStorageSpaceDraft((current) => ({ ...current, ...patch }))}
+        onSaveStorageSpace={() => data.saveStorageSpace(selectedStorageSpaceId, setSelectedStorageSpaceId, setSelectedStorageRow, setSelectedStorageSlot)}
         onStartBarcodeScanner={startBarcodeScanner}
         onOpenSystembolaget={openSystembolaget}
         onSetImportMode={setImportMode}
@@ -986,6 +994,10 @@ function CellarScreen({ session }: { session: Session }) {
         grapeReferenceRows={data.grapeReferenceRows}
         saving={savingWineEdit}
         occupiedPositions={getOccupiedPositions(editWineDraft?.storageSpaceId || "", editWineDraft?.storageRow || "1", editingWine?.id)}
+        storageSpaceDraft={data.storageSpaceDraft}
+        savingStorageSpace={data.savingStorageSpace}
+        onStorageSpaceDraftChange={(patch) => data.setStorageSpaceDraft((current) => ({ ...current, ...patch }))}
+        onSaveStorageSpace={() => data.saveStorageSpace(editWineDraft?.storageSpaceId || "", (id) => setEditWineDraft((c) => c ? { ...c, storageSpaceId: id } : c), (v) => setEditWineDraft((c) => c ? { ...c, storageRow: v } : c), (v) => setEditWineDraft((c) => c ? { ...c, storageSlot: v } : c))}
         onClose={closeEditWineModal}
         onDraftChange={(patch) => setEditWineDraft((current) => (current ? { ...current, ...patch } : current))}
         onStorageSpaceChange={(spaceId) => setEditWineDraft((current) => current ? { ...current, storageSpaceId: spaceId, storageRow: "1", storageSlot: "1" } : current)}
