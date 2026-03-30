@@ -1,5 +1,5 @@
 import { CameraView } from "expo-camera";
-import { Image, Modal, Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Image, Modal, Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
 
 import { buildNumericOptions, getSuggestedPairings, getWineStoragePlacementLabel, mergeTagText, parseTags } from "../lib/cellar-helpers";
 import type { ProductCatalogEntry } from "../lib/product-catalog";
@@ -347,18 +347,34 @@ export function AddWinePanel({
       {/* --- Barcode & SB article number at top --- */}
       <View style={styles.importSuggestionCard}>
         <Text style={styles.inputLabel}>Snabbimport</Text>
-        <Text style={styles.notesText}>
-          Har du en streckkod eller ett Systembolaget-artikelnummer? Fyll i det så försöker vi hämta resten automatiskt.
-        </Text>
+        {!draft.name.trim() ? (
+          <>
+            <Text style={styles.notesText}>
+              Har du flaskan? Skanna streckkoden för att fylla i automatiskt.
+            </Text>
+            <Pressable onPress={onStartBarcodeScanner} style={[styles.primaryButton, { marginBottom: 12 }]}>
+              <Text style={styles.primaryButtonText}>Skanna streckkod</Text>
+            </Pressable>
+            <Text style={styles.notesText}>
+              Eller fyll i streckkod / artikelnummer manuellt:
+            </Text>
+          </>
+        ) : (
+          <>
+            <Text style={styles.notesText}>
+              Har du en streckkod eller ett Systembolaget-artikelnummer? Fyll i det så försöker vi hämta resten automatiskt.
+            </Text>
+            <Pressable onPress={onStartBarcodeScanner} style={styles.secondaryButton}>
+              <Text style={styles.secondaryButtonText}>Skanna streckkod</Text>
+            </Pressable>
+          </>
+        )}
         <LabeledInput
           label="Streckkod"
           value={draft.barcode}
           onChangeText={onBarcodeChange}
           editable={!isLockedByCatalog("barcode")}
         />
-        <Pressable onPress={onStartBarcodeScanner} style={styles.secondaryButton}>
-          <Text style={styles.secondaryButtonText}>Skanna streckkod</Text>
-        </Pressable>
         <LabeledInput
           label="Systembolaget artikelnummer"
           value={draft.systembolagetProductId}
@@ -368,7 +384,12 @@ export function AddWinePanel({
         />
       </View>
 
-      {lookupBusy ? <Text style={styles.notesText}>Söker produktmatch...</Text> : null}
+      {lookupBusy ? (
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginVertical: 4 }}>
+          <ActivityIndicator size="small" color="#6f1d1b" />
+          <Text style={styles.notesText}>Söker efter produktdata...</Text>
+        </View>
+      ) : null}
       {!lookupBusy && lookupMessage ? <Text style={styles.notesText}>{lookupMessage}</Text> : null}
 
       {draft.systembolagetProductId ? (

@@ -314,7 +314,7 @@ function CellarScreen({ session }: { session: Session }) {
       Alert.alert("Produkt hittad", `Jag hittade ${match.name} från ${match.sourceLabel} och fyllde i tomma fält automatiskt.`);
       return;
     }
-    Alert.alert("Ingen produktträff", "Jag hittade ingen produktdata för den här streckkoden ännu, men streckkoden sparades i formuläret.");
+    Alert.alert("Ingen produktträff", "Streckkoden sparades. Fyll i vinets namn och detaljer nedan så kopplas de ihop automatiskt.");
   }
 
   // --- Catalog editor ---
