@@ -1,6 +1,9 @@
 import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { Children, useEffect, useMemo, useRef, useState, type ComponentProps, type ReactNode } from "react";
 
+const BLUR_DELAY_MS = 220;
+
+import { normalizeLookupValue } from "../lib/cellar-helpers";
 import type { ReferenceOptionRow } from "../types/reference-data";
 import type { StorageSpaceRow } from "../types/storage-space";
 
@@ -29,7 +32,8 @@ export function DateInput({ label, value, onChangeText }: { label: string; value
           placeholder="ÅÅÅÅ-MM-DD"
           placeholderTextColor="#8f8178"
           style={styles.input}
-          {...({ type: "date" } as any)}
+          // @ts-expect-error -- react-native-web supports type="date" but it's not in RN types
+          type="date"
         />
       </View>
     );
@@ -71,6 +75,7 @@ export function AutocompleteInput({
   editable?: boolean;
 }) {
   const [focused, setFocused] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -132,8 +137,12 @@ export function AutocompleteInput({
         const key = normalizeLookupValue(option.name) + "|" + normalizeLookupValue(option.parentName ?? "");
         return all.findIndex((o) => normalizeLookupValue(o.name) + "|" + normalizeLookupValue(o.parentName ?? "") === key) === index;
       })
-      .slice(0, 12);
+      .slice(0, 50);
   }, [minimumQueryLength, optionRows, options, value]);
+
+  const INITIAL_VISIBLE = 5;
+  const visibleSuggestions = expanded ? suggestions : suggestions.slice(0, INITIAL_VISIBLE);
+  const hiddenCount = suggestions.length - visibleSuggestions.length;
 
   const showSuggestions =
     focused &&
@@ -162,6 +171,7 @@ export function AutocompleteInput({
           editable={editable}
           onChangeText={(nextValue) => {
             onChangeText(nextValue);
+            setExpanded(false);
             setFocused(true);
           }}
           onFocus={() => {
@@ -173,12 +183,12 @@ export function AutocompleteInput({
           onBlur={() => {
             blurTimeoutRef.current = setTimeout(() => {
               setFocused(false);
-            }, 220);
+            }, BLUR_DELAY_MS);
           }}
         />
         {editable && showSuggestions ? (
           <View style={styles.autocompleteListInline}>
-            {suggestions.map((option) => (
+            {visibleSuggestions.map((option) => (
               <Pressable
                 key={`${label}-${option.name}-${option.parentName ?? ""}`}
                 onPress={() => selectOption(option)}
@@ -203,6 +213,21 @@ export function AutocompleteInput({
                 </Text>
               </Pressable>
             ))}
+            {hiddenCount > 0 ? (
+              <Pressable
+                onPress={() => setExpanded(true)}
+                onPressIn={() => {
+                  if (blurTimeoutRef.current) {
+                    clearTimeout(blurTimeoutRef.current);
+                  }
+                }}
+                style={styles.autocompleteShowMore}
+              >
+                <Text style={styles.autocompleteShowMoreText}>
+                  {`Visa ${hiddenCount} till`}
+                </Text>
+              </Pressable>
+            ) : null}
           </View>
         ) : null}
       </View>
@@ -349,12 +374,6 @@ export function LoadingInline({ label = "Laddar viner..." }: { label?: string })
   );
 }
 
-function normalizeLookupValue(value: string) {
-  return value
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-}
 
 const styles = StyleSheet.create({
   inputGroup: {
@@ -409,6 +428,17 @@ const styles = StyleSheet.create({
   autocompleteParent: {
     color: "#8f8178",
     fontSize: 13,
+  },
+  autocompleteShowMore: {
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    alignItems: "center",
+    backgroundColor: "#f2e7db",
+  },
+  autocompleteShowMoreText: {
+    color: "#6f6259",
+    fontSize: 13,
+    fontWeight: "600",
   },
   doubleRow: {
     flexDirection: "row",
