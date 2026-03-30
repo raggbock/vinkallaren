@@ -720,6 +720,9 @@ export function EditWineModal({
   onStorageSpaceChange,
   onStorageRowChange,
   onStorageSlotChange,
+  onChooseImage,
+  onTakePhoto,
+  onRemoveImage,
   onSave,
 }: {
   visible: boolean;
@@ -741,6 +744,9 @@ export function EditWineModal({
   onStorageSpaceChange: (spaceId: string) => void;
   onStorageRowChange: (value: string) => void;
   onStorageSlotChange: (value: string) => void;
+  onChooseImage: () => void;
+  onTakePhoto: () => void;
+  onRemoveImage: () => void;
   onSave: () => void;
 }) {
   return (
@@ -834,6 +840,24 @@ export function EditWineModal({
               <LabeledInput label="Etiketter" value={draft.tags} onChangeText={(value) => onDraftChange({ tags: value })} />
               <LabeledInput label="Passar till" value={draft.foodPairings} onChangeText={(value) => onDraftChange({ foodPairings: value })} />
               <LabeledInput label="Anteckningar" value={draft.notes} onChangeText={(value) => onDraftChange({ notes: value })} multiline />
+
+              <View style={styles.foodSection}>
+                <Text style={styles.inputLabel}>Bild</Text>
+                <View style={styles.tagRow}>
+                  <Pressable onPress={onTakePhoto} style={styles.secondaryButton}>
+                    <Text style={styles.secondaryButtonText}>Ta foto</Text>
+                  </Pressable>
+                  <Pressable onPress={onChooseImage} style={styles.secondaryButton}>
+                    <Text style={styles.secondaryButtonText}>{draft.imageUri ? "Byt bild" : "Välj bild"}</Text>
+                  </Pressable>
+                  {draft.imageUri ? (
+                    <Pressable onPress={onRemoveImage} style={styles.secondaryButton}>
+                      <Text style={styles.dangerText}>Ta bort bild</Text>
+                    </Pressable>
+                  ) : null}
+                </View>
+                {draft.imageUri ? <Image source={{ uri: draft.imageUri }} style={styles.wineImage} /> : null}
+              </View>
 
               <View style={styles.modalActionRow}>
                 <Pressable onPress={onClose} style={styles.secondaryButton} disabled={saving}>

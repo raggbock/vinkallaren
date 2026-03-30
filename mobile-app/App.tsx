@@ -702,7 +702,21 @@ function CellarScreen({ session }: { session: Session }) {
     }
     setSavingWineEdit(true);
     try {
-      const payload = buildWineInsertFromDraft(editWineDraft, editWineDraft.storageSpaceId, editWineDraft.storageRow, editWineDraft.storageSlot, editingWine.image_path);
+      // Handle image: new local image, cleared image, or keep existing
+      let imagePath = editingWine.image_path;
+      if (editWineDraft.imageUri && editWineDraft.imageUri !== editingWine.image_url) {
+        // New image selected — upload it
+        imagePath = await uploadWineImage(session.user.id, editWineDraft.imageUri);
+        // Remove old image if it existed
+        if (editingWine.image_path) {
+          await supabase.storage.from("wine-images").remove([editingWine.image_path]);
+        }
+      } else if (!editWineDraft.imageUri && editingWine.image_path) {
+        // Image removed
+        await supabase.storage.from("wine-images").remove([editingWine.image_path]);
+        imagePath = null;
+      }
+      const payload = buildWineInsertFromDraft(editWineDraft, editWineDraft.storageSpaceId, editWineDraft.storageRow, editWineDraft.storageSlot, imagePath);
       const { data: updatedData, error } = await supabase.from("wines").update(payload).eq("id", editingWine.id).select("*").single();
       if (error) throw error;
       const updatedWine = (updatedData ?? null) as WineRow | null;
@@ -937,6 +951,15 @@ function CellarScreen({ session }: { session: Session }) {
         onStorageSpaceChange={(spaceId) => setEditWineDraft((current) => current ? { ...current, storageSpaceId: spaceId, storageRow: "1", storageSlot: "1" } : current)}
         onStorageRowChange={(value) => setEditWineDraft((current) => (current ? { ...current, storageRow: value } : current))}
         onStorageSlotChange={(value) => setEditWineDraft((current) => (current ? { ...current, storageSlot: value } : current))}
+        onChooseImage={async () => {
+          const uri = await images.pickImageFromLibrary();
+          if (uri) setEditWineDraft((current) => current ? { ...current, imageUri: uri } : current);
+        }}
+        onTakePhoto={async () => {
+          const uri = await images.takePhoto();
+          if (uri) setEditWineDraft((current) => current ? { ...current, imageUri: uri } : current);
+        }}
+        onRemoveImage={() => setEditWineDraft((current) => current ? { ...current, imageUri: "" } : current)}
         onSave={saveWineEdit}
       />
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" style={styles.scrollFlex}>
