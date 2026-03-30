@@ -44,5 +44,12 @@
     "files": [
       "./data/catalog-sources/vivino-wine-batch.json"
     ]
+  },
+  {
+    "source": "Vinmonopolet",
+    "priority": 7,
+    "files": [
+      "./data/catalog-sources/vinmonopolet-wine-batch.json"
+    ]
   }
 ]
