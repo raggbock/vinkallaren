@@ -3,7 +3,7 @@ import "react-native-url-polyfill/auto";
 import { useCameraPermissions } from "expo-camera";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Alert, Linking, Platform, SafeAreaView, ScrollView } from "react-native";
+import { Alert, Linking, Platform, SafeAreaView, ScrollView, Text as RNText, View as RNView } from "react-native";
 import type { Session } from "@supabase/supabase-js";
 
 import { supabase, supabaseConfigured } from "./src/lib/supabase";
@@ -34,6 +34,7 @@ import type { ProductCatalogWineRow } from "./src/types/product-catalog";
 import type { WineHistoryInsert } from "./src/types/wine-history";
 import type { WineInsert, WineRecord, WineRow } from "./src/types/wine";
 import { styles } from "./src/styles/theme";
+import { BUILD_VERSION } from "./src/lib/build-version";
 import { AuthScreen, LoadingScreen, SetupScreen } from "./src/screens/auth";
 import { useCellarData } from "./src/hooks/useCellarData";
 import { useCellarFilters } from "./src/hooks/useCellarFilters";
@@ -1016,6 +1017,7 @@ function CellarScreen({ session }: { session: Session }) {
       />
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" style={styles.scrollFlex}>
         {activePanel}
+        <RNText style={{ color: "#8f8178", fontSize: 10, textAlign: "center", opacity: 0.6, paddingBottom: 8 }}>{BUILD_VERSION}</RNText>
       </ScrollView>
       <BottomTabBar activeSection={activeSection} sections={CELLAR_SECTIONS} styles={styles} onSelect={setActiveSection} />
     </SafeAreaView>
