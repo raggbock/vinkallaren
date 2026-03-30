@@ -101,7 +101,10 @@ export function useCellarData(userId: string) {
     const pageSize = 5000;
     while (true) {
       const { data, error } = await supabase.from("product_catalog_wines").select("*").order("name", { ascending: true }).range(offset, offset + pageSize - 1);
-      if (error) return;
+      if (error) {
+        Alert.alert("Kunde inte hämta katalognamn", error.message);
+        return;
+      }
       allEntries.push(...(data as ProductCatalogWineRow[]));
       if (data.length < pageSize) break;
       offset += pageSize;
@@ -111,7 +114,10 @@ export function useCellarData(userId: string) {
 
   async function fetchReferenceOptions() {
     const { data, error } = await supabase.from("reference_options").select("*").in("category", ["grape", "country", "region"]).order("category", { ascending: true }).order("sort_order", { ascending: true }).order("name", { ascending: true });
-    if (error) return;
+    if (error) {
+      Alert.alert("Kunde inte hämta referensdata", error.message);
+      return;
+    }
     setReferenceOptions((data ?? []) as ReferenceOptionRow[]);
   }
 
@@ -195,14 +201,16 @@ export function useCellarData(userId: string) {
   // --- Catalog backfill ---
 
   useEffect(() => {
-    if (catalogBackfillDone || wines.length === 0) return;
+    if (catalogBackfillDone || loadingCatalogEntries || wines.length === 0) return;
     const completeWines = wines.filter((wine) => canBeSavedAsCatalogEntry(wine));
     if (completeWines.length === 0) {
       setCatalogBackfillDone(true);
       return;
     }
+    let cancelled = false;
     const runBackfill = async () => {
       for (const wine of completeWines) {
+        if (cancelled) return;
         const alreadyKnown = catalogNameEntries.some(
           (entry) =>
             normalizeLookupValue(entry.name) === normalizeLookupValue(wine.name) &&
@@ -211,11 +219,14 @@ export function useCellarData(userId: string) {
         if (alreadyKnown) continue;
         await cacheWineRecordAsCatalogEntry(wine, userId);
       }
-      await Promise.all([fetchCatalogEntries(), fetchCatalogNameEntries()]);
-      setCatalogBackfillDone(true);
+      if (!cancelled) {
+        await Promise.all([fetchCatalogEntries(), fetchCatalogNameEntries()]);
+        setCatalogBackfillDone(true);
+      }
     };
     void runBackfill();
-  }, [catalogBackfillDone, catalogNameEntries, userId, wines]);
+    return () => { cancelled = true; };
+  }, [catalogBackfillDone, loadingCatalogEntries, catalogNameEntries, userId, wines]);
 
   // --- Derived data ---
 

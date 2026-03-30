@@ -8,12 +8,17 @@ export function useImagePicker() {
       Alert.alert("Behörighet saknas", "Ge appen tillgång till bilder.");
       return null;
     }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
-      allowsEditing: true,
-      quality: 0.8,
-    });
-    return result.canceled ? null : result.assets[0].uri;
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsEditing: true,
+        quality: 0.8,
+      });
+      return result.canceled ? null : result.assets[0].uri;
+    } catch {
+      Alert.alert("Kunde inte öppna bildbiblioteket", "Försök igen.");
+      return null;
+    }
   }
 
   async function takePhoto(): Promise<string | null> {
@@ -22,11 +27,16 @@ export function useImagePicker() {
       Alert.alert("Behörighet saknas", "Ge appen tillgång till kameran.");
       return null;
     }
-    const result = await ImagePicker.launchCameraAsync({
-      allowsEditing: true,
-      quality: 0.8,
-    });
-    return result.canceled ? null : result.assets[0].uri;
+    try {
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        quality: 0.8,
+      });
+      return result.canceled ? null : result.assets[0].uri;
+    } catch {
+      Alert.alert("Kunde inte öppna kameran", "Försök igen.");
+      return null;
+    }
   }
 
   return { pickImageFromLibrary, takePhoto };

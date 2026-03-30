@@ -8,7 +8,8 @@ import type { WineRecord } from "../types/wine";
 import type { CellarSection } from "../types/cellar";
 import { InsightCard, LabeledInput, LoadingInline, SuggestionRow } from "./form-controls";
 
-type SharedStyles = any;
+import type { styles as themeStyles } from "../styles/theme";
+type SharedStyles = typeof themeStyles;
 
 export function BottomTabBar({
   activeSection,

@@ -10,7 +10,8 @@ import type { CatalogEditorDraft, ImportFieldSelection, ImportMode, WineDraft } 
 import type { WineRecord } from "../types/wine";
 import { AutocompleteInput, DateInput, DoubleRow, ImportSelectionRow, LabeledInput, StorageSpaceSelector, SuggestionRow } from "./form-controls";
 
-type SharedStyles = any;
+import type { styles as themeStyles } from "../styles/theme";
+type SharedStyles = typeof themeStyles;
 const WINE_TYPE_OPTIONS = ["Rött", "Vitt", "Mousserande", "Sött"];
 
 export function BarcodeScannerModal({
@@ -197,25 +198,25 @@ export function VintagePickerModal({
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.5)" }}>
-        <View style={{ backgroundColor: "#fff", borderRadius: 12, padding: 20, width: "80%", maxHeight: "60%" }}>
-          <Text style={{ fontSize: 18, fontWeight: "600", marginBottom: 12 }}>{wineName}</Text>
-          <Text style={{ fontSize: 14, color: "#666", marginBottom: 16 }}>Välj årtal:</Text>
+        <View style={{ backgroundColor: "#fffaf5", borderRadius: 18, padding: 20, width: "80%", maxHeight: "60%" }}>
+          <Text style={{ fontSize: 18, fontWeight: "600", color: "#231815", marginBottom: 12 }}>{wineName}</Text>
+          <Text style={{ fontSize: 14, color: "#6f6259", marginBottom: 16 }}>Välj årtal:</Text>
           <ScrollView>
             {vintages.map(({ year, entry }) => (
               <Pressable
                 key={entry.id}
                 onPress={() => onSelectVintage(entry)}
-                style={{ paddingVertical: 12, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: "#eee" }}
+                style={{ paddingVertical: 12, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: "#e6d7c8" }}
               >
-                <Text style={{ fontSize: 16 }}>{year}</Text>
+                <Text style={{ fontSize: 16, color: "#231815" }}>{year}</Text>
               </Pressable>
             ))}
           </ScrollView>
           <Pressable
             onPress={onAddNew}
-            style={{ marginTop: 12, paddingVertical: 12, alignItems: "center", backgroundColor: "#f0f0f0", borderRadius: 8 }}
+            style={{ marginTop: 12, paddingVertical: 12, alignItems: "center", backgroundColor: "#ead8ca", borderRadius: 12 }}
           >
-            <Text style={{ fontSize: 16, color: "#333" }}>Lägg till nytt</Text>
+            <Text style={{ fontSize: 16, color: "#6f1d1b", fontWeight: "600" }}>Lägg till nytt</Text>
           </Pressable>
         </View>
       </View>

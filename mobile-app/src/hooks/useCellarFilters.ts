@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 
-import { getWineStoragePlacementLabel } from "../lib/cellar-helpers";
+import { getWineStoragePlacementLabel, normalizeLookupValue } from "../lib/cellar-helpers";
 import type { StorageSpaceRow } from "../types/storage-space";
 import type { WineRecord } from "../types/wine";
 
@@ -24,7 +24,7 @@ export function useCellarFilters(wines: WineRecord[], storageSpaceById: Map<stri
         selectedVintageFilter === "Alla" || String(wine.vintage ?? "") === selectedVintageFilter;
       const matchesStorageSpace =
         !selectedStorageSpaceFilterId || wine.storage_space_id === selectedStorageSpaceFilterId;
-      const normalizedQuery = searchQuery.trim().toLowerCase();
+      const normalizedQuery = normalizeLookupValue(searchQuery.trim());
       const matchesSearch =
         normalizedQuery.length === 0 ||
         [
@@ -41,7 +41,7 @@ export function useCellarFilters(wines: WineRecord[], storageSpaceById: Map<stri
           ...wine.tags,
         ]
           .filter(Boolean)
-          .some((value) => String(value).toLowerCase().includes(normalizedQuery));
+          .some((value) => normalizeLookupValue(String(value)).includes(normalizedQuery));
 
       return (
         matchesPairing &&
