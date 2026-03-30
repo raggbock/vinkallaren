@@ -146,9 +146,10 @@ function WineCard({
 }) {
   return (
     <View style={[styles.wineCard, highlighted && styles.wineCardHighlighted]}>
-      {wine.image_url ? <Image source={{ uri: wine.image_url }} style={styles.wineImage} resizeMode="contain" /> : null}
-
       <View style={styles.wineCardHeader}>
+        {wine.image_url ? (
+          <Image source={{ uri: wine.image_url }} style={{ width: 64, height: 86, borderRadius: 10, backgroundColor: "#ead8ca" }} resizeMode="cover" />
+        ) : null}
         <View style={styles.flex}>
           <Text style={styles.wineType}>{wine.type}</Text>
           <Text style={styles.wineName}>{wine.name}</Text>
@@ -294,7 +295,7 @@ export function MinKallarePanel({
   onClearHighlight?: () => void;
 }) {
   const [statsExpanded, setStatsExpanded] = useState(false);
-  const [expandedSpaceIds, setExpandedSpaceIds] = useState<Set<string>>(new Set());
+  const [expandedSpaceIds, setExpandedSpaceIds] = useState<Set<string>>(new Set(["__unplaced__"]));
 
   function toggleSpace(spaceId: string) {
     setExpandedSpaceIds((prev) => {
@@ -401,6 +402,42 @@ export function MinKallarePanel({
         <Text style={styles.emptyState}>Inga viner ännu. Lägg till din första flaska.</Text>
       ) : null}
 
+      {/* Unassigned wines first */}
+      {unplacedWines.length > 0 ? (
+        <View>
+          <Pressable onPress={() => toggleSpace("__unplaced__")} style={[styles.storageCard, { borderWidth: 2, borderColor: "#f4c38c" }]}>
+            <View style={styles.storageCardHeader}>
+              <View style={styles.flex}>
+                <Text style={styles.wineType}>Behöver plats</Text>
+                <Text style={styles.wineName}>Otilldelade</Text>
+              </View>
+              <View style={styles.storageCardRight}>
+                <View style={[styles.quantityBadge, { backgroundColor: "#f4c38c" }]}>
+                  <Text style={styles.quantityBadgeText}>{unplacedWines.length} st</Text>
+                </View>
+                <Text style={styles.statsSummaryToggle}>{expandedSpaceIds.has("__unplaced__") ? "▲" : "▼"}</Text>
+              </View>
+            </View>
+          </Pressable>
+
+          {expandedSpaceIds.has("__unplaced__")
+            ? unplacedWines.map((wine) => (
+                <WineCard
+                  key={wine.id}
+                  wine={wine}
+                  styles={styles}
+                  highlighted={wine.id === highlightedWineId}
+                  storageSpaceById={storageSpaceById}
+                  onOpenSystembolaget={onOpenSystembolaget}
+                  onEditWine={onEditWine}
+                  onDrinkWine={onDrinkWine}
+                  onDeleteWine={onDeleteWine}
+                />
+              ))
+            : null}
+        </View>
+      ) : null}
+
       {spaceCards.map((card) => {
         const isExpanded = expandedSpaceIds.has(card.id);
 
@@ -439,41 +476,6 @@ export function MinKallarePanel({
           </View>
         );
       })}
-
-      {unplacedWines.length > 0 ? (
-        <View>
-          <Pressable onPress={() => toggleSpace("__unplaced__")} style={styles.storageCard}>
-            <View style={styles.storageCardHeader}>
-              <View style={styles.flex}>
-                <Text style={styles.wineType}>Utan plats</Text>
-                <Text style={styles.wineName}>Ej tilldelade</Text>
-              </View>
-              <View style={styles.storageCardRight}>
-                <View style={styles.quantityBadge}>
-                  <Text style={styles.quantityBadgeText}>{unplacedWines.length} st</Text>
-                </View>
-                <Text style={styles.statsSummaryToggle}>{expandedSpaceIds.has("__unplaced__") ? "▲" : "▼"}</Text>
-              </View>
-            </View>
-          </Pressable>
-
-          {expandedSpaceIds.has("__unplaced__")
-            ? unplacedWines.map((wine) => (
-                <WineCard
-                  key={wine.id}
-                  wine={wine}
-                  styles={styles}
-                  highlighted={wine.id === highlightedWineId}
-                  storageSpaceById={storageSpaceById}
-                  onOpenSystembolaget={onOpenSystembolaget}
-                  onEditWine={onEditWine}
-                  onDrinkWine={onDrinkWine}
-                  onDeleteWine={onDeleteWine}
-                />
-              ))
-            : null}
-        </View>
-      ) : null}
     </View>
   );
 }
@@ -530,9 +532,10 @@ export function HistoryPanel({
 
       {filteredEntries.map((entry) => (
         <View key={entry.id} style={styles.wineCard}>
-          {entry.image_url ? <Image source={{ uri: entry.image_url }} style={styles.wineImage} resizeMode="contain" /> : null}
-
           <View style={styles.wineCardHeader}>
+            {entry.image_url ? (
+              <Image source={{ uri: entry.image_url }} style={{ width: 64, height: 86, borderRadius: 10, backgroundColor: "#ead8ca" }} resizeMode="cover" />
+            ) : null}
             <View style={styles.flex}>
               <Text style={styles.wineType}>{entry.type || "Historik"}</Text>
               <Text style={styles.wineName}>{entry.name}</Text>

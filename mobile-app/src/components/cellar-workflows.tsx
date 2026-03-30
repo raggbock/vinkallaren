@@ -240,6 +240,7 @@ export function AddWinePanel({
   selectedStorageRow,
   selectedStorageSlot,
   storageSpaceById,
+  occupiedPositions,
   searchWineNames,
   effectiveCountryOptions,
   effectiveRegionOptions,
@@ -288,6 +289,7 @@ export function AddWinePanel({
   selectedStorageRow: string;
   selectedStorageSlot: string;
   storageSpaceById: Map<string, StorageSpaceRow>;
+  occupiedPositions: { occupiedRows: Set<string>; occupiedSlots: Set<string> };
   searchWineNames: (query: string, offset?: number) => Promise<{ suggestions: Suggestion[]; hasMore: boolean; nextOffset: number }>;
   effectiveCountryOptions: string[];
   effectiveRegionOptions: string[];
@@ -567,8 +569,8 @@ export function AddWinePanel({
               <StorageSpaceSelector title="" spaces={storageSpaces} selectedId={selectedStorageSpaceId} onSelect={onStorageSpaceChange} clearLabel="Ingen plats" />
               {selectedStorageSpace ? (
                 <>
-                  <SuggestionRow title="Rad" options={buildNumericOptions(selectedStorageSpace.row_count)} selected={selectedStorageRow} onSelect={onStorageRowChange} />
-                  <SuggestionRow title="Plats" options={buildNumericOptions(selectedStorageSpace.slots_per_row)} selected={selectedStorageSlot} onSelect={onStorageSlotChange} />
+                  <SuggestionRow title="Rad" options={buildNumericOptions(selectedStorageSpace.row_count)} selected={selectedStorageRow} onSelect={onStorageRowChange} disabledOptions={occupiedPositions.occupiedRows} />
+                  <SuggestionRow title="Plats" options={buildNumericOptions(selectedStorageSpace.slots_per_row)} selected={selectedStorageSlot} onSelect={onStorageSlotChange} disabledOptions={occupiedPositions.occupiedSlots} />
                   <Text style={styles.notesText}>
                     Vald placering:{" "}
                     {getWineStoragePlacementLabel(
@@ -707,6 +709,7 @@ export function EditWineModal({
   storageSpaces,
   selectedStorageSpace,
   storageSpaceById,
+  occupiedPositions,
   searchWineNames,
   effectiveCountryOptions,
   effectiveRegionOptions,
@@ -731,6 +734,7 @@ export function EditWineModal({
   storageSpaces: StorageSpaceRow[];
   selectedStorageSpace?: StorageSpaceRow | null;
   storageSpaceById: Map<string, StorageSpaceRow>;
+  occupiedPositions: { occupiedRows: Set<string>; occupiedSlots: Set<string> };
   searchWineNames: (query: string, offset?: number) => Promise<{ suggestions: Suggestion[]; hasMore: boolean; nextOffset: number }>;
   effectiveCountryOptions: string[];
   effectiveRegionOptions: string[];
@@ -814,8 +818,8 @@ export function EditWineModal({
                   <StorageSpaceSelector title="" spaces={storageSpaces} selectedId={draft.storageSpaceId} onSelect={onStorageSpaceChange} clearLabel="Ingen plats" />
                   {selectedStorageSpace ? (
                     <>
-                      <SuggestionRow title="Rad" options={buildNumericOptions(selectedStorageSpace.row_count)} selected={draft.storageRow} onSelect={onStorageRowChange} />
-                      <SuggestionRow title="Plats" options={buildNumericOptions(selectedStorageSpace.slots_per_row)} selected={draft.storageSlot} onSelect={onStorageSlotChange} />
+                      <SuggestionRow title="Rad" options={buildNumericOptions(selectedStorageSpace.row_count)} selected={draft.storageRow} onSelect={onStorageRowChange} disabledOptions={occupiedPositions.occupiedRows} />
+                      <SuggestionRow title="Plats" options={buildNumericOptions(selectedStorageSpace.slots_per_row)} selected={draft.storageSlot} onSelect={onStorageSlotChange} disabledOptions={occupiedPositions.occupiedSlots} />
                       <Text style={styles.notesText}>
                         Vald placering:{" "}
                         {getWineStoragePlacementLabel(

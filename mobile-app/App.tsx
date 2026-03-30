@@ -2,7 +2,7 @@ import "react-native-url-polyfill/auto";
 
 import { useCameraPermissions } from "expo-camera";
 import { StatusBar } from "expo-status-bar";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Linking, Platform, SafeAreaView, ScrollView } from "react-native";
 import type { Session } from "@supabase/supabase-js";
 
@@ -140,14 +140,16 @@ function CellarScreen({ session }: { session: Session }) {
   const selectedEditStorageSpace = data.storageSpaces.find((s) => s.id === (editWineDraft?.storageSpaceId || "")) ?? null;
   const mealRecommendations = useMemo(() => buildMealRecommendations(data.wines, selectedMeal), [selectedMeal, data.wines]);
 
-  // --- Storage space auto-select ---
+  // --- Storage space auto-select (only on first load) ---
+  const storageAutoSelectedRef = useRef(false);
   useEffect(() => {
-    if (data.storageSpaces.length > 0 && !selectedStorageSpaceId) {
+    if (!storageAutoSelectedRef.current && data.storageSpaces.length > 0 && !selectedStorageSpaceId) {
       setSelectedStorageSpaceId(data.storageSpaces[0].id);
       setSelectedStorageRow("1");
       setSelectedStorageSlot("1");
+      storageAutoSelectedRef.current = true;
     }
-  }, [selectedStorageSpaceId, data.storageSpaces]);
+  }, [data.storageSpaces]);
 
   useEffect(() => {
     if (!selectedStorageSpaceId) return;
@@ -552,6 +554,33 @@ function CellarScreen({ session }: { session: Session }) {
     if (uri) setDrinkImageUri(uri);
   }
 
+  // --- Storage conflict detection ---
+
+  function getOccupiedPositions(spaceId: string, selectedRow: string, excludeWineId?: string): { occupiedRows: Set<string>; occupiedSlots: Set<string> } {
+    const occupiedRows = new Set<string>();
+    const occupiedSlots = new Set<string>();
+    if (!spaceId) return { occupiedRows, occupiedSlots };
+    const space = data.storageSpaces.find((s) => s.id === spaceId);
+    if (!space) return { occupiedRows, occupiedSlots };
+
+    // Count occupied positions per row — if all slots in a row are taken, disable the row
+    const rowSlotCounts = new Map<number, number>();
+    for (const w of data.wines) {
+      if (w.storage_space_id !== spaceId || w.id === excludeWineId) continue;
+      if (w.storage_row != null) {
+        rowSlotCounts.set(w.storage_row, (rowSlotCounts.get(w.storage_row) || 0) + 1);
+      }
+      // Track occupied slots in the currently selected row
+      if (w.storage_row === Number(selectedRow) && w.storage_slot != null) {
+        occupiedSlots.add(String(w.storage_slot));
+      }
+    }
+    for (const [row, count] of rowSlotCounts) {
+      if (count >= space.slots_per_row) occupiedRows.add(String(row));
+    }
+    return { occupiedRows, occupiedSlots };
+  }
+
   // --- Save operations ---
 
   async function saveWine() {
@@ -857,12 +886,16 @@ function CellarScreen({ session }: { session: Session }) {
             return nextDraft;
           })
         }
+        occupiedPositions={getOccupiedPositions(selectedStorageSpaceId, selectedStorageRow)}
         onStorageSpaceChange={(spaceId) => {
           setSelectedStorageSpaceId(spaceId);
           setSelectedStorageRow("1");
           setSelectedStorageSlot("1");
         }}
-        onStorageRowChange={setSelectedStorageRow}
+        onStorageRowChange={(value) => {
+          setSelectedStorageRow(value);
+          setSelectedStorageSlot("1");
+        }}
         onStorageSlotChange={setSelectedStorageSlot}
         onStartBarcodeScanner={startBarcodeScanner}
         onOpenSystembolaget={openSystembolaget}
@@ -952,10 +985,11 @@ function CellarScreen({ session }: { session: Session }) {
         regionReferenceRows={data.regionReferenceRows}
         grapeReferenceRows={data.grapeReferenceRows}
         saving={savingWineEdit}
+        occupiedPositions={getOccupiedPositions(editWineDraft?.storageSpaceId || "", editWineDraft?.storageRow || "1", editingWine?.id)}
         onClose={closeEditWineModal}
         onDraftChange={(patch) => setEditWineDraft((current) => (current ? { ...current, ...patch } : current))}
         onStorageSpaceChange={(spaceId) => setEditWineDraft((current) => current ? { ...current, storageSpaceId: spaceId, storageRow: "1", storageSlot: "1" } : current)}
-        onStorageRowChange={(value) => setEditWineDraft((current) => (current ? { ...current, storageRow: value } : current))}
+        onStorageRowChange={(value) => setEditWineDraft((current) => (current ? { ...current, storageRow: value, storageSlot: "1" } : current))}
         onStorageSlotChange={(value) => setEditWineDraft((current) => (current ? { ...current, storageSlot: value } : current))}
         onChooseImage={async () => {
           const uri = await images.pickImageFromLibrary();

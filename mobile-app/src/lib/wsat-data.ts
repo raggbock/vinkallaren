@@ -160,24 +160,24 @@ export function buildWsatSummary(data: WsatTastingData): string {
   const parts: string[] = [];
 
   const app = [data.appearance.intensity, data.appearance.colour].filter((v): v is string => v != null);
-  if (app.length > 0) parts.push(app.map(swedishLabel).join(", "));
+  if (app.length > 0) parts.push(app.join(", "));
 
   const noseItems = [
-    data.nose.intensity ? swedishLabel(data.nose.intensity) : null,
+    data.nose.intensity,
     ...data.nose.aromas.slice(0, 3),
-  ].filter(Boolean);
+  ].filter((v): v is string => v != null);
   if (noseItems.length > 0) parts.push(noseItems.join(", "));
 
   const palateItems = [
-    data.palate.sweetness ? swedishLabel(data.palate.sweetness) : null,
-    data.palate.acidity ? `syra: ${swedishLabel(data.palate.acidity)}` : null,
-    data.palate.body ? `kropp: ${swedishLabel(data.palate.body)}` : null,
-  ].filter(Boolean);
+    data.palate.sweetness,
+    data.palate.acidity ? `acidity: ${data.palate.acidity}` : null,
+    data.palate.body ? `body: ${data.palate.body}` : null,
+  ].filter((v): v is string => v != null);
   if (palateItems.length > 0) parts.push(palateItems.join(", "));
 
-  if (data.conclusions.quality) parts.push(swedishLabel(data.conclusions.quality));
+  if (data.conclusions.quality) parts.push(data.conclusions.quality);
 
-  return parts.join(" | ") || "Ingen data";
+  return parts.join(" | ") || "No data";
 }
 
 // --- Tannin visibility ---

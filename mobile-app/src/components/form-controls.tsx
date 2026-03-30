@@ -324,12 +324,14 @@ export function SuggestionRow({
   selected,
   onSelect,
   disabled = false,
+  disabledOptions,
 }: {
   title: string;
   options: string[];
   selected?: string | string[];
   onSelect: (value: string) => void;
   disabled?: boolean;
+  disabledOptions?: Set<string>;
 }) {
   return (
     <View style={styles.foodSection}>
@@ -337,13 +339,14 @@ export function SuggestionRow({
       <View style={styles.tagRow}>
         {options.map((option) => {
           const isSelected = Array.isArray(selected) ? selected.includes(option) : selected === option;
+          const isOccupied = disabledOptions?.has(option) && !isSelected;
 
           return (
             <Pressable
               key={`${title}-${option}`}
               onPress={() => onSelect(option)}
-              disabled={disabled}
-              style={[styles.suggestionPill, isSelected && styles.suggestionPillActive]}
+              disabled={disabled || isOccupied}
+              style={[styles.suggestionPill, isSelected && styles.suggestionPillActive, isOccupied && { opacity: 0.35 }]}
             >
               <Text style={[styles.suggestionText, isSelected && styles.suggestionTextActive]}>{option}</Text>
             </Pressable>

@@ -15,12 +15,11 @@ import {
   emptyWsatData,
   getColourOptions,
   showTannin,
-  swedishLabel,
   type AromaSection,
   type WsatTastingData,
 } from "../lib/wsat-data";
 
-const STEP_TITLES = ["Utseende", "Doft", "Smak", "Slutsats"];
+const STEP_TITLES = ["Appearance", "Nose", "Palate", "Conclusions"];
 
 export function WsatTastingModal({
   visible,
@@ -63,7 +62,7 @@ export function WsatTastingModal({
           </View>
           <Text style={styles.stepIndicator}>{step + 1} / {STEP_TITLES.length}</Text>
           <Pressable onPress={onClose}>
-            <Text style={styles.closeText}>Stäng</Text>
+            <Text style={styles.closeText}>Close</Text>
           </Pressable>
         </View>
 
@@ -91,7 +90,7 @@ export function WsatTastingModal({
                 selected={data.nose.intensity}
                 onSelect={(v) => setData({ ...data, nose: { ...data.nose, intensity: v as WsatTastingData["nose"]["intensity"] } })}
               />
-              <Text style={styles.sectionLabel}>Aromer</Text>
+              <Text style={styles.sectionLabel}>Aromas</Text>
               <TagSelector
                 sections={AROMA_LEXICON}
                 selected={data.nose.aromas}
@@ -99,7 +98,7 @@ export function WsatTastingModal({
               />
               <TextInput
                 style={styles.textInput}
-                placeholder="Övriga doftnoteringar..."
+                placeholder="Additional aroma notes..."
                 placeholderTextColor="#8f8178"
                 value={data.nose.aromaNote ?? ""}
                 onChangeText={(v) => setData({ ...data, nose: { ...data.nose, aromaNote: v || null } })}
@@ -108,15 +107,15 @@ export function WsatTastingModal({
             </>
           ) : step === 2 ? (
             <>
-              <OptionRow label="Sötma" options={[...PALATE_SWEETNESS]} selected={data.palate.sweetness} onSelect={(v) => setData({ ...data, palate: { ...data.palate, sweetness: v as any } })} />
-              <OptionRow label="Syra" options={[...PALATE_ACIDITY]} selected={data.palate.acidity} onSelect={(v) => setData({ ...data, palate: { ...data.palate, acidity: v as any } })} />
+              <OptionRow label="Sweetness" options={[...PALATE_SWEETNESS]} selected={data.palate.sweetness} onSelect={(v) => setData({ ...data, palate: { ...data.palate, sweetness: v as any } })} />
+              <OptionRow label="Acidity" options={[...PALATE_ACIDITY]} selected={data.palate.acidity} onSelect={(v) => setData({ ...data, palate: { ...data.palate, acidity: v as any } })} />
               {showTannin(wineType) ? (
                 <OptionRow label="Tannin" options={[...PALATE_TANNIN]} selected={data.palate.tannin} onSelect={(v) => setData({ ...data, palate: { ...data.palate, tannin: v as any } })} />
               ) : null}
-              <OptionRow label="Alkohol" options={[...PALATE_ALCOHOL]} selected={data.palate.alcohol} onSelect={(v) => setData({ ...data, palate: { ...data.palate, alcohol: v as any } })} />
-              <OptionRow label="Kropp" options={[...PALATE_BODY]} selected={data.palate.body} onSelect={(v) => setData({ ...data, palate: { ...data.palate, body: v as any } })} />
-              <OptionRow label="Smakintensitet" options={[...PALATE_FLAVOUR_INTENSITY]} selected={data.palate.flavourIntensity} onSelect={(v) => setData({ ...data, palate: { ...data.palate, flavourIntensity: v as any } })} />
-              <Text style={styles.sectionLabel}>Smaker</Text>
+              <OptionRow label="Alcohol" options={[...PALATE_ALCOHOL]} selected={data.palate.alcohol} onSelect={(v) => setData({ ...data, palate: { ...data.palate, alcohol: v as any } })} />
+              <OptionRow label="Body" options={[...PALATE_BODY]} selected={data.palate.body} onSelect={(v) => setData({ ...data, palate: { ...data.palate, body: v as any } })} />
+              <OptionRow label="Flavour intensity" options={[...PALATE_FLAVOUR_INTENSITY]} selected={data.palate.flavourIntensity} onSelect={(v) => setData({ ...data, palate: { ...data.palate, flavourIntensity: v as any } })} />
+              <Text style={styles.sectionLabel}>Flavours</Text>
               <TagSelector
                 sections={AROMA_LEXICON}
                 selected={data.palate.flavours}
@@ -124,32 +123,32 @@ export function WsatTastingModal({
               />
               <TextInput
                 style={styles.textInput}
-                placeholder="Övriga smaknoteringar..."
+                placeholder="Additional flavour notes..."
                 placeholderTextColor="#8f8178"
                 value={data.palate.flavourNote ?? ""}
                 onChangeText={(v) => setData({ ...data, palate: { ...data.palate, flavourNote: v || null } })}
                 multiline
               />
-              <OptionRow label="Avslut" options={[...PALATE_FINISH]} selected={data.palate.finish} onSelect={(v) => setData({ ...data, palate: { ...data.palate, finish: v as any } })} />
+              <OptionRow label="Finish" options={[...PALATE_FINISH]} selected={data.palate.finish} onSelect={(v) => setData({ ...data, palate: { ...data.palate, finish: v as any } })} />
             </>
           ) : (
-            <OptionRow label="Kvalitet" options={[...QUALITY_OPTIONS]} selected={data.conclusions.quality} onSelect={(v) => setData({ ...data, conclusions: { quality: v as any } })} />
+            <OptionRow label="Quality" options={[...QUALITY_OPTIONS]} selected={data.conclusions.quality} onSelect={(v) => setData({ ...data, conclusions: { quality: v as any } })} />
           )}
         </ScrollView>
 
         <View style={styles.nav}>
           {step > 0 ? (
             <Pressable style={styles.navButtonSecondary} onPress={() => setStep(step - 1)}>
-              <Text style={styles.navButtonSecondaryText}>Tillbaka</Text>
+              <Text style={styles.navButtonSecondaryText}>Back</Text>
             </Pressable>
           ) : <View style={{ flex: 1 }} />}
           {step < STEP_TITLES.length - 1 ? (
             <Pressable style={styles.navButtonPrimary} onPress={() => setStep(step + 1)}>
-              <Text style={styles.navButtonPrimaryText}>Nästa</Text>
+              <Text style={styles.navButtonPrimaryText}>Next</Text>
             </Pressable>
           ) : (
             <Pressable style={styles.navButtonPrimary} onPress={handleSave}>
-              <Text style={styles.navButtonPrimaryText}>Spara</Text>
+              <Text style={styles.navButtonPrimaryText}>Save</Text>
             </Pressable>
           )}
         </View>
@@ -182,7 +181,7 @@ function OptionRow({
             onPress={() => onSelect(opt)}
           >
             <Text style={[styles.chipText, selected === opt && styles.chipTextSelected]}>
-              {swedishLabel(opt)}
+              {opt}
             </Text>
           </Pressable>
         ))}
