@@ -20,11 +20,13 @@ export function BarcodeScannerModal({
   styles,
   onClose,
   onBarcodeScanned,
+  onLabelPhoto,
 }: {
   visible: boolean;
   styles: SharedStyles;
   onClose: () => void;
   onBarcodeScanned: (event: { data: string }) => void;
+  onLabelPhoto: () => void;
 }) {
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="fullScreen">
@@ -51,6 +53,10 @@ export function BarcodeScannerModal({
         </View>
 
         <Text style={styles.scannerHint}>Om koden redan finns i din källare fyller appen i relevanta fält automatiskt.</Text>
+
+        <Pressable onPress={onLabelPhoto} style={styles.secondaryButton}>
+          <Text style={styles.secondaryButtonText}>Fotografera etiketten</Text>
+        </Pressable>
       </SafeAreaView>
     </Modal>
   );
@@ -514,19 +520,19 @@ export function AddWinePanel({
         <>
           {/* --- Tasting-specific fields --- */}
           <DateInput label="Provningsdatum" value={tastingDate} onChangeText={onTastingDateChange} />
-          <SuggestionRow title="Betyg" options={["1", "2", "3", "4", "5"]} selected={tastingRating} onSelect={onTastingRatingChange} />
-          <LabeledInput label="Smaknotering" value={draft.notes} onChangeText={(value) => onDraftChange({ notes: value })} placeholder="t.ex. mörk frukt, bra syra, gärna igen" multiline />
           {wsatData ? (
             <Pressable onPress={onOpenWsat} style={styles.importSuggestionCard}>
-              <Text style={styles.inputLabel}>WSET-provning</Text>
+              <Text style={styles.inputLabel}>WSET Tasting</Text>
               <Text style={styles.notesText}>{buildWsatSummary(wsatData)}</Text>
-              <Text style={styles.linkText}>Redigera</Text>
+              <Text style={styles.linkText}>Edit</Text>
             </Pressable>
           ) : (
             <Pressable onPress={onOpenWsat} style={styles.secondaryButton}>
-              <Text style={styles.secondaryButtonText}>WSET-provning</Text>
+              <Text style={styles.secondaryButtonText}>WSET Tasting</Text>
             </Pressable>
           )}
+          <SuggestionRow title="Betyg" options={["1", "2", "3", "4", "5"]} selected={tastingRating} onSelect={onTastingRatingChange} />
+          <LabeledInput label="Smaknotering" value={draft.notes} onChangeText={(value) => onDraftChange({ notes: value })} placeholder="t.ex. mörk frukt, bra syra, gärna igen" multiline />
         </>
       ) : (
         <>
