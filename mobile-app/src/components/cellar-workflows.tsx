@@ -1,7 +1,7 @@
 import { CameraView } from "expo-camera";
 import { ActivityIndicator, Image, Modal, Platform, Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
 
-import { buildNumericOptions, getSuggestedPairings, getWineStoragePlacementLabel, mergeTagText, parseTags } from "../lib/cellar-helpers";
+import { buildNumericOptions, FOOD_CATEGORIES, getWineStoragePlacementLabel, mergeTagText, parseTags } from "../lib/cellar-helpers";
 import { buildWsatSummary, type WsatTastingData } from "../lib/wsat-data";
 import type { ProductCatalogEntry } from "../lib/product-catalog";
 import type { ProductCatalogWineRow } from "../types/product-catalog";
@@ -9,7 +9,7 @@ import type { ReferenceOptionRow } from "../types/reference-data";
 import type { StorageSpaceRow } from "../types/storage-space";
 import type { CatalogEditorDraft, ImportFieldSelection, ImportMode, WineDraft } from "../types/cellar-drafts";
 import type { WineRecord } from "../types/wine";
-import { AutocompleteInput, DateInput, DoubleRow, ImportSelectionRow, LabeledInput, StorageSpaceSelector, SuggestionRow, type Suggestion } from "./form-controls";
+import { AutocompleteInput, DateInput, DoubleRow, GroupedSuggestionRow, ImportSelectionRow, LabeledInput, StorageSpaceSelector, SuggestionRow, type Suggestion } from "./form-controls";
 
 import type { styles as themeStyles } from "../styles/theme";
 type SharedStyles = typeof themeStyles;
@@ -544,10 +544,10 @@ export function AddWinePanel({
             <DateInput label="Inköpt" value={draft.acquiredAt} onChangeText={(value) => onDraftChange({ acquiredAt: value })} />
           </DoubleRow>
 
-          {/* --- Food pairing: suggestions + free text together --- */}
-          <SuggestionRow
+          {/* --- Food pairing: grouped categories + free text --- */}
+          <GroupedSuggestionRow
             title="Matförslag"
-            options={getSuggestedPairings(draft.type)}
+            groups={FOOD_CATEGORIES}
             selected={parseTags(draft.foodPairings)}
             onSelect={(pairing) => onDraftChange({ foodPairings: mergeTagText(draft.foodPairings, pairing) })}
           />

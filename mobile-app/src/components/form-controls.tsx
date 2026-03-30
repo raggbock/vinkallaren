@@ -354,6 +354,56 @@ export function SuggestionRow({
   );
 }
 
+export function GroupedSuggestionRow({
+  title,
+  groups,
+  selected,
+  onSelect,
+}: {
+  title: string;
+  groups: Array<{ label: string; items: string[] }>;
+  selected: string[];
+  onSelect: (value: string) => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const visibleGroups = expanded ? groups : groups.slice(0, 3);
+
+  return (
+    <View style={styles.foodSection}>
+      <Text style={styles.inputLabel}>{title}</Text>
+      {visibleGroups.map((group) => (
+        <View key={group.label} style={{ marginBottom: 8 }}>
+          <Text style={styles.groupLabel}>{group.label}</Text>
+          <View style={styles.tagRow}>
+            {group.items.map((item) => {
+              const isSelected = selected.includes(item);
+              return (
+                <Pressable
+                  key={`${group.label}-${item}`}
+                  onPress={() => onSelect(item)}
+                  style={[styles.suggestionPill, isSelected && styles.suggestionPillActive]}
+                >
+                  <Text style={[styles.suggestionText, isSelected && styles.suggestionTextActive]}>{item}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+      ))}
+      {groups.length > 3 && !expanded ? (
+        <Pressable onPress={() => setExpanded(true)}>
+          <Text style={styles.expandLink}>Visa fler kategorier ({groups.length - 3} till)</Text>
+        </Pressable>
+      ) : null}
+      {expanded ? (
+        <Pressable onPress={() => setExpanded(false)}>
+          <Text style={styles.expandLink}>Visa färre</Text>
+        </Pressable>
+      ) : null}
+    </View>
+  );
+}
+
 export function StorageSpaceSelector({
   title,
   spaces,
@@ -546,6 +596,18 @@ const styles = StyleSheet.create({
   },
   suggestionTextActive: {
     color: "#fff6ee",
+  },
+  groupLabel: {
+    color: "#8f8178",
+    fontSize: 12,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  expandLink: {
+    color: "#6f1d1b",
+    fontSize: 13,
+    fontWeight: "600",
+    marginTop: 4,
   },
   importOptionRow: {
     flexDirection: "row",
