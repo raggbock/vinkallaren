@@ -19,6 +19,7 @@ export type WineHistoryRow = {
   quantity_consumed: number;
   rating: number | null;
   tasting_notes: string | null;
+  tasting_data: Record<string, unknown> | null;
   consumed_at: string;
   created_at: string;
 };
@@ -47,5 +48,6 @@ export type WineHistoryInsert = {
   quantity_consumed?: number;
   rating?: number | null;
   tasting_notes?: string | null;
+  tasting_data?: Record<string, unknown> | null;
   consumed_at?: string | null;
 };
