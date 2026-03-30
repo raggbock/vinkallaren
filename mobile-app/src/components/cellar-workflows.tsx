@@ -75,7 +75,7 @@ export function CatalogEditorModal({
   styles: SharedStyles;
   draft: CatalogEditorDraft | null;
   saving: boolean;
-  searchWineNames: (query: string) => Promise<Suggestion[]>;
+  searchWineNames: (query: string, offset?: number) => Promise<{ suggestions: Suggestion[]; hasMore: boolean; nextOffset: number }>;
   effectiveCountryOptions: string[];
   effectiveRegionOptions: string[];
   effectiveGrapeOptions: string[];
@@ -277,7 +277,7 @@ export function AddWinePanel({
   selectedStorageRow: string;
   selectedStorageSlot: string;
   storageSpaceById: Map<string, StorageSpaceRow>;
-  searchWineNames: (query: string) => Promise<Suggestion[]>;
+  searchWineNames: (query: string, offset?: number) => Promise<{ suggestions: Suggestion[]; hasMore: boolean; nextOffset: number }>;
   effectiveCountryOptions: string[];
   effectiveRegionOptions: string[];
   effectiveGrapeOptions: string[];
@@ -683,7 +683,7 @@ export function EditWineModal({
   storageSpaces: StorageSpaceRow[];
   selectedStorageSpace?: StorageSpaceRow | null;
   storageSpaceById: Map<string, StorageSpaceRow>;
-  searchWineNames: (query: string) => Promise<Suggestion[]>;
+  searchWineNames: (query: string, offset?: number) => Promise<{ suggestions: Suggestion[]; hasMore: boolean; nextOffset: number }>;
   effectiveCountryOptions: string[];
   effectiveRegionOptions: string[];
   effectiveGrapeOptions: string[];

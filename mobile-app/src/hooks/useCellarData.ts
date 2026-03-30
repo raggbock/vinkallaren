@@ -93,14 +93,15 @@ export function useCellarData(userId: string) {
     setLoadingCatalogEntries(false);
   }
 
-  async function searchCatalogWineNames(query: string): Promise<Suggestion[]> {
+  async function searchCatalogWineNames(query: string, offset = 0): Promise<{ suggestions: Suggestion[]; hasMore: boolean; nextOffset: number }> {
+    const BATCH_SIZE = 50;
     const { data, error } = await supabase
       .from("product_catalog_wines")
       .select("name, producer")
       .ilike("name", `%${query}%`)
       .order("name", { ascending: true })
-      .limit(200);
-    if (error) return [];
+      .range(offset, offset + BATCH_SIZE - 1);
+    if (error) return { suggestions: [], hasMore: false, nextOffset: offset };
     const seen = new Set<string>();
     const results: Suggestion[] = [];
     for (const row of data ?? []) {
@@ -109,14 +110,14 @@ export function useCellarData(userId: string) {
       seen.add(key);
       results.push({ name: row.name, parentName: row.producer ?? null });
     }
-    // Sort: name starts with query first, then alphabetical
     results.sort((a, b) => {
       const aStarts = normalizeLookupValue(a.name).startsWith(query) ? 0 : 1;
       const bStarts = normalizeLookupValue(b.name).startsWith(query) ? 0 : 1;
       if (aStarts !== bStarts) return aStarts - bStarts;
       return a.name.localeCompare(b.name);
     });
-    return results.slice(0, 200);
+    const rowCount = (data ?? []).length;
+    return { suggestions: results, hasMore: rowCount === BATCH_SIZE, nextOffset: offset + rowCount };
   }
 
   async function fetchCatalogEntriesByName(name: string): Promise<ProductCatalogWineRow[]> {

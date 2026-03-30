@@ -79,7 +79,7 @@ export function AutocompleteInput({
   onOptionSelected?: (value: string, parentName?: string | null) => void;
   options: string[];
   optionRows?: ReferenceOptionRow[];
-  searchAsync?: (query: string) => Promise<Suggestion[]>;
+  searchAsync?: (query: string, offset?: number) => Promise<{ suggestions: Suggestion[]; hasMore: boolean; nextOffset: number }>;
   placeholder?: string;
   minimumQueryLength?: number;
   editable?: boolean;
@@ -87,8 +87,12 @@ export function AutocompleteInput({
   const [focused, setFocused] = useState(false);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [asyncResults, setAsyncResults] = useState<Suggestion[]>([]);
+  const [asyncHasMore, setAsyncHasMore] = useState(false);
+  const [asyncOffset, setAsyncOffset] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
   const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const currentQueryRef = useRef("");
 
   useEffect(() => {
     return () => {
@@ -103,11 +107,20 @@ export function AutocompleteInput({
     const query = normalizeLookupValue(value);
     if (!query || query.length < minimumQueryLength) {
       setAsyncResults([]);
+      setAsyncHasMore(false);
+      setAsyncOffset(0);
+      currentQueryRef.current = "";
       return;
     }
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
     searchTimeoutRef.current = setTimeout(() => {
-      void searchAsync(query).then(setAsyncResults);
+      currentQueryRef.current = query;
+      void searchAsync(query, 0).then(({ suggestions, hasMore, nextOffset }) => {
+        setAsyncResults(suggestions);
+        setAsyncHasMore(hasMore);
+        setAsyncOffset(nextOffset);
+        setVisibleCount(PAGE_SIZE);
+      });
     }, SEARCH_DEBOUNCE_MS);
     return () => {
       if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
@@ -178,11 +191,31 @@ export function AutocompleteInput({
     setFocused(false);
   }
 
+  function loadMoreAsync() {
+    if (!searchAsync || loadingMore || !asyncHasMore) return;
+    const query = currentQueryRef.current;
+    if (!query) return;
+    setLoadingMore(true);
+    void searchAsync(query, asyncOffset).then(({ suggestions: newResults, hasMore, nextOffset }) => {
+      // Deduplicate against existing results
+      const existingKeys = new Set(asyncResults.map((r) => normalizeLookupValue(r.name) + "|" + normalizeLookupValue(r.parentName ?? "")));
+      const unique = newResults.filter((r) => !existingKeys.has(normalizeLookupValue(r.name) + "|" + normalizeLookupValue(r.parentName ?? "")));
+      setAsyncResults((prev) => [...prev, ...unique]);
+      setAsyncHasMore(hasMore);
+      setAsyncOffset(nextOffset);
+      setLoadingMore(false);
+    });
+  }
+
   function handleScroll(event: NativeSyntheticEvent<NativeScrollEvent>) {
     const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
     const distanceFromBottom = contentSize.height - layoutMeasurement.height - contentOffset.y;
-    if (distanceFromBottom < SCROLL_THRESHOLD && visibleCount < suggestions.length) {
-      setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, suggestions.length));
+    if (distanceFromBottom < SCROLL_THRESHOLD) {
+      if (visibleCount < suggestions.length) {
+        setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, suggestions.length));
+      } else if (searchAsync && asyncHasMore && !loadingMore) {
+        loadMoreAsync();
+      }
     }
   }
 
@@ -235,9 +268,13 @@ export function AutocompleteInput({
                 </Text>
               </Pressable>
             ))}
-            {visibleCount < suggestions.length ? (
+            {loadingMore ? (
+              <ActivityIndicator size="small" color="#8f8178" style={{ paddingVertical: 8 }} />
+            ) : visibleCount < suggestions.length || asyncHasMore ? (
               <Text style={styles.autocompleteMoreHint}>
-                {`${suggestions.length - visibleCount} till \u2193`}
+                {visibleCount < suggestions.length
+                  ? `${suggestions.length - visibleCount} till \u2193`
+                  : "Scrolla f\u00f6r fler \u2193"}
               </Text>
             ) : null}
           </ScrollView>
