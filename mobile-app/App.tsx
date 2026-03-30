@@ -38,6 +38,9 @@ import { AuthScreen, LoadingScreen, SetupScreen } from "./src/screens/auth";
 import { useCellarData } from "./src/hooks/useCellarData";
 import { useCellarFilters } from "./src/hooks/useCellarFilters";
 import { useImagePicker } from "./src/hooks/useImagePicker";
+import { recognizeLabel, parseWineLabel } from "./src/lib/label-ocr";
+import { LabelMatchPickerModal } from "./src/components/label-match-picker";
+import type { CatalogTextMatch } from "./src/hooks/useCellarData";
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -86,6 +89,11 @@ function CellarScreen({ session }: { session: Session }) {
   const [lookupBusy, setLookupBusy] = useState(false);
   const [lookupMessage, setLookupMessage] = useState("");
   const [selectedCatalogNameEntry, setSelectedCatalogNameEntry] = useState<ProductCatalogWineRow | null>(null);
+
+  // --- Label scanner ---
+  const [labelMatches, setLabelMatches] = useState<CatalogTextMatch[]>([]);
+  const [labelPickerVisible, setLabelPickerVisible] = useState(false);
+  const [labelOcrText, setLabelOcrText] = useState<string | null>(null);
 
   // --- Barcode scanner ---
   const [scannerVisible, setScannerVisible] = useState(false);
@@ -319,6 +327,112 @@ function CellarScreen({ session }: { session: Session }) {
       return;
     }
     Alert.alert("Ingen produktträff", "Streckkoden sparades. Fyll i vinets namn och detaljer nedan så kopplas de ihop automatiskt.");
+  }
+
+  // --- Label scanning ---
+
+  async function handleLabelPhoto() {
+    setScannerVisible(false);
+    const uri = await images.takePhoto();
+    if (!uri) {
+      setScannerVisible(true);
+      return;
+    }
+
+    setLookupBusy(true);
+    setLookupMessage("Läser etiketten...");
+    try {
+      const blocks = await recognizeLabel(uri);
+      if (blocks.length === 0) {
+        Alert.alert("Kunde inte läsa etiketten", "Försök igen med bättre belysning.");
+        setLookupBusy(false);
+        setLookupMessage("");
+        return;
+      }
+
+      const parsed = parseWineLabel(blocks);
+      if (!parsed.searchQuery) {
+        Alert.alert("Kunde inte läsa etiketten", "Försök igen med bättre belysning.");
+        setLookupBusy(false);
+        setLookupMessage("");
+        return;
+      }
+
+      setLabelOcrText(parsed.name);
+
+      // Pre-fill vintage if found
+      if (parsed.vintage) {
+        setDraft((current) => ({ ...current, vintage: current.vintage || parsed.vintage! }));
+      }
+
+      const matches = await data.matchCatalogByText(parsed.searchQuery);
+
+      if (matches.length > 0) {
+        setLabelMatches(matches);
+        setLabelPickerVisible(true);
+      } else {
+        // No matches — prefill name field with OCR text
+        if (parsed.name) {
+          setDraft((current) => ({ ...current, name: current.name || parsed.name! }));
+        }
+        if (parsed.producer) {
+          setDraft((current) => ({ ...current, producer: current.producer || parsed.producer! }));
+        }
+        Alert.alert(
+          "Inga matchningar hittades",
+          "Texten från etiketten har fyllts i — korrigera vid behov."
+        );
+      }
+    } catch {
+      Alert.alert("Kunde inte läsa etiketten", "Försök igen med bättre belysning.");
+    } finally {
+      setLookupBusy(false);
+      setLookupMessage("");
+    }
+  }
+
+  async function handleLabelMatchSelected(match: CatalogTextMatch) {
+    setLabelPickerVisible(false);
+    setLabelMatches([]);
+
+    // Fetch full catalog entry by name to get all fields
+    const entries = await data.fetchCatalogEntriesByName(match.name);
+    if (entries.length > 0) {
+      const best = entries.reduce((a, b) =>
+        scoreCatalogCompleteness(b) > scoreCatalogCompleteness(a) ? b : a
+      );
+      setSelectedCatalogNameEntry(best);
+      setDraft((current) => ({
+        ...current,
+        name: best.name,
+        producer: best.producer ?? current.producer,
+        country: best.country ?? current.country,
+        region: best.region ?? current.region,
+        grape: best.grape ?? current.grape,
+        type: best.type ?? current.type,
+        vintage: best.vintage?.toString() ?? current.vintage,
+        foodPairings: best.food_pairings?.join(", ") || current.foodPairings,
+        barcode: best.barcode ?? current.barcode,
+        systembolagetProductId: best.systembolaget_product_id ?? current.systembolagetProductId,
+      }));
+    } else {
+      // Fallback: just fill name + producer from the match
+      setDraft((current) => ({
+        ...current,
+        name: match.name,
+        producer: match.producer ?? current.producer,
+        vintage: match.vintage?.toString() ?? current.vintage,
+      }));
+    }
+  }
+
+  function handleLabelMatchDismissed() {
+    setLabelPickerVisible(false);
+    setLabelMatches([]);
+    // Prefill with OCR text as fallback
+    if (labelOcrText) {
+      setDraft((current) => ({ ...current, name: current.name || labelOcrText! }));
+    }
   }
 
   // --- Catalog editor ---
@@ -755,7 +869,13 @@ function CellarScreen({ session }: { session: Session }) {
   return (
     <SafeAreaView style={styles.screen}>
       <StatusBar style="light" />
-      <BarcodeScannerModal visible={scannerVisible} styles={styles} onClose={() => setScannerVisible(false)} onBarcodeScanned={handleBarcodeScanned} />
+      <BarcodeScannerModal visible={scannerVisible} styles={styles} onClose={() => setScannerVisible(false)} onBarcodeScanned={handleBarcodeScanned} onLabelPhoto={handleLabelPhoto} />
+      <LabelMatchPickerModal
+        visible={labelPickerVisible}
+        matches={labelMatches}
+        onSelect={handleLabelMatchSelected}
+        onDismiss={handleLabelMatchDismissed}
+      />
       <WsatTastingModal
         visible={wsatModalVisible}
         wineType={draft.type}
