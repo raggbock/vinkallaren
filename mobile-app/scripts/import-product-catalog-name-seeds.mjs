@@ -45,6 +45,19 @@ function sqlInteger(value) {
   return `${Number(value)}`;
 }
 
+function stripProducerPrefix(name, producer) {
+  if (!name || !producer) return name;
+  if (name.toLowerCase().startsWith(producer.toLowerCase() + " ")) {
+    const stripped = name.slice(producer.length).trim();
+    if (stripped.length > 0) return stripped;
+  }
+  return name;
+}
+
+function collapseSpaces(str) {
+  return str ? str.replace(/\s{2,}/g, " ").trim() : str;
+}
+
 function normalizeType(value) {
   if (!value) {
     return null;
@@ -78,7 +91,7 @@ function normalizeType(value) {
 const valuesSql = seeds
   .map(
     (seed) => `    (
-      ${sqlString(seed.name)},
+      ${sqlString(collapseSpaces(stripProducerPrefix(seed.name, seed.producer)))},
       ${sqlString(seed.producer ?? null)},
       ${sqlString(seed.country ?? null)},
       ${sqlString(seed.region ?? null)},

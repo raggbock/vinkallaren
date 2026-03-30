@@ -58,6 +58,19 @@ function normalizeType(value) {
   return normalized;
 }
 
+function stripProducerPrefix(name, producer) {
+  if (!name || !producer) return name;
+  if (name.toLowerCase().startsWith(producer.toLowerCase() + " ")) {
+    const stripped = name.slice(producer.length).trim();
+    if (stripped.length > 0) return stripped;
+  }
+  return name;
+}
+
+function collapseSpaces(str) {
+  return str ? str.replace(/\s{2,}/g, " ").trim() : str;
+}
+
 function normalizeKeyPart(value) {
   return String(value ?? "")
     .trim()
@@ -117,9 +130,11 @@ for (const sourceEntry of selectedSources.sort((left, right) => (left.priority ?
         continue;
       }
 
+      const rawName = collapseSpaces(row.name);
+      const rawProducer = row.producer ?? null;
       const normalizedSeed = {
-        name: row.name,
-        producer: row.producer ?? null,
+        name: stripProducerPrefix(rawName, rawProducer),
+        producer: rawProducer,
         country: row.country ?? null,
         region: row.region ?? null,
         type: normalizeType(row.type),

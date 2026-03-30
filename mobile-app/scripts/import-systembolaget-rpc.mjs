@@ -48,6 +48,19 @@ if (fetchError) {
 const existingIds = new Set(existingRows.map((r) => r.systembolaget_product_id));
 console.log(`Found ${existingIds.size} existing Systembolaget IDs in database`);
 
+function stripProducerPrefix(name, producer) {
+  if (!name || !producer) return name;
+  if (name.toLowerCase().startsWith(producer.toLowerCase() + " ")) {
+    const stripped = name.slice(producer.length).trim();
+    if (stripped.length > 0) return stripped;
+  }
+  return name;
+}
+
+function collapseSpaces(str) {
+  return str ? str.replace(/\s{2,}/g, " ").trim() : str;
+}
+
 function normalizeType(value) {
   if (!value) return null;
   const t = String(value).trim();
@@ -83,9 +96,10 @@ const normalized = wines
       name = name.replace(/\s+(18|19|20)\d{2}\s*$/, '');
     }
 
+    const producer = w.producer || null;
     return {
-      name,
-      producer: w.producer || null,
+      name: collapseSpaces(stripProducerPrefix(name, producer)),
+      producer,
       country: w.country || null,
       region: w.region || null,
       type: normalizeType(w.type),

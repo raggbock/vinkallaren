@@ -68,11 +68,23 @@ function normalizeType(categoryLevel2) {
   return categoryLevel2.trim();
 }
 
+function stripProducerPrefix(name, producer) {
+  if (!name || !producer) return name;
+  if (name.toLowerCase().startsWith(producer.toLowerCase() + " ")) {
+    const stripped = name.slice(producer.length).trim();
+    if (stripped.length > 0) return stripped;
+  }
+  return name;
+}
+
+function collapseSpaces(str) {
+  return str ? str.replace(/\s{2,}/g, " ").trim() : str;
+}
+
 function mapWine(p) {
-  const name = [p.productNameBold, p.productNameThin]
-    .filter(Boolean)
-    .join(" ")
-    .trim();
+  const rawName = (p.productNameThin || p.productNameBold || "").trim();
+  const producer = (p.producerName || "").trim();
+  const name = collapseSpaces(stripProducerPrefix(rawName, producer)) || collapseSpaces(p.productNameBold) || null;
 
   const region = [p.originLevel1, p.originLevel2]
     .filter(Boolean)
