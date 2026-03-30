@@ -1,10 +1,13 @@
 import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { Children, useEffect, useMemo, useRef, useState, type ComponentProps, type ReactNode } from "react";
 
+import type { NativeSyntheticEvent, NativeScrollEvent } from "react-native";
+
 const BLUR_DELAY_MS = 220;
-const INITIAL_VISIBLE = 5;
-const MAX_SUGGESTIONS = 20;
+const PAGE_SIZE = 10;
+const MAX_SUGGESTIONS = 50;
 const SEARCH_DEBOUNCE_MS = 300;
+const SCROLL_THRESHOLD = 40;
 
 import { normalizeLookupValue } from "../lib/cellar-helpers";
 import type { ReferenceOptionRow } from "../types/reference-data";
@@ -82,7 +85,7 @@ export function AutocompleteInput({
   editable?: boolean;
 }) {
   const [focused, setFocused] = useState(false);
-  const [expanded, setExpanded] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [asyncResults, setAsyncResults] = useState<Suggestion[]>([]);
   const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -156,8 +159,7 @@ export function AutocompleteInput({
   }, [searchAsync, minimumQueryLength, optionRows, options, value]);
 
   const suggestions = searchAsync ? asyncResults : clientSuggestions;
-  const visibleSuggestions = expanded ? suggestions : suggestions.slice(0, INITIAL_VISIBLE);
-  const hiddenCount = suggestions.length - visibleSuggestions.length;
+  const visibleSuggestions = suggestions.slice(0, visibleCount);
 
   const showSuggestions =
     focused &&
@@ -176,6 +178,14 @@ export function AutocompleteInput({
     setFocused(false);
   }
 
+  function handleScroll(event: NativeSyntheticEvent<NativeScrollEvent>) {
+    const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+    const distanceFromBottom = contentSize.height - layoutMeasurement.height - contentOffset.y;
+    if (distanceFromBottom < SCROLL_THRESHOLD && visibleCount < suggestions.length) {
+      setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, suggestions.length));
+    }
+  }
+
   return (
     <View style={styles.inputGroup}>
       <Text style={styles.inputLabel}>{label}</Text>
@@ -188,7 +198,7 @@ export function AutocompleteInput({
           editable={editable}
           onChangeText={(nextValue) => {
             onChangeText(nextValue);
-            setExpanded(false);
+            setVisibleCount(PAGE_SIZE);
             setFocused(true);
           }}
           onFocus={() => {
@@ -202,7 +212,12 @@ export function AutocompleteInput({
           }}
         />
         {editable && showSuggestions ? (
-          <ScrollView style={styles.autocompleteListInline} nestedScrollEnabled>
+          <ScrollView
+            style={styles.autocompleteListInline}
+            nestedScrollEnabled
+            onScroll={handleScroll}
+            scrollEventThrottle={100}
+          >
             {visibleSuggestions.map((option) => (
               <Pressable
                 key={`${label}-${option.name}-${option.parentName ?? ""}`}
@@ -220,17 +235,6 @@ export function AutocompleteInput({
                 </Text>
               </Pressable>
             ))}
-            {hiddenCount > 0 ? (
-              <Pressable
-                onPress={() => setExpanded(true)}
-                onPressIn={cancelBlur}
-                style={styles.autocompleteShowMore}
-              >
-                <Text style={styles.autocompleteShowMoreText}>
-                  {`Visa ${hiddenCount} till`}
-                </Text>
-              </Pressable>
-            ) : null}
           </ScrollView>
         ) : null}
       </View>
@@ -431,17 +435,6 @@ const styles = StyleSheet.create({
   autocompleteParent: {
     color: "#8f8178",
     fontSize: 13,
-  },
-  autocompleteShowMore: {
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    alignItems: "center",
-    backgroundColor: "#f2e7db",
-  },
-  autocompleteShowMoreText: {
-    color: "#6f6259",
-    fontSize: 13,
-    fontWeight: "600",
   },
   doubleRow: {
     flexDirection: "row",
