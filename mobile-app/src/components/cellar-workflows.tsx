@@ -2,6 +2,7 @@ import { CameraView } from "expo-camera";
 import { ActivityIndicator, Image, Modal, Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
 
 import { buildNumericOptions, getSuggestedPairings, getWineStoragePlacementLabel, mergeTagText, parseTags } from "../lib/cellar-helpers";
+import { buildWsatSummary, type WsatTastingData } from "../lib/wsat-data";
 import type { ProductCatalogEntry } from "../lib/product-catalog";
 import type { ProductCatalogWineRow } from "../types/product-catalog";
 import type { ReferenceOptionRow } from "../types/reference-data";
@@ -268,6 +269,8 @@ export function AddWinePanel({
   onTastingDateChange,
   onSaveTasting,
   savingTasting,
+  wsatData,
+  onOpenWsat,
 }: {
   styles: SharedStyles;
   draft: WineDraft;
@@ -314,6 +317,8 @@ export function AddWinePanel({
   onTastingDateChange: (value: string) => void;
   onSaveTasting: () => void;
   savingTasting: boolean;
+  wsatData: WsatTastingData | null;
+  onOpenWsat: () => void;
 }) {
   const isLockedByCatalog = (field: keyof ProductCatalogWineRow) => {
     if (!selectedCatalogNameEntry) {
@@ -511,6 +516,17 @@ export function AddWinePanel({
           <DateInput label="Provningsdatum" value={tastingDate} onChangeText={onTastingDateChange} />
           <SuggestionRow title="Betyg" options={["1", "2", "3", "4", "5"]} selected={tastingRating} onSelect={onTastingRatingChange} />
           <LabeledInput label="Smaknotering" value={draft.notes} onChangeText={(value) => onDraftChange({ notes: value })} placeholder="t.ex. mörk frukt, bra syra, gärna igen" multiline />
+          {wsatData ? (
+            <Pressable onPress={onOpenWsat} style={styles.importSuggestionCard}>
+              <Text style={styles.inputLabel}>WSET-provning</Text>
+              <Text style={styles.notesText}>{buildWsatSummary(wsatData)}</Text>
+              <Text style={styles.linkText}>Redigera</Text>
+            </Pressable>
+          ) : (
+            <Pressable onPress={onOpenWsat} style={styles.secondaryButton}>
+              <Text style={styles.secondaryButtonText}>WSET-provning</Text>
+            </Pressable>
+          )}
         </>
       ) : (
         <>

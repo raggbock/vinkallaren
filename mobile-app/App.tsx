@@ -24,6 +24,8 @@ import {
 } from "./src/lib/wine-helpers";
 import { BottomTabBar, HistoryPanel, MealPlannerPanel, MinKallarePanel } from "./src/components/cellar-sections";
 import { AddWinePanel, BarcodeScannerModal, CatalogEditorModal, DrinkWineModal, EditWineModal, VintagePickerModal } from "./src/components/cellar-workflows";
+import type { WsatTastingData } from "./src/lib/wsat-data";
+import { WsatTastingModal } from "./src/components/wsat-tasting-modal";
 import { CELLAR_SECTIONS, type CellarSection } from "./src/types/cellar";
 import type { ImportFieldSelection, ImportMode, WineDraft } from "./src/types/cellar-drafts";
 import { defaultDraft, defaultImportSelection } from "./src/types/cellar-drafts";
@@ -119,6 +121,8 @@ function CellarScreen({ session }: { session: Session }) {
   const [tastingRating, setTastingRating] = useState("");
   const [tastingDate, setTastingDate] = useState(new Date().toISOString().slice(0, 10));
   const [savingTasting, setSavingTasting] = useState(false);
+  const [wsatData, setWsatData] = useState<WsatTastingData | null>(null);
+  const [wsatModalVisible, setWsatModalVisible] = useState(false);
 
   // --- Save states ---
   const [saving, setSaving] = useState(false);
@@ -506,12 +510,14 @@ function CellarScreen({ session }: { session: Session }) {
         rating: tastingRating ? Number(tastingRating) : null,
         tasting_notes: emptyToNull(draft.notes),
         consumed_at: tastingDate || null,
+        tasting_data: wsatData ?? null,
       };
       const { error } = await supabase.from("wine_history").insert(payload);
       if (error) throw error;
       setDraft(defaultDraft);
       setTastingRating("");
       setTastingDate(new Date().toISOString().slice(0, 10));
+      setWsatData(null);
       await data.fetchHistoryEntries();
     } catch (error) {
       Alert.alert("Kunde inte spara", error instanceof Error ? error.message : "Försök igen.");
@@ -740,6 +746,8 @@ function CellarScreen({ session }: { session: Session }) {
         onTastingDateChange={setTastingDate}
         onSaveTasting={saveTasting}
         savingTasting={savingTasting}
+        wsatData={wsatData}
+        onOpenWsat={() => setWsatModalVisible(true)}
       />
     );
   }
@@ -748,6 +756,13 @@ function CellarScreen({ session }: { session: Session }) {
     <SafeAreaView style={styles.screen}>
       <StatusBar style="light" />
       <BarcodeScannerModal visible={scannerVisible} styles={styles} onClose={() => setScannerVisible(false)} onBarcodeScanned={handleBarcodeScanned} />
+      <WsatTastingModal
+        visible={wsatModalVisible}
+        wineType={draft.type}
+        initialData={wsatData}
+        onSave={(d) => setWsatData(d)}
+        onClose={() => setWsatModalVisible(false)}
+      />
       <VintagePickerModal visible={vintagePickerVisible} wineName={vintagePickerWineName} vintages={vintagePickerOptions} onSelectVintage={handleVintageSelected} onAddNew={handleVintageAddNew} onClose={() => setVintagePickerVisible(false)} styles={styles} />
       <CatalogEditorModal
         visible={catalogEditorVisible}
