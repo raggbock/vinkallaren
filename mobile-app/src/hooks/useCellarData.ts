@@ -29,6 +29,14 @@ import type { StorageSpaceInsert, StorageSpaceRow } from "../types/storage-space
 import type { WineHistoryRecord, WineHistoryRow } from "../types/wine-history";
 import type { WineRecord, WineRow } from "../types/wine";
 
+export type CatalogTextMatch = {
+  id: string;
+  name: string;
+  producer: string | null;
+  vintage: number | null;
+  similarity: number;
+};
+
 export function useCellarData(userId: string) {
   const [wines, setWines] = useState<WineRecord[]>([]);
   const [historyEntries, setHistoryEntries] = useState<WineHistoryRecord[]>([]);
@@ -128,6 +136,16 @@ export function useCellarData(userId: string) {
       .order("updated_at", { ascending: false });
     if (error) return [];
     return (data ?? []) as ProductCatalogWineRow[];
+  }
+
+  async function matchCatalogByText(query: string, maxResults = 5): Promise<CatalogTextMatch[]> {
+    if (query.trim().length < 3) return [];
+    const { data, error } = await supabase.rpc("match_catalog_by_text", {
+      query: query.trim(),
+      max_results: maxResults,
+    });
+    if (error) return [];
+    return (data ?? []) as CatalogTextMatch[];
   }
 
   async function fetchReferenceOptions() {
@@ -297,6 +315,7 @@ export function useCellarData(userId: string) {
     // Catalog search (server-side, debounced by caller)
     searchCatalogWineNames,
     fetchCatalogEntriesByName,
+    matchCatalogByText,
 
     // Storage space management
     storageSpaceDraft,
