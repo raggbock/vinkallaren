@@ -511,9 +511,15 @@ function CellarScreen({ session }: { session: Session }) {
     setDrinkNotes("");
   }
 
-  function openEditWineModal(wine: WineRecord) {
-    setEditingWine(wine);
-    setEditWineDraft(toWineDraft(wine));
+  async function openEditWineModal(wine: WineRecord) {
+    // Re-hydrate to get a fresh signed URL (existing one may be expired)
+    let freshWine = wine;
+    if (wine.image_path && !wine.image_url) {
+      const [hydrated] = await hydrateWineRecords([wine as any]);
+      freshWine = hydrated;
+    }
+    setEditingWine(freshWine);
+    setEditWineDraft(toWineDraft(freshWine));
     setEditWineVisible(true);
   }
 
