@@ -58,6 +58,10 @@ function collapseSpaces(str) {
   return str ? str.replace(/\s{2,}/g, " ").trim() : str;
 }
 
+function normalizeApostrophes(str) {
+  return str ? str.replace(/[\u2018\u2019\u201A\u201B\u00B4\u0060]/g, "'") : str;
+}
+
 function normalizeType(value) {
   if (!value) {
     return null;
@@ -91,8 +95,8 @@ function normalizeType(value) {
 const valuesSql = seeds
   .map(
     (seed) => `    (
-      ${sqlString(collapseSpaces(stripProducerPrefix(seed.name, seed.producer)))},
-      ${sqlString(seed.producer ?? null)},
+      ${sqlString(normalizeApostrophes(collapseSpaces(stripProducerPrefix(seed.name, seed.producer))))},
+      ${sqlString(normalizeApostrophes(seed.producer ?? null))},
       ${sqlString(seed.country ?? null)},
       ${sqlString(seed.region ?? null)},
       ${sqlString(normalizeType(seed.type))},

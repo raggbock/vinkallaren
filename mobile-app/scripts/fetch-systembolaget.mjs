@@ -81,9 +81,13 @@ function collapseSpaces(str) {
   return str ? str.replace(/\s{2,}/g, " ").trim() : str;
 }
 
+function normalizeApostrophes(str) {
+  return str ? str.replace(/[\u2018\u2019\u201A\u201B\u00B4\u0060]/g, "'") : str;
+}
+
 function mapWine(p) {
-  const rawName = (p.productNameThin || p.productNameBold || "").trim();
-  const producer = (p.producerName || "").trim();
+  const rawName = normalizeApostrophes((p.productNameThin || p.productNameBold || "").trim());
+  const producer = normalizeApostrophes((p.producerName || "").trim());
   const name = collapseSpaces(stripProducerPrefix(rawName, producer)) || collapseSpaces(p.productNameBold) || null;
 
   const region = [p.originLevel1, p.originLevel2]

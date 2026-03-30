@@ -71,6 +71,10 @@ function collapseSpaces(str) {
   return str ? str.replace(/\s{2,}/g, " ").trim() : str;
 }
 
+function normalizeApostrophes(str) {
+  return str ? str.replace(/[\u2018\u2019\u201A\u201B\u00B4\u0060]/g, "'") : str;
+}
+
 function normalizeKeyPart(value) {
   return String(value ?? "")
     .trim()
@@ -130,8 +134,8 @@ for (const sourceEntry of selectedSources.sort((left, right) => (left.priority ?
         continue;
       }
 
-      const rawName = collapseSpaces(row.name);
-      const rawProducer = row.producer ?? null;
+      const rawName = normalizeApostrophes(collapseSpaces(row.name));
+      const rawProducer = normalizeApostrophes(row.producer ?? null);
       const normalizedSeed = {
         name: stripProducerPrefix(rawName, rawProducer),
         producer: rawProducer,

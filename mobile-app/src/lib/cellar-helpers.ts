@@ -229,5 +229,6 @@ export function normalizeLookupValue(value: string) {
   return value
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[\u2018\u2019\u201A\u201B\u00B4\u0060]/g, "'");
 }

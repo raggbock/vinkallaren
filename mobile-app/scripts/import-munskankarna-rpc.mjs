@@ -46,6 +46,10 @@ function collapseSpaces(str) {
   return str ? str.replace(/\s{2,}/g, " ").trim() : str;
 }
 
+function normalizeApostrophes(str) {
+  return str ? str.replace(/[\u2018\u2019\u201A\u201B\u00B4\u0060]/g, "'") : str;
+}
+
 function normalizeType(value) {
   if (!value) return null;
   const t = String(value).trim();
@@ -78,9 +82,9 @@ const normalized = wines.filter((w) => {
     name = name.replace(/\s+(18|19|20)\d{2}\s*$/, '');
   }
 
-  const producer = w.producer || null;
+  const producer = normalizeApostrophes(w.producer || null);
   return {
-    name: collapseSpaces(stripProducerPrefix(name, producer)),
+    name: normalizeApostrophes(collapseSpaces(stripProducerPrefix(name, producer))),
     producer,
     country: w.country || null,
     region: w.region || null,
