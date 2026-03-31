@@ -1,26 +1,22 @@
 import { CameraView } from "expo-camera";
-import { ActivityIndicator, Image, Modal, Platform, Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
+import { Image, Modal, Platform, Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
 
-import { buildNumericOptions, FOOD_CATEGORIES, getWineStoragePlacementLabel, mergeTagText, parseTags } from "../lib/cellar-helpers";
-import { buildWsatSummary, type WsatTastingData } from "../lib/wsat-data";
-import type { ProductCatalogEntry } from "../lib/product-catalog";
 import type { ProductCatalogWineRow } from "../types/product-catalog";
 import type { ReferenceOptionRow } from "../types/reference-data";
-import type { StorageSpaceRow } from "../types/storage-space";
-import type { CatalogEditorDraft, ImportFieldSelection, ImportMode, StorageSpaceDraft, WineDraft } from "../types/cellar-drafts";
+import type { CatalogEditorDraft } from "../types/cellar-drafts";
 import type { WineRecord } from "../types/wine";
-import { AutocompleteInput, DateInput, DoubleRow, GroupedSuggestionRow, ImportSelectionRow, LabeledInput, StorageSpaceForm, StorageSpaceSelector, SuggestionRow, type Suggestion } from "./form-controls";
+import { AutocompleteInput, DateInput, DoubleRow, LabeledInput, SuggestionRow, type Suggestion } from "./form-controls";
 
 import type { styles as themeStyles } from "../styles/theme";
 type SharedStyles = typeof themeStyles;
 const WINE_TYPE_OPTIONS = ["Rött", "Vitt", "Mousserande", "Sött"];
 
+// Re-export extracted components for backward-compatible imports
+export { AddWinePanel } from "./add-wine-panel";
+export { EditWineModal } from "./edit-wine-modal";
+
 export function BarcodeScannerModal({
-  visible,
-  styles,
-  onClose,
-  onBarcodeScanned,
-  onLabelPhoto,
+  visible, styles, onClose, onBarcodeScanned, onLabelPhoto,
 }: {
   visible: boolean;
   styles: SharedStyles;
@@ -65,20 +61,10 @@ export function BarcodeScannerModal({
 }
 
 export function CatalogEditorModal({
-  visible,
-  styles,
-  draft,
-  saving,
-  searchWineNames,
-  effectiveCountryOptions,
-  effectiveRegionOptions,
-  effectiveGrapeOptions,
-  countryReferenceRows,
-  regionReferenceRows,
-  grapeReferenceRows,
-  onClose,
-  onSave,
-  onChange,
+  visible, styles, draft, saving, searchWineNames,
+  effectiveCountryOptions, effectiveRegionOptions, effectiveGrapeOptions,
+  countryReferenceRows, regionReferenceRows, grapeReferenceRows,
+  onClose, onSave, onChange,
 }: {
   visible: boolean;
   styles: SharedStyles;
@@ -111,64 +97,24 @@ export function CatalogEditorModal({
         <ScrollView contentContainerStyle={styles.catalogEditorContent} keyboardShouldPersistTaps="handled">
           {draft ? (
             <>
-              <AutocompleteInput
-                label="Namn"
-                value={draft.name}
-                onChangeText={(value) => onChange({ name: value })}
-                options={[]}
-                searchAsync={searchWineNames}
-                placeholder="Skriv minst 4 bokstäver"
-                minimumQueryLength={4}
-              />
+              <AutocompleteInput label="Namn" value={draft.name} onChangeText={(value) => onChange({ name: value })} options={[]} searchAsync={searchWineNames} placeholder="Skriv minst 4 bokstäver" minimumQueryLength={4} />
               <DoubleRow>
                 <LabeledInput label="Streckkod" value={draft.barcode} onChangeText={(value) => onChange({ barcode: value })} />
-                <LabeledInput
-                  label="Artikelnummer"
-                  value={draft.systembolagetProductId}
-                  onChangeText={(value) => onChange({ systembolagetProductId: value })}
-                />
+                <LabeledInput label="Artikelnummer" value={draft.systembolagetProductId} onChangeText={(value) => onChange({ systembolagetProductId: value })} />
               </DoubleRow>
               <LabeledInput label="Producent" value={draft.producer} onChangeText={(value) => onChange({ producer: value })} />
               <DoubleRow>
-                <AutocompleteInput
-                  label="Land"
-                  value={draft.country}
-                  onChangeText={(value) => onChange({ country: value })}
-                  options={effectiveCountryOptions}
-                  optionRows={countryReferenceRows}
-                />
-                <AutocompleteInput
-                  label="Region"
-                  value={draft.region}
-                  onChangeText={(value) => onChange({ region: value })}
-                  options={effectiveRegionOptions}
-                  optionRows={regionReferenceRows}
-                />
+                <AutocompleteInput label="Land" value={draft.country} onChangeText={(value) => onChange({ country: value })} options={effectiveCountryOptions} optionRows={countryReferenceRows} />
+                <AutocompleteInput label="Region" value={draft.region} onChangeText={(value) => onChange({ region: value })} options={effectiveRegionOptions} optionRows={regionReferenceRows} />
               </DoubleRow>
               <DoubleRow>
-                <AutocompleteInput
-                  label="Druva"
-                  value={draft.grape}
-                  onChangeText={(value) => onChange({ grape: value })}
-                  options={effectiveGrapeOptions}
-                  optionRows={grapeReferenceRows}
-                />
+                <AutocompleteInput label="Druva" value={draft.grape} onChangeText={(value) => onChange({ grape: value })} options={effectiveGrapeOptions} optionRows={grapeReferenceRows} />
                 <LabeledInput label="Årgång" value={draft.vintage} onChangeText={(value) => onChange({ vintage: value })} keyboardType="number-pad" />
               </DoubleRow>
               <SuggestionRow title="Vintyp" options={WINE_TYPE_OPTIONS} selected={draft.type} onSelect={(value) => onChange({ type: value })} />
-              <LabeledInput
-                label="Matmatchning"
-                value={draft.foodPairings}
-                onChangeText={(value) => onChange({ foodPairings: value })}
-                placeholder="lamm, fisk, ost"
-              />
+              <LabeledInput label="Matmatchning" value={draft.foodPairings} onChangeText={(value) => onChange({ foodPairings: value })} placeholder="lamm, fisk, ost" />
               <LabeledInput label="Källmärkning" value={draft.sourceLabel} onChangeText={(value) => onChange({ sourceLabel: value })} />
-              <LabeledInput
-                label="Kvalitetsnivå"
-                value={draft.sourceConfidence}
-                onChangeText={(value) => onChange({ sourceConfidence: value })}
-                placeholder="high, medium, low"
-              />
+              <LabeledInput label="Kvalitetsnivå" value={draft.sourceConfidence} onChangeText={(value) => onChange({ sourceConfidence: value })} placeholder="high, medium, low" />
               <View style={styles.modalActionRow}>
                 <Pressable onPress={onClose} style={styles.secondaryButton} disabled={saving}>
                   <Text style={styles.secondaryButtonText}>Avbryt</Text>
@@ -186,13 +132,7 @@ export function CatalogEditorModal({
 }
 
 export function VintagePickerModal({
-  visible,
-  wineName,
-  vintages,
-  onSelectVintage,
-  onAddNew,
-  onClose,
-  styles,
+  visible, wineName, vintages, onSelectVintage, onAddNew, onClose, styles,
 }: {
   visible: boolean;
   wineName: string;
@@ -210,19 +150,12 @@ export function VintagePickerModal({
           <Text style={{ fontSize: 14, color: "#6f6259", marginBottom: 16 }}>Välj årtal:</Text>
           <ScrollView>
             {vintages.map(({ year, entry }) => (
-              <Pressable
-                key={entry.id}
-                onPress={() => onSelectVintage(entry)}
-                style={{ paddingVertical: 12, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: "#e6d7c8" }}
-              >
+              <Pressable key={entry.id} onPress={() => onSelectVintage(entry)} style={{ paddingVertical: 12, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: "#e6d7c8" }}>
                 <Text style={{ fontSize: 16, color: "#231815" }}>{year}</Text>
               </Pressable>
             ))}
           </ScrollView>
-          <Pressable
-            onPress={onAddNew}
-            style={{ marginTop: 12, paddingVertical: 12, alignItems: "center", backgroundColor: "#ead8ca", borderRadius: 12 }}
-          >
+          <Pressable onPress={onAddNew} style={{ marginTop: 12, paddingVertical: 12, alignItems: "center", backgroundColor: "#ead8ca", borderRadius: 12 }}>
             <Text style={{ fontSize: 16, color: "#6f1d1b", fontWeight: "600" }}>Lägg till nytt</Text>
           </Pressable>
         </View>
@@ -231,420 +164,9 @@ export function VintagePickerModal({
   );
 }
 
-export function AddWinePanel({
-  styles,
-  draft,
-  storageSpaces,
-  selectedStorageSpace,
-  selectedStorageSpaceId,
-  selectedStorageRow,
-  selectedStorageSlot,
-  storageSpaceById,
-  occupiedPositions,
-  storageSpaceDraft,
-  savingStorageSpace,
-  onStorageSpaceDraftChange,
-  onSaveStorageSpace,
-  searchWineNames,
-  effectiveCountryOptions,
-  effectiveRegionOptions,
-  effectiveGrapeOptions,
-  countryReferenceRows,
-  regionReferenceRows,
-  grapeReferenceRows,
-  lookupBusy,
-  lookupMessage,
-  catalogSuggestion,
-  selectedCatalogNameEntry,
-  importMode,
-  importSelection,
-  saving,
-  onDraftChange,
-  onNameSelected,
-  onBarcodeChange,
-  onArticleNumberChange,
-  onStorageSpaceChange,
-  onStorageRowChange,
-  onStorageSlotChange,
-  onStartBarcodeScanner,
-  onOpenSystembolaget,
-  onSetImportMode,
-  onApplyCatalogSuggestion,
-  onToggleImportField,
-  onChooseImage,
-  onTakePhoto,
-  onSaveWine,
-  tastingMode,
-  onTastingModeChange,
-  tastingRating,
-  onTastingRatingChange,
-  tastingDate,
-  onTastingDateChange,
-  onSaveTasting,
-  savingTasting,
-  wsatData,
-  onOpenWsat,
-}: {
-  styles: SharedStyles;
-  draft: WineDraft;
-  storageSpaces: StorageSpaceRow[];
-  selectedStorageSpace?: StorageSpaceRow | null;
-  selectedStorageSpaceId: string;
-  selectedStorageRow: string;
-  selectedStorageSlot: string;
-  storageSpaceById: Map<string, StorageSpaceRow>;
-  occupiedPositions: { occupiedRows: Set<string>; occupiedSlots: Set<string> };
-  storageSpaceDraft: StorageSpaceDraft;
-  savingStorageSpace: boolean;
-  onStorageSpaceDraftChange: (patch: Partial<StorageSpaceDraft>) => void;
-  onSaveStorageSpace: () => void;
-  searchWineNames: (query: string, offset?: number) => Promise<{ suggestions: Suggestion[]; hasMore: boolean; nextOffset: number }>;
-  effectiveCountryOptions: string[];
-  effectiveRegionOptions: string[];
-  effectiveGrapeOptions: string[];
-  countryReferenceRows: ReferenceOptionRow[];
-  regionReferenceRows: ReferenceOptionRow[];
-  grapeReferenceRows: ReferenceOptionRow[];
-  lookupBusy: boolean;
-  lookupMessage: string;
-  catalogSuggestion: ProductCatalogEntry | null;
-  selectedCatalogNameEntry: ProductCatalogWineRow | null;
-  importMode: ImportMode;
-  importSelection: ImportFieldSelection;
-  saving: boolean;
-  onDraftChange: (patch: Partial<WineDraft>) => void;
-  onNameSelected: (value: string, producer?: string | null) => void;
-  onBarcodeChange: (value: string) => void;
-  onArticleNumberChange: (value: string) => void;
-  onStorageSpaceChange: (spaceId: string) => void;
-  onStorageRowChange: (value: string) => void;
-  onStorageSlotChange: (value: string) => void;
-  onStartBarcodeScanner: () => void;
-  onOpenSystembolaget: (productId: string) => void;
-  onSetImportMode: (mode: ImportMode) => void;
-  onApplyCatalogSuggestion: (mode: ImportMode) => void;
-  onToggleImportField: (field: keyof ImportFieldSelection) => void;
-  onChooseImage: () => void;
-  onTakePhoto: () => void;
-  onSaveWine: () => void;
-  tastingMode: boolean;
-  onTastingModeChange: (value: boolean) => void;
-  tastingRating: string;
-  onTastingRatingChange: (value: string) => void;
-  tastingDate: string;
-  onTastingDateChange: (value: string) => void;
-  onSaveTasting: () => void;
-  savingTasting: boolean;
-  wsatData: WsatTastingData | null;
-  onOpenWsat: () => void;
-}) {
-  const isLockedByCatalog = (field: keyof ProductCatalogWineRow) => {
-    if (!selectedCatalogNameEntry) {
-      return false;
-    }
-
-    const value = selectedCatalogNameEntry[field];
-
-    if (Array.isArray(value)) {
-      return value.length > 0;
-    }
-
-    return value !== null && value !== "";
-  };
-
-  return (
-    <View style={styles.panel}>
-      <Text style={styles.panelTitle}>Lägg till vin</Text>
-
-      {/* --- Mode toggle: Källare vs Vinprovning --- */}
-      <SuggestionRow
-        title="Läge"
-        options={["Källare", "Vinprovning"]}
-        selected={tastingMode ? "Vinprovning" : "Källare"}
-        onSelect={(value) => onTastingModeChange(value === "Vinprovning")}
-      />
-      {tastingMode ? (
-        <Text style={styles.notesText}>Vinet sparas direkt i din historik — det läggs inte till i källaren.</Text>
-      ) : null}
-
-      {/* --- Barcode & SB article number at top --- */}
-      <View style={styles.importSuggestionCard}>
-        <Text style={styles.inputLabel}>Snabbimport</Text>
-        {!draft.name.trim() ? (
-          <>
-            <Text style={styles.notesText}>
-              Har du flaskan? Skanna streckkoden för att fylla i automatiskt.
-            </Text>
-            <Pressable onPress={onStartBarcodeScanner} style={[styles.primaryButton, { marginBottom: 12 }]}>
-              <Text style={styles.primaryButtonText}>Skanna streckkod</Text>
-            </Pressable>
-            <Text style={styles.notesText}>
-              Eller fyll i streckkod / artikelnummer manuellt:
-            </Text>
-          </>
-        ) : (
-          <>
-            <Text style={styles.notesText}>
-              Har du en streckkod eller ett Systembolaget-artikelnummer? Fyll i det så försöker vi hämta resten automatiskt.
-            </Text>
-            <Pressable onPress={onStartBarcodeScanner} style={styles.secondaryButton}>
-              <Text style={styles.secondaryButtonText}>Skanna streckkod</Text>
-            </Pressable>
-          </>
-        )}
-        <LabeledInput
-          label="Streckkod"
-          value={draft.barcode}
-          onChangeText={onBarcodeChange}
-          editable={!isLockedByCatalog("barcode")}
-        />
-        <LabeledInput
-          label="Systembolaget artikelnummer"
-          value={draft.systembolagetProductId}
-          onChangeText={onArticleNumberChange}
-          placeholder="t.ex. 12345"
-          editable={!isLockedByCatalog("systembolaget_product_id")}
-        />
-      </View>
-
-      {lookupBusy ? (
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginVertical: 4 }}>
-          <ActivityIndicator size="small" color="#6f1d1b" />
-          <Text style={styles.notesText}>Söker efter produktdata...</Text>
-        </View>
-      ) : null}
-      {!lookupBusy && lookupMessage ? <Text style={styles.notesText}>{lookupMessage}</Text> : null}
-
-      {draft.systembolagetProductId ? (
-        <Pressable onPress={() => onOpenSystembolaget(draft.systembolagetProductId)} style={styles.secondaryButton}>
-          <Text style={styles.secondaryButtonText}>Öppna hos Systembolaget</Text>
-        </Pressable>
-      ) : null}
-
-      {catalogSuggestion ? (
-        <View style={styles.importSuggestionCard}>
-          <Text style={styles.inputLabel}>Importförslag</Text>
-          <Text style={styles.recommendationName}>{catalogSuggestion.name}</Text>
-          <Text style={styles.linkText}>{catalogSuggestion.sourceLabel}</Text>
-          <Text style={styles.notesText}>{[catalogSuggestion.producer, catalogSuggestion.country, catalogSuggestion.region].filter(Boolean).join(" • ")}</Text>
-          <View style={styles.importModeRow}>
-            <Pressable onPress={() => { onSetImportMode("all"); onApplyCatalogSuggestion("all"); }} style={[styles.quickImportButton, importMode === "all" && styles.quickImportButtonActive]}>
-              <Text style={[styles.quickImportText, importMode === "all" && styles.quickImportTextActive]}>Importera allt</Text>
-            </Pressable>
-            <Pressable onPress={() => { onSetImportMode("empty"); onApplyCatalogSuggestion("empty"); }} style={[styles.quickImportButton, importMode === "empty" && styles.quickImportButtonActive]}>
-              <Text style={[styles.quickImportText, importMode === "empty" && styles.quickImportTextActive]}>Bara tomma fält</Text>
-            </Pressable>
-            <Pressable onPress={() => onSetImportMode("custom")} style={[styles.quickImportButton, importMode === "custom" && styles.quickImportButtonActive]}>
-              <Text style={[styles.quickImportText, importMode === "custom" && styles.quickImportTextActive]}>Välj själv</Text>
-            </Pressable>
-          </View>
-          {importMode === "custom" ? (
-            <>
-              <ImportSelectionRow label="Namn" selected={importSelection.name} onToggle={() => onToggleImportField("name")} />
-              <ImportSelectionRow label="Producent" selected={importSelection.producer} onToggle={() => onToggleImportField("producer")} />
-              <ImportSelectionRow label="Land" selected={importSelection.country} onToggle={() => onToggleImportField("country")} />
-              <ImportSelectionRow label="Region" selected={importSelection.region} onToggle={() => onToggleImportField("region")} />
-              <ImportSelectionRow label="Årgång" selected={importSelection.vintage} onToggle={() => onToggleImportField("vintage")} />
-              <ImportSelectionRow label="Druva" selected={importSelection.grape} onToggle={() => onToggleImportField("grape")} />
-              <ImportSelectionRow label="Typ" selected={importSelection.type} onToggle={() => onToggleImportField("type")} />
-              <ImportSelectionRow label="Matmatchning" selected={importSelection.foodPairings} onToggle={() => onToggleImportField("foodPairings")} />
-              <ImportSelectionRow label="Artikelnummer" selected={importSelection.systembolagetProductId} onToggle={() => onToggleImportField("systembolagetProductId")} />
-              <ImportSelectionRow label="Streckkod" selected={importSelection.barcode} onToggle={() => onToggleImportField("barcode")} />
-              <Pressable onPress={() => onApplyCatalogSuggestion("custom")} style={styles.primaryButton}>
-                <Text style={styles.primaryButtonText}>Fyll i från förslag</Text>
-              </Pressable>
-            </>
-          ) : null}
-        </View>
-      ) : null}
-
-      {!catalogSuggestion && (draft.barcode.trim() || draft.systembolagetProductId.trim()) ? (
-        <View style={styles.importSuggestionCard}>
-          <Text style={styles.inputLabel}>Ingen träff ännu?</Text>
-          <Text style={styles.notesText}>
-            Fyll i resten av uppgifterna och spara som vanligt. Lägg gärna till streckkod eller artikelnummer så kan vi matcha nästa gång.
-          </Text>
-        </View>
-      ) : null}
-
-      {/* --- Wine details --- */}
-      <AutocompleteInput
-        label="Namn"
-        value={draft.name}
-        onChangeText={(value) => onDraftChange({ name: value })}
-        onOptionSelected={onNameSelected}
-        options={[]}
-        searchAsync={searchWineNames}
-        placeholder="Skriv minst 4 bokstäver"
-        minimumQueryLength={4}
-      />
-      <LabeledInput
-        label="Producent"
-        value={draft.producer}
-        onChangeText={(value) => onDraftChange({ producer: value })}
-        editable={!isLockedByCatalog("producer")}
-      />
-      <DoubleRow>
-        <AutocompleteInput
-          label="Land"
-          value={draft.country}
-          onChangeText={(value) => onDraftChange({ country: value })}
-          options={effectiveCountryOptions}
-          optionRows={countryReferenceRows}
-          placeholder="Skriv t.ex. fr eller it"
-          editable={!isLockedByCatalog("country")}
-        />
-        <AutocompleteInput
-          label="Region"
-          value={draft.region}
-          onChangeText={(value) => onDraftChange({ region: value })}
-          options={effectiveRegionOptions}
-          optionRows={regionReferenceRows}
-          placeholder="Skriv t.ex. bor, rio, nap..."
-          editable={!isLockedByCatalog("region")}
-        />
-      </DoubleRow>
-      <AutocompleteInput
-        label="Druva"
-        value={draft.grape}
-        onChangeText={(value) => onDraftChange({ grape: value })}
-        options={effectiveGrapeOptions}
-        optionRows={grapeReferenceRows}
-        placeholder="Nebbiolo, Chardonnay..."
-        editable={!isLockedByCatalog("grape")}
-      />
-      {tastingMode ? (
-        <LabeledInput label="Årgång" value={draft.vintage} onChangeText={(value) => onDraftChange({ vintage: value })} keyboardType="number-pad" />
-      ) : (
-        <DoubleRow>
-          <LabeledInput label="Årgång" value={draft.vintage} onChangeText={(value) => onDraftChange({ vintage: value })} keyboardType="number-pad" />
-          <LabeledInput label="Antal" value={draft.quantity} onChangeText={(value) => onDraftChange({ quantity: value })} keyboardType="number-pad" />
-        </DoubleRow>
-      )}
-      <SuggestionRow
-        title="Vintyp"
-        options={WINE_TYPE_OPTIONS}
-        selected={draft.type}
-        onSelect={(value) => onDraftChange({ type: value })}
-        disabled={isLockedByCatalog("type")}
-      />
-      {tastingMode ? (
-        <>
-          {/* --- Tasting-specific fields --- */}
-          <DateInput label="Provningsdatum" value={tastingDate} onChangeText={onTastingDateChange} />
-          {wsatData ? (
-            <Pressable onPress={onOpenWsat} style={styles.importSuggestionCard}>
-              <Text style={styles.inputLabel}>WSET Tasting</Text>
-              <Text style={styles.notesText}>{buildWsatSummary(wsatData)}</Text>
-              <Text style={styles.linkText}>Edit</Text>
-            </Pressable>
-          ) : (
-            <Pressable onPress={onOpenWsat} style={styles.secondaryButton}>
-              <Text style={styles.secondaryButtonText}>WSET Tasting</Text>
-            </Pressable>
-          )}
-          <SuggestionRow title="Betyg" options={["1", "2", "3", "4", "5"]} selected={tastingRating} onSelect={onTastingRatingChange} />
-          <LabeledInput label="Smaknotering" value={draft.notes} onChangeText={(value) => onDraftChange({ notes: value })} placeholder="t.ex. mörk frukt, bra syra, gärna igen" multiline />
-        </>
-      ) : (
-        <>
-          {/* --- Cellar-specific fields --- */}
-          <DoubleRow>
-            <LabeledInput label="Drick senast (år)" value={draft.drinkBy} onChangeText={(value) => onDraftChange({ drinkBy: value })} keyboardType="number-pad" placeholder="t.ex. 2028" />
-            <DateInput label="Inköpt" value={draft.acquiredAt} onChangeText={(value) => onDraftChange({ acquiredAt: value })} />
-          </DoubleRow>
-
-          {/* --- Food pairing: grouped categories + free text --- */}
-          <GroupedSuggestionRow
-            title="Matförslag"
-            groups={FOOD_CATEGORIES}
-            selected={parseTags(draft.foodPairings)}
-            onSelect={(pairing) => onDraftChange({ foodPairings: mergeTagText(draft.foodPairings, pairing) })}
-          />
-          <LabeledInput
-            label="Passar till"
-            value={draft.foodPairings}
-            onChangeText={(value) => onDraftChange({ foodPairings: value })}
-            placeholder="lamm, ost, svamp, fisk"
-            editable={!isLockedByCatalog("food_pairings")}
-          />
-
-          {/* --- Storage --- */}
-          <View style={styles.foodSection}>
-            <Text style={styles.inputLabel}>Förvaringsplats</Text>
-            {storageSpaces.length > 0 ? (
-              <>
-                <StorageSpaceSelector title="" spaces={storageSpaces} selectedId={selectedStorageSpaceId} onSelect={onStorageSpaceChange} clearLabel="Ingen plats" />
-                {selectedStorageSpace ? (
-                  <>
-                    <SuggestionRow title="Rad" options={buildNumericOptions(selectedStorageSpace.row_count)} selected={selectedStorageRow} onSelect={onStorageRowChange} disabledOptions={occupiedPositions.occupiedRows} />
-                    <SuggestionRow title="Plats" options={buildNumericOptions(selectedStorageSpace.slots_per_row)} selected={selectedStorageSlot} onSelect={onStorageSlotChange} disabledOptions={occupiedPositions.occupiedSlots} />
-                    <Text style={styles.notesText}>
-                      Vald placering:{" "}
-                      {getWineStoragePlacementLabel(
-                        {
-                          storage_space_id: selectedStorageSpaceId,
-                          storage_row: Number(selectedStorageRow),
-                          storage_slot: Number(selectedStorageSlot),
-                        },
-                        storageSpaceById
-                      )}
-                    </Text>
-                  </>
-                ) : null}
-              </>
-            ) : (
-              <Text style={styles.notesText}>Skapa en förvaringsplats för att kunna välja rad och plats.</Text>
-            )}
-            <StorageSpaceForm draft={storageSpaceDraft} saving={savingStorageSpace} onDraftChange={onStorageSpaceDraftChange} onSave={onSaveStorageSpace} />
-          </View>
-
-          <LabeledInput label="Fri platsnotering" value={draft.location} onChangeText={(value) => onDraftChange({ location: value })} placeholder="t.ex. längst bak, överst i kylen" />
-          <LabeledInput label="Etiketter" value={draft.tags} onChangeText={(value) => onDraftChange({ tags: value })} placeholder="middag, present, lagring" />
-          <LabeledInput label="Anteckningar" value={draft.notes} onChangeText={(value) => onDraftChange({ notes: value })} multiline />
-        </>
-      )}
-
-      <View style={styles.imageButtonRow}>
-        <Pressable onPress={onTakePhoto} style={styles.secondaryButton}>
-          <Text style={styles.secondaryButtonText}>Ta foto av etiketten</Text>
-        </Pressable>
-        <Pressable onPress={onChooseImage} style={styles.secondaryButton}>
-          <Text style={styles.secondaryButtonText}>{draft.imageUri ? "Byt bild" : "Välj flaskbild"}</Text>
-        </Pressable>
-      </View>
-
-      {draft.imageUri ? <Image source={{ uri: draft.imageUri }} style={styles.wineImage} resizeMode="contain" /> : null}
-
-      {tastingMode ? (
-        <Pressable onPress={onSaveTasting} style={styles.primaryButton} disabled={savingTasting}>
-          <Text style={styles.primaryButtonText}>{savingTasting ? "Sparar..." : "Spara i historik"}</Text>
-        </Pressable>
-      ) : (
-        <Pressable onPress={onSaveWine} style={styles.primaryButton} disabled={saving}>
-          <Text style={styles.primaryButtonText}>{saving ? "Sparar..." : "Spara i källaren"}</Text>
-        </Pressable>
-      )}
-    </View>
-  );
-}
-
 export function DrinkWineModal({
-  visible,
-  styles,
-  wine,
-  rating,
-  notes,
-  consumedDate,
-  imageUri,
-  saving,
-  onClose,
-  onRatingChange,
-  onNotesChange,
-  onConsumedDateChange,
-  onChooseImage,
-  onTakePhoto,
-  onConfirm,
+  visible, styles, wine, rating, notes, consumedDate, imageUri, saving,
+  onClose, onRatingChange, onNotesChange, onConsumedDateChange, onChooseImage, onTakePhoto, onConfirm,
 }: {
   visible: boolean;
   styles: SharedStyles;
@@ -677,17 +199,8 @@ export function DrinkWineModal({
 
         <ScrollView contentContainerStyle={styles.catalogEditorContent} keyboardShouldPersistTaps="handled">
           <DateInput label="Datum" value={consumedDate} onChangeText={onConsumedDateChange} />
-
           <SuggestionRow title="Betyg" options={["1", "2", "3", "4", "5"]} selected={rating} onSelect={onRatingChange} />
-
-          <LabeledInput
-            label="Smaknotering"
-            value={notes}
-            onChangeText={onNotesChange}
-            placeholder="t.ex. mörk frukt, bra syra, gärna igen"
-            multiline
-          />
-
+          <LabeledInput label="Smaknotering" value={notes} onChangeText={onNotesChange} placeholder="t.ex. mörk frukt, bra syra, gärna igen" multiline />
           <View style={styles.modalActionRow}>
             <Pressable onPress={onTakePhoto} style={styles.secondaryButton}>
               <Text style={styles.secondaryButtonText}>Ta foto</Text>
@@ -697,7 +210,6 @@ export function DrinkWineModal({
             </Pressable>
           </View>
           {imageUri ? <Image source={{ uri: imageUri }} style={styles.wineImage} resizeMode="contain" /> : null}
-
           <View style={styles.modalActionRow}>
             <Pressable onPress={onClose} style={styles.secondaryButton} disabled={saving}>
               <Text style={styles.secondaryButtonText}>Avbryt</Text>
@@ -706,197 +218,6 @@ export function DrinkWineModal({
               <Text style={styles.primaryButtonText}>{saving ? "Sparar..." : "Spara i historik"}</Text>
             </Pressable>
           </View>
-        </ScrollView>
-      </SafeAreaView>
-    </Modal>
-  );
-}
-
-export function EditWineModal({
-  visible,
-  styles,
-  draft,
-  storageSpaces,
-  selectedStorageSpace,
-  storageSpaceById,
-  occupiedPositions,
-  storageSpaceDraft,
-  savingStorageSpace,
-  onStorageSpaceDraftChange,
-  onSaveStorageSpace,
-  searchWineNames,
-  effectiveCountryOptions,
-  effectiveRegionOptions,
-  effectiveGrapeOptions,
-  countryReferenceRows,
-  regionReferenceRows,
-  grapeReferenceRows,
-  saving,
-  onClose,
-  onDraftChange,
-  onStorageSpaceChange,
-  onStorageRowChange,
-  onStorageSlotChange,
-  onChooseImage,
-  onTakePhoto,
-  onRemoveImage,
-  onSave,
-}: {
-  visible: boolean;
-  styles: SharedStyles;
-  draft: WineDraft | null;
-  storageSpaces: StorageSpaceRow[];
-  selectedStorageSpace?: StorageSpaceRow | null;
-  storageSpaceById: Map<string, StorageSpaceRow>;
-  occupiedPositions: { occupiedRows: Set<string>; occupiedSlots: Set<string> };
-  storageSpaceDraft: StorageSpaceDraft;
-  savingStorageSpace: boolean;
-  onStorageSpaceDraftChange: (patch: Partial<StorageSpaceDraft>) => void;
-  onSaveStorageSpace: () => void;
-  searchWineNames: (query: string, offset?: number) => Promise<{ suggestions: Suggestion[]; hasMore: boolean; nextOffset: number }>;
-  effectiveCountryOptions: string[];
-  effectiveRegionOptions: string[];
-  effectiveGrapeOptions: string[];
-  countryReferenceRows: ReferenceOptionRow[];
-  regionReferenceRows: ReferenceOptionRow[];
-  grapeReferenceRows: ReferenceOptionRow[];
-  saving: boolean;
-  onClose: () => void;
-  onDraftChange: (patch: Partial<WineDraft>) => void;
-  onStorageSpaceChange: (spaceId: string) => void;
-  onStorageRowChange: (value: string) => void;
-  onStorageSlotChange: (value: string) => void;
-  onChooseImage: () => void;
-  onTakePhoto: () => void;
-  onRemoveImage: () => void;
-  onSave: () => void;
-}) {
-  return (
-    <Modal visible={visible} animationType="slide" presentationStyle="fullScreen">
-      <SafeAreaView style={styles.scannerScreen}>
-        <View style={styles.scannerHeader}>
-          <View style={styles.flex}>
-            <Text style={styles.eyebrow}>Min källare</Text>
-            <Text style={styles.scannerTitle}>Redigera vin</Text>
-          </View>
-          <Pressable onPress={onClose} disabled={saving}>
-            <Text style={styles.linkText}>Stäng</Text>
-          </Pressable>
-        </View>
-
-        <ScrollView contentContainerStyle={styles.catalogEditorContent} keyboardShouldPersistTaps="handled">
-          {draft ? (
-            <>
-              <AutocompleteInput
-                label="Namn"
-                value={draft.name}
-                onChangeText={(value) => onDraftChange({ name: value })}
-                options={[]}
-                searchAsync={searchWineNames}
-                placeholder="Skriv minst 4 bokstäver"
-                minimumQueryLength={4}
-              />
-              <LabeledInput label="Producent" value={draft.producer} onChangeText={(value) => onDraftChange({ producer: value })} />
-              <DoubleRow>
-                <AutocompleteInput
-                  label="Land"
-                  value={draft.country}
-                  onChangeText={(value) => onDraftChange({ country: value })}
-                  options={effectiveCountryOptions}
-                  optionRows={countryReferenceRows}
-                />
-                <AutocompleteInput
-                  label="Region"
-                  value={draft.region}
-                  onChangeText={(value) => onDraftChange({ region: value })}
-                  options={effectiveRegionOptions}
-                  optionRows={regionReferenceRows}
-                />
-              </DoubleRow>
-              <AutocompleteInput
-                label="Druva"
-                value={draft.grape}
-                onChangeText={(value) => onDraftChange({ grape: value })}
-                options={effectiveGrapeOptions}
-                optionRows={grapeReferenceRows}
-              />
-              <DoubleRow>
-                <LabeledInput label="Årgång" value={draft.vintage} onChangeText={(value) => onDraftChange({ vintage: value })} keyboardType="number-pad" />
-                <LabeledInput label="Antal" value={draft.quantity} onChangeText={(value) => onDraftChange({ quantity: value })} keyboardType="number-pad" />
-              </DoubleRow>
-              <SuggestionRow title="Vintyp" options={WINE_TYPE_OPTIONS} selected={draft.type} onSelect={(value) => onDraftChange({ type: value })} />
-              <DoubleRow>
-                <LabeledInput label="Drick senast (år)" value={draft.drinkBy} onChangeText={(value) => onDraftChange({ drinkBy: value })} keyboardType="number-pad" placeholder="t.ex. 2028" />
-                <DateInput label="Inköpt" value={draft.acquiredAt} onChangeText={(value) => onDraftChange({ acquiredAt: value })} />
-              </DoubleRow>
-
-              {storageSpaces.length > 0 ? (
-                <View style={styles.foodSection}>
-                  <Text style={styles.inputLabel}>Förvaringsplats</Text>
-                  <StorageSpaceSelector title="" spaces={storageSpaces} selectedId={draft.storageSpaceId} onSelect={onStorageSpaceChange} clearLabel="Ingen plats" />
-                  {selectedStorageSpace ? (
-                    <>
-                      <SuggestionRow title="Rad" options={buildNumericOptions(selectedStorageSpace.row_count)} selected={draft.storageRow} onSelect={onStorageRowChange} disabledOptions={occupiedPositions.occupiedRows} />
-                      <SuggestionRow title="Plats" options={buildNumericOptions(selectedStorageSpace.slots_per_row)} selected={draft.storageSlot} onSelect={onStorageSlotChange} disabledOptions={occupiedPositions.occupiedSlots} />
-                      <Text style={styles.notesText}>
-                        Vald placering:{" "}
-                        {getWineStoragePlacementLabel(
-                          {
-                            storage_space_id: draft.storageSpaceId,
-                            storage_row: Number(draft.storageRow),
-                            storage_slot: Number(draft.storageSlot),
-                          },
-                          storageSpaceById
-                        )}
-                      </Text>
-                    </>
-                  ) : null}
-                  <StorageSpaceForm draft={storageSpaceDraft} saving={savingStorageSpace} onDraftChange={onStorageSpaceDraftChange} onSave={onSaveStorageSpace} />
-                </View>
-              ) : (
-                <View style={styles.foodSection}>
-                  <Text style={styles.inputLabel}>Förvaringsplats</Text>
-                  <StorageSpaceForm draft={storageSpaceDraft} saving={savingStorageSpace} onDraftChange={onStorageSpaceDraftChange} onSave={onSaveStorageSpace} />
-                </View>
-              )}
-
-              <LabeledInput label="Fri platsnotering" value={draft.location} onChangeText={(value) => onDraftChange({ location: value })} />
-              <DoubleRow>
-                <LabeledInput label="Streckkod" value={draft.barcode} onChangeText={(value) => onDraftChange({ barcode: value })} />
-                <LabeledInput label="Artikelnummer" value={draft.systembolagetProductId} onChangeText={(value) => onDraftChange({ systembolagetProductId: value })} />
-              </DoubleRow>
-              <LabeledInput label="Etiketter" value={draft.tags} onChangeText={(value) => onDraftChange({ tags: value })} />
-              <LabeledInput label="Passar till" value={draft.foodPairings} onChangeText={(value) => onDraftChange({ foodPairings: value })} />
-              <LabeledInput label="Anteckningar" value={draft.notes} onChangeText={(value) => onDraftChange({ notes: value })} multiline />
-
-              <View style={styles.foodSection}>
-                <Text style={styles.inputLabel}>Bild</Text>
-                <View style={styles.tagRow}>
-                  <Pressable onPress={onTakePhoto} style={styles.secondaryButton}>
-                    <Text style={styles.secondaryButtonText}>Ta foto</Text>
-                  </Pressable>
-                  <Pressable onPress={onChooseImage} style={styles.secondaryButton}>
-                    <Text style={styles.secondaryButtonText}>{draft.imageUri ? "Byt bild" : "Välj bild"}</Text>
-                  </Pressable>
-                  {draft.imageUri ? (
-                    <Pressable onPress={onRemoveImage} style={styles.secondaryButton}>
-                      <Text style={styles.dangerText}>Ta bort bild</Text>
-                    </Pressable>
-                  ) : null}
-                </View>
-                {draft.imageUri ? <Image source={{ uri: draft.imageUri }} style={styles.wineImage} resizeMode="contain" /> : null}
-              </View>
-
-              <View style={styles.modalActionRow}>
-                <Pressable onPress={onClose} style={styles.secondaryButton} disabled={saving}>
-                  <Text style={styles.secondaryButtonText}>Avbryt</Text>
-                </Pressable>
-                <Pressable onPress={onSave} style={styles.primaryButton} disabled={saving}>
-                  <Text style={styles.primaryButtonText}>{saving ? "Sparar..." : "Spara ändringar"}</Text>
-                </Pressable>
-              </View>
-            </>
-          ) : null}
         </ScrollView>
       </SafeAreaView>
     </Modal>
