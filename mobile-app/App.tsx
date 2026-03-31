@@ -2,7 +2,7 @@ import "react-native-url-polyfill/auto";
 
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useMemo, useState } from "react";
-import { Alert, SafeAreaView, ScrollView, Text as RNText } from "react-native";
+import { Alert, Pressable, SafeAreaView, ScrollView, Text as RNText, View as RNView } from "react-native";
 import type { Session } from "@supabase/supabase-js";
 
 import { supabase, supabaseConfigured } from "./src/lib/supabase";
@@ -21,6 +21,7 @@ import { BottomTabBar, HistoryPanel, MealPlannerPanel, MinKallarePanel } from ".
 import { AddWinePanel, BarcodeScannerModal, CatalogEditorModal, DrinkWineModal, EditWineModal, VintagePickerModal } from "./src/components/cellar-workflows";
 import { WsatTastingModal } from "./src/components/wsat-tasting-modal";
 import { LabelMatchPickerModal } from "./src/components/label-match-picker";
+import { PrivacyPolicyModal } from "./src/components/privacy-policy-modal";
 import { CELLAR_SECTIONS, type CellarSection } from "./src/types/cellar";
 import type { WineDraft } from "./src/types/cellar-drafts";
 import { defaultDraft } from "./src/types/cellar-drafts";
@@ -110,6 +111,7 @@ function CellarScreen({ session }: { session: Session }) {
 
   // --- Save states ---
   const [saving, setSaving] = useState(false);
+  const [privacyVisible, setPrivacyVisible] = useState(false);
 
   // --- Derived ---
   const selectedEditStorageSpace = data.storageSpaces.find((s) => s.id === (editWineDraft?.storageSpaceId || "")) ?? null;
@@ -384,6 +386,7 @@ function CellarScreen({ session }: { session: Session }) {
   return (
     <SafeAreaView style={styles.screen}>
       <StatusBar style="light" />
+      <PrivacyPolicyModal visible={privacyVisible} styles={styles} onClose={() => setPrivacyVisible(false)} />
       <BarcodeScannerModal visible={catalog.scannerVisible} styles={styles} onClose={() => catalog.setScannerVisible(false)} onBarcodeScanned={({ data: d }) => catalog.handleBarcodeScanned(d, draft, setDraft)} onLabelPhoto={() => catalog.handleLabelPhoto(setDraft)} />
       <LabelMatchPickerModal visible={catalog.labelPickerVisible} matches={catalog.labelMatches} onSelect={(m) => catalog.handleLabelMatchSelected(m, setDraft)} onDismiss={() => catalog.handleLabelMatchDismissed(setDraft)} />
       <WsatTastingModal visible={wsatModalVisible} wineType={draft.type} initialData={wsatData} onSave={(d) => setWsatData(d)} onClose={() => setWsatModalVisible(false)} />
@@ -435,7 +438,12 @@ function CellarScreen({ session }: { session: Session }) {
       />
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" style={styles.scrollFlex}>
         {activePanel}
-        <RNText style={{ color: "#8f8178", fontSize: 10, textAlign: "center", opacity: 0.6, paddingBottom: 8 }}>{BUILD_VERSION}</RNText>
+        <RNView style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 8, paddingBottom: 8 }}>
+          <RNText style={{ color: "#8f8178", fontSize: 10, opacity: 0.6 }}>{BUILD_VERSION}</RNText>
+          <Pressable onPress={() => setPrivacyVisible(true)}>
+            <RNText style={{ color: "#8f8178", fontSize: 10, textDecorationLine: "underline" }}>Integritetspolicy</RNText>
+          </Pressable>
+        </RNView>
       </ScrollView>
       <BottomTabBar activeSection={activeSection} sections={CELLAR_SECTIONS} styles={styles} onSelect={setActiveSection} />
     </SafeAreaView>
