@@ -86,9 +86,7 @@ export function MinKallarePanel({
   for (const space of storageSpaces) {
     const wines = winesBySpace.get(space.id) || [];
     const bottleCount = storageSpaceBottleCounts.get(space.id) || 0;
-    if (wines.length > 0 || bottleCount > 0) {
-      spaceCards.push({ id: space.id, name: space.name, spaceType: space.space_type, wines, bottleCount });
-    }
+    spaceCards.push({ id: space.id, name: space.name, spaceType: space.space_type, wines, bottleCount });
   }
 
   useEffect(() => {
