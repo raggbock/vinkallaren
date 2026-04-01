@@ -1,0 +1,68 @@
+export type TastingSessionRow = {
+  id: string;
+  host_id: string;
+  title: string;
+  join_code: string;
+  mode: "blind" | "open";
+  format: "quick" | "wset";
+  free_order: boolean;
+  status: "active" | "revealed" | "ended";
+  created_at: string;
+};
+
+export type SessionWineRow = {
+  id: string;
+  session_id: string;
+  position: number;
+  name: string;
+  producer: string | null;
+  country: string | null;
+  region: string | null;
+  grape: string | null;
+  vintage: number | null;
+  type: string | null;
+  wine_id: string | null;
+  created_at: string;
+};
+
+export type SessionTastingRow = {
+  id: string;
+  session_id: string;
+  session_wine_id: string;
+  user_id: string;
+  rating: number | null;
+  notes: string | null;
+  food_pairings: string[];
+  tasting_data: Record<string, unknown> | null;
+  created_at: string;
+};
+
+export type SessionWineInsert = {
+  session_id: string;
+  position: number;
+  name: string;
+  producer?: string | null;
+  country?: string | null;
+  region?: string | null;
+  grape?: string | null;
+  vintage?: number | null;
+  type?: string | null;
+  wine_id?: string | null;
+};
+
+export type SessionTastingInsert = {
+  session_id: string;
+  session_wine_id: string;
+  user_id: string;
+  rating?: number | null;
+  notes?: string | null;
+  food_pairings?: string[];
+  tasting_data?: Record<string, unknown> | null;
+};
+
+export type CreateSessionInput = {
+  title: string;
+  mode: "blind" | "open";
+  format: "quick" | "wset";
+  free_order: boolean;
+};
