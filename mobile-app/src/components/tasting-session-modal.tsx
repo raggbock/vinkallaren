@@ -130,7 +130,7 @@ export function TastingSessionPanel({
       ) : (
         <>
           <View style={s.actionRow}>
-            <Pressable onPress={() => setView("create")} style={styles.primaryButton}>
+            <Pressable onPress={() => setView("create")} style={[styles.primaryButton, { flex: 2 }]}>
               <Text style={styles.primaryButtonText}>Ny provning</Text>
             </Pressable>
             <Pressable onPress={() => setView("join")} style={styles.secondaryButton}>

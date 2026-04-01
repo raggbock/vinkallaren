@@ -51,9 +51,21 @@ create index idx_session_tastings_user on session_tastings (user_id);
 -- RLS: tasting_sessions
 alter table tasting_sessions enable row level security;
 
+-- Helper to check participation without RLS recursion
+create or replace function public.is_session_participant(p_session_id uuid)
+returns boolean
+language sql security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from session_tastings
+    where session_id = p_session_id and user_id = auth.uid()
+  );
+$$;
+
 create policy "sessions_select" on tasting_sessions for select using (
   host_id = auth.uid()
-  or exists (select 1 from session_tastings st where st.session_id = tasting_sessions.id and st.user_id = auth.uid())
+  or is_session_participant(id)
 );
 create policy "sessions_insert" on tasting_sessions for insert with check (host_id = auth.uid());
 create policy "sessions_update" on tasting_sessions for update using (host_id = auth.uid());
@@ -66,7 +78,7 @@ create policy "session_wines_select" on session_wines for select using (
   exists (
     select 1 from tasting_sessions ts
     where ts.id = session_wines.session_id
-    and (ts.host_id = auth.uid() or exists (select 1 from session_tastings st where st.session_id = ts.id and st.user_id = auth.uid()))
+    and (ts.host_id = auth.uid() or is_session_participant(ts.id))
   )
 );
 create policy "session_wines_insert" on session_wines for insert with check (

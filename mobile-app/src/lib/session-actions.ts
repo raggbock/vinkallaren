@@ -25,6 +25,7 @@ export async function createSession(userId: string, input: CreateSessionInput): 
       .select("*")
       .single();
     if (!error) return data as TastingSessionRow;
+    console.error("createSession error:", error.code, error.message);
     if (error.code !== "23505") { Alert.alert("Kunde inte skapa provning", error.message); return null; }
   }
   Alert.alert("Kunde inte skapa provning", "Försök igen.");
