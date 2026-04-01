@@ -20,7 +20,7 @@ export function MinKallarePanel({
   onEditWine, onDrinkWine, onDeleteWine,
   storageSpaceDraft, savingStorageSpace, onStorageSpaceDraftChange, onSaveStorageSpace,
   onUpdateStorageSpace, onDeleteStorageSpace,
-  onNavigateToAdd,
+  onNavigateToAdd, onOpenTastingSessions,
   selectedStorageSpaceFilterId, onStorageSpaceFilterChange,
   hasMoreWines, onLoadMoreWines,
   highlightedWineId, onClearHighlight,
@@ -62,6 +62,7 @@ export function MinKallarePanel({
   onUpdateStorageSpace: (id: string, patch: { name?: string; space_type?: string; row_count?: number; slots_per_row?: number }) => void;
   onDeleteStorageSpace: (id: string) => void;
   onNavigateToAdd: () => void;
+  onOpenTastingSessions: () => void;
   selectedStorageSpaceFilterId: string;
   onStorageSpaceFilterChange: (id: string) => void;
   hasMoreWines: boolean;
@@ -163,6 +164,10 @@ export function MinKallarePanel({
       ) : null}
 
       {loading ? <LoadingInline /> : null}
+
+      <Pressable onPress={onOpenTastingSessions} style={styles.secondaryButton}>
+        <Text style={styles.secondaryButtonText}>Provningar</Text>
+      </Pressable>
 
       <StorageSpaceForm draft={storageSpaceDraft} saving={savingStorageSpace} onDraftChange={onStorageSpaceDraftChange} onSave={onSaveStorageSpace} />
 
