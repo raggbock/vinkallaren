@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
-import { Alert, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import * as Clipboard from "expo-clipboard";
-import { AnimatedModal } from "./animated-modal";
 import { Expandable, LabeledInput, SuggestionRow } from "./form-controls";
 import { SessionTastingView } from "./session-tasting-view";
 import { addWineToSession, buildShareMessage, endSession, revealSession, saveTasting } from "../lib/session-actions";
@@ -9,13 +8,16 @@ import type { CreateSessionInput, SessionTastingRow, SessionWineRow, TastingSess
 import type { WsatTastingData } from "../lib/wsat-data";
 import type { WineRecord } from "../types/wine";
 
-export function TastingSessionModal({
-  visible, userId, sessions, loading, activeSession, activeWines, activeTastings,
-  wines, onClose, onFetchSessions, onCreateSession, onJoinSession, onOpenSession,
+import type { styles as themeStyles } from "../styles/theme";
+type SharedStyles = typeof themeStyles;
+
+export function TastingSessionPanel({
+  styles, userId, sessions, loading, activeSession, activeWines, activeTastings,
+  wines, onBack, onFetchSessions, onCreateSession, onJoinSession, onOpenSession,
   onCloseSession, onSetActiveWines, onSetActiveTastings, onSetActiveSession,
   onOpenWsat, wsatData,
 }: {
-  visible: boolean;
+  styles: SharedStyles;
   userId: string;
   sessions: TastingSessionRow[];
   loading: boolean;
@@ -23,7 +25,7 @@ export function TastingSessionModal({
   activeWines: SessionWineRow[];
   activeTastings: SessionTastingRow[];
   wines: WineRecord[];
-  onClose: () => void;
+  onBack: () => void;
   onFetchSessions: () => void;
   onCreateSession: (input: CreateSessionInput) => Promise<TastingSessionRow | null>;
   onJoinSession: (code: string) => Promise<TastingSessionRow | null>;
@@ -39,9 +41,7 @@ export function TastingSessionModal({
   const [tastingWine, setTastingWine] = useState<SessionWineRow | null>(null);
   const [savingTasting, setSavingTasting] = useState(false);
 
-  useEffect(() => {
-    if (visible) { onFetchSessions(); setView("list"); setTastingWine(null); }
-  }, [visible]);
+  useEffect(() => { onFetchSessions(); setView("list"); setTastingWine(null); }, []);
 
   // Tasting a specific wine
   if (activeSession && tastingWine) {
@@ -49,31 +49,29 @@ export function TastingSessionModal({
       (t) => t.session_wine_id === tastingWine.id && t.user_id === userId,
     );
     return (
-      <AnimatedModal visible={visible} onClose={onClose}>
-        <SafeAreaView style={s.screen}>
-          <SessionTastingView
-            wine={tastingWine}
-            format={activeSession.format}
-            initialRating={existing?.rating ?? null}
-            initialNotes={existing?.notes ?? null}
-            initialFoodPairings={existing?.food_pairings ?? []}
-            initialWsatData={wsatData}
-            saving={savingTasting}
-            onSave={async (data) => {
-              setSavingTasting(true);
-              const result = await saveTasting({
-                session_id: activeSession.id, session_wine_id: tastingWine.id,
-                user_id: userId, rating: data.rating, notes: data.notes,
-                food_pairings: data.foodPairings, tasting_data: data.wsatData ?? null,
-              });
-              setSavingTasting(false);
-              if (result) setTastingWine(null);
-            }}
-            onOpenWsat={onOpenWsat}
-            onBack={() => setTastingWine(null)}
-          />
-        </SafeAreaView>
-      </AnimatedModal>
+      <View style={styles.panel}>
+        <SessionTastingView
+          wine={tastingWine}
+          format={activeSession.format}
+          initialRating={existing?.rating ?? null}
+          initialNotes={existing?.notes ?? null}
+          initialFoodPairings={existing?.food_pairings ?? []}
+          initialWsatData={wsatData}
+          saving={savingTasting}
+          onSave={async (data) => {
+            setSavingTasting(true);
+            const result = await saveTasting({
+              session_id: activeSession.id, session_wine_id: tastingWine.id,
+              user_id: userId, rating: data.rating, notes: data.notes,
+              food_pairings: data.foodPairings, tasting_data: data.wsatData ?? null,
+            });
+            setSavingTasting(false);
+            if (result) setTastingWine(null);
+          }}
+          onOpenWsat={onOpenWsat}
+          onBack={() => setTastingWine(null)}
+        />
+      </View>
     );
   }
 
@@ -82,83 +80,76 @@ export function TastingSessionModal({
     const isHost = activeSession.host_id === userId;
     const participantCount = new Set(activeTastings.map((t) => t.user_id)).size;
     return (
-      <AnimatedModal visible={visible} onClose={onClose}>
-        <SafeAreaView style={s.screen}>
-          <View style={s.header}>
-            <View style={{ flex: 1 }}>
-              <Text style={s.eyebrow}>
-                {activeSession.mode === "blind" ? "Blindprovning" : "Öppen provning"} · {activeSession.format.toUpperCase()}
-              </Text>
-              <Text style={s.title}>{activeSession.title}</Text>
-              <Text style={s.meta}>{participantCount} deltagare · {activeWines.length} viner</Text>
-            </View>
-            <Pressable onPress={() => { onCloseSession(); setView("list"); }}>
-              <Text style={s.linkText}>Tillbaka</Text>
-            </Pressable>
+      <View style={styles.panel}>
+        <View style={styles.panelHeaderRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={s.eyebrow}>
+              {activeSession.mode === "blind" ? "Blindprovning" : "Öppen provning"} · {activeSession.format.toUpperCase()}
+            </Text>
+            <Text style={styles.panelTitle}>{activeSession.title}</Text>
+            <Text style={s.meta}>{participantCount} deltagare · {activeWines.length} viner</Text>
           </View>
-          <ScrollView contentContainerStyle={s.content}>
-            {activeWines.map((wine) => (
-              <WineCardRow key={wine.id} wine={wine} userId={userId}
-                activeTastings={activeTastings} sessionStatus={activeSession.status}
-                sessionMode={activeSession.mode}
-                onPress={() => activeSession.status === "active" ? setTastingWine(wine) : null} />
-            ))}
-            {isHost && activeSession.status === "active" ? (
-              <AddWineForm sessionId={activeSession.id} wineCount={activeWines.length}
-                wines={wines} onAdded={(w) => onSetActiveWines((prev) => [...prev, w])} />
-            ) : null}
-          </ScrollView>
-          {isHost ? (
-            <HostControls session={activeSession} onSetSession={onSetActiveSession} />
-          ) : null}
-        </SafeAreaView>
-      </AnimatedModal>
+          <Pressable onPress={() => { onCloseSession(); setView("list"); }}>
+            <Text style={styles.linkText}>Tillbaka</Text>
+          </Pressable>
+        </View>
+
+        {activeWines.map((wine) => (
+          <WineCardRow key={wine.id} wine={wine} userId={userId}
+            activeTastings={activeTastings} sessionStatus={activeSession.status}
+            sessionMode={activeSession.mode}
+            onPress={() => activeSession.status === "active" ? setTastingWine(wine) : null} />
+        ))}
+
+        {isHost && activeSession.status === "active" ? (
+          <AddWineForm sessionId={activeSession.id} wineCount={activeWines.length}
+            wines={wines} onAdded={(w) => onSetActiveWines((prev) => [...prev, w])} />
+        ) : null}
+
+        {isHost ? (
+          <HostControls session={activeSession} onSetSession={onSetActiveSession} />
+        ) : null}
+      </View>
     );
   }
 
   // Session list / create / join
   return (
-    <AnimatedModal visible={visible} onClose={onClose}>
-      <SafeAreaView style={s.screen}>
-        <View style={s.header}>
-          <View style={{ flex: 1 }}>
-            <Text style={s.eyebrow}>Vinprovning</Text>
-            <Text style={s.title}>Provningar</Text>
+    <View style={styles.panel}>
+      <View style={styles.panelHeaderRow}>
+        <Text style={styles.panelTitle}>Provningar</Text>
+        <Pressable onPress={onBack}><Text style={styles.linkText}>Tillbaka</Text></Pressable>
+      </View>
+
+      {view === "create" ? (
+        <CreateForm onCreate={async (input) => { await onCreateSession(input); setView("list"); }}
+          onCancel={() => setView("list")} />
+      ) : view === "join" ? (
+        <JoinForm onJoin={async (code) => { await onJoinSession(code); setView("list"); }}
+          onCancel={() => setView("list")} />
+      ) : (
+        <>
+          <View style={s.actionRow}>
+            <Pressable onPress={() => setView("create")} style={styles.primaryButton}>
+              <Text style={styles.primaryButtonText}>Ny provning</Text>
+            </Pressable>
+            <Pressable onPress={() => setView("join")} style={styles.secondaryButton}>
+              <Text style={styles.secondaryButtonText}>Gå med (kod)</Text>
+            </Pressable>
           </View>
-          <Pressable onPress={onClose}><Text style={s.linkText}>Stäng</Text></Pressable>
-        </View>
-        <ScrollView contentContainerStyle={s.content}>
-          {view === "create" ? (
-            <CreateForm onCreate={async (input) => { await onCreateSession(input); setView("list"); }}
-              onCancel={() => setView("list")} />
-          ) : view === "join" ? (
-            <JoinForm onJoin={async (code) => { await onJoinSession(code); setView("list"); }}
-              onCancel={() => setView("list")} />
-          ) : (
-            <>
-              <View style={s.actionRow}>
-                <Pressable onPress={() => setView("create")} style={s.primaryBtn}>
-                  <Text style={s.primaryBtnText}>Ny provning</Text>
-                </Pressable>
-                <Pressable onPress={() => setView("join")} style={s.secondaryBtn}>
-                  <Text style={s.secondaryBtnText}>Gå med (kod)</Text>
-                </Pressable>
-              </View>
-              {loading ? <Text style={s.meta}>Laddar...</Text> : null}
-              {sessions.map((ses) => (
-                <Pressable key={ses.id} style={s.sessionCard} onPress={() => onOpenSession(ses)}>
-                  <Text style={s.sessionTitle}>{ses.title}</Text>
-                  <Text style={s.sessionMeta}>
-                    {ses.mode === "blind" ? "Blind" : "Öppen"} · {ses.format.toUpperCase()} · {ses.status === "active" ? "Pågår" : ses.status === "revealed" ? "Avslöjad" : "Avslutad"}
-                  </Text>
-                </Pressable>
-              ))}
-              {!loading && sessions.length === 0 ? <Text style={s.meta}>Inga provningar ännu.</Text> : null}
-            </>
-          )}
-        </ScrollView>
-      </SafeAreaView>
-    </AnimatedModal>
+          {loading ? <Text style={s.meta}>Laddar...</Text> : null}
+          {sessions.map((ses) => (
+            <Pressable key={ses.id} style={s.sessionCard} onPress={() => onOpenSession(ses)}>
+              <Text style={s.sessionTitle}>{ses.title}</Text>
+              <Text style={s.sessionMeta}>
+                {ses.mode === "blind" ? "Blind" : "Öppen"} · {ses.format.toUpperCase()} · {ses.status === "active" ? "Pågår" : ses.status === "revealed" ? "Avslöjad" : "Avslutad"}
+              </Text>
+            </Pressable>
+          ))}
+          {!loading && sessions.length === 0 ? <Text style={s.meta}>Inga provningar ännu.</Text> : null}
+        </>
+      )}
+    </View>
   );
 }
 
@@ -319,16 +310,11 @@ function AddWineForm({ sessionId, wineCount, wines, onAdded }: {
   );
 }
 
-/* ── Styles (cream palette) ── */
+/* ── Local styles (only what theme doesn't cover) ── */
 
 const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: "#f8f1e8", padding: 18, gap: 14 },
-  header: { flexDirection: "row", alignItems: "flex-start", gap: 12 },
   eyebrow: { color: "#6f1d1b", fontSize: 11, fontWeight: "700", letterSpacing: 2, textTransform: "uppercase" },
-  title: { color: "#231815", fontSize: 24, fontWeight: "700" },
   meta: { color: "#564a40", fontSize: 13, marginTop: 2 },
-  linkText: { color: "#6f1d1b", fontSize: 15, fontWeight: "600" },
-  content: { gap: 12, paddingBottom: 24 },
   actionRow: { flexDirection: "row", gap: 10 },
   primaryBtn: { flex: 1, backgroundColor: "#6f1d1b", borderRadius: 999, paddingVertical: 14, alignItems: "center" },
   primaryBtnText: { color: "#fffaf5", fontWeight: "700", fontSize: 15 },

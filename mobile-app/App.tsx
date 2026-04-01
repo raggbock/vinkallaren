@@ -10,7 +10,7 @@ import { deleteCatalogEntryById, openSystembolaget, saveCatalogEditorEntry, save
 import { BottomTabBar, HistoryPanel, MealPlannerPanel, MinKallarePanel } from "./src/components/cellar-sections";
 import { AddWinePanel, BarcodeScannerModal, CatalogEditorModal, DrinkWineModal, EditWineModal, VintagePickerModal } from "./src/components/cellar-workflows";
 import { WsatTastingModal } from "./src/components/wsat-tasting-modal";
-import { TastingSessionModal } from "./src/components/tasting-session-modal";
+import { TastingSessionPanel } from "./src/components/tasting-session-modal";
 import { LabelMatchPickerModal } from "./src/components/label-match-picker";
 import { PrivacyPolicyModal } from "./src/components/privacy-policy-modal";
 import { SuccessOverlay, useSuccessOverlay } from "./src/components/success-overlay";
@@ -315,7 +315,7 @@ function CellarScreen({ session }: { session: Session }) {
       onUpdateStorageSpace={data.updateStorageSpace}
       onDeleteStorageSpace={(id) => data.deleteStorageSpace(id, storage.selectedStorageSpaceId, storage.setSelectedStorageSpaceId, storage.setSelectedStorageRow, storage.setSelectedStorageSlot, filters.selectedStorageSpaceFilterId, filters.setSelectedStorageSpaceFilterId)}
       onNavigateToAdd={() => setActiveSection("add")}
-      onOpenTastingSessions={() => setTastingSessionsVisible(true)}
+      onOpenTastingSessions={() => { setTastingSessionsVisible(true); tastingSessions.fetchSessions(); }}
       selectedStorageSpaceFilterId={filters.selectedStorageSpaceFilterId}
       onStorageSpaceFilterChange={filters.setSelectedStorageSpaceFilterId}
       hasMoreWines={data.hasMoreWines}
@@ -324,7 +324,22 @@ function CellarScreen({ session }: { session: Session }) {
       onClearHighlight={() => setHighlightedWineId(null)}
     />
   );
-  if (activeSection === "history") {
+  if (activeSection === "cellar" && tastingSessionsVisible) {
+    activePanel = (
+      <TastingSessionPanel
+        styles={styles} userId={session.user.id}
+        sessions={tastingSessions.sessions} loading={tastingSessions.loading}
+        activeSession={tastingSessions.activeSession} activeWines={tastingSessions.activeWines}
+        activeTastings={tastingSessions.activeTastings} wines={data.wines}
+        onBack={() => { setTastingSessionsVisible(false); tastingSessions.closeSession(); }}
+        onFetchSessions={tastingSessions.fetchSessions} onCreateSession={tastingSessions.createSession}
+        onJoinSession={tastingSessions.joinSession} onOpenSession={tastingSessions.openSession}
+        onCloseSession={tastingSessions.closeSession} onSetActiveWines={tastingSessions.setActiveWines}
+        onSetActiveTastings={tastingSessions.setActiveTastings} onSetActiveSession={tastingSessions.setActiveSession}
+        onOpenWsat={() => setSessionWsatVisible(true)} wsatData={sessionWsatData}
+      />
+    );
+  } else if (activeSection === "history") {
     activePanel = <HistoryPanel styles={styles} historyEntries={data.historyEntries} loadingHistory={data.loadingHistory} storageSpaceById={data.storageSpaceById} />;
   } else if (activeSection === "meal") {
     activePanel = (
@@ -434,18 +449,6 @@ function CellarScreen({ session }: { session: Session }) {
         onChooseImage={async () => { const uri = await images.pickImageFromLibrary(); if (uri) setDrinkImageUri(uri); }}
         onTakePhoto={async () => { const uri = await images.takePhoto(); if (uri) setDrinkImageUri(uri); }}
         onConfirm={handleSaveDrink}
-      />
-      <TastingSessionModal
-        visible={tastingSessionsVisible} userId={session.user.id}
-        sessions={tastingSessions.sessions} loading={tastingSessions.loading}
-        activeSession={tastingSessions.activeSession} activeWines={tastingSessions.activeWines}
-        activeTastings={tastingSessions.activeTastings} wines={data.wines}
-        onClose={() => { setTastingSessionsVisible(false); tastingSessions.closeSession(); }}
-        onFetchSessions={tastingSessions.fetchSessions} onCreateSession={tastingSessions.createSession}
-        onJoinSession={tastingSessions.joinSession} onOpenSession={tastingSessions.openSession}
-        onCloseSession={tastingSessions.closeSession} onSetActiveWines={tastingSessions.setActiveWines}
-        onSetActiveTastings={tastingSessions.setActiveTastings} onSetActiveSession={tastingSessions.setActiveSession}
-        onOpenWsat={() => setSessionWsatVisible(true)} wsatData={sessionWsatData}
       />
       <WsatTastingModal visible={sessionWsatVisible} wineType="" initialData={sessionWsatData} onSave={(d) => setSessionWsatData(d)} onClose={() => setSessionWsatVisible(false)} />
       <EditWineModal
