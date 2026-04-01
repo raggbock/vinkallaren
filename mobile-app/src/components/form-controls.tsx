@@ -1,8 +1,29 @@
-import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
-import { Children, useState, type ComponentProps, type ReactNode } from "react";
+import { ActivityIndicator, Animated, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Children, useEffect, useRef, useState, type ComponentProps, type ReactNode } from "react";
 
 import type { ReferenceOptionRow } from "../types/reference-data";
 import type { StorageSpaceRow } from "../types/storage-space";
+
+export function Expandable({ expanded, children }: { expanded: boolean; children: ReactNode }) {
+  const anim = useRef(new Animated.Value(expanded ? 1 : 0)).current;
+  const [height, setHeight] = useState(0);
+
+  useEffect(() => {
+    Animated.timing(anim, { toValue: expanded ? 1 : 0, duration: 250, useNativeDriver: false }).start();
+  }, [expanded]);
+
+  return (
+    <Animated.View style={{
+      height: height === 0 ? undefined : anim.interpolate({ inputRange: [0, 1], outputRange: [0, height] }),
+      opacity: anim,
+      overflow: "hidden",
+    }}>
+      <View onLayout={(e) => { const h = e.nativeEvent.layout.height; if (h > 0) setHeight(h); }}>
+        {children}
+      </View>
+    </Animated.View>
+  );
+}
 
 export type Suggestion = { name: string; parentName: string | null };
 
@@ -162,12 +183,12 @@ export function GroupedSuggestionRow({
         </View>
       ))}
       {groups.length > 3 && !expanded ? (
-        <Pressable onPress={() => setExpanded(true)}>
+        <Pressable onPress={() => { setExpanded(true); }}>
           <Text style={styles.expandLink}>Visa fler kategorier ({groups.length - 3} till)</Text>
         </Pressable>
       ) : null}
       {expanded ? (
-        <Pressable onPress={() => setExpanded(false)}>
+        <Pressable onPress={() => { setExpanded(false); }}>
           <Text style={styles.expandLink}>Visa färre</Text>
         </Pressable>
       ) : null}
@@ -233,44 +254,43 @@ export function StorageSpaceForm({
   draft: { name: string; spaceType: string; rowCount: string; slotsPerRow: string; notes: string };
   saving: boolean;
   onDraftChange: (patch: Partial<{ name: string; spaceType: string; rowCount: string; slotsPerRow: string; notes: string }>) => void;
-  onSave: () => void;
+  onSave: () => void | Promise<void>;
 }) {
   const [expanded, setExpanded] = useState(false);
 
-  if (!expanded) {
-    return (
-      <Pressable onPress={() => setExpanded(true)} style={styles.secondaryButton}>
-        <Text style={styles.secondaryButtonText}>＋ Ny förvaringsplats</Text>
-      </Pressable>
-    );
-  }
-
   return (
-    <View style={styles.storageSpaceForm}>
-      <Text style={styles.inputLabel}>Ny förvaringsplats</Text>
-      <LabeledInput label="Namn" value={draft.name} onChangeText={(v) => onDraftChange({ name: v })} placeholder="t.ex. Vinkyl köket" />
-      <SuggestionRow
-        title="Typ"
-        options={SPACE_TYPE_OPTIONS}
-        selected={SPACE_TYPE_LABELS[draft.spaceType] || "Källare"}
-        onSelect={(v) => onDraftChange({ spaceType: SPACE_TYPE_VALUES[v] || "kallare" })}
-      />
-      <View style={styles.doubleRow}>
-        <View style={styles.doubleRowItem}>
-          <LabeledInput label="Antal rader" value={draft.rowCount} onChangeText={(v) => onDraftChange({ rowCount: v })} keyboardType="number-pad" />
+    <View>
+      <Pressable onPress={() => setExpanded(!expanded)} style={styles.secondaryButton}>
+        <Text style={styles.secondaryButtonText}>{expanded ? "Dölj" : "＋ Ny förvaringsplats"}</Text>
+      </Pressable>
+      <Expandable expanded={expanded}>
+        <View style={styles.storageSpaceForm}>
+          <Text style={styles.inputLabel}>Ny förvaringsplats</Text>
+          <LabeledInput label="Namn" value={draft.name} onChangeText={(v) => onDraftChange({ name: v })} placeholder="t.ex. Vinkyl köket" />
+          <SuggestionRow
+            title="Typ"
+            options={SPACE_TYPE_OPTIONS}
+            selected={SPACE_TYPE_LABELS[draft.spaceType] || "Källare"}
+            onSelect={(v) => onDraftChange({ spaceType: SPACE_TYPE_VALUES[v] || "kallare" })}
+          />
+          <View style={styles.doubleRow}>
+            <View style={styles.doubleRowItem}>
+              <LabeledInput label="Antal rader" value={draft.rowCount} onChangeText={(v) => onDraftChange({ rowCount: v })} keyboardType="number-pad" />
+            </View>
+            <View style={styles.doubleRowItem}>
+              <LabeledInput label="Platser per rad" value={draft.slotsPerRow} onChangeText={(v) => onDraftChange({ slotsPerRow: v })} keyboardType="number-pad" />
+            </View>
+          </View>
+          <View style={styles.doubleRow}>
+            <Pressable onPress={async () => { await onSave(); setExpanded(false); }} style={[styles.primaryButton, { flex: 1 }]} disabled={saving}>
+              <Text style={styles.primaryButtonText}>{saving ? "Sparar..." : "Spara plats"}</Text>
+            </Pressable>
+            <Pressable onPress={() => setExpanded(false)} style={[styles.secondaryButton, { flex: 1 }]}>
+              <Text style={styles.secondaryButtonText}>Avbryt</Text>
+            </Pressable>
+          </View>
         </View>
-        <View style={styles.doubleRowItem}>
-          <LabeledInput label="Platser per rad" value={draft.slotsPerRow} onChangeText={(v) => onDraftChange({ slotsPerRow: v })} keyboardType="number-pad" />
-        </View>
-      </View>
-      <View style={styles.doubleRow}>
-        <Pressable onPress={onSave} style={[styles.primaryButton, { flex: 1 }]} disabled={saving}>
-          <Text style={styles.primaryButtonText}>{saving ? "Sparar..." : "Spara plats"}</Text>
-        </Pressable>
-        <Pressable onPress={() => setExpanded(false)} style={[styles.secondaryButton, { flex: 0 }]}>
-          <Text style={styles.secondaryButtonText}>Avbryt</Text>
-        </Pressable>
-      </View>
+      </Expandable>
     </View>
   );
 }

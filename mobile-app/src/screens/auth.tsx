@@ -195,8 +195,9 @@ export function AuthScreen() {
               onChangeText={setEmail}
               autoCapitalize="none"
               keyboardType="email-address"
+              returnKeyType="next"
             />
-            <LabeledInput label="Lösenord" value={password} onChangeText={setPassword} secureTextEntry />
+            <LabeledInput label="Lösenord" value={password} onChangeText={setPassword} secureTextEntry returnKeyType="go" onSubmitEditing={handleAuth} />
 
             <Pressable onPress={handleAuth} style={styles.primaryButton} disabled={busy}>
               <Text style={styles.primaryButtonText}>

@@ -1,4 +1,5 @@
-import { Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
+import { AnimatedModal } from "./animated-modal";
 import type { CatalogTextMatch } from "../hooks/useCellarData";
 
 export function LabelMatchPickerModal({
@@ -13,9 +14,8 @@ export function LabelMatchPickerModal({
   onDismiss: () => void;
 }) {
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="formSheet" transparent>
-      <View style={pickerStyles.overlay}>
-        <SafeAreaView style={pickerStyles.sheet}>
+    <AnimatedModal visible={visible} onClose={onDismiss} mode="centered" cardStyle={pickerStyles.sheet}>
+        <SafeAreaView>
           <Text style={pickerStyles.title}>Möjliga matchningar</Text>
           <Text style={pickerStyles.subtitle}>
             Resultatet baseras på etikettfoto och kan vara felaktigt. Kontrollera att vinet stämmer.
@@ -45,24 +45,19 @@ export function LabelMatchPickerModal({
             <Text style={pickerStyles.dismissText}>Ingen av dessa</Text>
           </Pressable>
         </SafeAreaView>
-      </View>
-    </Modal>
+    </AnimatedModal>
   );
 }
 
 const pickerStyles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: "flex-end",
-    backgroundColor: "rgba(0,0,0,0.5)",
-  },
   sheet: {
     backgroundColor: "#2b1714",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderRadius: 20,
     padding: 20,
     paddingBottom: 32,
     maxHeight: "60%",
+    width: "90%",
+    maxWidth: 420,
   },
   title: {
     color: "#fff6ee",

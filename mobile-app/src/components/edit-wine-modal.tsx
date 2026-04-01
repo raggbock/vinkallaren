@@ -1,4 +1,5 @@
-import { Image, Modal, Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
+import { Image, Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
+import { AnimatedModal } from "./animated-modal";
 
 import { buildNumericOptions, getWineStoragePlacementLabel } from "../lib/cellar-helpers";
 import type { ReferenceOptionRow } from "../types/reference-data";
@@ -48,7 +49,7 @@ export function EditWineModal({
   onSave: () => void;
 }) {
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="fullScreen">
+    <AnimatedModal visible={visible} onClose={onClose}>
       <SafeAreaView style={styles.scannerScreen}>
         <View style={styles.scannerHeader}>
           <View style={styles.flex}>
@@ -139,6 +140,6 @@ export function EditWineModal({
           ) : null}
         </ScrollView>
       </SafeAreaView>
-    </Modal>
+    </AnimatedModal>
   );
 }

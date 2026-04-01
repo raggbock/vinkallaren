@@ -1,5 +1,6 @@
-import { Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
-import { useState } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { AnimatedModal } from "./animated-modal";
+import { useEffect, useState } from "react";
 import {
   AROMA_LEXICON,
   APPEARANCE_INTENSITY,
@@ -37,11 +38,11 @@ export function WsatTastingModal({
   const [step, setStep] = useState(0);
   const [data, setData] = useState<WsatTastingData>(initialData ?? emptyWsatData());
 
-  function handleOpen() {
-    if (initialData) setData(initialData);
-    else setData(emptyWsatData());
+  useEffect(() => {
+    if (!visible) return;
+    setData(initialData ?? emptyWsatData());
     setStep(0);
-  }
+  }, [visible]);
 
   function handleSave() {
     onSave(data);
@@ -53,8 +54,7 @@ export function WsatTastingModal({
   }
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onShow={handleOpen}>
-      <SafeAreaView style={styles.screen}>
+    <AnimatedModal visible={visible} onClose={onClose} mode="centered" cardStyle={styles.card}>
         <View style={styles.header}>
           <View style={{ flex: 1 }}>
             <Text style={styles.eyebrow}>WSET Level 2</Text>
@@ -152,8 +152,7 @@ export function WsatTastingModal({
             </Pressable>
           )}
         </View>
-      </SafeAreaView>
-    </Modal>
+    </AnimatedModal>
   );
 }
 
@@ -231,173 +230,177 @@ function TagSelector({
 // --- Styles ---
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: "#2b1714",
+  card: {
+    backgroundColor: "#f8f1e8",
+    borderRadius: 20,
+    padding: 18,
+    width: "90%",
+    maxWidth: 420,
+    maxHeight: "85%",
+    gap: 0,
   },
   header: {
     flexDirection: "row",
     alignItems: "flex-start",
     justifyContent: "space-between",
-    padding: 18,
     paddingBottom: 8,
     gap: 12,
   },
   eyebrow: {
-    color: "#f4c38c",
+    color: "#6f1d1b",
     letterSpacing: 2,
-    fontSize: 12,
+    fontSize: 11,
+    fontWeight: "700",
     textTransform: "uppercase",
     marginBottom: 2,
   },
   title: {
-    color: "#fff6ee",
-    fontSize: 28,
+    color: "#2b1714",
+    fontSize: 22,
     fontWeight: "700",
   },
   stepIndicator: {
-    color: "#c9a87c",
-    fontSize: 14,
+    color: "#8a7568",
+    fontSize: 13,
     marginTop: 6,
   },
   closeText: {
-    color: "#f4c38c",
+    color: "#6f1d1b",
     fontSize: 15,
+    fontWeight: "600",
     marginTop: 6,
   },
   content: {
-    padding: 18,
-    paddingTop: 8,
-    gap: 16,
-    paddingBottom: 24,
+    gap: 14,
+    paddingBottom: 16,
   },
   sectionLabel: {
-    color: "#f4c38c",
-    fontSize: 14,
-    fontWeight: "600",
+    color: "#6f1d1b",
+    fontSize: 13,
+    fontWeight: "700",
     letterSpacing: 1,
     textTransform: "uppercase",
     marginTop: 4,
   },
   optionRow: {
-    gap: 8,
+    gap: 6,
   },
   optionLabel: {
-    color: "#fff6ee",
-    fontSize: 15,
+    color: "#2b1714",
+    fontSize: 14,
     fontWeight: "600",
   },
   optionChips: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
+    gap: 6,
   },
   chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: "#3d2220",
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 18,
+    backgroundColor: "#ead8ca",
     borderWidth: 1,
-    borderColor: "#5a3a36",
+    borderColor: "#d4bfaa",
   },
   chipSelected: {
-    backgroundColor: "#f4c38c",
-    borderColor: "#f4c38c",
+    backgroundColor: "#6f1d1b",
+    borderColor: "#6f1d1b",
   },
   chipText: {
-    color: "#c9a87c",
-    fontSize: 14,
+    color: "#564a40",
+    fontSize: 13,
   },
   chipTextSelected: {
-    color: "#2b1714",
+    color: "#fff6ee",
     fontWeight: "600",
   },
   tagSelector: {
-    gap: 12,
+    gap: 10,
   },
   tagSectionTitle: {
-    color: "#c9a87c",
-    fontSize: 13,
+    color: "#8a7568",
+    fontSize: 12,
     fontWeight: "700",
     letterSpacing: 1,
     textTransform: "uppercase",
-    marginBottom: 4,
-    marginTop: 8,
+    marginBottom: 2,
+    marginTop: 6,
   },
   tagGroup: {
-    gap: 4,
-    marginBottom: 6,
+    gap: 3,
+    marginBottom: 4,
   },
   tagGroupLabel: {
-    color: "#8f8178",
-    fontSize: 12,
+    color: "#8a7568",
+    fontSize: 11,
     fontWeight: "600",
   },
   tagRow: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 6,
+    gap: 5,
   },
   tag: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 14,
-    backgroundColor: "#3d2220",
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 12,
+    backgroundColor: "#ead8ca",
     borderWidth: 1,
-    borderColor: "#5a3a36",
+    borderColor: "#d4bfaa",
   },
   tagSelected: {
     backgroundColor: "#6f1d1b",
-    borderColor: "#f4c38c",
+    borderColor: "#6f1d1b",
   },
   tagText: {
-    color: "#c9a87c",
-    fontSize: 13,
+    color: "#564a40",
+    fontSize: 12,
   },
   tagTextSelected: {
     color: "#f4c38c",
     fontWeight: "600",
   },
   textInput: {
-    backgroundColor: "#3d2220",
-    color: "#fff6ee",
+    backgroundColor: "#ead8ca",
+    color: "#2b1714",
     borderRadius: 10,
     padding: 12,
-    fontSize: 15,
-    minHeight: 60,
+    fontSize: 14,
+    minHeight: 50,
     textAlignVertical: "top",
     borderWidth: 1,
-    borderColor: "#5a3a36",
+    borderColor: "#d4bfaa",
   },
   nav: {
     flexDirection: "row",
-    padding: 18,
-    gap: 12,
+    paddingTop: 12,
+    gap: 10,
     borderTopWidth: 1,
-    borderTopColor: "#3d2220",
+    borderTopColor: "#ead8ca",
   },
   navButtonPrimary: {
     flex: 1,
     backgroundColor: "#6f1d1b",
-    paddingVertical: 14,
+    paddingVertical: 12,
     borderRadius: 10,
     alignItems: "center",
   },
   navButtonPrimaryText: {
     color: "#fff6ee",
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "700",
   },
   navButtonSecondary: {
     flex: 1,
-    backgroundColor: "#3d2220",
-    paddingVertical: 14,
+    backgroundColor: "#ead8ca",
+    paddingVertical: 12,
     borderRadius: 10,
     alignItems: "center",
   },
   navButtonSecondaryText: {
-    color: "#c9a87c",
-    fontSize: 16,
+    color: "#564a40",
+    fontSize: 15,
     fontWeight: "600",
   },
 });

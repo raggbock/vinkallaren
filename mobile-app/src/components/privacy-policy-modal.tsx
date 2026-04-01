@@ -1,11 +1,12 @@
-import { Modal, Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
+import { Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
+import { AnimatedModal } from "./animated-modal";
 import type { styles as themeStyles } from "../styles/theme";
 
 type SharedStyles = typeof themeStyles;
 
 export function PrivacyPolicyModal({ visible, styles, onClose }: { visible: boolean; styles: SharedStyles; onClose: () => void }) {
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" transparent={false}>
+    <AnimatedModal visible={visible} onClose={onClose}>
       <SafeAreaView style={styles.scannerScreen}>
         <View style={styles.scannerHeader}>
           <View style={styles.flex}>
@@ -50,7 +51,7 @@ export function PrivacyPolicyModal({ visible, styles, onClose }: { visible: bool
           </Section>
         </ScrollView>
       </SafeAreaView>
-    </Modal>
+    </AnimatedModal>
   );
 }
 

@@ -5,7 +5,7 @@ import { getWineStoragePlacementLabel } from "../lib/cellar-helpers";
 import type { StorageSpaceRow } from "../types/storage-space";
 import type { WineRecord } from "../types/wine";
 import type { StorageSpaceDraft } from "../types/cellar-drafts";
-import { InsightCard, LabeledInput, LoadingInline, StorageSpaceForm, SuggestionRow } from "./form-controls";
+import { Expandable, InsightCard, LabeledInput, LoadingInline, StorageSpaceForm, SuggestionRow } from "./form-controls";
 
 import type { styles as themeStyles } from "../styles/theme";
 type SharedStyles = typeof themeStyles;
@@ -121,7 +121,7 @@ export function MinKallarePanel({
         <Text style={styles.statsSummaryToggle}>{statsExpanded ? "▲" : "▼"}</Text>
       </Pressable>
 
-      {statsExpanded ? (
+      <Expandable expanded={statsExpanded}>
         <View style={styles.statsGrid}>
           <View style={styles.statsGridRow}>
             <InsightCard label="Mest flaskor från" value={stats.topCountry} />
@@ -133,7 +133,7 @@ export function MinKallarePanel({
           </View>
           <Pressable onPress={onRefreshStats}><Text style={styles.linkText}>Uppdatera statistik</Text></Pressable>
         </View>
-      ) : null}
+      </Expandable>
 
       <LabeledInput label="Sök" value={searchQuery} onChangeText={onSearchChange} placeholder="namn, druva, region, mat..." />
       <SuggestionRow title="Filtrera mat" options={pairingOptions} selected={selectedPairingFilter} onSelect={onPairingChange} />
@@ -166,9 +166,11 @@ export function MinKallarePanel({
               </View>
             </View>
           </Pressable>
-          {expandedSpaceIds.has("__unplaced__") ? unplacedWines.map((wine) => (
-            <WineCard key={wine.id} wine={wine} styles={styles} highlighted={wine.id === highlightedWineId} storageSpaceById={storageSpaceById} onOpenSystembolaget={onOpenSystembolaget} onEditWine={onEditWine} onDrinkWine={onDrinkWine} onDeleteWine={onDeleteWine} />
-          )) : null}
+          <Expandable expanded={expandedSpaceIds.has("__unplaced__")}>
+            <View>{unplacedWines.map((wine) => (
+              <WineCard key={wine.id} wine={wine} styles={styles} highlighted={wine.id === highlightedWineId} storageSpaceById={storageSpaceById} onOpenSystembolaget={onOpenSystembolaget} onEditWine={onEditWine} onDrinkWine={onDrinkWine} onDeleteWine={onDeleteWine} />
+            ))}</View>
+          </Expandable>
         </View>
       ) : null}
 
@@ -188,9 +190,11 @@ export function MinKallarePanel({
                 </View>
               </View>
             </Pressable>
-            {isExpanded ? card.wines.map((wine) => (
-              <WineCard key={wine.id} wine={wine} styles={styles} highlighted={wine.id === highlightedWineId} storageSpaceById={storageSpaceById} onOpenSystembolaget={onOpenSystembolaget} onEditWine={onEditWine} onDrinkWine={onDrinkWine} onDeleteWine={onDeleteWine} />
-            )) : null}
+            <Expandable expanded={isExpanded}>
+              <View>{card.wines.map((wine) => (
+                <WineCard key={wine.id} wine={wine} styles={styles} highlighted={wine.id === highlightedWineId} storageSpaceById={storageSpaceById} onOpenSystembolaget={onOpenSystembolaget} onEditWine={onEditWine} onDrinkWine={onDrinkWine} onDeleteWine={onDeleteWine} />
+              ))}</View>
+            </Expandable>
           </View>
         );
       })}
@@ -254,7 +258,7 @@ function WineCard({ wine, styles, highlighted, storageSpaceById, onOpenSystembol
 
       <View style={styles.actionRow}>
         <Pressable onPress={() => onEditWine(wine)}><Text style={styles.linkText}>Redigera</Text></Pressable>
-        <Pressable onPress={() => onDrinkWine(wine)} style={styles.secondaryButton}><Text style={styles.secondaryButtonText}>Drack 1 flaska</Text></Pressable>
+        <Pressable onPress={() => onDrinkWine(wine)}><Text style={styles.linkText}>Drick</Text></Pressable>
         <Pressable onPress={() => onDeleteWine(wine.id, wine.image_path)}><Text style={styles.dangerText}>Ta bort</Text></Pressable>
       </View>
     </View>

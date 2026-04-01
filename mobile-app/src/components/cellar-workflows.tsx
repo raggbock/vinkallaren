@@ -1,10 +1,12 @@
 import { CameraView } from "expo-camera";
-import { Image, Modal, Platform, Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
+import { Image, Platform, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
+import { AnimatedModal } from "./animated-modal";
 
 import type { ProductCatalogWineRow } from "../types/product-catalog";
 import type { ReferenceOptionRow } from "../types/reference-data";
 import type { CatalogEditorDraft } from "../types/cellar-drafts";
 import type { WineRecord } from "../types/wine";
+import { buildWsatSummary, type WsatTastingData } from "../lib/wsat-data";
 import { AutocompleteInput, DateInput, DoubleRow, LabeledInput, SuggestionRow, type Suggestion } from "./form-controls";
 
 import type { styles as themeStyles } from "../styles/theme";
@@ -25,7 +27,7 @@ export function BarcodeScannerModal({
   onLabelPhoto: () => void;
 }) {
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="fullScreen">
+    <AnimatedModal visible={visible} onClose={onClose}>
       <SafeAreaView style={styles.scannerScreen}>
         <View style={styles.scannerHeader}>
           <View style={styles.flex}>
@@ -56,7 +58,7 @@ export function BarcodeScannerModal({
           </Pressable>
         ) : null}
       </SafeAreaView>
-    </Modal>
+    </AnimatedModal>
   );
 }
 
@@ -82,7 +84,7 @@ export function CatalogEditorModal({
   onChange: (patch: Partial<CatalogEditorDraft>) => void;
 }) {
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="fullScreen">
+    <AnimatedModal visible={visible} onClose={onClose}>
       <SafeAreaView style={styles.scannerScreen}>
         <View style={styles.scannerHeader}>
           <View style={styles.flex}>
@@ -127,7 +129,7 @@ export function CatalogEditorModal({
           ) : null}
         </ScrollView>
       </SafeAreaView>
-    </Modal>
+    </AnimatedModal>
   );
 }
 
@@ -143,29 +145,26 @@ export function VintagePickerModal({
   styles: SharedStyles;
 }) {
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <View style={styles.vintagePickerOverlay}>
-        <View style={styles.vintagePickerCard}>
-          <Text style={styles.vintagePickerTitle}>{wineName}</Text>
-          <Text style={styles.vintagePickerSubtitle}>Välj årtal:</Text>
-          <ScrollView>
-            {vintages.map(({ year, entry }) => (
-              <Pressable key={entry.id} onPress={() => onSelectVintage(entry)} style={styles.vintagePickerItem}>
-                <Text style={styles.vintagePickerItemText}>{year}</Text>
-              </Pressable>
-            ))}
-          </ScrollView>
-          <Pressable onPress={onAddNew} style={styles.vintagePickerAddButton}>
-            <Text style={styles.vintagePickerAddText}>Lägg till nytt</Text>
+    <AnimatedModal visible={visible} onClose={onClose} mode="centered" cardStyle={styles.vintagePickerCard}>
+      <Text style={styles.vintagePickerTitle}>{wineName}</Text>
+      <Text style={styles.vintagePickerSubtitle}>Välj årtal:</Text>
+      <ScrollView>
+        {vintages.map(({ year, entry }) => (
+          <Pressable key={entry.id} onPress={() => onSelectVintage(entry)} style={styles.vintagePickerItem}>
+            <Text style={styles.vintagePickerItemText}>{year}</Text>
           </Pressable>
-        </View>
-      </View>
-    </Modal>
+        ))}
+      </ScrollView>
+      <Pressable onPress={onAddNew} style={styles.vintagePickerAddButton}>
+        <Text style={styles.vintagePickerAddText}>Lägg till nytt</Text>
+      </Pressable>
+    </AnimatedModal>
   );
 }
 
 export function DrinkWineModal({
   visible, styles, wine, rating, notes, consumedDate, imageUri, saving,
+  wsatData, onOpenWsat,
   onClose, onRatingChange, onNotesChange, onConsumedDateChange, onChooseImage, onTakePhoto, onConfirm,
 }: {
   visible: boolean;
@@ -176,6 +175,8 @@ export function DrinkWineModal({
   consumedDate: string;
   imageUri: string;
   saving: boolean;
+  wsatData: WsatTastingData | null;
+  onOpenWsat: () => void;
   onClose: () => void;
   onRatingChange: (value: string) => void;
   onNotesChange: (value: string) => void;
@@ -185,41 +186,62 @@ export function DrinkWineModal({
   onConfirm: () => void;
 }) {
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" transparent={false}>
-      <SafeAreaView style={styles.scannerScreen}>
-        <View style={styles.scannerHeader}>
-          <View style={styles.flex}>
-            <Text style={styles.eyebrow}>Historik</Text>
-            <Text style={styles.scannerTitle}>Drack du {wine?.name || "det här vinet"}?</Text>
+    <AnimatedModal visible={visible} onClose={onClose} mode="centered" cardStyle={drinkStyles.card}>
+          <View style={styles.panelHeaderRow}>
+            <View style={styles.flex}>
+              <Text style={styles.eyebrow}>Historik</Text>
+              <Text style={styles.panelTitle}>{wine?.name || "Vin"}</Text>
+            </View>
+            <Pressable onPress={onClose} disabled={saving}>
+              <Text style={styles.linkText}>Stäng</Text>
+            </Pressable>
           </View>
-          <Pressable onPress={onClose} disabled={saving}>
-            <Text style={styles.linkText}>Stäng</Text>
-          </Pressable>
-        </View>
 
-        <ScrollView contentContainerStyle={styles.catalogEditorContent} keyboardShouldPersistTaps="handled">
-          <DateInput label="Datum" value={consumedDate} onChangeText={onConsumedDateChange} />
-          <SuggestionRow title="Betyg" options={["1", "2", "3", "4", "5"]} selected={rating} onSelect={onRatingChange} />
-          <LabeledInput label="Smaknotering" value={notes} onChangeText={onNotesChange} placeholder="t.ex. mörk frukt, bra syra, gärna igen" multiline />
-          <View style={styles.modalActionRow}>
-            <Pressable onPress={onTakePhoto} style={styles.secondaryButton}>
-              <Text style={styles.secondaryButtonText}>Ta foto</Text>
-            </Pressable>
-            <Pressable onPress={onChooseImage} style={styles.secondaryButton}>
-              <Text style={styles.secondaryButtonText}>Välj bild</Text>
-            </Pressable>
-          </View>
-          {imageUri ? <Image source={{ uri: imageUri }} style={styles.wineImage} resizeMode="contain" /> : null}
+          <ScrollView contentContainerStyle={{ gap: 12 }} keyboardShouldPersistTaps="handled">
+            <DateInput label="Datum" value={consumedDate} onChangeText={onConsumedDateChange} />
+            <SuggestionRow title="Betyg" options={["1", "2", "3", "4", "5"]} selected={rating} onSelect={onRatingChange} />
+            {wsatData ? (
+              <Pressable onPress={onOpenWsat} style={styles.importSuggestionCard}>
+                <Text style={styles.inputLabel}>WSET Tasting</Text>
+                <Text style={styles.notesText}>{buildWsatSummary(wsatData)}</Text>
+              </Pressable>
+            ) : (
+              <Pressable onPress={onOpenWsat} style={styles.secondaryButton}>
+                <Text style={styles.secondaryButtonText}>WSET Tasting</Text>
+              </Pressable>
+            )}
+            <LabeledInput label="Smaknotering" value={notes} onChangeText={onNotesChange} placeholder="t.ex. mörk frukt, bra syra" multiline />
+            <View style={styles.imageButtonRow}>
+              <Pressable onPress={onTakePhoto} style={styles.secondaryButton}>
+                <Text style={styles.secondaryButtonText}>Ta foto</Text>
+              </Pressable>
+              <Pressable onPress={onChooseImage} style={styles.secondaryButton}>
+                <Text style={styles.secondaryButtonText}>Välj bild</Text>
+              </Pressable>
+            </View>
+            {imageUri ? <Image source={{ uri: imageUri }} style={{ width: "100%", height: 160, borderRadius: 12, backgroundColor: "#ead8ca" }} resizeMode="contain" /> : null}
+          </ScrollView>
+
           <View style={styles.modalActionRow}>
             <Pressable onPress={onClose} style={styles.secondaryButton} disabled={saving}>
               <Text style={styles.secondaryButtonText}>Avbryt</Text>
             </Pressable>
             <Pressable onPress={onConfirm} style={styles.primaryButton} disabled={saving}>
-              <Text style={styles.primaryButtonText}>{saving ? "Sparar..." : "Spara i historik"}</Text>
+              <Text style={styles.primaryButtonText}>{saving ? "Sparar..." : "Spara"}</Text>
             </Pressable>
           </View>
-        </ScrollView>
-      </SafeAreaView>
-    </Modal>
+    </AnimatedModal>
   );
 }
+
+const drinkStyles = StyleSheet.create({
+  card: {
+    backgroundColor: "#f8f1e8",
+    borderRadius: 20,
+    padding: 18,
+    width: "90%",
+    maxWidth: 420,
+    maxHeight: "85%",
+    gap: 14,
+  },
+});

@@ -22,6 +22,7 @@ import { AddWinePanel, BarcodeScannerModal, CatalogEditorModal, DrinkWineModal, 
 import { WsatTastingModal } from "./src/components/wsat-tasting-modal";
 import { LabelMatchPickerModal } from "./src/components/label-match-picker";
 import { PrivacyPolicyModal } from "./src/components/privacy-policy-modal";
+import { SuccessOverlay, useSuccessOverlay } from "./src/components/success-overlay";
 import { CELLAR_SECTIONS, type CellarSection } from "./src/types/cellar";
 import type { WineDraft } from "./src/types/cellar-drafts";
 import { defaultDraft } from "./src/types/cellar-drafts";
@@ -58,6 +59,14 @@ function useWebMeta() {
     og("og:title", "Vinkällaren");
     og("og:description", "Din digitala vinsamling — gratis och utan reklam.");
     og("og:type", "website");
+    // Global press/hover feedback for all interactive elements on web
+    const style = doc.createElement("style");
+    style.textContent = [
+      'div[tabindex="0"] { transition: opacity 0.15s, filter 0.15s; }',
+      'div[tabindex="0"]:hover { filter: brightness(0.92); }',
+      'div[tabindex="0"]:active { opacity: 0.7 !important; filter: brightness(0.85); transition: opacity 0.05s; }',
+    ].join("\n");
+    doc.head.appendChild(style);
   }, []);
 }
 
@@ -91,6 +100,7 @@ function CellarScreen({ session }: { session: Session }) {
   const filters = useCellarFilters(data.wines, data.storageSpaceById);
   const images = useImagePicker();
   const storage = useStorageSelection(data.storageSpaces, data.wines);
+  const success = useSuccessOverlay();
   const catalog = useCatalogWorkflow({
     sessionUserId: session.user.id,
     wines: data.wines,
@@ -117,6 +127,8 @@ function CellarScreen({ session }: { session: Session }) {
   const [drinkNotes, setDrinkNotes] = useState("");
   const [drinkConsumedDate, setDrinkConsumedDate] = useState("");
   const [drinkImageUri, setDrinkImageUri] = useState("");
+  const [drinkWsatData, setDrinkWsatData] = useState<WsatTastingData | null>(null);
+  const [drinkWsatModalVisible, setDrinkWsatModalVisible] = useState(false);
   const [savingDrinkHistory, setSavingDrinkHistory] = useState(false);
 
   // --- Edit wine modal ---
@@ -141,14 +153,13 @@ function CellarScreen({ session }: { session: Session }) {
   const selectedEditStorageSpace = data.storageSpaces.find((s) => s.id === (editWineDraft?.storageSpaceId || "")) ?? null;
   const mealRecommendations = useMemo(() => buildMealRecommendations(data.wines, selectedMeal), [selectedMeal, data.wines]);
 
-  // --- Modal openers ---
-
   function openDrinkModal(wine: WineRecord) {
     setSelectedDrinkWine(wine);
     setDrinkRating("");
     setDrinkNotes("");
     setDrinkConsumedDate(new Date().toISOString().slice(0, 10));
     setDrinkImageUri("");
+    setDrinkWsatData(null);
     setDrinkModalVisible(true);
   }
 
@@ -192,7 +203,14 @@ function CellarScreen({ session }: { session: Session }) {
       if (ok) {
         setDraft(defaultDraft);
         catalog.setSelectedCatalogNameEntry(null);
+        storage.setSelectedStorageRow("1");
+        storage.setSelectedStorageSlot("1");
         await Promise.all([data.fetchWines(), data.fetchCatalogEntries(), data.fetchReferenceOptions()]);
+        success.show("wine_added");
+        Alert.alert("Vinet är sparat!", "Vad vill du göra nu?", [
+          { text: "Lägg till fler", style: "default" },
+          { text: "Gå till min källare", onPress: () => setActiveSection("cellar") },
+        ]);
       }
     } catch (error) {
       Alert.alert("Kunde inte spara", error instanceof Error ? error.message : "Försök igen.");
@@ -211,6 +229,7 @@ function CellarScreen({ session }: { session: Session }) {
         setTastingDate(new Date().toISOString().slice(0, 10));
         setWsatData(null);
         await data.fetchHistoryEntries();
+        success.show("tasting_saved");
       }
     } catch (error) {
       Alert.alert("Kunde inte spara", error instanceof Error ? error.message : "Försök igen.");
@@ -227,10 +246,12 @@ function CellarScreen({ session }: { session: Session }) {
         userId: session.user.id, wine: selectedDrinkWine,
         rating: drinkRating, notes: drinkNotes,
         consumedDate: drinkConsumedDate, imageUri: drinkImageUri,
+        wsatData: drinkWsatData,
         setWines: data.setWines,
       });
       await data.fetchHistoryEntries();
       closeDrinkModal();
+      success.show("wine_drunk");
     } catch (error) {
       Alert.alert("Kunde inte spara historiken", error instanceof Error ? error.message : "Försök igen.");
     } finally {
@@ -245,6 +266,7 @@ function CellarScreen({ session }: { session: Session }) {
       await saveWineEditEntry({ userId: session.user.id, editingWine, editWineDraft, setWines: data.setWines });
       await data.fetchCatalogEntries();
       closeEditWineModal();
+      success.show("edit_saved");
     } catch (error) {
       if (error instanceof Error && (error.message === "missing_name" || error.message === "missing_fields")) return;
       Alert.alert("Kunde inte spara ändringen", error instanceof Error ? error.message : "Försök igen.");
@@ -325,7 +347,7 @@ function CellarScreen({ session }: { session: Session }) {
       storageSpaceDraft={data.storageSpaceDraft}
       savingStorageSpace={data.savingStorageSpace}
       onStorageSpaceDraftChange={(patch) => data.setStorageSpaceDraft((c) => ({ ...c, ...patch }))}
-      onSaveStorageSpace={() => data.saveStorageSpace(storage.selectedStorageSpaceId, storage.setSelectedStorageSpaceId, storage.setSelectedStorageRow, storage.setSelectedStorageSlot)}
+      onSaveStorageSpace={async () => { await data.saveStorageSpace(storage.selectedStorageSpaceId, storage.setSelectedStorageSpaceId, storage.setSelectedStorageRow, storage.setSelectedStorageSlot); success.show("storage_saved"); }}
       highlightedWineId={highlightedWineId}
       onClearHighlight={() => setHighlightedWineId(null)}
     />
@@ -389,7 +411,7 @@ function CellarScreen({ session }: { session: Session }) {
         storageSpaceDraft={data.storageSpaceDraft}
         savingStorageSpace={data.savingStorageSpace}
         onStorageSpaceDraftChange={(patch) => data.setStorageSpaceDraft((c) => ({ ...c, ...patch }))}
-        onSaveStorageSpace={() => data.saveStorageSpace(storage.selectedStorageSpaceId, storage.setSelectedStorageSpaceId, storage.setSelectedStorageRow, storage.setSelectedStorageSlot)}
+        onSaveStorageSpace={async () => { await data.saveStorageSpace(storage.selectedStorageSpaceId, storage.setSelectedStorageSpaceId, storage.setSelectedStorageRow, storage.setSelectedStorageSlot); success.show("storage_saved"); }}
         onStartBarcodeScanner={catalog.startBarcodeScanner}
         onOpenSystembolaget={openSystembolaget}
         onSetImportMode={catalog.setImportMode}
@@ -415,6 +437,7 @@ function CellarScreen({ session }: { session: Session }) {
   return (
     <SafeAreaView style={styles.screen}>
       <StatusBar style="light" />
+      <SuccessOverlay config={success.config} onDone={success.clear} />
       <PrivacyPolicyModal visible={privacyVisible} styles={styles} onClose={() => setPrivacyVisible(false)} />
       <BarcodeScannerModal visible={catalog.scannerVisible} styles={styles} onClose={() => catalog.setScannerVisible(false)} onBarcodeScanned={({ data: d }) => catalog.handleBarcodeScanned(d, draft, setDraft)} onLabelPhoto={() => catalog.handleLabelPhoto(setDraft)} />
       <LabelMatchPickerModal visible={catalog.labelPickerVisible} matches={catalog.labelMatches} onSelect={(m) => catalog.handleLabelMatchSelected(m, setDraft)} onDismiss={() => catalog.handleLabelMatchDismissed(setDraft)} />
@@ -431,10 +454,12 @@ function CellarScreen({ session }: { session: Session }) {
         onSave={handleSaveCatalogEditor}
         onChange={(patch) => setCatalogEditorDraft((c) => (c ? { ...c, ...patch } : c))}
       />
+      <WsatTastingModal visible={drinkWsatModalVisible} wineType={selectedDrinkWine?.type || ""} initialData={drinkWsatData} onSave={(d) => setDrinkWsatData(d)} onClose={() => setDrinkWsatModalVisible(false)} />
       <DrinkWineModal
         visible={drinkModalVisible} styles={styles} wine={selectedDrinkWine}
         rating={drinkRating} notes={drinkNotes} consumedDate={drinkConsumedDate}
         imageUri={drinkImageUri} saving={savingDrinkHistory}
+        wsatData={drinkWsatData} onOpenWsat={() => setDrinkWsatModalVisible(true)}
         onClose={closeDrinkModal} onRatingChange={setDrinkRating} onNotesChange={setDrinkNotes}
         onConsumedDateChange={setDrinkConsumedDate}
         onChooseImage={async () => { const uri = await images.pickImageFromLibrary(); if (uri) setDrinkImageUri(uri); }}

@@ -115,11 +115,12 @@ type SaveDrinkArgs = {
   notes: string;
   consumedDate: string;
   imageUri: string;
+  wsatData?: Record<string, unknown> | null;
   setWines: React.Dispatch<React.SetStateAction<WineRecord[]>>;
 };
 
 export async function saveDrinkEntry(args: SaveDrinkArgs): Promise<void> {
-  const { userId, wine, rating, notes, consumedDate, imageUri, setWines } = args;
+  const { userId, wine, rating, notes, consumedDate, imageUri, wsatData, setWines } = args;
   let imagePath = wine.image_path;
   if (imageUri) imagePath = await uploadWineImage(userId, imageUri);
   const payload: WineHistoryInsert = {
@@ -133,6 +134,7 @@ export async function saveDrinkEntry(args: SaveDrinkArgs): Promise<void> {
     image_path: imagePath, quantity_consumed: 1,
     rating: rating ? Number(rating) : null,
     tasting_notes: emptyToNull(notes),
+    tasting_data: wsatData ?? null,
     consumed_at: consumedDate || null,
   };
   const { error: historyError } = await supabase.from("wine_history").insert(payload);
