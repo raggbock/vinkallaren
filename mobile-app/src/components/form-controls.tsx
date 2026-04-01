@@ -273,14 +273,19 @@ export function StorageSpaceForm({
             selected={SPACE_TYPE_LABELS[draft.spaceType] || "Källare"}
             onSelect={(v) => onDraftChange({ spaceType: SPACE_TYPE_VALUES[v] || "kallare" })}
           />
-          <View style={styles.doubleRow}>
-            <View style={styles.doubleRowItem}>
-              <LabeledInput label="Antal rader" value={draft.rowCount} onChangeText={(v) => onDraftChange({ rowCount: v })} keyboardType="number-pad" />
+          <SuggestionRow title="Platser" options={["Med platser", "Utan platser"]}
+            selected={draft.rowCount === "0" ? "Utan platser" : "Med platser"}
+            onSelect={(v) => { if (v === "Utan platser") { onDraftChange({ rowCount: "0", slotsPerRow: "0" }); } else { onDraftChange({ rowCount: "6", slotsPerRow: "6" }); } }} />
+          {draft.rowCount !== "0" ? (
+            <View style={styles.doubleRow}>
+              <View style={styles.doubleRowItem}>
+                <LabeledInput label="Antal rader" value={draft.rowCount} onChangeText={(v) => onDraftChange({ rowCount: v })} keyboardType="number-pad" />
+              </View>
+              <View style={styles.doubleRowItem}>
+                <LabeledInput label="Platser per rad" value={draft.slotsPerRow} onChangeText={(v) => onDraftChange({ slotsPerRow: v })} keyboardType="number-pad" />
+              </View>
             </View>
-            <View style={styles.doubleRowItem}>
-              <LabeledInput label="Platser per rad" value={draft.slotsPerRow} onChangeText={(v) => onDraftChange({ slotsPerRow: v })} keyboardType="number-pad" />
-            </View>
-          </View>
+          ) : null}
           <View style={styles.doubleRow}>
             <Pressable onPress={async () => { await onSave(); setExpanded(false); }} style={[styles.primaryButton, { flex: 1 }]} disabled={saving}>
               <Text style={styles.primaryButtonText}>{saving ? "Sparar..." : "Spara plats"}</Text>

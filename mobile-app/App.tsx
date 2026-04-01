@@ -331,6 +331,7 @@ function CellarScreen({ session }: { session: Session }) {
         sessions={tastingSessions.sessions} loading={tastingSessions.loading}
         activeSession={tastingSessions.activeSession} activeWines={tastingSessions.activeWines}
         activeTastings={tastingSessions.activeTastings} wines={data.wines}
+        searchWineNames={data.searchCatalogWineNames}
         onBack={() => { setTastingSessionsVisible(false); tastingSessions.closeSession(); }}
         onFetchSessions={tastingSessions.fetchSessions} onCreateSession={tastingSessions.createSession}
         onJoinSession={tastingSessions.joinSession} onOpenSession={tastingSessions.openSession}

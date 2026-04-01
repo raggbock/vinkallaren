@@ -292,7 +292,7 @@ function CellarFields({ styles, draft, storageSpaces, selectedStorageSpace, sele
         {storageSpaces.length > 0 ? (
           <>
             <StorageSpaceSelector title="" spaces={storageSpaces} selectedId={selectedStorageSpaceId} onSelect={onStorageSpaceChange} clearLabel="Ingen plats" />
-            {selectedStorageSpace ? (
+            {selectedStorageSpace && selectedStorageSpace.row_count > 0 ? (
               <>
                 <SuggestionRow title="Rad" options={buildNumericOptions(selectedStorageSpace.row_count)} selected={selectedStorageRow} onSelect={onStorageRowChange} disabledOptions={occupiedPositions.occupiedRows} />
                 <SuggestionRow title="Plats" options={buildNumericOptions(selectedStorageSpace.slots_per_row)} selected={selectedStorageSlot} onSelect={onStorageSlotChange} disabledOptions={occupiedPositions.occupiedSlots} />

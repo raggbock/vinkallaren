@@ -212,7 +212,7 @@ export function MinKallarePanel({
             <Pressable onPress={() => toggleSpace(card.id)} style={styles.storageCard}>
               <View style={styles.storageCardHeader}>
                 <View style={styles.flex}>
-                  <Text style={styles.wineType}>{card.spaceType}</Text>
+                  <Text style={styles.wineType}>{SPACE_TYPE_LABELS[card.spaceType] || card.spaceType}</Text>
                   <Text style={styles.wineName}>{card.name}</Text>
                 </View>
                 <View style={styles.storageCardRight}>
@@ -274,10 +274,15 @@ function StorageSpaceActions({ space, styles, onUpdate, onDelete }: {
       <View style={{ gap: 8, paddingVertical: 8 }}>
         <LabeledInput label="Namn" value={name} onChangeText={setName} />
         <SuggestionRow title="Typ" options={SPACE_TYPE_OPTIONS} selected={spaceType} onSelect={setSpaceType} />
-        <View style={styles.actionRow}>
-          <LabeledInput label="Rader" value={rowCount} onChangeText={setRowCount} keyboardType="number-pad" />
-          <LabeledInput label="Platser/rad" value={slotsPerRow} onChangeText={setSlotsPerRow} keyboardType="number-pad" />
-        </View>
+        <SuggestionRow title="Platser" options={["Med platser", "Utan platser"]}
+          selected={rowCount === "0" ? "Utan platser" : "Med platser"}
+          onSelect={(v) => { if (v === "Utan platser") { setRowCount("0"); setSlotsPerRow("0"); } else { setRowCount("6"); setSlotsPerRow("6"); } }} />
+        {rowCount !== "0" ? (
+          <View style={styles.actionRow}>
+            <LabeledInput label="Rader" value={rowCount} onChangeText={setRowCount} keyboardType="number-pad" />
+            <LabeledInput label="Platser/rad" value={slotsPerRow} onChangeText={setSlotsPerRow} keyboardType="number-pad" />
+          </View>
+        ) : null}
         <View style={styles.actionRow}>
           <Pressable onPress={() => {
             onUpdate(space.id, { name, space_type: SPACE_TYPE_VALUES[spaceType] || space.space_type, row_count: parseInt(rowCount) || 0, slots_per_row: parseInt(slotsPerRow) || 0 });

@@ -85,7 +85,7 @@ export function EditWineModal({
                 <View style={styles.foodSection}>
                   <Text style={styles.inputLabel}>Förvaringsplats</Text>
                   <StorageSpaceSelector title="" spaces={storageSpaces} selectedId={draft.storageSpaceId} onSelect={onStorageSpaceChange} clearLabel="Ingen plats" />
-                  {selectedStorageSpace ? (
+                  {selectedStorageSpace && selectedStorageSpace.row_count > 0 ? (
                     <>
                       <SuggestionRow title="Rad" options={buildNumericOptions(selectedStorageSpace.row_count)} selected={draft.storageRow} onSelect={onStorageRowChange} disabledOptions={occupiedPositions.occupiedRows} />
                       <SuggestionRow title="Plats" options={buildNumericOptions(selectedStorageSpace.slots_per_row)} selected={draft.storageSlot} onSelect={onStorageSlotChange} disabledOptions={occupiedPositions.occupiedSlots} />

@@ -28,8 +28,9 @@ export function getWineStoragePlacementLabel(
   }
 
   const space = storageSpaceById.get(wine.storage_space_id);
-  const row = wine.storage_row ? `Rad ${wine.storage_row}` : "";
-  const slot = wine.storage_slot ? `Plats ${wine.storage_slot}` : "";
+  const positionFree = space && space.row_count === 0;
+  const row = !positionFree && wine.storage_row ? `Rad ${wine.storage_row}` : "";
+  const slot = !positionFree && wine.storage_slot ? `Plats ${wine.storage_slot}` : "";
   const parts = [space?.name || "Förvaringsplats", row, slot].filter(Boolean);
 
   return parts.join(" • ");

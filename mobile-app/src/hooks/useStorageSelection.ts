@@ -26,6 +26,7 @@ export function useStorageSelection(storageSpaces: StorageSpaceRow[], wines: Win
     if (!selectedStorageSpaceId) return;
     const space = storageSpaces.find((s) => s.id === selectedStorageSpaceId);
     if (!space) return;
+    if (space.row_count === 0) { setSelectedStorageRow("0"); setSelectedStorageSlot("0"); return; }
     const row = Number(selectedStorageRow);
     const slot = Number(selectedStorageSlot);
     if (!Number.isFinite(row) || row < 1 || row > space.row_count) setSelectedStorageRow("1");
@@ -34,10 +35,27 @@ export function useStorageSelection(storageSpaces: StorageSpaceRow[], wines: Win
 
   const selectedStorageSpace = storageSpaces.find((s) => s.id === selectedStorageSpaceId) ?? null;
 
+  function findFirstAvailable(spaceId: string, excludeWineId?: string): { row: string; slot: string } {
+    const space = storageSpaces.find((s) => s.id === spaceId);
+    if (!space || space.row_count === 0) return { row: "0", slot: "0" };
+    const occupied = new Set<string>();
+    for (const w of wines) {
+      if (w.storage_space_id !== spaceId || w.id === excludeWineId) continue;
+      if (w.storage_row != null && w.storage_slot != null) occupied.add(`${w.storage_row}-${w.storage_slot}`);
+    }
+    for (let r = 1; r <= space.row_count; r++) {
+      for (let s = 1; s <= space.slots_per_row; s++) {
+        if (!occupied.has(`${r}-${s}`)) return { row: String(r), slot: String(s) };
+      }
+    }
+    return { row: "1", slot: "1" };
+  }
+
   function changeStorageSpace(spaceId: string) {
     setSelectedStorageSpaceId(spaceId);
-    setSelectedStorageRow("1");
-    setSelectedStorageSlot("1");
+    const pos = findFirstAvailable(spaceId);
+    setSelectedStorageRow(pos.row);
+    setSelectedStorageSlot(pos.slot);
   }
 
   function changeStorageRow(value: string) {

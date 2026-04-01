@@ -176,8 +176,8 @@ export function useCellarData(userId: string) {
     }
     const rowCount = Number(storageSpaceDraft.rowCount);
     const slotsPerRow = Number(storageSpaceDraft.slotsPerRow);
-    if (!Number.isFinite(rowCount) || rowCount < 1 || !Number.isFinite(slotsPerRow) || slotsPerRow < 1) {
-      Alert.alert("Ogiltiga mått", "Ange minst 1 rad och 1 plats per rad.");
+    if (!Number.isFinite(rowCount) || rowCount < 0 || !Number.isFinite(slotsPerRow) || slotsPerRow < 0) {
+      Alert.alert("Ogiltiga mått", "Ange antal rader och platser per rad.");
       return;
     }
     setSavingStorageSpace(true);
