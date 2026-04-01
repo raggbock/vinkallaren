@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Image, Pressable, Text, View } from "react-native";
+import { Alert, Image, Pressable, Text, View } from "react-native";
 
 import { getWineStoragePlacementLabel } from "../lib/cellar-helpers";
 import type { StorageSpaceRow } from "../types/storage-space";
@@ -19,6 +19,7 @@ export function MinKallarePanel({
   onRegionChange, onTypeChange, onVintageChange, onSignOut, onOpenSystembolaget,
   onEditWine, onDrinkWine, onDeleteWine,
   storageSpaceDraft, savingStorageSpace, onStorageSpaceDraftChange, onSaveStorageSpace,
+  onUpdateStorageSpace, onDeleteStorageSpace,
   highlightedWineId, onClearHighlight,
 }: {
   styles: SharedStyles;
@@ -55,6 +56,8 @@ export function MinKallarePanel({
   savingStorageSpace: boolean;
   onStorageSpaceDraftChange: (patch: Partial<StorageSpaceDraft>) => void;
   onSaveStorageSpace: () => void;
+  onUpdateStorageSpace: (id: string, patch: { name?: string; space_type?: string; row_count?: number; slots_per_row?: number }) => void;
+  onDeleteStorageSpace: (id: string) => void;
   highlightedWineId?: string | null;
   onClearHighlight?: () => void;
 }) {
@@ -189,14 +192,65 @@ export function MinKallarePanel({
               </View>
             </Pressable>
             <Expandable expanded={isExpanded}>
-              <View>{card.wines.map((wine) => (
-                <WineCard key={wine.id} wine={wine} styles={styles} highlighted={wine.id === highlightedWineId} storageSpaceById={storageSpaceById} onOpenSystembolaget={onOpenSystembolaget} onEditWine={onEditWine} onDrinkWine={onDrinkWine} onDeleteWine={onDeleteWine} />
-              ))}</View>
+              <View>
+                <StorageSpaceActions space={storageSpaceById.get(card.id)!} styles={styles} onUpdate={onUpdateStorageSpace} onDelete={onDeleteStorageSpace} />
+                {card.wines.map((wine) => (
+                  <WineCard key={wine.id} wine={wine} styles={styles} highlighted={wine.id === highlightedWineId} storageSpaceById={storageSpaceById} onOpenSystembolaget={onOpenSystembolaget} onEditWine={onEditWine} onDrinkWine={onDrinkWine} onDeleteWine={onDeleteWine} />
+                ))}
+              </View>
             </Expandable>
           </View>
         );
       })}
     </View>
+  );
+}
+
+const SPACE_TYPE_OPTIONS = ["Vinkyl", "Vinställ", "Källare", "Övrigt"];
+const SPACE_TYPE_VALUES: Record<string, string> = { "Vinkyl": "vinkyl", "Vinställ": "vinstall", "Källare": "kallare", "Övrigt": "ovrigt" };
+const SPACE_TYPE_LABELS: Record<string, string> = Object.fromEntries(Object.entries(SPACE_TYPE_VALUES).map(([k, v]) => [v, k]));
+
+function StorageSpaceActions({ space, styles, onUpdate, onDelete }: {
+  space: StorageSpaceRow; styles: SharedStyles;
+  onUpdate: (id: string, patch: { name?: string; space_type?: string; row_count?: number; slots_per_row?: number }) => void;
+  onDelete: (id: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [name, setName] = useState(space.name);
+  const [spaceType, setSpaceType] = useState(SPACE_TYPE_LABELS[space.space_type] || space.space_type);
+  const [rowCount, setRowCount] = useState(String(space.row_count));
+  const [slotsPerRow, setSlotsPerRow] = useState(String(space.slots_per_row));
+
+  if (!editing) {
+    return (
+      <View style={styles.actionRow}>
+        <Pressable onPress={() => setEditing(true)}><Text style={styles.linkText}>Redigera</Text></Pressable>
+        <Pressable onPress={() => Alert.alert("Ta bort förvaringsplats", `Vill du ta bort "${space.name}"?`, [
+          { text: "Avbryt", style: "cancel" },
+          { text: "Ta bort", style: "destructive", onPress: () => onDelete(space.id) },
+        ])}><Text style={styles.dangerText}>Ta bort</Text></Pressable>
+      </View>
+    );
+  }
+
+  return (
+    <Expandable expanded={editing}>
+      <View style={{ gap: 8, paddingVertical: 8 }}>
+        <LabeledInput label="Namn" value={name} onChangeText={setName} />
+        <SuggestionRow title="Typ" options={SPACE_TYPE_OPTIONS} selected={spaceType} onSelect={setSpaceType} />
+        <View style={styles.actionRow}>
+          <LabeledInput label="Rader" value={rowCount} onChangeText={setRowCount} keyboardType="number-pad" />
+          <LabeledInput label="Platser/rad" value={slotsPerRow} onChangeText={setSlotsPerRow} keyboardType="number-pad" />
+        </View>
+        <View style={styles.actionRow}>
+          <Pressable onPress={() => {
+            onUpdate(space.id, { name, space_type: SPACE_TYPE_VALUES[spaceType] || space.space_type, row_count: parseInt(rowCount) || 0, slots_per_row: parseInt(slotsPerRow) || 0 });
+            setEditing(false);
+          }} style={styles.primaryButton}><Text style={styles.primaryButtonText}>Spara</Text></Pressable>
+          <Pressable onPress={() => setEditing(false)}><Text style={styles.linkText}>Avbryt</Text></Pressable>
+        </View>
+      </View>
+    </Expandable>
   );
 }
 

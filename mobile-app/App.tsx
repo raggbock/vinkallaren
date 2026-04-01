@@ -24,9 +24,7 @@ import { LabelMatchPickerModal } from "./src/components/label-match-picker";
 import { PrivacyPolicyModal } from "./src/components/privacy-policy-modal";
 import { SuccessOverlay, useSuccessOverlay } from "./src/components/success-overlay";
 import { CELLAR_SECTIONS, type CellarSection } from "./src/types/cellar";
-import type { WineDraft } from "./src/types/cellar-drafts";
-import { defaultDraft } from "./src/types/cellar-drafts";
-import type { CatalogEditorDraft } from "./src/types/cellar-drafts";
+import { defaultDraft, type CatalogEditorDraft, type WineDraft } from "./src/types/cellar-drafts";
 import type { WineRecord } from "./src/types/wine";
 import type { WsatTastingData } from "./src/lib/wsat-data";
 import { styles } from "./src/styles/theme";
@@ -109,18 +107,15 @@ function CellarScreen({ session }: { session: Session }) {
     takePhoto: images.takePhoto,
   });
 
-  // --- Local UI state ---
   const [draft, setDraft] = useState<WineDraft>(defaultDraft);
   const [activeSection, setActiveSection] = useState<CellarSection>("cellar");
   const [highlightedWineId, setHighlightedWineId] = useState<string | null>(null);
   const [selectedMeal, setSelectedMeal] = useState("lamm");
 
-  // --- Catalog editor ---
   const [catalogEditorVisible, setCatalogEditorVisible] = useState(false);
   const [catalogEditorDraft, setCatalogEditorDraft] = useState<CatalogEditorDraft | null>(null);
   const [savingCatalogEdit, setSavingCatalogEdit] = useState(false);
 
-  // --- Drink modal ---
   const [drinkModalVisible, setDrinkModalVisible] = useState(false);
   const [selectedDrinkWine, setSelectedDrinkWine] = useState<WineRecord | null>(null);
   const [drinkRating, setDrinkRating] = useState("");
@@ -131,13 +126,11 @@ function CellarScreen({ session }: { session: Session }) {
   const [drinkWsatModalVisible, setDrinkWsatModalVisible] = useState(false);
   const [savingDrinkHistory, setSavingDrinkHistory] = useState(false);
 
-  // --- Edit wine modal ---
   const [editWineVisible, setEditWineVisible] = useState(false);
   const [editingWine, setEditingWine] = useState<WineRecord | null>(null);
   const [editWineDraft, setEditWineDraft] = useState<WineDraft | null>(null);
   const [savingWineEdit, setSavingWineEdit] = useState(false);
 
-  // --- Tasting mode ---
   const [tastingMode, setTastingMode] = useState(false);
   const [tastingRating, setTastingRating] = useState("");
   const [tastingDate, setTastingDate] = useState(new Date().toISOString().slice(0, 10));
@@ -145,11 +138,9 @@ function CellarScreen({ session }: { session: Session }) {
   const [wsatData, setWsatData] = useState<WsatTastingData | null>(null);
   const [wsatModalVisible, setWsatModalVisible] = useState(false);
 
-  // --- Save states ---
   const [saving, setSaving] = useState(false);
   const [privacyVisible, setPrivacyVisible] = useState(false);
 
-  // --- Derived ---
   const selectedEditStorageSpace = data.storageSpaces.find((s) => s.id === (editWineDraft?.storageSpaceId || "")) ?? null;
   const mealRecommendations = useMemo(() => buildMealRecommendations(data.wines, selectedMeal), [selectedMeal, data.wines]);
 
@@ -186,8 +177,6 @@ function CellarScreen({ session }: { session: Session }) {
     setEditingWine(null);
     setEditWineDraft(null);
   }
-
-  // --- Save wrappers ---
 
   async function handleSaveWine() {
     setSaving(true);
@@ -309,8 +298,6 @@ function CellarScreen({ session }: { session: Session }) {
     if (error) Alert.alert("Kunde inte logga ut", error.message);
   }
 
-  // --- Render ---
-
   let activePanel = (
     <MinKallarePanel
       styles={styles} stats={data.stats}
@@ -348,6 +335,8 @@ function CellarScreen({ session }: { session: Session }) {
       savingStorageSpace={data.savingStorageSpace}
       onStorageSpaceDraftChange={(patch) => data.setStorageSpaceDraft((c) => ({ ...c, ...patch }))}
       onSaveStorageSpace={async () => { await data.saveStorageSpace(storage.selectedStorageSpaceId, storage.setSelectedStorageSpaceId, storage.setSelectedStorageRow, storage.setSelectedStorageSlot); success.show("storage_saved"); }}
+      onUpdateStorageSpace={data.updateStorageSpace}
+      onDeleteStorageSpace={(id) => data.deleteStorageSpace(id, storage.selectedStorageSpaceId, storage.setSelectedStorageSpaceId, storage.setSelectedStorageRow, storage.setSelectedStorageSlot, filters.selectedStorageSpaceFilterId, filters.setSelectedStorageSpaceFilterId)}
       highlightedWineId={highlightedWineId}
       onClearHighlight={() => setHighlightedWineId(null)}
     />

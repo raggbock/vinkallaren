@@ -194,6 +194,12 @@ export function useCellarData(userId: string) {
     }
   }
 
+  async function updateStorageSpace(id: string, patch: { name?: string; space_type?: string; row_count?: number; slots_per_row?: number; notes?: string | null }) {
+    const { error } = await supabase.from("storage_spaces").update(patch).eq("id", id);
+    if (error) { Alert.alert("Kunde inte uppdatera platsen", error.message); return; }
+    await fetchStorageSpaces();
+  }
+
   async function deleteStorageSpace(id: string, selectedStorageSpaceId: string, setSelectedStorageSpaceId: (v: string) => void, setSelectedStorageRow: (v: string) => void, setSelectedStorageSlot: (v: string) => void, selectedStorageSpaceFilterId: string, setSelectedStorageSpaceFilterId: (v: string) => void) {
     const { error } = await supabase.from("storage_spaces").delete().eq("id", id);
     if (error) {
@@ -322,6 +328,7 @@ export function useCellarData(userId: string) {
     setStorageSpaceDraft,
     savingStorageSpace,
     saveStorageSpace,
+    updateStorageSpace,
     deleteStorageSpace,
     deleteWine,
 
