@@ -104,11 +104,12 @@ create policy "session_tastings_delete" on session_tastings for delete using (us
 create or replace function public.join_session_by_code(code text)
 returns json
 language plpgsql security definer
+set search_path = public
 as $$
 declare
   sess record;
 begin
-  select id, title, host_id, mode, format, free_order, status
+  select id, title, host_id, join_code, mode, format, free_order, status, created_at
   into sess
   from tasting_sessions
   where join_code = upper(code) and status = 'active';
@@ -121,10 +122,12 @@ begin
     'id', sess.id,
     'title', sess.title,
     'host_id', sess.host_id,
+    'join_code', sess.join_code,
     'mode', sess.mode,
     'format', sess.format,
     'free_order', sess.free_order,
-    'status', sess.status
+    'status', sess.status,
+    'created_at', sess.created_at
   );
 end;
 $$;
@@ -132,3 +135,4 @@ $$;
 -- Enable realtime
 alter publication supabase_realtime add table session_tastings;
 alter publication supabase_realtime add table tasting_sessions;
+alter publication supabase_realtime add table session_wines;

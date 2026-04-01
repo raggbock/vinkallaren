@@ -17,14 +17,18 @@ function generateJoinCode(): string {
 }
 
 export async function createSession(userId: string, input: CreateSessionInput): Promise<TastingSessionRow | null> {
-  const joinCode = generateJoinCode();
-  const { data, error } = await supabase
-    .from("tasting_sessions")
-    .insert({ host_id: userId, title: input.title, join_code: joinCode, mode: input.mode, format: input.format, free_order: input.free_order })
-    .select("*")
-    .single();
-  if (error) { Alert.alert("Kunde inte skapa provning", error.message); return null; }
-  return data as TastingSessionRow;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const joinCode = generateJoinCode();
+    const { data, error } = await supabase
+      .from("tasting_sessions")
+      .insert({ host_id: userId, title: input.title, join_code: joinCode, mode: input.mode, format: input.format, free_order: input.free_order })
+      .select("*")
+      .single();
+    if (!error) return data as TastingSessionRow;
+    if (error.code !== "23505") { Alert.alert("Kunde inte skapa provning", error.message); return null; }
+  }
+  Alert.alert("Kunde inte skapa provning", "Försök igen.");
+  return null;
 }
 
 export async function joinSessionByCode(code: string): Promise<TastingSessionRow | null> {

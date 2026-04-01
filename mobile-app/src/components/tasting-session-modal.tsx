@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Alert, Clipboard, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
+import * as Clipboard from "expo-clipboard";
 import { AnimatedModal } from "./animated-modal";
 import { Expandable, LabeledInput, SuggestionRow } from "./form-controls";
 import { SessionTastingView } from "./session-tasting-view";
@@ -199,7 +200,7 @@ function HostControls({ session, onSetSession }: {
 }) {
   return (
     <View style={s.hostControls}>
-      <Pressable onPress={() => { Clipboard.setString(buildShareMessage(session.title, session.join_code)); Alert.alert("Kopierat!", "Klistra in i valfri chatt."); }} style={s.hostButton}>
+      <Pressable onPress={() => { Clipboard.setStringAsync(buildShareMessage(session.title, session.join_code)); Alert.alert("Kopierat!", "Klistra in i valfri chatt."); }} style={s.hostButton}>
         <Text style={s.hostButtonText}>Dela kod: {session.join_code}</Text>
       </Pressable>
       {session.status === "active" && session.mode === "blind" ? (
