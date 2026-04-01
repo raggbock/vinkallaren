@@ -2,7 +2,7 @@ import "react-native-url-polyfill/auto";
 
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useMemo, useState } from "react";
-import { Alert, Pressable, SafeAreaView, ScrollView, Text as RNText, View as RNView } from "react-native";
+import { Alert, Platform, Pressable, SafeAreaView, ScrollView, Text as RNText, View as RNView } from "react-native";
 import type { Session } from "@supabase/supabase-js";
 
 import { supabase, supabaseConfigured } from "./src/lib/supabase";
@@ -38,7 +38,31 @@ import { useStorageSelection } from "./src/hooks/useStorageSelection";
 import { useCatalogWorkflow } from "./src/hooks/useCatalogWorkflow";
 import { openCatalogEditor } from "./src/lib/cellar-actions";
 
+function useWebMeta() {
+  useEffect(() => {
+    if (Platform.OS !== "web") return;
+    const doc = document;
+    doc.documentElement.lang = "sv";
+    const meta = (name: string, content: string) => {
+      let el = doc.querySelector(`meta[name="${name}"]`) as HTMLMetaElement | null;
+      if (!el) { el = doc.createElement("meta"); el.name = name; doc.head.appendChild(el); }
+      el.content = content;
+    };
+    const og = (prop: string, content: string) => {
+      let el = doc.querySelector(`meta[property="${prop}"]`) as HTMLMetaElement | null;
+      if (!el) { el = doc.createElement("meta"); el.setAttribute("property", prop); doc.head.appendChild(el); }
+      el.content = content;
+    };
+    meta("description", "Håll koll på din vinsamling, hitta rätt vin till maten och spara smaknoteringar.");
+    meta("theme-color", "#2b1714");
+    og("og:title", "Vinkällaren");
+    og("og:description", "Din digitala vinsamling — gratis och utan reklam.");
+    og("og:type", "website");
+  }, []);
+}
+
 export default function App() {
+  useWebMeta();
   const [session, setSession] = useState<Session | null>(null);
   const [loadingSession, setLoadingSession] = useState(true);
 
@@ -292,7 +316,12 @@ function CellarScreen({ session }: { session: Session }) {
       onOpenSystembolaget={openSystembolaget}
       onEditWine={openEditWineModal}
       onDrinkWine={openDrinkModal}
-      onDeleteWine={data.deleteWine}
+      onDeleteWine={(id, imagePath) => {
+            Alert.alert("Ta bort vin", "Är du säker på att du vill ta bort det här vinet?", [
+              { text: "Avbryt", style: "cancel" },
+              { text: "Ta bort", style: "destructive", onPress: () => data.deleteWine(id, imagePath) },
+            ]);
+          }}
       storageSpaceDraft={data.storageSpaceDraft}
       savingStorageSpace={data.savingStorageSpace}
       onStorageSpaceDraftChange={(patch) => data.setStorageSpaceDraft((c) => ({ ...c, ...patch }))}
@@ -438,10 +467,10 @@ function CellarScreen({ session }: { session: Session }) {
       />
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" style={styles.scrollFlex}>
         {activePanel}
-        <RNView style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 8, paddingBottom: 8 }}>
-          <RNText style={{ color: "#8f8178", fontSize: 10, opacity: 0.6 }}>{BUILD_VERSION}</RNText>
+        <RNView style={styles.footerRow}>
+          <RNText style={styles.footerVersion}>{BUILD_VERSION}</RNText>
           <Pressable onPress={() => setPrivacyVisible(true)}>
-            <RNText style={{ color: "#8f8178", fontSize: 10, textDecorationLine: "underline" }}>Integritetspolicy</RNText>
+            <RNText style={styles.footerLink}>Integritetspolicy</RNText>
           </Pressable>
         </RNView>
       </ScrollView>

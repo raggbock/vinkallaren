@@ -34,7 +34,12 @@
     },
     "web": {
       "favicon": "./assets/favicon.png",
-      "output": "single"
+      "output": "single",
+      "lang": "sv",
+      "name": "Vinkällaren — Din digitala vinsamling",
+      "description": "Håll koll på din vinsamling, hitta rätt vin till maten och spara smaknoteringar. Gratis och utan reklam.",
+      "themeColor": "#2b1714",
+      "backgroundColor": "#2b1714"
     }
   }
 }

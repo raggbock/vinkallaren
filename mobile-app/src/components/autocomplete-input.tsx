@@ -199,13 +199,13 @@ export function AutocompleteInput({
 
 const styles = StyleSheet.create({
   inputGroup: { gap: 6 },
-  inputLabel: { color: "#6f6259", fontSize: 12, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.6 },
+  inputLabel: { color: "#564a40", fontSize: 12, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.6 },
   input: { borderRadius: 16, paddingHorizontal: 14, paddingVertical: 13, backgroundColor: "#fffaf5", color: "#231815", fontSize: 15, borderWidth: 1, borderColor: "#e6d7c8" },
   autocompleteWrapper: { gap: 6 },
   autocompleteListInline: { borderRadius: 16, backgroundColor: "#fffaf5", borderWidth: 1, borderColor: "#e6d7c8", overflow: "hidden", maxHeight: 280, marginBottom: 8 },
   autocompleteItem: { paddingHorizontal: 14, paddingVertical: 12, backgroundColor: "#fffaf5", cursor: "pointer" as unknown as undefined },
   autocompleteItemHover: { backgroundColor: "#f2e7db" },
   autocompleteText: { color: "#231815", fontSize: 15 },
-  autocompleteParent: { color: "#8f8178", fontSize: 13 },
+  autocompleteParent: { color: "#756861", fontSize: 13 },
   autocompleteMoreHint: { textAlign: "center", color: "#8f8178", fontSize: 12, paddingVertical: 8 },
 });

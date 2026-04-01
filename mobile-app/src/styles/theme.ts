@@ -60,6 +60,9 @@ export const styles = StyleSheet.create({
   scrollContent: {
     padding: 18,
     gap: 18,
+    maxWidth: 600,
+    width: "100%",
+    alignSelf: "center",
   },
   heroPanel: {
     backgroundColor: "#5c1d1b",
@@ -132,7 +135,7 @@ export const styles = StyleSheet.create({
     backgroundColor: "#6f1d1b",
   },
   segmentText: {
-    color: "#6f6259",
+    color: "#564a40",
     fontWeight: "700",
   },
   segmentTextActive: {
@@ -153,10 +156,12 @@ export const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     gap: 2,
+    minHeight: 44,
+    justifyContent: "center",
   },
   bottomTabIcon: {
     fontSize: 20,
-    color: "#a0928a",
+    color: "#7a6d65",
   },
   bottomTabIconActive: {
     color: "#6f1d1b",
@@ -164,7 +169,7 @@ export const styles = StyleSheet.create({
   bottomTabLabel: {
     fontSize: 11,
     fontWeight: "600",
-    color: "#a0928a",
+    color: "#7a6d65",
   },
   bottomTabLabelActive: {
     color: "#6f1d1b",
@@ -214,7 +219,7 @@ export const styles = StyleSheet.create({
     flex: 1,
   },
   inputLabel: {
-    color: "#6f6259",
+    color: "#564a40",
     fontSize: 12,
     fontWeight: "700",
     textTransform: "uppercase",
@@ -284,7 +289,7 @@ export const styles = StyleSheet.create({
     lineHeight: 21,
   },
   authFootnote: {
-    color: "#6f6259",
+    color: "#564a40",
     lineHeight: 21,
     fontSize: 13,
   },
@@ -379,7 +384,7 @@ export const styles = StyleSheet.create({
     fontWeight: "600",
   },
   importOptionState: {
-    color: "#6f6259",
+    color: "#564a40",
     fontWeight: "700",
   },
   importOptionTextActive: {
@@ -459,7 +464,7 @@ export const styles = StyleSheet.create({
     marginTop: 2,
   },
   wineMeta: {
-    color: "#6f6259",
+    color: "#564a40",
     marginTop: 4,
   },
   locationText: {
@@ -526,7 +531,7 @@ export const styles = StyleSheet.create({
     gap: 6,
   },
   foodCategoryLabel: {
-    color: "#6f6259",
+    color: "#564a40",
     fontSize: 11,
     fontWeight: "700",
     textTransform: "uppercase",
@@ -563,7 +568,7 @@ export const styles = StyleSheet.create({
     color: "#fffaf5",
   },
   notesText: {
-    color: "#6f6259",
+    color: "#564a40",
     lineHeight: 21,
   },
   actionRow: {
@@ -576,7 +581,7 @@ export const styles = StyleSheet.create({
     fontWeight: "700",
   },
   emptyState: {
-    color: "#6f6259",
+    color: "#564a40",
     lineHeight: 21,
   },
   loadingInline: {
@@ -591,5 +596,73 @@ export const styles = StyleSheet.create({
     gap: 10,
     borderWidth: 1,
     borderColor: "#ead8ca",
+  },
+  vintagePickerOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  vintagePickerCard: {
+    backgroundColor: "#fffaf5",
+    borderRadius: 18,
+    padding: 20,
+    width: "85%",
+    maxWidth: 400,
+    maxHeight: "60%",
+  },
+  vintagePickerTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#231815",
+    marginBottom: 12,
+  },
+  vintagePickerSubtitle: {
+    fontSize: 14,
+    color: "#564a40",
+    marginBottom: 16,
+  },
+  vintagePickerItem: {
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e6d7c8",
+    minHeight: 48,
+    justifyContent: "center",
+  },
+  vintagePickerItemText: {
+    fontSize: 16,
+    color: "#231815",
+  },
+  vintagePickerAddButton: {
+    marginTop: 12,
+    paddingVertical: 14,
+    alignItems: "center",
+    backgroundColor: "#ead8ca",
+    borderRadius: 12,
+    minHeight: 48,
+    justifyContent: "center",
+  },
+  vintagePickerAddText: {
+    fontSize: 16,
+    color: "#6f1d1b",
+    fontWeight: "600",
+  },
+  footerRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 8,
+    paddingBottom: 8,
+  },
+  footerVersion: {
+    color: "#8f8178",
+    fontSize: 10,
+    opacity: 0.6,
+  },
+  footerLink: {
+    color: "#8f8178",
+    fontSize: 10,
+    textDecorationLine: "underline",
   },
 });

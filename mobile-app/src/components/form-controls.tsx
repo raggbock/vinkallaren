@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   inputLabel: {
-    color: "#6f6259",
+    color: "#564a40",
     fontSize: 12,
     fontWeight: "700",
     textTransform: "uppercase",
@@ -382,14 +382,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#6f1d1b",
   },
   suggestionText: {
-    color: "#6f6259",
+    color: "#564a40",
     fontWeight: "600",
   },
   suggestionTextActive: {
     color: "#fff6ee",
   },
   groupLabel: {
-    color: "#8f8178",
+    color: "#756861",
     fontSize: 12,
     fontWeight: "600",
     marginBottom: 4,
@@ -420,7 +420,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   importOptionState: {
-    color: "#6f6259",
+    color: "#564a40",
     fontWeight: "700",
   },
   importOptionTextActive: {
@@ -433,7 +433,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   notesText: {
-    color: "#6f6259",
+    color: "#564a40",
     lineHeight: 21,
   },
   primaryButton: {

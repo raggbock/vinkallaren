@@ -144,19 +144,19 @@ export function VintagePickerModal({
 }) {
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.5)" }}>
-        <View style={{ backgroundColor: "#fffaf5", borderRadius: 18, padding: 20, width: "80%", maxHeight: "60%" }}>
-          <Text style={{ fontSize: 18, fontWeight: "600", color: "#231815", marginBottom: 12 }}>{wineName}</Text>
-          <Text style={{ fontSize: 14, color: "#6f6259", marginBottom: 16 }}>Välj årtal:</Text>
+      <View style={styles.vintagePickerOverlay}>
+        <View style={styles.vintagePickerCard}>
+          <Text style={styles.vintagePickerTitle}>{wineName}</Text>
+          <Text style={styles.vintagePickerSubtitle}>Välj årtal:</Text>
           <ScrollView>
             {vintages.map(({ year, entry }) => (
-              <Pressable key={entry.id} onPress={() => onSelectVintage(entry)} style={{ paddingVertical: 12, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: "#e6d7c8" }}>
-                <Text style={{ fontSize: 16, color: "#231815" }}>{year}</Text>
+              <Pressable key={entry.id} onPress={() => onSelectVintage(entry)} style={styles.vintagePickerItem}>
+                <Text style={styles.vintagePickerItemText}>{year}</Text>
               </Pressable>
             ))}
           </ScrollView>
-          <Pressable onPress={onAddNew} style={{ marginTop: 12, paddingVertical: 12, alignItems: "center", backgroundColor: "#ead8ca", borderRadius: 12 }}>
-            <Text style={{ fontSize: 16, color: "#6f1d1b", fontWeight: "600" }}>Lägg till nytt</Text>
+          <Pressable onPress={onAddNew} style={styles.vintagePickerAddButton}>
+            <Text style={styles.vintagePickerAddText}>Lägg till nytt</Text>
           </Pressable>
         </View>
       </View>
