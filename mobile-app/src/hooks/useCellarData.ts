@@ -37,8 +37,11 @@ export type CatalogTextMatch = {
   similarity: number;
 };
 
+const WINES_PAGE_SIZE = 50;
+
 export function useCellarData(userId: string) {
   const [wines, setWines] = useState<WineRecord[]>([]);
+  const [hasMoreWines, setHasMoreWines] = useState(false);
   const [historyEntries, setHistoryEntries] = useState<WineHistoryRecord[]>([]);
   const [storageSpaces, setStorageSpaces] = useState<StorageSpaceRow[]>([]);
   const [catalogEntries, setCatalogEntries] = useState<ProductCatalogWineRow[]>([]);
@@ -55,14 +58,23 @@ export function useCellarData(userId: string) {
 
   async function fetchWines() {
     setLoading(true);
-    const { data, error } = await supabase.from("wines").select("*").order("created_at", { ascending: false });
-    if (error) {
-      Alert.alert("Kunde inte hämta viner", error.message);
-      setLoading(false);
-      return;
-    }
-    setWines(await hydrateWineRecords((data ?? []) as WineRow[]));
+    const { data, error } = await supabase.from("wines").select("*").order("created_at", { ascending: false }).limit(WINES_PAGE_SIZE);
+    if (error) { Alert.alert("Kunde inte hämta viner", error.message); setLoading(false); return; }
+    const rows = (data ?? []) as WineRow[];
+    setHasMoreWines(rows.length === WINES_PAGE_SIZE);
+    setWines(await hydrateWineRecords(rows));
     setLoading(false);
+  }
+
+  async function fetchMoreWines() {
+    if (!hasMoreWines) return;
+    const offset = wines.length;
+    const { data, error } = await supabase.from("wines").select("*").order("created_at", { ascending: false }).range(offset, offset + WINES_PAGE_SIZE - 1);
+    if (error) { Alert.alert("Kunde inte hämta fler viner", error.message); return; }
+    const rows = (data ?? []) as WineRow[];
+    setHasMoreWines(rows.length === WINES_PAGE_SIZE);
+    const hydrated = await hydrateWineRecords(rows);
+    setWines((prev) => [...prev, ...hydrated]);
   }
 
   async function fetchHistoryEntries() {
@@ -313,6 +325,8 @@ export function useCellarData(userId: string) {
 
     // Fetchers
     fetchWines,
+    fetchMoreWines,
+    hasMoreWines,
     fetchHistoryEntries,
     fetchStorageSpaces,
     fetchCatalogEntries,

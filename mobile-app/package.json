@@ -43,6 +43,7 @@
     "@supabase/supabase-js": "^2.100.1",
     "expo": "~55.0.9",
     "expo-camera": "~55.0.11",
+    "expo-image-manipulator": "~55.0.11",
     "expo-image-picker": "^55.0.14",
     "expo-status-bar": "~55.0.4",
     "playwright": "^1.58.2",

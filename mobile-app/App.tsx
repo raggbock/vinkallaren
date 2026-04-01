@@ -1,8 +1,8 @@
 import "react-native-url-polyfill/auto";
 
 import { StatusBar } from "expo-status-bar";
-import { useEffect, useMemo, useState } from "react";
-import { Alert, Platform, Pressable, SafeAreaView, ScrollView, Text as RNText, View as RNView } from "react-native";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Alert, Platform, Pressable, RefreshControl, SafeAreaView, ScrollView, Text as RNText, View as RNView } from "react-native";
 import type { Session } from "@supabase/supabase-js";
 
 import { supabase, supabaseConfigured } from "./src/lib/supabase";
@@ -111,6 +111,12 @@ function CellarScreen({ session }: { session: Session }) {
   const [activeSection, setActiveSection] = useState<CellarSection>("cellar");
   const [highlightedWineId, setHighlightedWineId] = useState<string | null>(null);
   const [selectedMeal, setSelectedMeal] = useState("lamm");
+  const [refreshing, setRefreshing] = useState(false);
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await Promise.all([data.fetchWines(), data.fetchStorageSpaces(), data.fetchHistoryEntries()]);
+    setRefreshing(false);
+  }, [data.fetchWines, data.fetchStorageSpaces, data.fetchHistoryEntries]);
 
   const [catalogEditorVisible, setCatalogEditorVisible] = useState(false);
   const [catalogEditorDraft, setCatalogEditorDraft] = useState<CatalogEditorDraft | null>(null);
@@ -337,6 +343,11 @@ function CellarScreen({ session }: { session: Session }) {
       onSaveStorageSpace={async () => { await data.saveStorageSpace(storage.selectedStorageSpaceId, storage.setSelectedStorageSpaceId, storage.setSelectedStorageRow, storage.setSelectedStorageSlot); success.show("storage_saved"); }}
       onUpdateStorageSpace={data.updateStorageSpace}
       onDeleteStorageSpace={(id) => data.deleteStorageSpace(id, storage.selectedStorageSpaceId, storage.setSelectedStorageSpaceId, storage.setSelectedStorageRow, storage.setSelectedStorageSlot, filters.selectedStorageSpaceFilterId, filters.setSelectedStorageSpaceFilterId)}
+      onNavigateToAdd={() => setActiveSection("add")}
+      selectedStorageSpaceFilterId={filters.selectedStorageSpaceFilterId}
+      onStorageSpaceFilterChange={filters.setSelectedStorageSpaceFilterId}
+      hasMoreWines={data.hasMoreWines}
+      onLoadMoreWines={data.fetchMoreWines}
       highlightedWineId={highlightedWineId}
       onClearHighlight={() => setHighlightedWineId(null)}
     />
@@ -479,7 +490,7 @@ function CellarScreen({ session }: { session: Session }) {
         onRemoveImage={() => setEditWineDraft((c) => c ? { ...c, imageUri: "" } : c)}
         onSave={handleSaveWineEdit}
       />
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" style={styles.scrollFlex}>
+      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" style={styles.scrollFlex} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6f1d1b" colors={["#6f1d1b"]} />}>
         {activePanel}
         <RNView style={styles.footerRow}>
           <RNText style={styles.footerVersion}>{BUILD_VERSION}</RNText>

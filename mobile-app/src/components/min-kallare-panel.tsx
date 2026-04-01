@@ -20,6 +20,9 @@ export function MinKallarePanel({
   onEditWine, onDrinkWine, onDeleteWine,
   storageSpaceDraft, savingStorageSpace, onStorageSpaceDraftChange, onSaveStorageSpace,
   onUpdateStorageSpace, onDeleteStorageSpace,
+  onNavigateToAdd,
+  selectedStorageSpaceFilterId, onStorageSpaceFilterChange,
+  hasMoreWines, onLoadMoreWines,
   highlightedWineId, onClearHighlight,
 }: {
   styles: SharedStyles;
@@ -58,6 +61,11 @@ export function MinKallarePanel({
   onSaveStorageSpace: () => void;
   onUpdateStorageSpace: (id: string, patch: { name?: string; space_type?: string; row_count?: number; slots_per_row?: number }) => void;
   onDeleteStorageSpace: (id: string) => void;
+  onNavigateToAdd: () => void;
+  selectedStorageSpaceFilterId: string;
+  onStorageSpaceFilterChange: (id: string) => void;
+  hasMoreWines: boolean;
+  onLoadMoreWines: () => void;
   highlightedWineId?: string | null;
   onClearHighlight?: () => void;
 }) {
@@ -142,13 +150,30 @@ export function MinKallarePanel({
       <SuggestionRow title="Filtrera region" options={regionOptions} selected={selectedRegionFilter} onSelect={onRegionChange} />
       <SuggestionRow title="Filtrera typ" options={typeOptions} selected={selectedTypeFilter} onSelect={onTypeChange} />
       <SuggestionRow title="Filtrera årgång" options={vintageOptions} selected={selectedVintageFilter} onSelect={onVintageChange} />
+      {storageSpaces.length > 0 ? (
+        <SuggestionRow
+          title="Filtrera plats"
+          options={["Alla", ...storageSpaces.map((s) => s.name)]}
+          selected={selectedStorageSpaceFilterId ? storageSpaceById.get(selectedStorageSpaceFilterId)?.name || "Alla" : "Alla"}
+          onSelect={(name) => {
+            const space = storageSpaces.find((s) => s.name === name);
+            onStorageSpaceFilterChange(space?.id || "");
+          }}
+        />
+      ) : null}
 
       {loading ? <LoadingInline /> : null}
 
       <StorageSpaceForm draft={storageSpaceDraft} saving={savingStorageSpace} onDraftChange={onStorageSpaceDraftChange} onSave={onSaveStorageSpace} />
 
       {!loading && spaceCards.length === 0 && unplacedWines.length === 0 ? (
-        <Text style={styles.emptyState}>Inga viner ännu. Lägg till din första flaska.</Text>
+        <View style={styles.emptyStateCard}>
+          <Text style={styles.emptyStateTitle}>Din källare är tom</Text>
+          <Text style={styles.emptyState}>Kom igång genom att lägga till ditt första vin — skanna en streckkod eller fyll i för hand.</Text>
+          <Pressable onPress={onNavigateToAdd} style={styles.primaryButton}>
+            <Text style={styles.primaryButtonText}>Lägg till vin</Text>
+          </Pressable>
+        </View>
       ) : null}
 
       {unplacedWines.length > 0 ? (
@@ -202,6 +227,12 @@ export function MinKallarePanel({
           </View>
         );
       })}
+
+      {hasMoreWines ? (
+        <Pressable onPress={onLoadMoreWines} style={styles.secondaryButton}>
+          <Text style={styles.secondaryButtonText}>Ladda fler viner</Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }

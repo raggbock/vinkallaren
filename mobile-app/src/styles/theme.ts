@@ -580,9 +580,20 @@ export const styles = StyleSheet.create({
     color: "#9c3d31",
     fontWeight: "700",
   },
+  emptyStateCard: {
+    alignItems: "center" as const,
+    padding: 28,
+    gap: 10,
+  },
+  emptyStateTitle: {
+    color: "#2b1714",
+    fontSize: 18,
+    fontWeight: "700" as const,
+  },
   emptyState: {
     color: "#564a40",
     lineHeight: 21,
+    textAlign: "center" as const,
   },
   loadingInline: {
     flexDirection: "row",

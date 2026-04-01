@@ -1,3 +1,4 @@
+import * as ImageManipulator from "expo-image-manipulator";
 import { supabase } from "./supabase";
 import { cacheCatalogEntry, type ProductCatalogEntry } from "./product-catalog";
 import { emptyToNull, normalizeLookupValue, parseTags, resolveImportedValue, toNumberOrNull } from "./cellar-helpers";
@@ -359,13 +360,13 @@ export async function hydrateWineHistoryRecords(rows: WineHistoryRow[]): Promise
 }
 
 export async function uploadWineImage(userId: string, uri: string) {
-  const response = await fetch(uri);
+  const compressed = await ImageManipulator.manipulateAsync(uri, [{ resize: { width: 1200 } }], { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG });
+  const response = await fetch(compressed.uri);
   const blob = await response.blob();
-  const extension = blob.type.split("/")[1] || "jpg";
-  const filePath = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${extension}`;
+  const filePath = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
 
   const { error } = await supabase.storage.from("wine-images").upload(filePath, blob, {
-    contentType: blob.type || "image/jpeg",
+    contentType: "image/jpeg",
     upsert: false,
   });
 
