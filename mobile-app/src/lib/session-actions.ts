@@ -1,4 +1,4 @@
-import { Alert } from "react-native";
+import { ok, fail, type Result } from "../types/result";
 import { supabase } from "./supabase";
 import type {
   CreateSessionInput,
@@ -16,7 +16,7 @@ function generateJoinCode(): string {
   return code;
 }
 
-export async function createSession(userId: string, input: CreateSessionInput): Promise<TastingSessionRow | null> {
+export async function createSession(userId: string, input: CreateSessionInput): Promise<Result<TastingSessionRow>> {
   for (let attempt = 0; attempt < 3; attempt++) {
     const joinCode = generateJoinCode();
     const { data, error } = await supabase
@@ -24,65 +24,70 @@ export async function createSession(userId: string, input: CreateSessionInput): 
       .insert({ host_id: userId, title: input.title, join_code: joinCode, mode: input.mode, format: input.format, free_order: input.free_order })
       .select("*")
       .single();
-    if (!error) return data as TastingSessionRow;
-    if (error.code !== "23505") { Alert.alert("Kunde inte skapa provning", error.message); return null; }
+    if (!error) return ok(data as TastingSessionRow);
+    if (error.code !== "23505") return fail(error.message);
   }
-  Alert.alert("Kunde inte skapa provning", "Försök igen.");
-  return null;
+  return fail("Försök igen.");
 }
 
-export async function joinSessionByCode(code: string): Promise<TastingSessionRow | null> {
+export async function joinSessionByCode(code: string): Promise<Result<TastingSessionRow>> {
   const { data, error } = await supabase.rpc("join_session_by_code", { code: code.toUpperCase() });
-  if (error) { Alert.alert("Kunde inte gå med", error.message); return null; }
-  if (data?.error) { Alert.alert("Hittades inte", "Ingen aktiv provning med den koden."); return null; }
-  return data as TastingSessionRow;
+  if (error) return fail(error.message);
+  if (data?.error) return fail("Ingen aktiv provning med den koden.");
+  return ok(data as TastingSessionRow);
 }
 
-export async function fetchSessionWines(sessionId: string): Promise<SessionWineRow[]> {
+export async function fetchSessionWines(sessionId: string): Promise<Result<SessionWineRow[]>> {
   const { data, error } = await supabase
     .from("session_wines")
     .select("*")
     .eq("session_id", sessionId)
     .order("position", { ascending: true });
-  if (error) { Alert.alert("Kunde inte hämta viner", error.message); return []; }
-  return (data ?? []) as SessionWineRow[];
+  if (error) return fail(error.message);
+  return ok((data ?? []) as SessionWineRow[]);
 }
 
-export async function fetchSessionTastings(sessionId: string): Promise<SessionTastingRow[]> {
+export async function fetchSessionTastings(sessionId: string): Promise<Result<SessionTastingRow[]>> {
   const { data, error } = await supabase
     .from("session_tastings")
     .select("*")
     .eq("session_id", sessionId);
-  if (error) { Alert.alert("Kunde inte hämta provningar", error.message); return []; }
-  return (data ?? []) as SessionTastingRow[];
+  if (error) return fail(error.message);
+  return ok((data ?? []) as SessionTastingRow[]);
 }
 
-export async function addWineToSession(wine: SessionWineInsert): Promise<SessionWineRow | null> {
+export async function addWineToSession(wine: SessionWineInsert): Promise<Result<SessionWineRow>> {
   const { data, error } = await supabase.from("session_wines").insert(wine).select("*").single();
-  if (error) { Alert.alert("Kunde inte lägga till vin", error.message); return null; }
-  return data as SessionWineRow;
+  if (error) return fail(error.message);
+  return ok(data as SessionWineRow);
 }
 
-export async function saveTasting(tasting: SessionTastingInsert): Promise<SessionTastingRow | null> {
+export async function saveTasting(tasting: SessionTastingInsert): Promise<Result<SessionTastingRow>> {
   const { data, error } = await supabase
     .from("session_tastings")
     .upsert(tasting, { onConflict: "session_wine_id,user_id" })
     .select("*")
     .single();
-  if (error) { Alert.alert("Kunde inte spara provning", error.message); return null; }
-  return data as SessionTastingRow;
+  if (error) return fail(error.message);
+  return ok(data as SessionTastingRow);
 }
 
-export async function revealSession(sessionId: string): Promise<boolean> {
+export async function revealSession(sessionId: string): Promise<Result<true>> {
   const { error } = await supabase.from("tasting_sessions").update({ status: "revealed" }).eq("id", sessionId);
-  if (error) { Alert.alert("Kunde inte avslöja", error.message); return false; }
-  return true;
+  if (error) return fail(error.message);
+  return ok(true);
 }
 
-export async function endSession(sessionId: string): Promise<boolean> {
+export async function endSession(sessionId: string): Promise<Result<true>> {
   const { error } = await supabase.from("tasting_sessions").update({ status: "ended" }).eq("id", sessionId);
-  if (error) { Alert.alert("Kunde inte avsluta", error.message); return false; }
-  return true;
+  if (error) return fail(error.message);
+  return ok(true);
+}
+
+export async function fetchSessionParticipants(sessionId: string): Promise<{ user_id: string; display_name: string }[]> {
+  const { data, error } = await supabase.rpc("get_session_participants", { p_session_id: sessionId });
+  if (error) return [];
+  return (data ?? []) as { user_id: string; display_name: string }[];
 }
 
 export function buildShareMessage(title: string, joinCode: string): string {

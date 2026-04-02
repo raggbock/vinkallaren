@@ -4,24 +4,27 @@ import * as Clipboard from "expo-clipboard";
 import { AutocompleteInput, Expandable, LabeledInput, SuggestionRow } from "./form-controls";
 import type { Suggestion } from "./form-controls";
 import { SessionTastingView } from "./session-tasting-view";
-import { addWineToSession, buildShareMessage, endSession, revealSession, saveTasting } from "../lib/session-actions";
+import { addWineToSession, buildShareMessage, endSession, fetchSessionParticipants, revealSession, saveTasting } from "../lib/session-actions";
+import { showError } from "../lib/show-error";
 import type { CreateSessionInput, SessionTastingRow, SessionWineRow, TastingSessionRow } from "../types/tasting-session";
 import type { WsatTastingData } from "../lib/wsat-data";
 import type { WineRecord } from "../types/wine";
+import type { SessionToast } from "../hooks/useTastingSessions";
 
 import type { styles as themeStyles } from "../styles/theme";
 type SharedStyles = typeof themeStyles;
 
 export function TastingSessionPanel({
-  styles, userId, sessions, loading, activeSession, activeWines, activeTastings,
+  styles, userId, sessions, loading, toasts, activeSession, activeWines, activeTastings,
   wines, searchWineNames, onBack, onFetchSessions, onCreateSession, onJoinSession, onOpenSession,
   onCloseSession, onSetActiveWines, onSetActiveTastings, onSetActiveSession,
-  onOpenWsat, wsatData,
+  onOpenWsat, wsatData, onSessionEnded,
 }: {
   styles: SharedStyles;
   userId: string;
   sessions: TastingSessionRow[];
   loading: boolean;
+  toasts: SessionToast[];
   activeSession: TastingSessionRow | null;
   activeWines: SessionWineRow[];
   activeTastings: SessionTastingRow[];
@@ -38,6 +41,7 @@ export function TastingSessionPanel({
   onSetActiveSession: (session: TastingSessionRow | null) => void;
   onOpenWsat: () => void;
   wsatData: WsatTastingData | null;
+  onSessionEnded: () => void;
 }) {
   const [view, setView] = useState<"list" | "create" | "join">("list");
   const [tastingWine, setTastingWine] = useState<SessionWineRow | null>(null);
@@ -68,7 +72,8 @@ export function TastingSessionPanel({
               food_pairings: data.foodPairings, tasting_data: data.wsatData ?? null,
             });
             setSavingTasting(false);
-            if (result) setTastingWine(null);
+            if (result.error) { showError("Kunde inte spara provning", result.error); return; }
+            setTastingWine(null);
           }}
           onOpenWsat={onOpenWsat}
           onBack={() => setTastingWine(null)}
@@ -83,18 +88,27 @@ export function TastingSessionPanel({
     const participantCount = new Set(activeTastings.map((t) => t.user_id)).size;
     return (
       <View style={styles.panel}>
-        <View style={styles.panelHeaderRow}>
+        <View style={[styles.panelHeaderRow, { zIndex: 999 }]}>
           <View style={{ flex: 1 }}>
             <Text style={s.eyebrow}>
               {activeSession.mode === "blind" ? "Blindprovning" : "Öppen provning"} · {activeSession.format.toUpperCase()}
             </Text>
             <Text style={styles.panelTitle}>{activeSession.title}</Text>
-            <Text style={s.meta}>{participantCount} deltagare · {activeWines.length} viner</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4, zIndex: 999 }}>
+              <ParticipantBadge sessionId={activeSession.id} count={participantCount} />
+              <Text style={s.meta}> · {activeWines.length} viner</Text>
+            </View>
           </View>
           <Pressable onPress={() => { onCloseSession(); setView("list"); }}>
             <Text style={styles.linkText}>Tillbaka</Text>
           </Pressable>
         </View>
+
+        {toasts.map((toast) => (
+          <View key={toast.id} style={s.toast}>
+            <Text style={s.toastText}>{toast.message}</Text>
+          </View>
+        ))}
 
         {activeWines.map((wine) => (
           <WineCardRow key={wine.id} wine={wine} userId={userId}
@@ -105,11 +119,12 @@ export function TastingSessionPanel({
 
         {isHost && activeSession.status === "active" ? (
           <AddWineForm sessionId={activeSession.id} wineCount={activeWines.length}
-            wines={wines} searchWineNames={searchWineNames} onAdded={(w) => onSetActiveWines((prev) => [...prev, w])} />
+            wines={wines} searchWineNames={searchWineNames} onAdded={() => {}} />
         ) : null}
 
         {isHost ? (
-          <HostControls session={activeSession} onSetSession={onSetActiveSession} />
+          <HostControls session={activeSession} onSetSession={onSetActiveSession}
+            onEnd={() => { onCloseSession(); setView("list"); onSessionEnded(); }} />
         ) : null}
       </View>
     );
@@ -188,8 +203,8 @@ function WineCardRow({ wine, userId, activeTastings, sessionStatus, sessionMode,
 
 /* ── Host controls ── */
 
-function HostControls({ session, onSetSession }: {
-  session: TastingSessionRow; onSetSession: (s: TastingSessionRow | null) => void;
+function HostControls({ session, onSetSession, onEnd }: {
+  session: TastingSessionRow; onSetSession: (s: TastingSessionRow | null) => void; onEnd: () => void;
 }) {
   return (
     <View style={s.hostControls}>
@@ -197,12 +212,18 @@ function HostControls({ session, onSetSession }: {
         <Text style={s.hostButtonText}>Dela kod: {session.join_code}</Text>
       </Pressable>
       {session.status === "active" && session.mode === "blind" ? (
-        <Pressable onPress={async () => { if (await revealSession(session.id)) onSetSession({ ...session, status: "revealed" }); }} style={s.hostButton}>
+        <Pressable onPress={() => Alert.alert("Avslöja viner?", "Alla deltagare kommer se varandras betyg och noteringar.", [
+          { text: "Avbryt", style: "cancel" },
+          { text: "Avslöja", onPress: async () => { const r = await revealSession(session.id); if (r.error) { showError("Kunde inte avslöja", r.error); return; } onSetSession({ ...session, status: "revealed" }); } },
+        ])} style={s.hostButton}>
           <Text style={s.hostButtonText}>Avslöja</Text>
         </Pressable>
       ) : null}
       {session.status !== "ended" ? (
-        <Pressable onPress={async () => { if (await endSession(session.id)) onSetSession({ ...session, status: "ended" }); }} style={[s.hostButton, { backgroundColor: "#ead8ca" }]}>
+        <Pressable onPress={() => Alert.alert("Avsluta provning?", "Provningen avslutas och sparas i historiken.", [
+          { text: "Avbryt", style: "cancel" },
+          { text: "Avsluta", style: "destructive", onPress: async () => { const r = await endSession(session.id); if (r.error) { showError("Kunde inte avsluta", r.error); return; } onSetSession({ ...session, status: "ended" }); onEnd(); } },
+        ])} style={[s.hostButton, { backgroundColor: "#ead8ca" }]}>
           <Text style={[s.hostButtonText, { color: "#6f1d1b" }]}>Avsluta</Text>
         </Pressable>
       ) : null}
@@ -299,11 +320,10 @@ function AddWineForm({ sessionId, wineCount, wines, searchWineNames, onAdded }: 
       wine_id: selectedWineId,
     });
     setSaving(false);
-    if (result) {
-      onAdded(result);
-      setName(""); setProducer(""); setVintage(""); setCellarFilter("");
-      setSelectedWineId(null); setExpanded(false);
-    }
+    if (result.error) { showError("Kunde inte lägga till vin", result.error); return; }
+    onAdded(result.data!);
+    setName(""); setProducer(""); setVintage(""); setCellarFilter("");
+    setSelectedWineId(null); setExpanded(false);
   }
 
   return (
@@ -346,6 +366,51 @@ function AddWineForm({ sessionId, wineCount, wines, searchWineNames, onAdded }: 
   );
 }
 
+/* ── Participant hover badge ── */
+
+function ParticipantBadge({ sessionId, count }: { sessionId: string; count: number }) {
+  const [names, setNames] = useState<string[]>([]);
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [fetched, setFetched] = useState(false);
+
+  async function handleHover() {
+    setShowTooltip(true);
+    if (!fetched) {
+      const participants = await fetchSessionParticipants(sessionId);
+      setNames(participants.map((p) => p.display_name || "Anonym"));
+      setFetched(true);
+    }
+  }
+
+  // Re-fetch when count changes
+  useEffect(() => { setFetched(false); }, [count]);
+
+  return (
+    <View>
+      <Pressable
+        onHoverIn={handleHover} onHoverOut={() => setShowTooltip(false)}
+        onPress={async () => {
+          if (!fetched) {
+            const participants = await fetchSessionParticipants(sessionId);
+            setNames(participants.map((p) => p.display_name || "Anonym"));
+            setFetched(true);
+          }
+          setShowTooltip((v) => !v);
+        }}
+      >
+        <Text style={[s.meta, { textDecorationLine: "underline" }]}>{count} deltagare</Text>
+      </Pressable>
+      {showTooltip && names.length > 0 ? (
+        <View style={s.tooltip}>
+          {names.map((name, i) => (
+            <Text key={i} style={s.tooltipText}>{name}</Text>
+          ))}
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
 /* ── Local styles (only what theme doesn't cover) ── */
 
 const s = StyleSheet.create({
@@ -372,6 +437,10 @@ const s = StyleSheet.create({
   hostControls: { flexDirection: "row", gap: 8, flexWrap: "wrap" },
   hostButton: { backgroundColor: "#6f1d1b", borderRadius: 999, paddingVertical: 10, paddingHorizontal: 16 },
   hostButtonText: { color: "#fffaf5", fontWeight: "700", fontSize: 13 },
+  tooltip: { position: "absolute" as const, top: 22, left: 0, backgroundColor: "#231815", borderRadius: 10, padding: 10, gap: 2, zIndex: 999, minWidth: 140, elevation: 10 },
+  tooltipText: { color: "#fffaf5", fontSize: 13 },
+  toast: { backgroundColor: "#6f1d1b", borderRadius: 12, paddingVertical: 8, paddingHorizontal: 14 },
+  toastText: { color: "#fffaf5", fontSize: 13, fontWeight: "600", textAlign: "center" as const },
   cellarPick: { backgroundColor: "#fffaf5", borderRadius: 12, padding: 10, borderWidth: 1, borderColor: "#ead8ca" },
   cellarPickName: { color: "#231815", fontSize: 14, fontWeight: "600" },
   cellarPickMeta: { color: "#564a40", fontSize: 12 },

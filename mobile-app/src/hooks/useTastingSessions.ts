@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 import {
   createSession,
@@ -6,6 +6,7 @@ import {
   fetchSessionWines,
   joinSessionByCode,
 } from "../lib/session-actions";
+import { showError } from "../lib/show-error";
 import type {
   CreateSessionInput,
   SessionTastingRow,
@@ -13,9 +14,19 @@ import type {
   TastingSessionRow,
 } from "../types/tasting-session";
 
+export type SessionToast = { id: number; message: string };
+
 export function useTastingSessions(userId: string) {
   const [sessions, setSessions] = useState<TastingSessionRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [toasts, setToasts] = useState<SessionToast[]>([]);
+  const toastIdRef = useRef(0);
+
+  function pushToast(message: string) {
+    const id = ++toastIdRef.current;
+    setToasts((prev) => [...prev, { id, message }]);
+    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 4000);
+  }
 
   // Active session state
   const [activeSession, setActiveSession] = useState<TastingSessionRow | null>(null);
@@ -32,14 +43,17 @@ export function useTastingSessions(userId: string) {
     setLoading(false);
   }, []);
 
+  // Fetch sessions on mount
+  useEffect(() => { fetchSessions(); }, []);
+
   const openSession = useCallback(async (session: TastingSessionRow) => {
     setActiveSession(session);
-    const [wines, tastings] = await Promise.all([
+    const [winesResult, tastingsResult] = await Promise.all([
       fetchSessionWines(session.id),
       fetchSessionTastings(session.id),
     ]);
-    setActiveWines(wines);
-    setActiveTastings(tastings);
+    setActiveWines(winesResult.data ?? []);
+    setActiveTastings(tastingsResult.data ?? []);
   }, []);
 
   const closeSession = useCallback(() => {
@@ -49,23 +63,23 @@ export function useTastingSessions(userId: string) {
   }, []);
 
   const handleCreate = useCallback(async (input: CreateSessionInput) => {
-    const session = await createSession(userId, input);
-    if (session) {
-      setSessions((prev) => [session, ...prev]);
-      await openSession(session);
-    }
+    const result = await createSession(userId, input);
+    if (result.error) { showError("Kunde inte skapa provning", result.error); return null; }
+    const session = result.data!;
+    setSessions((prev) => [session, ...prev]);
+    await openSession(session);
     return session;
   }, [userId, openSession]);
 
   const handleJoin = useCallback(async (code: string) => {
-    const session = await joinSessionByCode(code);
-    if (session) {
-      setSessions((prev) => {
-        if (prev.some((s) => s.id === session.id)) return prev;
-        return [session, ...prev];
-      });
-      await openSession(session);
-    }
+    const result = await joinSessionByCode(code);
+    if (result.error) { showError("Kunde inte gå med", result.error); return null; }
+    const session = result.data!;
+    setSessions((prev) => {
+      if (prev.some((s) => s.id === session.id)) return prev;
+      return [session, ...prev];
+    });
+    await openSession(session);
     return session;
   }, [openSession]);
 
@@ -79,9 +93,18 @@ export function useTastingSessions(userId: string) {
       .on("postgres_changes", { event: "*", schema: "public", table: "session_tastings", filter: `session_id=eq.${sessionId}` },
         (payload) => {
           if (payload.eventType === "INSERT") {
-            setActiveTastings((prev) => [...prev.filter((t) => t.id !== (payload.new as SessionTastingRow).id), payload.new as SessionTastingRow]);
+            const tasting = payload.new as SessionTastingRow;
+            setActiveTastings((prev) => {
+              const isNewParticipant = !prev.some((t) => t.user_id === tasting.user_id);
+              if (isNewParticipant && tasting.user_id !== userId) pushToast("Ny deltagare gick med!");
+              return [...prev.filter((t) => t.id !== tasting.id), tasting];
+            });
           } else if (payload.eventType === "UPDATE") {
-            setActiveTastings((prev) => prev.map((t) => t.id === (payload.new as SessionTastingRow).id ? payload.new as SessionTastingRow : t));
+            const tasting = payload.new as SessionTastingRow;
+            if (tasting.user_id !== userId && tasting.rating != null) {
+              pushToast("Någon har smakat klart på ett vin");
+            }
+            setActiveTastings((prev) => prev.map((t) => t.id === tasting.id ? tasting : t));
           } else if (payload.eventType === "DELETE") {
             setActiveTastings((prev) => prev.filter((t) => t.id !== (payload.old as { id: string }).id));
           }
@@ -98,7 +121,7 @@ export function useTastingSessions(userId: string) {
           setSessions((prev) => prev.map((s) => s.id === updated.id ? updated : s));
           // Re-fetch tastings when revealed (RLS opens up, we now see others' data)
           if (updated.status === "revealed") {
-            fetchSessionTastings(sessionId).then(setActiveTastings);
+            fetchSessionTastings(sessionId).then((r) => { if (r.data) setActiveTastings(r.data); });
           }
         }
       )
@@ -109,7 +132,8 @@ export function useTastingSessions(userId: string) {
       .channel(`session-wines-${sessionId}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "session_wines", filter: `session_id=eq.${sessionId}` },
         (payload) => {
-          setActiveWines((prev) => [...prev, payload.new as SessionWineRow].sort((a, b) => a.position - b.position));
+          const wine = payload.new as SessionWineRow;
+          setActiveWines((prev) => prev.some((w) => w.id === wine.id) ? prev : [...prev, wine].sort((a, b) => a.position - b.position));
         }
       )
       .subscribe();
@@ -124,6 +148,7 @@ export function useTastingSessions(userId: string) {
   return {
     sessions,
     loading,
+    toasts,
     activeSession,
     activeWines,
     activeTastings,
