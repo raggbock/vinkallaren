@@ -4,7 +4,8 @@ import { AutocompleteInput, Expandable, LabeledInput, PanelHeader, SuggestionRow
 import type { Suggestion } from "./form-controls";
 import { ActiveSessionView, isAllDone } from "./session-active-view";
 import { SessionTastingView } from "./session-tasting-view";
-import { addWineToSession, advanceReveal, endSession, fetchSessionParticipants, finishReveal, revealSession, saveTasting, shareSession } from "../lib/session-actions";
+import { addWineToSession, advanceReveal, endSession, fetchSessionParticipants, finishReveal, revealSession, saveTasting, shareSession, startSession } from "../lib/session-actions";
+import { SessionSetupView } from "./session-setup-view";
 import { confirmAction, showError } from "../lib/show-error";
 import type { CreateSessionInput, SessionTastingRow, SessionWineRow, TastingSessionRow } from "../types/tasting-session";
 import type { WsetTastingData } from "../lib/wset-data";
@@ -55,10 +56,16 @@ export function TastingSessionPanel({
 
   useEffect(() => {
     if (!activeSession) { setParticipants([]); return; }
-    fetchSessionParticipants(activeSession.id).then((r) => {
+    const fetchParticipants = () => fetchSessionParticipants(activeSession.id).then((r) => {
       if (r.data) setParticipants(r.data);
     });
-  }, [activeSession?.id, activeTastings.length]);
+    fetchParticipants();
+    // Poll for new participants during setup (no realtime trigger for joins)
+    if (activeSession.status === "setup") {
+      const interval = setInterval(fetchParticipants, 3000);
+      return () => clearInterval(interval);
+    }
+  }, [activeSession?.id, activeSession?.status, activeTastings.length]);
 
   // Tasting a specific wine
   if (activeSession && tastingWine) {
@@ -131,6 +138,32 @@ export function TastingSessionPanel({
           }}
           onBack={() => { onCloseSession(); setView("list"); }}
         />
+      </View>
+    );
+  }
+
+  // Setup/lobby view
+  if (activeSession && activeSession.status === "setup") {
+    const isHost = activeSession.host_id === userId;
+    return (
+      <View style={styles.panel}>
+        <SessionSetupView
+          session={activeSession}
+          wines={activeWines}
+          participants={participants}
+          isHost={isHost}
+          onStart={async () => {
+            const r = await startSession(activeSession.id);
+            if (r.error) { showError("Kunde inte starta", r.error); return; }
+            onSetActiveSession({ ...activeSession, status: "active" });
+          }}
+          onBack={() => { onCloseSession(); setView("list"); }}
+        >
+          {isHost ? (
+            <AddWineForm sessionId={activeSession.id} wineCount={activeWines.length}
+              wines={wines} searchWineNames={searchWineNames} />
+          ) : null}
+        </SessionSetupView>
       </View>
     );
   }

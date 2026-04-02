@@ -232,8 +232,8 @@ export function MinKallarePanel({
 
       {loading ? <LoadingInline /> : null}
 
-      <Pressable onPress={onOpenTastingSessions} style={styles.secondaryButton}>
-        <Text style={styles.secondaryButtonText}>Provningar</Text>
+      <Pressable onPress={onOpenTastingSessions} style={[styles.primaryButton, { paddingVertical: 18 }]}>
+        <Text style={styles.primaryButtonText}>🥂  Provningar</Text>
       </Pressable>
 
       <StorageSpaceForm draft={storageSpaceDraft} saving={savingStorageSpace} onDraftChange={onStorageSpaceDraftChange} onSave={onSaveStorageSpace} />
