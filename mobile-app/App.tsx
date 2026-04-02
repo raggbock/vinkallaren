@@ -39,6 +39,7 @@ import { useSessionWset } from "./src/hooks/useSessionWset";
 import { useProfile } from "./src/hooks/useProfile";
 import { DisplayNamePrompt } from "./src/components/display-name-prompt";
 import { ProfilePage } from "./src/components/profile-page";
+import { parseJoinCodeFromUrl } from "./src/lib/join-link";
 
 function useWebHoverStyles() {
   useEffect(() => {
@@ -57,6 +58,7 @@ export default function App() {
   useWebHoverStyles();
   const [session, setSession] = useState<Session | null>(null);
   const [loadingSession, setLoadingSession] = useState(true);
+  const [pendingJoinCode, setPendingJoinCode] = useState<string | null>(() => parseJoinCodeFromUrl());
   useEffect(() => {
     let mounted = true;
     supabase.auth.getSession().then(({ data }) => {
@@ -73,11 +75,11 @@ export default function App() {
 
   if (!supabaseConfigured) return <SetupScreen />;
   if (loadingSession) return <LoadingScreen label="Kopplar upp vinkällaren..." />;
-  if (!session) return <LandingScreen />;
-  return <CellarScreen session={session} />;
+  if (!session) return <LandingScreen pendingJoinCode={pendingJoinCode} />;
+  return <CellarScreen session={session} pendingJoinCode={pendingJoinCode} onJoinCodeConsumed={() => setPendingJoinCode(null)} />;
 }
 
-function CellarScreen({ session }: { session: Session }) {
+function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { session: Session; pendingJoinCode: string | null; onJoinCodeConsumed: () => void }) {
   const data = useCellarData(session.user.id);
   const filters = useCellarFilters(data.wines, data.storageSpaceById);
   const images = useImagePicker();
@@ -95,6 +97,14 @@ function CellarScreen({ session }: { session: Session }) {
   const [profileVisible, setProfileVisible] = useState(false);
   const [promptDismissed, setPromptDismissed] = useState(false);
   const [promptSaving, setPromptSaving] = useState(false);
+
+  // Auto-join session from /join/:code URL
+  useEffect(() => {
+    if (!pendingJoinCode) return;
+    onJoinCodeConsumed();
+    setTastingSessionsVisible(true);
+    tastingSessions.joinSession(pendingJoinCode);
+  }, [pendingJoinCode]);
 
   const drink = useDrinkWineModal({
     userId: session.user.id,

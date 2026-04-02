@@ -224,7 +224,7 @@ function AuthForm() {
   );
 }
 
-export function LandingScreen() {
+export function LandingScreen({ pendingJoinCode }: { pendingJoinCode?: string | null }) {
   const isWide = useIsWide();
   useWebGradient();
 
