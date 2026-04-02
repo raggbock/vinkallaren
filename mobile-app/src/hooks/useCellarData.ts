@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Alert } from "react-native";
+import { showError } from "../lib/show-error";
 
 import { supabase } from "../lib/supabase";
 import { GRAPE_VARIETIES, WINE_COUNTRIES, WINE_REGIONS } from "../lib/reference-data";
@@ -28,14 +28,7 @@ import type { ReferenceOptionRow } from "../types/reference-data";
 import type { StorageSpaceInsert, StorageSpaceRow } from "../types/storage-space";
 import type { WineHistoryRecord, WineHistoryRow } from "../types/wine-history";
 import type { WineRecord, WineRow } from "../types/wine";
-
-export type CatalogTextMatch = {
-  id: string;
-  name: string;
-  producer: string | null;
-  vintage: number | null;
-  similarity: number;
-};
+import type { CatalogTextMatch } from "../types/product-catalog";
 
 const WINES_PAGE_SIZE = 50;
 
@@ -59,7 +52,7 @@ export function useCellarData(userId: string) {
   async function fetchWines() {
     setLoading(true);
     const { data, error } = await supabase.from("wines").select("*").order("created_at", { ascending: false }).limit(WINES_PAGE_SIZE);
-    if (error) { Alert.alert("Kunde inte hämta viner", error.message); setLoading(false); return; }
+    if (error) { showError("Kunde inte hämta viner", error.message); setLoading(false); return; }
     const rows = (data ?? []) as WineRow[];
     setHasMoreWines(rows.length === WINES_PAGE_SIZE);
     setWines(await hydrateWineRecords(rows));
@@ -70,7 +63,7 @@ export function useCellarData(userId: string) {
     if (!hasMoreWines) return;
     const offset = wines.length;
     const { data, error } = await supabase.from("wines").select("*").order("created_at", { ascending: false }).range(offset, offset + WINES_PAGE_SIZE - 1);
-    if (error) { Alert.alert("Kunde inte hämta fler viner", error.message); return; }
+    if (error) { showError("Kunde inte hämta fler viner", error.message); return; }
     const rows = (data ?? []) as WineRow[];
     setHasMoreWines(rows.length === WINES_PAGE_SIZE);
     const hydrated = await hydrateWineRecords(rows);
@@ -81,7 +74,7 @@ export function useCellarData(userId: string) {
     setLoadingHistory(true);
     const { data, error } = await supabase.from("wine_history").select("*").order("consumed_at", { ascending: false }).limit(100);
     if (error) {
-      Alert.alert("Kunde inte hämta historiken", error.message);
+      showError("Kunde inte hämta historiken", error.message);
       setLoadingHistory(false);
       return;
     }
@@ -93,7 +86,7 @@ export function useCellarData(userId: string) {
     setLoadingStorageSpaces(true);
     const { data, error } = await supabase.from("storage_spaces").select("*").order("created_at", { ascending: true });
     if (error) {
-      Alert.alert("Kunde inte hämta förvaringsplatser", error.message);
+      showError("Kunde inte hämta förvaringsplatser", error.message);
       setLoadingStorageSpaces(false);
       return;
     }
@@ -105,7 +98,7 @@ export function useCellarData(userId: string) {
     setLoadingCatalogEntries(true);
     const { data, error } = await supabase.from("product_catalog_wines").select("*").order("updated_at", { ascending: false }).limit(12);
     if (error) {
-      Alert.alert("Kunde inte hämta produktkatalogen", error.message);
+      showError("Kunde inte hämta produktkatalogen", error.message);
       setLoadingCatalogEntries(false);
       return;
     }
@@ -163,22 +156,22 @@ export function useCellarData(userId: string) {
   async function fetchReferenceOptions() {
     const { data, error } = await supabase.from("reference_options").select("*").in("category", ["grape", "country", "region"]).order("category", { ascending: true }).order("sort_order", { ascending: true }).order("name", { ascending: true });
     if (error) {
-      Alert.alert("Kunde inte hämta referensdata", error.message);
+      showError("Kunde inte hämta referensdata", error.message);
       return;
     }
     setReferenceOptions((data ?? []) as ReferenceOptionRow[]);
   }
 
-  async function saveStorageSpace(selectedStorageSpaceId: string, setSelectedStorageSpaceId: (id: string) => void, setSelectedStorageRow: (v: string) => void, setSelectedStorageSlot: (v: string) => void) {
+  async function saveStorageSpace(): Promise<string | null> {
     if (!storageSpaceDraft.name.trim()) {
-      Alert.alert("Namn saknas", "Skriv in namnet på förvaringsplatsen.");
-      return;
+      showError("Namn saknas", "Skriv in namnet på förvaringsplatsen.");
+      return null;
     }
     const rowCount = Number(storageSpaceDraft.rowCount);
     const slotsPerRow = Number(storageSpaceDraft.slotsPerRow);
     if (!Number.isFinite(rowCount) || rowCount < 0 || !Number.isFinite(slotsPerRow) || slotsPerRow < 0) {
-      Alert.alert("Ogiltiga mått", "Ange antal rader och platser per rad.");
-      return;
+      showError("Ogiltiga mått", "Ange antal rader och platser per rad.");
+      return null;
     }
     setSavingStorageSpace(true);
     try {
@@ -193,14 +186,11 @@ export function useCellarData(userId: string) {
       const { data, error } = await supabase.from("storage_spaces").insert(payload).select("*").single();
       if (error) throw error;
       setStorageSpaceDraft(defaultStorageSpaceDraft);
-      if (data?.id) {
-        setSelectedStorageSpaceId(data.id);
-        setSelectedStorageRow("1");
-        setSelectedStorageSlot("1");
-      }
       await fetchStorageSpaces();
+      return data?.id ?? null;
     } catch (error) {
-      Alert.alert("Kunde inte spara platsen", error instanceof Error ? error.message : "Försök igen.");
+      showError("Kunde inte spara platsen", error instanceof Error ? error.message : "Försök igen.");
+      return null;
     } finally {
       setSavingStorageSpace(false);
     }
@@ -208,31 +198,24 @@ export function useCellarData(userId: string) {
 
   async function updateStorageSpace(id: string, patch: { name?: string; space_type?: string; row_count?: number; slots_per_row?: number; notes?: string | null }) {
     const { error } = await supabase.from("storage_spaces").update(patch).eq("id", id);
-    if (error) { Alert.alert("Kunde inte uppdatera platsen", error.message); return; }
+    if (error) { showError("Kunde inte uppdatera platsen", error.message); return; }
     await fetchStorageSpaces();
   }
 
-  async function deleteStorageSpace(id: string, selectedStorageSpaceId: string, setSelectedStorageSpaceId: (v: string) => void, setSelectedStorageRow: (v: string) => void, setSelectedStorageSlot: (v: string) => void, selectedStorageSpaceFilterId: string, setSelectedStorageSpaceFilterId: (v: string) => void) {
+  async function deleteStorageSpace(id: string): Promise<boolean> {
     const { error } = await supabase.from("storage_spaces").delete().eq("id", id);
     if (error) {
-      Alert.alert("Kunde inte ta bort platsen", error.message);
-      return;
-    }
-    if (selectedStorageSpaceId === id) {
-      setSelectedStorageSpaceId("");
-      setSelectedStorageRow("1");
-      setSelectedStorageSlot("1");
-    }
-    if (selectedStorageSpaceFilterId === id) {
-      setSelectedStorageSpaceFilterId("");
+      showError("Kunde inte ta bort platsen", error.message);
+      return false;
     }
     await Promise.all([fetchStorageSpaces(), fetchWines()]);
+    return true;
   }
 
   async function deleteWine(id: string, imagePath?: string | null) {
     const { error } = await supabase.from("wines").delete().eq("id", id);
     if (error) {
-      Alert.alert("Kunde inte ta bort", error.message);
+      showError("Kunde inte ta bort", error.message);
       return;
     }
     if (imagePath) {

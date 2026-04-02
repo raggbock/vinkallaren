@@ -4,6 +4,7 @@ import { StatusBar } from "expo-status-bar";
 import { ActivityIndicator } from "react-native";
 
 import { supabase } from "../lib/supabase";
+import { showError } from "../lib/show-error";
 import { LabeledInput } from "../components/form-controls";
 import { styles } from "../styles/theme";
 
@@ -52,7 +53,7 @@ export function AuthScreen() {
 
   async function handleAuth() {
     if (!email.trim() || !password.trim()) {
-      Alert.alert("Saknar uppgifter", "Fyll i både e-post och lösenord.");
+      showError("Saknar uppgifter", "Fyll i både e-post och lösenord.");
       return;
     }
 
@@ -93,7 +94,7 @@ export function AuthScreen() {
         }
       }
     } catch (error) {
-      Alert.alert("Inloggning misslyckades", error instanceof Error ? error.message : "Försök igen.");
+      showError("Inloggning misslyckades", error instanceof Error ? error.message : "Försök igen.");
     } finally {
       setBusy(false);
     }
@@ -110,7 +111,7 @@ export function AuthScreen() {
         throw error;
       }
     } catch (error) {
-      Alert.alert(
+      showError(
         "Gästläge gick inte att starta",
         error instanceof Error
           ? `${error.message} Aktivera Anonymous Sign-Ins i Supabase Authentication om du vill använda gästläge.`

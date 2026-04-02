@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Alert, Platform } from "react-native";
+import { showError } from "../lib/show-error";
 import { useCameraPermissions } from "expo-camera";
 
 import { cacheCatalogEntry, findCatalogMatch, type ProductCatalogEntry } from "../lib/product-catalog";
@@ -12,9 +13,8 @@ import {
 import { recognizeLabel, parseWineLabel } from "../lib/label-ocr";
 import type { ImportFieldSelection, ImportMode, WineDraft } from "../types/cellar-drafts";
 import { defaultImportSelection } from "../types/cellar-drafts";
-import type { ProductCatalogWineRow } from "../types/product-catalog";
+import type { CatalogTextMatch, ProductCatalogWineRow } from "../types/product-catalog";
 import type { WineRecord } from "../types/wine";
-import type { CatalogTextMatch } from "./useCellarData";
 
 type CatalogWorkflowDeps = {
   sessionUserId: string;
@@ -174,13 +174,13 @@ export function useCatalogWorkflow(deps: CatalogWorkflowDeps) {
 
   async function startBarcodeScanner() {
     if (Platform.OS === "web" && typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.protocol !== "https:") {
-      Alert.alert("Skanning kräver säker anslutning", "På mobilwebb behöver kameraskanning vanligtvis https eller localhost.");
+      showError("Skanning kräver säker anslutning", "På mobilwebb behöver kameraskanning vanligtvis https eller localhost.");
       return;
     }
     if (!cameraPermission?.granted) {
       const permission = await requestCameraPermission();
       if (!permission.granted) {
-        Alert.alert("Behörighet saknas", "Ge appen kameratillgång för att kunna skanna streckkoder.");
+        showError("Behörighet saknas", "Ge appen kameratillgång för att kunna skanna streckkoder.");
         return;
       }
     }
@@ -250,7 +250,7 @@ export function useCatalogWorkflow(deps: CatalogWorkflowDeps) {
         Alert.alert("Inga matchningar hittades", "Texten från etiketten har fyllts i — korrigera vid behov.");
       }
     } catch {
-      Alert.alert("Kunde inte läsa etiketten", "Försök igen med bättre belysning.");
+      showError("Kunde inte läsa etiketten", "Försök igen med bättre belysning.");
     } finally {
       setLookupBusy(false);
       setLookupMessage("");
@@ -258,7 +258,7 @@ export function useCatalogWorkflow(deps: CatalogWorkflowDeps) {
   }
 
   function showLabelError() {
-    Alert.alert("Kunde inte läsa etiketten", "Försök igen med bättre belysning.");
+    showError("Kunde inte läsa etiketten", "Försök igen med bättre belysning.");
     setLookupBusy(false);
     setLookupMessage("");
   }
