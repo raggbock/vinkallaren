@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Alert, Image, Pressable, Text, View } from "react-native";
 
 import { getWineStoragePlacementLabel } from "../lib/cellar-helpers";
@@ -242,9 +242,7 @@ export function MinKallarePanel({
   );
 }
 
-const SPACE_TYPE_OPTIONS = ["Vinkyl", "Vinställ", "Källare", "Övrigt"];
-const SPACE_TYPE_VALUES: Record<string, string> = { "Vinkyl": "vinkyl", "Vinställ": "vinstall", "Källare": "kallare", "Övrigt": "ovrigt" };
-const SPACE_TYPE_LABELS: Record<string, string> = Object.fromEntries(Object.entries(SPACE_TYPE_VALUES).map(([k, v]) => [v, k]));
+import { SPACE_TYPE_LABELS, SPACE_TYPE_OPTIONS, SPACE_TYPE_VALUES } from "../lib/storage-types";
 
 function StorageSpaceActions({ space, styles, onUpdate, onDelete }: {
   space: StorageSpaceRow; styles: SharedStyles;
@@ -295,7 +293,7 @@ function StorageSpaceActions({ space, styles, onUpdate, onDelete }: {
   );
 }
 
-function WineCard({ wine, styles, highlighted, storageSpaceById, onOpenSystembolaget, onEditWine, onDrinkWine, onDeleteWine }: {
+const WineCard = React.memo(function WineCard({ wine, styles, highlighted, storageSpaceById, onOpenSystembolaget, onEditWine, onDrinkWine, onDeleteWine }: {
   wine: WineRecord; styles: SharedStyles; highlighted?: boolean; storageSpaceById: Map<string, StorageSpaceRow>;
   onOpenSystembolaget: (productId: string) => void; onEditWine: (wine: WineRecord) => void;
   onDrinkWine: (wine: WineRecord) => void; onDeleteWine: (wineId: string, imagePath: string | null) => void;
@@ -356,4 +354,4 @@ function WineCard({ wine, styles, highlighted, storageSpaceById, onOpenSystembol
       </View>
     </View>
   );
-}
+});

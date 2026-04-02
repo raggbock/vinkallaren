@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Image, Pressable, Text, TextInput, View } from "react-native";
 
 import { FOOD_CATEGORIES } from "../lib/cellar-helpers";
@@ -195,40 +195,47 @@ export function HistoryPanel({
       ) : null}
 
       {filteredEntries.map((entry) => (
-        <View key={entry.id} style={styles.wineCard}>
-          <View style={styles.wineCardHeader}>
-            {entry.image_url ? (
-              <Image source={{ uri: entry.image_url }} style={{ width: 64, height: 86, borderRadius: 10, backgroundColor: "#ead8ca" }} resizeMode="cover" />
-            ) : null}
-            <View style={styles.flex}>
-              <Text style={styles.wineType}>{entry.type || "Historik"}</Text>
-              <Text style={styles.wineName}>{entry.name}</Text>
-              <Text style={styles.wineMeta}>
-                {[entry.producer, entry.vintage, entry.grape, [entry.country, entry.region].filter(Boolean).join(", ")]
-                  .filter(Boolean)
-                  .join(" • ")}
-              </Text>
-            </View>
-            {entry.rating ? (
-              <View style={styles.ratingBadge}>
-                <Text style={styles.ratingBadgeText}>{"★".repeat(entry.rating)}{"☆".repeat(5 - entry.rating)}</Text>
-              </View>
-            ) : null}
-          </View>
-
-          <Text style={styles.notesText}>
-            Dracks {new Date(entry.consumed_at).toLocaleDateString("sv-SE")} • {entry.quantity_consumed} flaska
-            {entry.quantity_consumed > 1 ? "r" : ""}
-          </Text>
-          {entry.tasting_notes ? <Text style={styles.notesText}>{entry.tasting_notes}</Text> : null}
-          {entry.tasting_data ? (
-            <View style={{ marginTop: 6, paddingTop: 6, borderTopWidth: 1, borderTopColor: "#3d2220" }}>
-              <Text style={[styles.notesText, { color: "#f4c38c", fontWeight: "600", marginBottom: 2 }]}>WSET Tasting</Text>
-              <Text style={styles.notesText}>{buildWsatSummary(entry.tasting_data as WsatTastingData)}</Text>
-            </View>
-          ) : null}
-        </View>
+        <HistoryRow key={entry.id} entry={entry} styles={styles} />
       ))}
     </View>
   );
 }
+
+const HistoryRow = React.memo(function HistoryRow({ entry, styles }: {
+  entry: WineHistoryRecord; styles: SharedStyles;
+}) {
+  return (
+    <View style={styles.wineCard}>
+      <View style={styles.wineCardHeader}>
+        {entry.image_url ? (
+          <Image source={{ uri: entry.image_url }} style={{ width: 64, height: 86, borderRadius: 10, backgroundColor: "#ead8ca" }} resizeMode="cover" />
+        ) : null}
+        <View style={styles.flex}>
+          <Text style={styles.wineType}>{entry.type || "Historik"}</Text>
+          <Text style={styles.wineName}>{entry.name}</Text>
+          <Text style={styles.wineMeta}>
+            {[entry.producer, entry.vintage, entry.grape, [entry.country, entry.region].filter(Boolean).join(", ")]
+              .filter(Boolean)
+              .join(" • ")}
+          </Text>
+        </View>
+        {entry.rating ? (
+          <View style={styles.ratingBadge}>
+            <Text style={styles.ratingBadgeText}>{"★".repeat(entry.rating)}{"☆".repeat(5 - entry.rating)}</Text>
+          </View>
+        ) : null}
+      </View>
+      <Text style={styles.notesText}>
+        Dracks {new Date(entry.consumed_at).toLocaleDateString("sv-SE")} • {entry.quantity_consumed} flaska
+        {entry.quantity_consumed > 1 ? "r" : ""}
+      </Text>
+      {entry.tasting_notes ? <Text style={styles.notesText}>{entry.tasting_notes}</Text> : null}
+      {entry.tasting_data ? (
+        <View style={{ marginTop: 6, paddingTop: 6, borderTopWidth: 1, borderTopColor: "#3d2220" }}>
+          <Text style={[styles.notesText, { color: "#f4c38c", fontWeight: "600", marginBottom: 2 }]}>WSET Tasting</Text>
+          <Text style={styles.notesText}>{buildWsatSummary(entry.tasting_data as WsatTastingData)}</Text>
+        </View>
+      ) : null}
+    </View>
+  );
+});
