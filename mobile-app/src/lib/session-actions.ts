@@ -73,7 +73,19 @@ export async function saveTasting(tasting: SessionTastingInsert): Promise<Result
 }
 
 export async function revealSession(sessionId: string): Promise<Result<true>> {
-  const { error } = await supabase.from("tasting_sessions").update({ status: "revealed" }).eq("id", sessionId);
+  const { error } = await supabase.from("tasting_sessions").update({ status: "revealing", revealed_up_to: 1 }).eq("id", sessionId);
+  if (error) return fail(error.message);
+  return ok(true);
+}
+
+export async function advanceReveal(sessionId: string, nextPosition: number): Promise<Result<true>> {
+  const { error } = await supabase.from("tasting_sessions").update({ revealed_up_to: nextPosition }).eq("id", sessionId);
+  if (error) return fail(error.message);
+  return ok(true);
+}
+
+export async function finishReveal(sessionId: string): Promise<Result<true>> {
+  const { error } = await supabase.from("tasting_sessions").update({ status: "ended" }).eq("id", sessionId);
   if (error) return fail(error.message);
   return ok(true);
 }

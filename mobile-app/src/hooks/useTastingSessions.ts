@@ -132,8 +132,8 @@ export function useTastingSessions(userId: string) {
           const updated = payload.new as TastingSessionRow;
           setActiveSession(updated);
           setSessions((prev) => prev.map((s) => s.id === updated.id ? updated : s));
-          // Re-fetch tastings when revealed (RLS opens up, we now see others' data)
-          if (updated.status === "revealed") {
+          // Re-fetch tastings when status changes or reveal advances (RLS opens up progressively)
+          if (updated.status !== "active") {
             fetchSessionTastings(sessionId).then((r) => { if (r.data) setActiveTastings(r.data); });
           }
         }

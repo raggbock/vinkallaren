@@ -6,7 +6,8 @@ export type TastingSessionRow = {
   mode: "blind" | "open";
   format: "quick" | "wset";
   free_order: boolean;
-  status: "active" | "revealed" | "ended";
+  status: "active" | "revealing" | "ended";
+  revealed_up_to: number;
   created_at: string;
 };
 

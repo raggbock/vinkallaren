@@ -93,7 +93,7 @@ export function TastingSessionPanel({
   }
 
   // Results view for ended/revealed sessions
-  if (activeSession && (activeSession.status === "ended" || activeSession.status === "revealed")) {
+  if (activeSession && activeSession.status === "ended") {
     const results = buildSessionResults(activeWines, activeTastings, activeSession.format, activeSession.created_at);
     return (
       <View style={styles.panel}>
@@ -161,7 +161,7 @@ export function TastingSessionPanel({
             <Pressable key={ses.id} style={s.sessionCard} onPress={() => onOpenSession(ses)}>
               <Text style={s.sessionTitle}>{ses.title}</Text>
               <Text style={s.sessionMeta}>
-                {ses.mode === "blind" ? "Blind" : "Öppen"} · {ses.format.toUpperCase()} · {ses.status === "active" ? "Pågår" : ses.status === "revealed" ? "Avslöjad" : "Avslutad"}
+                {ses.mode === "blind" ? "Blind" : "Öppen"} · {ses.format.toUpperCase()} · {ses.status === "active" ? "Pågår" : ses.status === "revealing" ? "Avslöjas" : "Avslutad"}
               </Text>
             </Pressable>
           ))}
@@ -185,7 +185,7 @@ function HostControls({ session, onSetSession, onEnd, activeTastings, activeWine
         <Text style={s.hostButtonText}>Dela provning</Text>
       </Pressable>
       {session.status === "active" && session.mode === "blind" ? (
-        <Pressable onPress={() => confirmAction("Avslöja viner?", "Alla deltagare kommer se varandras betyg och noteringar.", async () => { const r = await revealSession(session.id); if (r.error) { showError("Kunde inte avslöja", r.error); return; } onSetSession({ ...session, status: "revealed" }); })}
+        <Pressable onPress={() => confirmAction("Starta avslöjningen?", "Alla kommer se resultaten ett vin i taget.", async () => { const r = await revealSession(session.id); if (r.error) { showError("Kunde inte avslöja", r.error); return; } onSetSession({ ...session, status: "revealing", revealed_up_to: 1 }); })}
           style={[s.hostButton, allDone && s.hostButtonHighlight]}>
           <Text style={[s.hostButtonText, allDone && { color: "#6f1d1b" }]}>{allDone ? "Alla klara \u2014 Avsl\u00F6ja!" : "Avsl\u00F6ja"}</Text>
         </Pressable>
