@@ -4,6 +4,7 @@ import { Image, Pressable, Text, TextInput, View } from "react-native";
 import { FOOD_CATEGORIES } from "../lib/cellar-helpers";
 import { buildWsatSummary, type WsatTastingData } from "../lib/wsat-data";
 import type { StorageSpaceRow } from "../types/storage-space";
+import type { TastingSessionRow } from "../types/tasting-session";
 import type { WineHistoryRecord } from "../types/wine-history";
 import type { WineRecord } from "../types/wine";
 import type { CellarSection } from "../types/cellar";
@@ -11,9 +12,6 @@ import { LoadingInline } from "./form-controls";
 
 import type { styles as themeStyles } from "../styles/theme";
 type SharedStyles = typeof themeStyles;
-
-// Re-export for backward-compatible imports
-export { MinKallarePanel } from "./min-kallare-panel";
 
 export function BottomTabBar({
   activeSection,
@@ -133,11 +131,15 @@ export function HistoryPanel({
   historyEntries,
   loadingHistory,
   storageSpaceById,
+  endedSessions,
+  onOpenSession,
 }: {
   styles: SharedStyles;
   historyEntries: WineHistoryRecord[];
   loadingHistory: boolean;
   storageSpaceById: Map<string, StorageSpaceRow>;
+  endedSessions?: TastingSessionRow[];
+  onOpenSession?: (session: TastingSessionRow) => void;
 }) {
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -168,9 +170,23 @@ export function HistoryPanel({
         />
       ) : null}
 
+      {endedSessions && endedSessions.length > 0 ? (
+        <View style={{ gap: 8 }}>
+          <Text style={styles.inputLabel}>Avslutade provningar</Text>
+          {endedSessions.map((ses) => (
+            <Pressable key={ses.id} style={styles.wineCard} onPress={() => onOpenSession?.(ses)}>
+              <Text style={styles.wineName}>{ses.title}</Text>
+              <Text style={styles.wineMeta}>
+                {ses.mode === "blind" ? "Blind" : "Öppen"} · {ses.format.toUpperCase()} · {new Date(ses.created_at).toLocaleDateString("sv-SE")}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      ) : null}
+
       {loadingHistory ? <LoadingInline label="Laddar historik..." /> : null}
 
-      {!loadingHistory && historyEntries.length === 0 ? (
+      {!loadingHistory && historyEntries.length === 0 && (!endedSessions || endedSessions.length === 0) ? (
         <Text style={styles.emptyState}>Ingen historik ännu. När du markerar att du druckit en flaska kan du sätta betyg här.</Text>
       ) : null}
 

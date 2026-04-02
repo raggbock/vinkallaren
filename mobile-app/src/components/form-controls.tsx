@@ -89,15 +89,6 @@ export function DoubleRow({ children }: { children: ReactNode }) {
   );
 }
 
-export function MetricCard({ value, label }: { value: string; label: string }) {
-  return (
-    <View style={styles.metricCard}>
-      <Text style={styles.metricValue}>{value}</Text>
-      <Text style={styles.metricLabel}>{label}</Text>
-    </View>
-  );
-}
-
 export function InsightCard({ label, value }: { label: string; value: string }) {
   return (
     <View style={styles.insightCard}>
@@ -241,9 +232,7 @@ export function StorageSpaceSelector({
   );
 }
 
-const SPACE_TYPE_OPTIONS = ["Vinkyl", "Vinställ", "Källare", "Övrigt"];
-const SPACE_TYPE_VALUES: Record<string, string> = { "Vinkyl": "vinkyl", "Vinställ": "vinstall", "Källare": "kallare", "Övrigt": "ovrigt" };
-const SPACE_TYPE_LABELS: Record<string, string> = Object.fromEntries(Object.entries(SPACE_TYPE_VALUES).map(([k, v]) => [v, k]));
+import { SPACE_TYPE_LABELS, SPACE_TYPE_OPTIONS, SPACE_TYPE_VALUES } from "../lib/storage-types";
 
 export function StorageSpaceForm({
   draft,
@@ -360,23 +349,6 @@ const styles = StyleSheet.create({
   },
   doubleRowItem: {
     flex: 1,
-  },
-  metricCard: {
-    flex: 1,
-    borderRadius: 20,
-    backgroundColor: "rgba(255, 246, 238, 0.12)",
-    paddingVertical: 18,
-    paddingHorizontal: 14,
-    gap: 6,
-  },
-  metricValue: {
-    color: "#fff6ee",
-    fontSize: 26,
-    fontWeight: "700",
-  },
-  metricLabel: {
-    color: "#f8d9b5",
-    fontSize: 13,
   },
   insightCard: {
     backgroundColor: "#fffaf5",
