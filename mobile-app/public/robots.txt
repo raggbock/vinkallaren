@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://vinkallaren.pages.dev/sitemap.xml
+Sitemap: https://minvinkallare.se/sitemap.xml

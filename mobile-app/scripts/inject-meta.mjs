@@ -9,11 +9,11 @@ const HTML_PATH = "dist/index.html";
 const html = readFileSync(HTML_PATH, "utf-8");
 
 const tags = `
-    <link rel="canonical" href="https://vinkallaren.pages.dev/" />
+    <link rel="canonical" href="https://minvinkallare.se/" />
     <meta property="og:title" content="Vinkällaren — Din digitala vinsamling" />
     <meta property="og:description" content="Håll koll på din vinsamling, hitta rätt vin till maten och spara smaknoteringar. Gratis och utan reklam." />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://vinkallaren.pages.dev/" />
+    <meta property="og:url" content="https://minvinkallare.se/" />
     <meta property="og:locale" content="sv_SE" />
     <meta property="og:site_name" content="Vinkällaren" />
     <meta name="twitter:card" content="summary" />
