@@ -1,4 +1,4 @@
-import { Text, View } from "react-native";
+import { Image, Text, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { ActivityIndicator } from "react-native";
 
@@ -26,10 +26,13 @@ export function SetupScreen() {
   );
 }
 
+const logoSquare = require("../../assets/logo-square.png");
+
 export function LoadingScreen({ label }: { label: string }) {
   return (
     <View style={styles.screenCentered}>
       <StatusBar style="light" />
+      <Image source={logoSquare} style={{ width: 120, height: 120, marginBottom: 16 }} resizeMode="contain" />
       <ActivityIndicator size="large" color="#f4c38c" />
       <Text style={styles.loadingText}>{label}</Text>
     </View>
