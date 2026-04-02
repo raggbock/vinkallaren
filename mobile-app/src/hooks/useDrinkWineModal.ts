@@ -3,7 +3,7 @@ import { showError } from "../lib/show-error";
 import { hydrateWineHistoryRecords } from "../lib/wine-helpers";
 import type { WineRecord } from "../types/wine";
 import type { WineHistoryRecord } from "../types/wine-history";
-import type { WsatTastingData } from "../lib/wsat-data";
+import type { WsetTastingData } from "../lib/wset-data";
 import { saveDrinkEntry } from "../lib/cellar-actions";
 
 type Deps = {
@@ -22,8 +22,8 @@ export function useDrinkWineModal(deps: Deps) {
   const [notes, setNotes] = useState("");
   const [consumedDate, setConsumedDate] = useState("");
   const [imageUri, setImageUri] = useState("");
-  const [wsatData, setWsatData] = useState<WsatTastingData | null>(null);
-  const [wsatVisible, setWsatVisible] = useState(false);
+  const [wsetData, setWsetData] = useState<WsetTastingData | null>(null);
+  const [wsetVisible, setWsetVisible] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const open = useCallback((w: WineRecord) => {
@@ -32,7 +32,7 @@ export function useDrinkWineModal(deps: Deps) {
     setNotes("");
     setConsumedDate(new Date().toISOString().slice(0, 10));
     setImageUri("");
-    setWsatData(null);
+    setWsetData(null);
     setVisible(true);
   }, []);
 
@@ -45,7 +45,7 @@ export function useDrinkWineModal(deps: Deps) {
   const save = useCallback(async () => {
     if (!wine) return;
     setSaving(true);
-    const result = await saveDrinkEntry({ userId: deps.userId, wine, rating, notes, consumedDate, imageUri, wsatData, setWines: deps.setWines });
+    const result = await saveDrinkEntry({ userId: deps.userId, wine, rating, notes, consumedDate, imageUri, wsetData, setWines: deps.setWines });
     if (result.error) { showError("Kunde inte spara historiken", result.error); setSaving(false); return; }
     const [hydrated] = await hydrateWineHistoryRecords([result.data!]);
     deps.setHistoryEntries(prev => [hydrated, ...prev]);
@@ -53,7 +53,7 @@ export function useDrinkWineModal(deps: Deps) {
     setWine(null);
     deps.showSuccess("wine_drunk");
     setSaving(false);
-  }, [wine, rating, notes, consumedDate, imageUri, wsatData, deps]);
+  }, [wine, rating, notes, consumedDate, imageUri, wsetData, deps]);
 
   const chooseImage = useCallback(async () => {
     const uri = await deps.pickImageFromLibrary();
@@ -73,8 +73,8 @@ export function useDrinkWineModal(deps: Deps) {
     consumedDate,
     imageUri,
     saving,
-    wsatData,
-    onOpenWsat: useCallback(() => setWsatVisible(true), []),
+    wsetData,
+    onOpenWset: useCallback(() => setWsetVisible(true), []),
     onClose: close,
     onRatingChange: setRating,
     onNotesChange: setNotes,
@@ -84,13 +84,13 @@ export function useDrinkWineModal(deps: Deps) {
     onConfirm: save,
   };
 
-  const wsatProps = {
-    visible: wsatVisible,
+  const wsetProps = {
+    visible: wsetVisible,
     wineType: wine?.type || "",
-    initialData: wsatData,
-    onSave: useCallback((d: WsatTastingData) => { setWsatData(d); setWsatVisible(false); }, []),
-    onClose: useCallback(() => setWsatVisible(false), []),
+    initialData: wsetData,
+    onSave: useCallback((d: WsetTastingData) => { setWsetData(d); setWsetVisible(false); }, []),
+    onClose: useCallback(() => setWsetVisible(false), []),
   };
 
-  return { actions: { open }, modalProps, wsatProps };
+  return { actions: { open }, modalProps, wsetProps };
 }

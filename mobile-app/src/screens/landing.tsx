@@ -98,7 +98,7 @@ const FEATURES = [
   { icon: "\u{1F942}", title: "Provningar med vänner", desc: "Starta blindprovningar, dela en kod och betygsätt tillsammans. Avslöja resultaten när alla är klara." },
   { icon: "\u{1F377}", title: "Katalogisera din samling", desc: "Håll ordning på flaskor, förvaringsplatser och årgångar. Sök och filtrera i din källare." },
   { icon: "\u{1F37D}\uFE0F", title: "Hitta rätt vin till maten", desc: "Välj vad du ska äta — få förslag på matchande viner direkt från din egen samling." },
-  { icon: "\u2B50", title: "Smaknoteringar och betyg", desc: "Spara tasting notes med WSAT-stöd. Bygg upp din smakhistorik över tid." },
+  { icon: "\u2B50", title: "Smaknoteringar och betyg", desc: "Spara tasting notes med WSET-stöd. Bygg upp din smakhistorik över tid." },
 ] as const;
 
 function MarketingContent() {

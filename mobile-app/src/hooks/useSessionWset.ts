@@ -1,21 +1,21 @@
 import { useCallback, useState } from "react";
-import type { WsatTastingData } from "../lib/wsat-data";
+import type { WsetTastingData } from "../lib/wset-data";
 
-export function useSessionWsat() {
-  const [data, setData] = useState<WsatTastingData | null>(null);
+export function useSessionWset() {
+  const [data, setData] = useState<WsetTastingData | null>(null);
   const [visible, setVisible] = useState(false);
 
-  const wsatProps = {
+  const wsetProps = {
     visible,
     wineType: "" as string,
     initialData: data,
-    onSave: useCallback((d: WsatTastingData) => { setData(d); setVisible(false); }, []),
+    onSave: useCallback((d: WsetTastingData) => { setData(d); setVisible(false); }, []),
     onClose: useCallback(() => setVisible(false), []),
   };
 
   return {
     data,
     open: useCallback(() => setVisible(true), []),
-    wsatProps,
+    wsetProps,
   };
 }

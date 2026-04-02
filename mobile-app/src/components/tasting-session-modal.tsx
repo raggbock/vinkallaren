@@ -7,7 +7,7 @@ import { SessionTastingView } from "./session-tasting-view";
 import { addWineToSession, buildShareMessage, endSession, fetchSessionParticipants, revealSession, saveTasting } from "../lib/session-actions";
 import { confirmAction, showError } from "../lib/show-error";
 import type { CreateSessionInput, SessionTastingRow, SessionWineRow, TastingSessionRow } from "../types/tasting-session";
-import type { WsatTastingData } from "../lib/wsat-data";
+import type { WsetTastingData } from "../lib/wset-data";
 import type { WineRecord } from "../types/wine";
 import type { SessionToast } from "../hooks/useTastingSessions";
 
@@ -18,7 +18,7 @@ export function TastingSessionPanel({
   styles, userId, sessions, loading, toasts, activeSession, activeWines, activeTastings,
   wines, searchWineNames, onBack, onFetchSessions, onCreateSession, onJoinSession, onOpenSession,
   onCloseSession, onSetActiveWines, onSetActiveTastings, onSetActiveSession,
-  onOpenWsat, wsatData, onSessionEnded,
+  onOpenWset, wsetData, onSessionEnded,
 }: {
   styles: SharedStyles;
   userId: string;
@@ -39,8 +39,8 @@ export function TastingSessionPanel({
   onSetActiveWines: (fn: (prev: SessionWineRow[]) => SessionWineRow[]) => void;
   onSetActiveTastings: (fn: (prev: SessionTastingRow[]) => SessionTastingRow[]) => void;
   onSetActiveSession: (session: TastingSessionRow | null) => void;
-  onOpenWsat: () => void;
-  wsatData: WsatTastingData | null;
+  onOpenWset: () => void;
+  wsetData: WsetTastingData | null;
   onSessionEnded: () => void;
 }) {
   const [view, setView] = useState<"list" | "create" | "join">("list");
@@ -62,20 +62,20 @@ export function TastingSessionPanel({
           initialRating={existing?.rating ?? null}
           initialNotes={existing?.notes ?? null}
           initialFoodPairings={existing?.food_pairings ?? []}
-          initialWsatData={wsatData}
+          initialWsetData={wsetData}
           saving={savingTasting}
           onSave={async (data) => {
             setSavingTasting(true);
             const result = await saveTasting({
               session_id: activeSession.id, session_wine_id: tastingWine.id,
               user_id: userId, rating: data.rating, notes: data.notes,
-              food_pairings: data.foodPairings, tasting_data: data.wsatData ?? null,
+              food_pairings: data.foodPairings, tasting_data: data.wsetData ?? null,
             });
             setSavingTasting(false);
             if (result.error) { showError("Kunde inte spara provning", result.error); return; }
             setTastingWine(null);
           }}
-          onOpenWsat={onOpenWsat}
+          onOpenWset={onOpenWset}
           onBack={() => setTastingWine(null)}
         />
       </View>

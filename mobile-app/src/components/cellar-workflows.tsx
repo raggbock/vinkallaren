@@ -6,16 +6,12 @@ import type { ProductCatalogWineRow } from "../types/product-catalog";
 import type { ReferenceOptionRow } from "../types/reference-data";
 import type { CatalogEditorDraft } from "../types/cellar-drafts";
 import type { WineRecord } from "../types/wine";
-import { buildWsatSummary, type WsatTastingData } from "../lib/wsat-data";
+import { buildWsetSummary, type WsetTastingData } from "../lib/wset-data";
 import { AutocompleteInput, DateInput, DoubleRow, LabeledInput, SuggestionRow, type Suggestion } from "./form-controls";
 
 import type { styles as themeStyles } from "../styles/theme";
 type SharedStyles = typeof themeStyles;
 const WINE_TYPE_OPTIONS = ["Rött", "Vitt", "Mousserande", "Sött"];
-
-// Re-export extracted components for backward-compatible imports
-export { AddWinePanel } from "./add-wine-panel";
-export { EditWineModal } from "./edit-wine-modal";
 
 export function BarcodeScannerModal({
   visible, styles, onClose, onBarcodeScanned, onLabelPhoto,
@@ -164,7 +160,7 @@ export function VintagePickerModal({
 
 export function DrinkWineModal({
   visible, styles, wine, rating, notes, consumedDate, imageUri, saving,
-  wsatData, onOpenWsat,
+  wsetData, onOpenWset,
   onClose, onRatingChange, onNotesChange, onConsumedDateChange, onChooseImage, onTakePhoto, onConfirm,
 }: {
   visible: boolean;
@@ -175,8 +171,8 @@ export function DrinkWineModal({
   consumedDate: string;
   imageUri: string;
   saving: boolean;
-  wsatData: WsatTastingData | null;
-  onOpenWsat: () => void;
+  wsetData: WsetTastingData | null;
+  onOpenWset: () => void;
   onClose: () => void;
   onRatingChange: (value: string) => void;
   onNotesChange: (value: string) => void;
@@ -200,13 +196,13 @@ export function DrinkWineModal({
           <ScrollView contentContainerStyle={{ gap: 12 }} keyboardShouldPersistTaps="handled">
             <DateInput label="Datum" value={consumedDate} onChangeText={onConsumedDateChange} />
             <SuggestionRow title="Betyg" options={["1", "2", "3", "4", "5"]} selected={rating} onSelect={onRatingChange} />
-            {wsatData ? (
-              <Pressable onPress={onOpenWsat} style={styles.importSuggestionCard}>
+            {wsetData ? (
+              <Pressable onPress={onOpenWset} style={styles.importSuggestionCard}>
                 <Text style={styles.inputLabel}>WSET Tasting</Text>
-                <Text style={styles.notesText}>{buildWsatSummary(wsatData)}</Text>
+                <Text style={styles.notesText}>{buildWsetSummary(wsetData)}</Text>
               </Pressable>
             ) : (
-              <Pressable onPress={onOpenWsat} style={styles.secondaryButton}>
+              <Pressable onPress={onOpenWset} style={styles.secondaryButton}>
                 <Text style={styles.secondaryButtonText}>WSET Tasting</Text>
               </Pressable>
             )}

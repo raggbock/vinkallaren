@@ -1,7 +1,7 @@
 import { ActivityIndicator, Image, Pressable, Text, View } from "react-native";
 
 import { buildNumericOptions, FOOD_CATEGORIES, getWineStoragePlacementLabel, mergeTagText, parseTags } from "../lib/cellar-helpers";
-import { buildWsatSummary, type WsatTastingData } from "../lib/wsat-data";
+import { buildWsetSummary, type WsetTastingData } from "../lib/wset-data";
 import type { ProductCatalogEntry } from "../lib/product-catalog";
 import type { ProductCatalogWineRow } from "../types/product-catalog";
 import type { ReferenceOptionRow } from "../types/reference-data";
@@ -27,7 +27,7 @@ export function AddWinePanel({
   onToggleImportField, onChooseImage, onTakePhoto, onSaveWine,
   tastingMode, onTastingModeChange, tastingRating, onTastingRatingChange,
   tastingDate, onTastingDateChange, onSaveTasting, savingTasting,
-  wsatData, onOpenWsat,
+  wsetData, onOpenWset,
 }: {
   styles: SharedStyles;
   draft: WineDraft;
@@ -79,8 +79,8 @@ export function AddWinePanel({
   onTastingDateChange: (value: string) => void;
   onSaveTasting: () => void;
   savingTasting: boolean;
-  wsatData: WsatTastingData | null;
-  onOpenWsat: () => void;
+  wsetData: WsetTastingData | null;
+  onOpenWset: () => void;
 }) {
   const isLockedByCatalog = (field: keyof ProductCatalogWineRow) => {
     if (!selectedCatalogNameEntry) return false;
@@ -169,7 +169,7 @@ export function AddWinePanel({
       <SuggestionRow title="Vintyp" options={WINE_TYPE_OPTIONS} selected={draft.type} onSelect={(value) => onDraftChange({ type: value })} disabled={isLockedByCatalog("type")} />
 
       {tastingMode ? (
-        <TastingFields styles={styles} draft={draft} tastingDate={tastingDate} tastingRating={tastingRating} wsatData={wsatData} onDraftChange={onDraftChange} onTastingDateChange={onTastingDateChange} onTastingRatingChange={onTastingRatingChange} onOpenWsat={onOpenWsat} />
+        <TastingFields styles={styles} draft={draft} tastingDate={tastingDate} tastingRating={tastingRating} wsetData={wsetData} onDraftChange={onDraftChange} onTastingDateChange={onTastingDateChange} onTastingRatingChange={onTastingRatingChange} onOpenWset={onOpenWset} />
       ) : (
         <CellarFields
           styles={styles} draft={draft} storageSpaces={storageSpaces} selectedStorageSpace={selectedStorageSpace}
@@ -247,21 +247,21 @@ function CatalogImportCard({ styles, catalogSuggestion, importMode, importSelect
   );
 }
 
-function TastingFields({ styles, draft, tastingDate, tastingRating, wsatData, onDraftChange, onTastingDateChange, onTastingRatingChange, onOpenWsat }: {
-  styles: SharedStyles; draft: WineDraft; tastingDate: string; tastingRating: string; wsatData: WsatTastingData | null;
-  onDraftChange: (patch: Partial<WineDraft>) => void; onTastingDateChange: (v: string) => void; onTastingRatingChange: (v: string) => void; onOpenWsat: () => void;
+function TastingFields({ styles, draft, tastingDate, tastingRating, wsetData, onDraftChange, onTastingDateChange, onTastingRatingChange, onOpenWset }: {
+  styles: SharedStyles; draft: WineDraft; tastingDate: string; tastingRating: string; wsetData: WsetTastingData | null;
+  onDraftChange: (patch: Partial<WineDraft>) => void; onTastingDateChange: (v: string) => void; onTastingRatingChange: (v: string) => void; onOpenWset: () => void;
 }) {
   return (
     <>
       <DateInput label="Provningsdatum" value={tastingDate} onChangeText={onTastingDateChange} />
-      {wsatData ? (
-        <Pressable onPress={onOpenWsat} style={styles.importSuggestionCard}>
+      {wsetData ? (
+        <Pressable onPress={onOpenWset} style={styles.importSuggestionCard}>
           <Text style={styles.inputLabel}>WSET Tasting</Text>
-          <Text style={styles.notesText}>{buildWsatSummary(wsatData)}</Text>
+          <Text style={styles.notesText}>{buildWsetSummary(wsetData)}</Text>
           <Text style={styles.linkText}>Edit</Text>
         </Pressable>
       ) : (
-        <Pressable onPress={onOpenWsat} style={styles.secondaryButton}>
+        <Pressable onPress={onOpenWset} style={styles.secondaryButton}>
           <Text style={styles.secondaryButtonText}>WSET Tasting</Text>
         </Pressable>
       )}

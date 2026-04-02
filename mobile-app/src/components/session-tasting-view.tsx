@@ -2,8 +2,8 @@ import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { LabeledInput, SuggestionRow } from "./form-controls";
 import type { SessionWineRow } from "../types/tasting-session";
-import type { WsatTastingData } from "../lib/wsat-data";
-import { buildWsatSummary } from "../lib/wsat-data";
+import type { WsetTastingData } from "../lib/wset-data";
+import { buildWsetSummary } from "../lib/wset-data";
 
 export function SessionTastingView({
   wine,
@@ -11,10 +11,10 @@ export function SessionTastingView({
   initialRating,
   initialNotes,
   initialFoodPairings,
-  initialWsatData,
+  initialWsetData,
   saving,
   onSave,
-  onOpenWsat,
+  onOpenWset,
   onBack,
 }: {
   wine: SessionWineRow;
@@ -22,10 +22,10 @@ export function SessionTastingView({
   initialRating: number | null;
   initialNotes: string | null;
   initialFoodPairings: string[];
-  initialWsatData: WsatTastingData | null;
+  initialWsetData: WsetTastingData | null;
   saving: boolean;
-  onSave: (data: { rating: number | null; notes: string | null; foodPairings: string[]; wsatData: WsatTastingData | null }) => void;
-  onOpenWsat: () => void;
+  onSave: (data: { rating: number | null; notes: string | null; foodPairings: string[]; wsetData: WsetTastingData | null }) => void;
+  onOpenWset: () => void;
   onBack: () => void;
 }) {
   const [rating, setRating] = useState(initialRating ? String(initialRating) : "");
@@ -38,7 +38,7 @@ export function SessionTastingView({
       rating: rating ? Number(rating) : null,
       notes: notes.trim() || null,
       foodPairings: pairings,
-      wsatData: initialWsatData,
+      wsetData: initialWsetData,
     });
   }
 
@@ -61,14 +61,14 @@ export function SessionTastingView({
         <SuggestionRow title="Betyg" options={["1", "2", "3", "4", "5"]} selected={rating} onSelect={setRating} />
 
         {format === "wset" ? (
-          initialWsatData ? (
-            <Pressable onPress={onOpenWsat} style={localStyles.wsatCard}>
-              <Text style={localStyles.wsatLabel}>WSET Tasting</Text>
-              <Text style={localStyles.wsatSummary}>{buildWsatSummary(initialWsatData)}</Text>
+          initialWsetData ? (
+            <Pressable onPress={onOpenWset} style={localStyles.wsetCard}>
+              <Text style={localStyles.wsetLabel}>WSET Tasting</Text>
+              <Text style={localStyles.wsetSummary}>{buildWsetSummary(initialWsetData)}</Text>
             </Pressable>
           ) : (
-            <Pressable onPress={onOpenWsat} style={localStyles.wsatButton}>
-              <Text style={localStyles.wsatButtonText}>WSET Tasting</Text>
+            <Pressable onPress={onOpenWset} style={localStyles.wsetButton}>
+              <Text style={localStyles.wsetButtonText}>WSET Tasting</Text>
             </Pressable>
           )
         ) : null}
@@ -92,11 +92,11 @@ const localStyles = StyleSheet.create({
   wineMeta: { color: "#564a40", fontSize: 13, marginTop: 2 },
   backText: { color: "#6f1d1b", fontSize: 15, fontWeight: "600" },
   form: { gap: 14, paddingBottom: 24 },
-  wsatCard: { backgroundColor: "#ead8ca", borderRadius: 12, padding: 12, gap: 4 },
-  wsatLabel: { color: "#6f1d1b", fontSize: 12, fontWeight: "700", textTransform: "uppercase", letterSpacing: 1 },
-  wsatSummary: { color: "#564a40", fontSize: 13, lineHeight: 18 },
-  wsatButton: { backgroundColor: "#ead8ca", borderRadius: 999, paddingVertical: 12, alignItems: "center" },
-  wsatButtonText: { color: "#6f1d1b", fontWeight: "700" },
+  wsetCard: { backgroundColor: "#ead8ca", borderRadius: 12, padding: 12, gap: 4 },
+  wsetLabel: { color: "#6f1d1b", fontSize: 12, fontWeight: "700", textTransform: "uppercase", letterSpacing: 1 },
+  wsetSummary: { color: "#564a40", fontSize: 13, lineHeight: 18 },
+  wsetButton: { backgroundColor: "#ead8ca", borderRadius: 999, paddingVertical: 12, alignItems: "center" },
+  wsetButtonText: { color: "#6f1d1b", fontWeight: "700" },
   saveButton: { backgroundColor: "#6f1d1b", borderRadius: 999, paddingVertical: 14, alignItems: "center" },
   saveButtonText: { color: "#fffaf5", fontWeight: "700", fontSize: 15 },
 });

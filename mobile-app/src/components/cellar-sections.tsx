@@ -2,7 +2,7 @@ import React, { useCallback, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, Image, Pressable, RefreshControl, Text, TextInput, View } from "react-native";
 
 import { FOOD_CATEGORIES } from "../lib/cellar-helpers";
-import { buildWsatSummary, type WsatTastingData } from "../lib/wsat-data";
+import { buildWsetSummary, type WsetTastingData } from "../lib/wset-data";
 import type { StorageSpaceRow } from "../types/storage-space";
 import type { TastingSessionRow } from "../types/tasting-session";
 import type { WineHistoryRecord } from "../types/wine-history";
@@ -254,7 +254,7 @@ const HistoryRow = React.memo(function HistoryRow({ entry, styles }: {
       {entry.tasting_data ? (
         <View style={{ marginTop: 6, paddingTop: 6, borderTopWidth: 1, borderTopColor: "#3d2220" }}>
           <Text style={[styles.notesText, { color: "#f4c38c", fontWeight: "600", marginBottom: 2 }]}>WSET Tasting</Text>
-          <Text style={styles.notesText}>{buildWsatSummary(entry.tasting_data as WsatTastingData)}</Text>
+          <Text style={styles.notesText}>{buildWsetSummary(entry.tasting_data as WsetTastingData)}</Text>
         </View>
       ) : null}
     </View>

@@ -15,7 +15,7 @@ import type { CatalogEditorDraft, WineDraft } from "../types/cellar-drafts";
 import type { WineHistoryInsert, WineHistoryRow } from "../types/wine-history";
 import type { WineInsert, WineRecord, WineRow } from "../types/wine";
 import type { ProductCatalogWineRow } from "../types/product-catalog";
-import type { WsatTastingData } from "./wsat-data";
+import type { WsetTastingData } from "./wset-data";
 
 type SaveWineArgs = {
   userId: string;
@@ -69,11 +69,11 @@ type SaveTastingArgs = {
   draft: WineDraft;
   tastingRating: string;
   tastingDate: string;
-  wsatData: WsatTastingData | null;
+  wsetData: WsetTastingData | null;
 };
 
 export async function saveTastingEntry(args: SaveTastingArgs): Promise<Result<WineHistoryRow>> {
-  const { userId, draft, tastingRating, tastingDate, wsatData } = args;
+  const { userId, draft, tastingRating, tastingDate, wsetData } = args;
   if (!draft.name.trim()) return fail("Namn saknas: Skriv in vilket vin du provade.");
   let imagePath: string | null = null;
   if (draft.imageUri) imagePath = await uploadWineImage(userId, draft.imageUri);
@@ -93,7 +93,7 @@ export async function saveTastingEntry(args: SaveTastingArgs): Promise<Result<Wi
     rating: tastingRating ? Number(tastingRating) : null,
     tasting_notes: emptyToNull(draft.notes),
     consumed_at: tastingDate || null,
-    tasting_data: wsatData ?? null,
+    tasting_data: wsetData ?? null,
   };
   const { data, error } = await supabase.from("wine_history").insert(payload).select().single();
   if (error) return fail(error.message);
@@ -108,12 +108,12 @@ type SaveDrinkArgs = {
   notes: string;
   consumedDate: string;
   imageUri: string;
-  wsatData?: Record<string, unknown> | null;
+  wsetData?: Record<string, unknown> | null;
   setWines: React.Dispatch<React.SetStateAction<WineRecord[]>>;
 };
 
 export async function saveDrinkEntry(args: SaveDrinkArgs): Promise<Result<WineHistoryRow>> {
-  const { userId, wine, rating, notes, consumedDate, imageUri, wsatData, setWines } = args;
+  const { userId, wine, rating, notes, consumedDate, imageUri, wsetData, setWines } = args;
   let imagePath = wine.image_path;
   if (imageUri) imagePath = await uploadWineImage(userId, imageUri);
   const payload: WineHistoryInsert = {
@@ -127,7 +127,7 @@ export async function saveDrinkEntry(args: SaveDrinkArgs): Promise<Result<WineHi
     image_path: imagePath, quantity_consumed: 1,
     rating: rating ? Number(rating) : null,
     tasting_notes: emptyToNull(notes),
-    tasting_data: wsatData ?? null,
+    tasting_data: wsetData ?? null,
     consumed_at: consumedDate || null,
   };
   const { data: historyData, error: historyError } = await supabase.from("wine_history").insert(payload).select().single();

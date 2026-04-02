@@ -13,16 +13,16 @@ import {
   PALATE_FLAVOUR_INTENSITY,
   PALATE_FINISH,
   QUALITY_OPTIONS,
-  emptyWsatData,
+  emptyWsetData,
   getColourOptions,
   showTannin,
   type AromaSection,
-  type WsatTastingData,
-} from "../lib/wsat-data";
+  type WsetTastingData,
+} from "../lib/wset-data";
 
 const STEP_TITLES = ["Appearance", "Nose", "Palate", "Conclusions"];
 
-export function WsatTastingModal({
+export function WsetTastingModal({
   visible,
   wineType,
   initialData,
@@ -31,16 +31,16 @@ export function WsatTastingModal({
 }: {
   visible: boolean;
   wineType: string;
-  initialData: WsatTastingData | null;
-  onSave: (data: WsatTastingData) => void;
+  initialData: WsetTastingData | null;
+  onSave: (data: WsetTastingData) => void;
   onClose: () => void;
 }) {
   const [step, setStep] = useState(0);
-  const [data, setData] = useState<WsatTastingData>(initialData ?? emptyWsatData());
+  const [data, setData] = useState<WsetTastingData>(initialData ?? emptyWsetData());
 
   useEffect(() => {
     if (!visible) return;
-    setData(initialData ?? emptyWsatData());
+    setData(initialData ?? emptyWsetData());
     setStep(0);
   }, [visible]);
 
@@ -73,7 +73,7 @@ export function WsatTastingModal({
                 label="Intensitet"
                 options={[...APPEARANCE_INTENSITY]}
                 selected={data.appearance.intensity}
-                onSelect={(v) => setData({ ...data, appearance: { ...data.appearance, intensity: v as WsatTastingData["appearance"]["intensity"] } })}
+                onSelect={(v) => setData({ ...data, appearance: { ...data.appearance, intensity: v as WsetTastingData["appearance"]["intensity"] } })}
               />
               <OptionRow
                 label="Färg"
@@ -88,7 +88,7 @@ export function WsatTastingModal({
                 label="Intensitet"
                 options={[...NOSE_INTENSITY]}
                 selected={data.nose.intensity}
-                onSelect={(v) => setData({ ...data, nose: { ...data.nose, intensity: v as WsatTastingData["nose"]["intensity"] } })}
+                onSelect={(v) => setData({ ...data, nose: { ...data.nose, intensity: v as WsetTastingData["nose"]["intensity"] } })}
               />
               <Text style={styles.sectionLabel}>Aromas</Text>
               <TagSelector

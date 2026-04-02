@@ -1,6 +1,6 @@
 // --- Types ---
 
-export type WsatTastingData = {
+export type WsetTastingData = {
   protocol: "wset_l2";
   appearance: {
     intensity: "pale" | "medium" | "deep" | null;
@@ -27,7 +27,7 @@ export type WsatTastingData = {
   };
 };
 
-export function emptyWsatData(): WsatTastingData {
+export function emptyWsetData(): WsetTastingData {
   return {
     protocol: "wset_l2",
     appearance: { intensity: null, colour: null },
@@ -156,7 +156,7 @@ export function swedishLabel(value: string): string {
 
 // --- Summary builder ---
 
-export function buildWsatSummary(data: WsatTastingData): string {
+export function buildWsetSummary(data: WsetTastingData): string {
   const parts: string[] = [];
 
   const app = [data.appearance.intensity, data.appearance.colour].filter((v): v is string => v != null);

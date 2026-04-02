@@ -13,7 +13,7 @@ import { MinKallarePanel } from "./src/components/min-kallare-panel";
 import { BarcodeScannerModal, CatalogEditorModal, DrinkWineModal, VintagePickerModal } from "./src/components/cellar-workflows";
 import { AddWinePanel } from "./src/components/add-wine-panel";
 import { EditWineModal } from "./src/components/edit-wine-modal";
-import { WsatTastingModal } from "./src/components/wsat-tasting-modal";
+import { WsetTastingModal } from "./src/components/wset-tasting-modal";
 import { TastingSessionPanel } from "./src/components/tasting-session-modal";
 import { LabelMatchPickerModal } from "./src/components/label-match-picker";
 import { PrivacyPolicyModal } from "./src/components/privacy-policy-modal";
@@ -35,7 +35,7 @@ import { useEditWineModal } from "./src/hooks/useEditWineModal";
 import { useCatalogEditorModal } from "./src/hooks/useCatalogEditorModal";
 import { useModalToggle } from "./src/hooks/useModalToggle";
 import { useAddWineTasting } from "./src/hooks/useAddWineTasting";
-import { useSessionWsat } from "./src/hooks/useSessionWsat";
+import { useSessionWset } from "./src/hooks/useSessionWset";
 
 function useWebHoverStyles() {
   useEffect(() => {
@@ -112,7 +112,7 @@ function CellarScreen({ session }: { session: Session }) {
     fetchCatalogEntries: data.fetchCatalogEntries,
   });
   const privacy = useModalToggle();
-  const sessionWsat = useSessionWsat();
+  const sessionWset = useSessionWset();
 
   const [draft, setDraft] = useState<WineDraft>(defaultDraft);
   const [activeSection, setActiveSection] = useState<CellarSection>("cellar");
@@ -235,7 +235,7 @@ function CellarScreen({ session }: { session: Session }) {
         onJoinSession={tastingSessions.joinSession} onOpenSession={tastingSessions.openSession}
         onCloseSession={tastingSessions.closeSession} onSetActiveWines={tastingSessions.setActiveWines}
         onSetActiveTastings={tastingSessions.setActiveTastings} onSetActiveSession={tastingSessions.setActiveSession}
-        onOpenWsat={sessionWsat.open} wsatData={sessionWsat.data}
+        onOpenWset={sessionWset.open} wsetData={sessionWset.data}
         onSessionEnded={() => { setTastingSessionsVisible(false); setActiveSection("history"); }}
       />
     );
@@ -320,7 +320,7 @@ function CellarScreen({ session }: { session: Session }) {
       <PrivacyPolicyModal visible={privacy.visible} styles={styles} onClose={privacy.close} />
       <BarcodeScannerModal visible={catalog.scannerVisible} styles={styles} onClose={() => catalog.setScannerVisible(false)} onBarcodeScanned={({ data: d }) => catalog.handleBarcodeScanned(d, draft, setDraft)} onLabelPhoto={() => catalog.handleLabelPhoto(setDraft)} />
       <LabelMatchPickerModal visible={catalog.labelPickerVisible} matches={catalog.labelMatches} onSelect={(m) => catalog.handleLabelMatchSelected(m, setDraft)} onDismiss={() => catalog.handleLabelMatchDismissed(setDraft)} />
-      <WsatTastingModal {...tasting.wsatProps} wineType={draft.type} />
+      <WsetTastingModal {...tasting.wsetProps} wineType={draft.type} />
       <VintagePickerModal visible={catalog.vintagePickerVisible} wineName={catalog.vintagePickerWineName} vintages={catalog.vintagePickerOptions} onSelectVintage={(e) => catalog.handleVintageSelected(e, setDraft)} onAddNew={() => catalog.handleVintageAddNew(setDraft)} onClose={() => catalog.setVintagePickerVisible(false)} styles={styles} />
       <CatalogEditorModal
         {...catalogEditor.modalProps} styles={styles}
@@ -330,9 +330,9 @@ function CellarScreen({ session }: { session: Session }) {
         countryReferenceRows={data.countryReferenceRows} regionReferenceRows={data.regionReferenceRows}
         grapeReferenceRows={data.grapeReferenceRows}
       />
-      <WsatTastingModal {...drink.wsatProps} />
+      <WsetTastingModal {...drink.wsetProps} />
       <DrinkWineModal {...drink.modalProps} styles={styles} />
-      <WsatTastingModal {...sessionWsat.wsatProps} />
+      <WsetTastingModal {...sessionWset.wsetProps} />
       <EditWineModal
         {...edit.modalProps} styles={styles}
         storageSpaces={data.storageSpaces}
