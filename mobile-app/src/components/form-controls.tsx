@@ -484,9 +484,8 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   panelHeroLogo: {
-    width: "120%",
-    height: 140,
-    marginHorizontal: "-10%",
+    width: "100%",
+    height: 160,
   },
   panelHeroRow: {
     flexDirection: "row",
