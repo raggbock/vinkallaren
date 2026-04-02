@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { ActivityIndicator, FlatList, Image, Pressable, RefreshControl, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, FlatList, Image, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { FOOD_CATEGORIES } from "../lib/cellar-helpers";
 import { buildWsetSummary, type WsetTastingData } from "../lib/wset-data";
@@ -8,7 +8,11 @@ import type { TastingSessionRow } from "../types/tasting-session";
 import type { WineHistoryRecord } from "../types/wine-history";
 import type { WineRecord } from "../types/wine";
 import type { CellarSection } from "../types/cellar";
-import { LoadingInline, PanelHeader } from "./form-controls";
+import { Expandable, LoadingInline, PanelHeader } from "./form-controls";
+import { fetchSessionWines, fetchSessionTastings, fetchSessionParticipants } from "../lib/session-actions";
+import { buildSessionResults } from "../lib/session-results";
+import { ResultsDashboard } from "./results-dashboard";
+import type { SessionWineRow, SessionTastingRow } from "../types/tasting-session";
 
 import type { styles as themeStyles } from "../styles/theme";
 type SharedStyles = typeof themeStyles;
@@ -125,7 +129,7 @@ export function MealPlannerPanel({
 
 export function HistoryPanel({
   styles, historyEntries, loadingHistory, storageSpaceById,
-  endedSessions, onOpenSession,
+  endedSessions,
   refreshing, onRefresh, hasMore, onLoadMore,
 }: {
   styles: SharedStyles;
@@ -133,12 +137,12 @@ export function HistoryPanel({
   loadingHistory: boolean;
   storageSpaceById: Map<string, StorageSpaceRow>;
   endedSessions?: TastingSessionRow[];
-  onOpenSession?: (session: TastingSessionRow) => void;
   refreshing?: boolean;
   onRefresh?: () => void;
   hasMore?: boolean;
   onLoadMore?: () => void;
 }) {
+  const [tab, setTab] = useState<"viner" | "provningar">("viner");
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredEntries = useMemo(() => {
@@ -154,11 +158,23 @@ export function HistoryPanel({
     <HistoryRow entry={item} styles={styles} />
   ), [styles]);
 
+  const sessionCount = endedSessions?.length ?? 0;
+
   const listHeader = useMemo(() => (
     <View style={styles.panel}>
-      <PanelHeader title="Historik" rightLabel={`${filteredEntries.length} av ${historyEntries.length} poster`} />
+      <PanelHeader title="Historik" />
 
-      {historyEntries.length > 0 ? (
+      {/* Sub-tabs */}
+      <View style={historyStyles.tabRow}>
+        <Pressable onPress={() => setTab("viner")} style={[historyStyles.tab, tab === "viner" && historyStyles.tabActive]}>
+          <Text style={[historyStyles.tabText, tab === "viner" && historyStyles.tabTextActive]}>Viner</Text>
+        </Pressable>
+        <Pressable onPress={() => setTab("provningar")} style={[historyStyles.tab, tab === "provningar" && historyStyles.tabActive]}>
+          <Text style={[historyStyles.tabText, tab === "provningar" && historyStyles.tabTextActive]}>Provningar{sessionCount > 0 ? ` (${sessionCount})` : ""}</Text>
+        </Pressable>
+      </View>
+
+      {tab === "viner" && historyEntries.length > 0 ? (
         <TextInput
           style={styles.input}
           placeholder="Sök namn, producent, årgång..."
@@ -169,35 +185,33 @@ export function HistoryPanel({
         />
       ) : null}
 
-      {endedSessions && endedSessions.length > 0 ? (
-        <View style={{ gap: 8 }}>
-          <Text style={styles.inputLabel}>Avslutade provningar</Text>
-          {endedSessions.map((ses) => (
-            <Pressable key={ses.id} style={styles.wineCard} onPress={() => onOpenSession?.(ses)}>
-              <Text style={styles.wineName}>{ses.title}</Text>
-              <Text style={styles.wineMeta}>
-                {ses.mode === "blind" ? "Blind" : "Öppen"} · {ses.format.toUpperCase()} · {new Date(ses.created_at).toLocaleDateString("sv-SE")}
-              </Text>
-            </Pressable>
-          ))}
+      {tab === "provningar" ? (
+        <View style={{ gap: 10 }}>
+          {sessionCount === 0 ? (
+            <Text style={styles.emptyState}>Inga avslutade provningar ännu.</Text>
+          ) : (
+            endedSessions!.map((ses) => (
+              <ExpandableSessionCard key={ses.id} session={ses} styles={styles} />
+            ))
+          )}
         </View>
       ) : null}
 
-      {loadingHistory ? <LoadingInline label="Laddar historik..." /> : null}
+      {tab === "viner" && loadingHistory ? <LoadingInline label="Laddar historik..." /> : null}
 
-      {!loadingHistory && historyEntries.length === 0 && (!endedSessions || endedSessions.length === 0) ? (
+      {tab === "viner" && !loadingHistory && historyEntries.length === 0 ? (
         <Text style={styles.emptyState}>Ingen historik ännu. När du markerar att du druckit en flaska kan du sätta betyg här.</Text>
       ) : null}
 
-      {!loadingHistory && historyEntries.length > 0 && filteredEntries.length === 0 ? (
+      {tab === "viner" && !loadingHistory && historyEntries.length > 0 && filteredEntries.length === 0 ? (
         <Text style={styles.emptyState}>Inga träffar för "{searchQuery}"</Text>
       ) : null}
     </View>
-  ), [styles, filteredEntries.length, historyEntries.length, searchQuery, endedSessions, loadingHistory, onOpenSession]);
+  ), [styles, tab, sessionCount, filteredEntries.length, historyEntries.length, searchQuery, endedSessions, loadingHistory]);
 
   return (
     <FlatList
-      data={filteredEntries}
+      data={tab === "viner" ? filteredEntries : []}
       keyExtractor={(item) => item.id}
       renderItem={renderItem}
       ListHeaderComponent={listHeader}
@@ -206,13 +220,63 @@ export function HistoryPanel({
       refreshControl={
         onRefresh ? <RefreshControl refreshing={refreshing ?? false} onRefresh={onRefresh} tintColor="#6f1d1b" colors={["#6f1d1b"]} /> : undefined
       }
-      onEndReached={hasMore ? onLoadMore : undefined}
+      onEndReached={tab === "viner" && hasMore ? onLoadMore : undefined}
       onEndReachedThreshold={0.5}
-      ListFooterComponent={hasMore ? <ActivityIndicator style={{ padding: 16 }} color="#6f1d1b" /> : null}
+      ListFooterComponent={tab === "viner" && hasMore ? <ActivityIndicator style={{ padding: 16 }} color="#6f1d1b" /> : null}
       initialNumToRender={20}
       maxToRenderPerBatch={10}
       windowSize={5}
     />
+  );
+}
+
+function ExpandableSessionCard({ session, styles }: { session: TastingSessionRow; styles: SharedStyles }) {
+  const [expanded, setExpanded] = useState(false);
+  const [wines, setWines] = useState<SessionWineRow[]>([]);
+  const [tastings, setTastings] = useState<SessionTastingRow[]>([]);
+  const [participants, setParticipants] = useState<{ user_id: string; display_name: string | null; avatar_color: string | null }[]>([]);
+  const [loaded, setLoaded] = useState(false);
+
+  function handleToggle() {
+    setExpanded(!expanded);
+    if (!loaded) {
+      Promise.all([
+        fetchSessionWines(session.id),
+        fetchSessionTastings(session.id),
+        fetchSessionParticipants(session.id),
+      ]).then(([w, t, p]) => {
+        if (w.data) setWines(w.data);
+        if (t.data) setTastings(t.data);
+        if (p.data) setParticipants(p.data);
+        setLoaded(true);
+      });
+    }
+  }
+
+  const dateStr = new Date(session.created_at).toLocaleDateString("sv-SE", { day: "numeric", month: "short", year: "numeric" });
+
+  return (
+    <View style={styles.wineCard}>
+      <Pressable onPress={handleToggle} style={{ gap: 4 }}>
+        <Text style={styles.wineName}>{session.title}</Text>
+        <Text style={styles.wineMeta}>
+          {session.mode === "blind" ? "Blind" : "Öppen"} · {session.format.toUpperCase()} · {dateStr}
+        </Text>
+      </Pressable>
+      <Expandable expanded={expanded}>
+        {loaded && wines.length > 0 ? (
+          <View style={{ marginTop: 12 }}>
+            <ResultsDashboard
+              results={buildSessionResults(wines, tastings, session.format, session.created_at)}
+              participants={participants}
+              onBack={() => setExpanded(false)}
+            />
+          </View>
+        ) : expanded && !loaded ? (
+          <LoadingInline label="Laddar resultat..." />
+        ) : null}
+      </Expandable>
+    </View>
   );
 }
 
@@ -253,4 +317,12 @@ const HistoryRow = React.memo(function HistoryRow({ entry, styles }: {
       ) : null}
     </View>
   );
+});
+
+const historyStyles = StyleSheet.create({
+  tabRow: { flexDirection: "row", gap: 0, backgroundColor: "#ead8ca", borderRadius: 12, padding: 3 },
+  tab: { flex: 1, paddingVertical: 8, alignItems: "center", borderRadius: 10 },
+  tabActive: { backgroundColor: "#6f1d1b" },
+  tabText: { color: "#6f1d1b", fontSize: 13, fontWeight: "700" },
+  tabTextActive: { color: "#fffaf5" },
 });

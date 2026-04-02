@@ -278,7 +278,6 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
   } else if (activeSection === "history") {
     activePanel = <HistoryPanel styles={styles} historyEntries={data.historyEntries} loadingHistory={data.loadingHistory} storageSpaceById={data.storageSpaceById}
       endedSessions={tastingSessions.sessions.filter((ses) => ses.status === "ended")}
-      onOpenSession={(ses) => { setTastingSessionsVisible(true); setActiveSection("cellar"); tastingSessions.openSession(ses); }}
       refreshing={refreshing} onRefresh={onRefresh} hasMore={data.hasMoreHistory} onLoadMore={data.fetchMoreHistory}
     />;
   } else if (activeSection === "meal") {
