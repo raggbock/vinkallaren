@@ -258,6 +258,7 @@ function CellarScreen({ session }: { session: Session }) {
     activePanel = <HistoryPanel styles={styles} historyEntries={data.historyEntries} loadingHistory={data.loadingHistory} storageSpaceById={data.storageSpaceById}
       endedSessions={tastingSessions.sessions.filter((ses) => ses.status === "ended")}
       onOpenSession={(ses) => { setTastingSessionsVisible(true); setActiveSection("cellar"); tastingSessions.openSession(ses); }}
+      refreshing={refreshing} onRefresh={onRefresh} hasMore={data.hasMoreHistory} onLoadMore={data.fetchMoreHistory}
     />;
   } else if (activeSection === "meal") {
     activePanel = (
@@ -359,13 +360,19 @@ function CellarScreen({ session }: { session: Session }) {
         storageSpaceDraft={data.storageSpaceDraft} savingStorageSpace={data.savingStorageSpace}
         onStorageSpaceDraftChange={(patch) => data.setStorageSpaceDraft((c) => ({ ...c, ...patch }))}
       />
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" style={styles.scrollFlex} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6f1d1b" colors={["#6f1d1b"]} />}>
-        {activePanel}
-        <RNView style={styles.footerRow}>
-          <RNText style={styles.footerVersion}>{BUILD_VERSION}</RNText>
-          <Pressable onPress={privacy.open}><RNText style={styles.footerLink}>Integritetspolicy</RNText></Pressable>
+      {activeSection === "history" ? (
+        <RNView style={styles.scrollFlex}>
+          {activePanel}
         </RNView>
-      </ScrollView>
+      ) : (
+        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" style={styles.scrollFlex} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6f1d1b" colors={["#6f1d1b"]} />}>
+          {activePanel}
+          <RNView style={styles.footerRow}>
+            <RNText style={styles.footerVersion}>{BUILD_VERSION}</RNText>
+            <Pressable onPress={privacy.open}><RNText style={styles.footerLink}>Integritetspolicy</RNText></Pressable>
+          </RNView>
+        </ScrollView>
+      )}
       <BottomTabBar activeSection={activeSection} sections={CELLAR_SECTIONS} styles={styles} onSelect={setActiveSection} />
     </SafeAreaView>
   );

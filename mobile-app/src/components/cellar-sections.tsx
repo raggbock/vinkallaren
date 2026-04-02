@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from "react";
-import { Image, Pressable, Text, TextInput, View } from "react-native";
+import React, { useCallback, useMemo, useState } from "react";
+import { ActivityIndicator, FlatList, Image, Pressable, RefreshControl, Text, TextInput, View } from "react-native";
 
 import { FOOD_CATEGORIES } from "../lib/cellar-helpers";
 import { buildWsatSummary, type WsatTastingData } from "../lib/wsat-data";
@@ -127,12 +127,9 @@ export function MealPlannerPanel({
 }
 
 export function HistoryPanel({
-  styles,
-  historyEntries,
-  loadingHistory,
-  storageSpaceById,
-  endedSessions,
-  onOpenSession,
+  styles, historyEntries, loadingHistory, storageSpaceById,
+  endedSessions, onOpenSession,
+  refreshing, onRefresh, hasMore, onLoadMore,
 }: {
   styles: SharedStyles;
   historyEntries: WineHistoryRecord[];
@@ -140,6 +137,10 @@ export function HistoryPanel({
   storageSpaceById: Map<string, StorageSpaceRow>;
   endedSessions?: TastingSessionRow[];
   onOpenSession?: (session: TastingSessionRow) => void;
+  refreshing?: boolean;
+  onRefresh?: () => void;
+  hasMore?: boolean;
+  onLoadMore?: () => void;
 }) {
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -152,7 +153,11 @@ export function HistoryPanel({
     });
   }, [historyEntries, searchQuery]);
 
-  return (
+  const renderItem = useCallback(({ item }: { item: WineHistoryRecord }) => (
+    <HistoryRow entry={item} styles={styles} />
+  ), [styles]);
+
+  const listHeader = useMemo(() => (
     <View style={styles.panel}>
       <View style={styles.panelHeaderRow}>
         <Text style={styles.panelTitle}>Historik</Text>
@@ -193,11 +198,27 @@ export function HistoryPanel({
       {!loadingHistory && historyEntries.length > 0 && filteredEntries.length === 0 ? (
         <Text style={styles.emptyState}>Inga träffar för "{searchQuery}"</Text>
       ) : null}
-
-      {filteredEntries.map((entry) => (
-        <HistoryRow key={entry.id} entry={entry} styles={styles} />
-      ))}
     </View>
+  ), [styles, filteredEntries.length, historyEntries.length, searchQuery, endedSessions, loadingHistory, onOpenSession]);
+
+  return (
+    <FlatList
+      data={filteredEntries}
+      keyExtractor={(item) => item.id}
+      renderItem={renderItem}
+      ListHeaderComponent={listHeader}
+      contentContainerStyle={styles.scrollContent}
+      keyboardShouldPersistTaps="handled"
+      refreshControl={
+        onRefresh ? <RefreshControl refreshing={refreshing ?? false} onRefresh={onRefresh} tintColor="#6f1d1b" colors={["#6f1d1b"]} /> : undefined
+      }
+      onEndReached={hasMore ? onLoadMore : undefined}
+      onEndReachedThreshold={0.5}
+      ListFooterComponent={hasMore ? <ActivityIndicator style={{ padding: 16 }} color="#6f1d1b" /> : null}
+      initialNumToRender={20}
+      maxToRenderPerBatch={10}
+      windowSize={5}
+    />
   );
 }
 
