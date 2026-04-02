@@ -1,7 +1,7 @@
 import "react-native-url-polyfill/auto";
 import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Alert, Platform, Pressable, RefreshControl, SafeAreaView, ScrollView, Text as RNText, View as RNView } from "react-native";
+import { Alert, Image as RNImage, Platform, Pressable, RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text as RNText, View as RNView } from "react-native";
 import type { Session } from "@supabase/supabase-js";
 import { supabase, supabaseConfigured } from "./src/lib/supabase";
 import { buildMealRecommendations } from "./src/lib/cellar-helpers";
@@ -73,6 +73,14 @@ export default function App() {
   if (!session) return <LandingScreen />;
   return <CellarScreen session={session} />;
 }
+
+const logoSquare = require("./assets/logo-square.png");
+
+const brandBar = StyleSheet.create({
+  row: { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4, gap: 10 },
+  logo: { width: 32, height: 32 },
+  name: { color: "#6f1d1b", fontSize: 14, fontWeight: "700", letterSpacing: 1 },
+});
 
 function CellarScreen({ session }: { session: Session }) {
   const data = useCellarData(session.user.id);
@@ -316,6 +324,10 @@ function CellarScreen({ session }: { session: Session }) {
   return (
     <SafeAreaView style={styles.screen}>
       <StatusBar style="light" />
+      <RNView style={brandBar.row}>
+        <RNImage source={logoSquare} style={brandBar.logo} resizeMode="contain" />
+        <RNText style={brandBar.name}>Vinkällaren</RNText>
+      </RNView>
       <SuccessOverlay config={success.config} onDone={success.clear} />
       <PrivacyPolicyModal visible={privacy.visible} styles={styles} onClose={privacy.close} />
       <BarcodeScannerModal visible={catalog.scannerVisible} styles={styles} onClose={() => catalog.setScannerVisible(false)} onBarcodeScanned={({ data: d }) => catalog.handleBarcodeScanned(d, draft, setDraft)} onLabelPhoto={() => catalog.handleLabelPhoto(setDraft)} />
