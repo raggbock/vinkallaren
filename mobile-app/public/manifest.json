@@ -1,0 +1,18 @@
+{
+  "name": "Vinkällaren — Din digitala vinsamling",
+  "short_name": "Vinkällaren",
+  "description": "Håll koll på din vinsamling, hitta rätt vin till maten och spara smaknoteringar.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#2b1714",
+  "background_color": "#2b1714",
+  "lang": "sv",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    }
+  ]
+}

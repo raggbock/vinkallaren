@@ -8,7 +8,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "prebuild": "node ./scripts/generate-version.mjs",
-    "web:build": "node ./scripts/generate-version.mjs && expo export --platform web",
+    "web:build": "node ./scripts/generate-version.mjs && expo export --platform web && node ./scripts/inject-meta.mjs",
     "release:web": "npm run web:build",
     "catalog:seed:sql": "node ./scripts/import-product-catalog-seeds.mjs ./data/product-catalog-seeds.json --sql",
     "catalog:seed:apply": "node ./scripts/import-product-catalog-seeds.mjs ./data/product-catalog-seeds.json --apply",

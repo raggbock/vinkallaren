@@ -36,38 +36,21 @@ import { useModalToggle } from "./src/hooks/useModalToggle";
 import { useAddWineTasting } from "./src/hooks/useAddWineTasting";
 import { useSessionWsat } from "./src/hooks/useSessionWsat";
 
-function useWebMeta() {
+function useWebHoverStyles() {
   useEffect(() => {
     if (Platform.OS !== "web") return;
-    const doc = document;
-    doc.documentElement.lang = "sv";
-    const meta = (name: string, content: string) => {
-      let el = doc.querySelector(`meta[name="${name}"]`) as HTMLMetaElement | null;
-      if (!el) { el = doc.createElement("meta"); el.name = name; doc.head.appendChild(el); }
-      el.content = content;
-    };
-    const og = (prop: string, content: string) => {
-      let el = doc.querySelector(`meta[property="${prop}"]`) as HTMLMetaElement | null;
-      if (!el) { el = doc.createElement("meta"); el.setAttribute("property", prop); doc.head.appendChild(el); }
-      el.content = content;
-    };
-    meta("description", "Håll koll på din vinsamling, hitta rätt vin till maten och spara smaknoteringar.");
-    meta("theme-color", "#2b1714");
-    og("og:title", "Vinkällaren");
-    og("og:description", "Din digitala vinsamling — gratis och utan reklam.");
-    og("og:type", "website");
-    const style = doc.createElement("style");
+    const style = document.createElement("style");
     style.textContent = [
       'div[tabindex="0"] { transition: opacity 0.15s, filter 0.15s; }',
       'div[tabindex="0"]:hover { filter: brightness(0.92); }',
       'div[tabindex="0"]:active { opacity: 0.7 !important; filter: brightness(0.85); transition: opacity 0.05s; }',
     ].join("\n");
-    doc.head.appendChild(style);
+    document.head.appendChild(style);
   }, []);
 }
 
 export default function App() {
-  useWebMeta();
+  useWebHoverStyles();
   const [session, setSession] = useState<Session | null>(null);
   const [loadingSession, setLoadingSession] = useState(true);
   useEffect(() => {
