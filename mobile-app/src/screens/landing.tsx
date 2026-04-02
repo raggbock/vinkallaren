@@ -235,6 +235,12 @@ export function LandingScreen({ pendingJoinCode }: { pendingJoinCode?: string | 
         <ScrollView contentContainerStyle={[s.container, isWide && s.containerWide]} keyboardShouldPersistTaps="handled">
           <MarketingContent isWide={isWide} />
           <View style={[s.authColumn, isWide && s.authColumnWide]}>
+            {pendingJoinCode ? (
+              <View style={s.joinBanner}>
+                <Text style={s.joinBannerText}>Du har blivit inbjuden till en vinprovning!</Text>
+                <Text style={s.joinBannerSub}>Logga in eller skapa konto för att gå med.</Text>
+              </View>
+            ) : null}
             <AuthForm />
           </View>
         </ScrollView>
@@ -365,6 +371,28 @@ const s = StyleSheet.create({
     alignItems: "center",
   },
   guestCtaText: { color: "#f4c38c", fontWeight: "600", fontSize: 13 },
+
+  // Join banner
+  joinBanner: {
+    backgroundColor: "rgba(244,195,140,0.12)",
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "rgba(244,195,140,0.2)",
+  },
+  joinBannerText: {
+    color: "#fffaf5",
+    fontSize: 14,
+    fontWeight: "700",
+    textAlign: "center",
+  },
+  joinBannerSub: {
+    color: "#c4a882",
+    fontSize: 12,
+    textAlign: "center",
+    marginTop: 4,
+  },
 
   // Notices
   notice: { color: "#c4a882", fontSize: 11, lineHeight: 16 },
