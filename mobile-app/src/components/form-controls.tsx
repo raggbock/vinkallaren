@@ -308,12 +308,12 @@ export function ImportSelectionRow({
   );
 }
 
-const logoSquare = require("../../assets/logo-square.png");
+const logoBanner = require("../../assets/logo-banner.png");
 
 export function PanelHeader({ title, rightLabel, onRightPress }: { title: string; rightLabel?: string; onRightPress?: () => void }) {
   return (
     <View style={styles.panelHero}>
-      <Image source={logoSquare} style={styles.panelHeroLogo} resizeMode="contain" />
+      <Image source={logoBanner} style={styles.panelHeroLogo} resizeMode="contain" />
       <View style={styles.panelHeroRow}>
         <Text style={styles.panelHeroTitle}>{title}</Text>
         {rightLabel ? (
@@ -484,8 +484,8 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   panelHeroLogo: {
-    width: 100,
-    height: 100,
+    width: "80%",
+    height: 80,
   },
   panelHeroRow: {
     flexDirection: "row",
