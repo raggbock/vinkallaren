@@ -119,7 +119,7 @@ export function TastingSessionPanel({
 
         {isHost && activeSession.status === "active" ? (
           <AddWineForm sessionId={activeSession.id} wineCount={activeWines.length}
-            wines={wines} searchWineNames={searchWineNames} onAdded={() => {}} />
+            wines={wines} searchWineNames={searchWineNames} />
         ) : null}
 
         {isHost ? (
@@ -286,10 +286,9 @@ function JoinForm({ onJoin, onCancel }: { onJoin: (code: string) => void; onCanc
 
 /* ── Add wine form ── */
 
-function AddWineForm({ sessionId, wineCount, wines, searchWineNames, onAdded }: {
+function AddWineForm({ sessionId, wineCount, wines, searchWineNames }: {
   sessionId: string; wineCount: number; wines: WineRecord[];
   searchWineNames: (query: string, offset?: number) => Promise<{ suggestions: Suggestion[]; hasMore: boolean; nextOffset: number }>;
-  onAdded: (w: SessionWineRow) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [source, setSource] = useState<"manual" | "cellar">("manual");
@@ -321,7 +320,6 @@ function AddWineForm({ sessionId, wineCount, wines, searchWineNames, onAdded }: 
     });
     setSaving(false);
     if (result.error) { showError("Kunde inte lägga till vin", result.error); return; }
-    onAdded(result.data!);
     setName(""); setProducer(""); setVintage(""); setCellarFilter("");
     setSelectedWineId(null); setExpanded(false);
   }
@@ -376,8 +374,8 @@ function ParticipantBadge({ sessionId, count }: { sessionId: string; count: numb
   async function handleHover() {
     setShowTooltip(true);
     if (!fetched) {
-      const participants = await fetchSessionParticipants(sessionId);
-      setNames(participants.map((p) => p.display_name || "Anonym"));
+      const result = await fetchSessionParticipants(sessionId);
+      if (result.data) setNames(result.data.map((p) => p.display_name || "Anonym"));
       setFetched(true);
     }
   }
@@ -391,8 +389,8 @@ function ParticipantBadge({ sessionId, count }: { sessionId: string; count: numb
         onHoverIn={handleHover} onHoverOut={() => setShowTooltip(false)}
         onPress={async () => {
           if (!fetched) {
-            const participants = await fetchSessionParticipants(sessionId);
-            setNames(participants.map((p) => p.display_name || "Anonym"));
+            const result = await fetchSessionParticipants(sessionId);
+            if (result.data) setNames(result.data.map((p) => p.display_name || "Anonym"));
             setFetched(true);
           }
           setShowTooltip((v) => !v);

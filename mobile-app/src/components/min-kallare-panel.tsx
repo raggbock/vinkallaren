@@ -87,14 +87,14 @@ export function MinKallarePanel({
   const [statsExpanded, setStatsExpanded] = useState(false);
   const [expandedSpaceIds, setExpandedSpaceIds] = useState<Set<string>>(new Set(["__unplaced__"]));
 
-  function toggleSpace(spaceId: string) {
+  const toggleSpace = useCallback((spaceId: string) => {
     setExpandedSpaceIds((prev) => {
       const next = new Set(prev);
       if (next.has(spaceId)) next.delete(spaceId);
       else next.add(spaceId);
       return next;
     });
-  }
+  }, []);
 
   const winesBySpace = useMemo(() => {
     const map = new Map<string, WineRecord[]>();
@@ -179,7 +179,7 @@ export function MinKallarePanel({
         <StorageSpaceActions space={section.space} styles={styles} onUpdate={onUpdateStorageSpace} onDelete={onDeleteStorageSpace} />
       ) : null}
     </View>
-  ), [styles, expandedSpaceIds, onUpdateStorageSpace, onDeleteStorageSpace]);
+  ), [styles, expandedSpaceIds, toggleSpace, onUpdateStorageSpace, onDeleteStorageSpace]);
 
   const renderItem = useCallback(({ item }: { item: WineRecord }) => (
     <WineCard wine={item} styles={styles} highlighted={item.id === highlightedWineId} storageSpaceById={storageSpaceById} onOpenSystembolaget={onOpenSystembolaget} onEditWine={onEditWine} onDrinkWine={onDrinkWine} onDeleteWine={onDeleteWine} />
@@ -188,7 +188,7 @@ export function MinKallarePanel({
   const totalCountries = new Set(filteredWines.map((w) => w.country).filter(Boolean)).size;
   const summaryText = `${stats.totalBottles} flaskor · ${totalCountries} länder · snitt ${stats.averageVintage}`;
 
-  const listHeader = useMemo(() => (
+  const listHeader = (
     <View style={styles.panel}>
       <View style={styles.panelHeaderRow}>
         <Text style={styles.panelTitle}>Min källare</Text>
@@ -250,16 +250,7 @@ export function MinKallarePanel({
         </View>
       ) : null}
     </View>
-  ), [
-    styles, stats, summaryText, statsExpanded, searchQuery, selectedPairingFilter,
-    selectedCountryFilter, selectedRegionFilter, selectedTypeFilter, selectedVintageFilter,
-    pairingOptions, countryOptions, regionOptions, typeOptions, vintageOptions,
-    storageSpaces, storageSpaceById, selectedStorageSpaceFilterId, loading, sections.length,
-    storageSpaceDraft, savingStorageSpace, onSignOut, onRefreshStats, onSearchChange,
-    onPairingChange, onCountryChange, onRegionChange, onTypeChange, onVintageChange,
-    onStorageSpaceFilterChange, onOpenTastingSessions, onStorageSpaceDraftChange,
-    onSaveStorageSpace, onNavigateToAdd,
-  ]);
+  );
 
   return (
     <SectionList

@@ -84,10 +84,10 @@ export async function endSession(sessionId: string): Promise<Result<true>> {
   return ok(true);
 }
 
-export async function fetchSessionParticipants(sessionId: string): Promise<{ user_id: string; display_name: string }[]> {
+export async function fetchSessionParticipants(sessionId: string): Promise<Result<{ user_id: string; display_name: string }[]>> {
   const { data, error } = await supabase.rpc("get_session_participants", { p_session_id: sessionId });
-  if (error) return [];
-  return (data ?? []) as { user_id: string; display_name: string }[];
+  if (error) return fail(error.message);
+  return ok((data ?? []) as { user_id: string; display_name: string }[]);
 }
 
 export function buildShareMessage(title: string, joinCode: string): string {
