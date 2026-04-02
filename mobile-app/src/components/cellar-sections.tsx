@@ -10,6 +10,7 @@ import type { WineRecord } from "../types/wine";
 import type { CellarSection } from "../types/cellar";
 import { Expandable, LoadingInline, PanelHeader } from "./form-controls";
 import { fetchSessionWines, fetchSessionTastings, fetchSessionParticipants } from "../lib/session-actions";
+import { formatDateFull, formatDateISO } from "../lib/format-date";
 import { buildSessionResults } from "../lib/session-results";
 import { ResultsDashboard } from "./results-dashboard";
 import type { SessionWineRow, SessionTastingRow } from "../types/tasting-session";
@@ -253,7 +254,7 @@ function ExpandableSessionCard({ session, styles }: { session: TastingSessionRow
     }
   }
 
-  const dateStr = new Date(session.created_at).toLocaleDateString("sv-SE", { day: "numeric", month: "short", year: "numeric" });
+  const dateStr = formatDateFull(session.created_at);
 
   return (
     <View style={styles.wineCard}>
@@ -287,7 +288,7 @@ const HistoryRow = React.memo(function HistoryRow({ entry, styles }: {
     <View style={styles.wineCard}>
       <View style={styles.wineCardHeader}>
         {entry.image_url ? (
-          <Image source={{ uri: entry.image_url }} style={{ width: 64, height: 86, borderRadius: 10, backgroundColor: "#ead8ca" }} resizeMode="cover" />
+          <Image source={{ uri: entry.image_url }} style={styles.wineThumbnail} resizeMode="cover" />
         ) : null}
         <View style={styles.flex}>
           <Text style={styles.wineType}>{entry.type || "Historik"}</Text>
@@ -305,7 +306,7 @@ const HistoryRow = React.memo(function HistoryRow({ entry, styles }: {
         ) : null}
       </View>
       <Text style={styles.notesText}>
-        Dracks {new Date(entry.consumed_at).toLocaleDateString("sv-SE")} • {entry.quantity_consumed} flaska
+        Dracks {formatDateISO(entry.consumed_at)} • {entry.quantity_consumed} flaska
         {entry.quantity_consumed > 1 ? "r" : ""}
       </Text>
       {entry.tasting_notes ? <Text style={styles.notesText}>{entry.tasting_notes}</Text> : null}

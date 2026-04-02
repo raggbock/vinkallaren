@@ -22,7 +22,7 @@ export type SessionResults = {
   participantIds: string[];
 };
 
-export const CONSENSUS_THRESHOLD = 0.8;
+const CONSENSUS_THRESHOLD = 0.8;
 
 export function stddev(values: number[]): number {
   if (values.length < 2) return 0;

@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { styles as theme } from "../styles/theme";
 import { LabeledInput, SuggestionRow } from "./form-controls";
 import type { SessionWineRow } from "../types/tasting-session";
-import type { WsetTastingData } from "../lib/wset-data";
-import { buildWsetSummary } from "../lib/wset-data";
+import { buildWsetSummary, type WsetTastingData } from "../lib/wset-data";
 
 export function SessionTastingView({
   wine,
@@ -76,8 +76,8 @@ export function SessionTastingView({
         <LabeledInput label="Smaknotering" value={notes} onChangeText={setNotes} placeholder="t.ex. mörk frukt, bra syra" multiline />
         <LabeledInput label="Passar till" value={foodPairings} onChangeText={setFoodPairings} placeholder="lamm, pasta, ost" />
 
-        <Pressable onPress={handleSave} style={localStyles.saveButton} disabled={saving}>
-          <Text style={localStyles.saveButtonText}>{saving ? "Sparar..." : "Spara provning"}</Text>
+        <Pressable onPress={handleSave} style={theme.primaryButton} disabled={saving}>
+          <Text style={theme.primaryButtonText}>{saving ? "Sparar..." : "Spara provning"}</Text>
         </Pressable>
       </ScrollView>
     </View>
@@ -97,6 +97,4 @@ const localStyles = StyleSheet.create({
   wsetSummary: { color: "#564a40", fontSize: 13, lineHeight: 18 },
   wsetButton: { backgroundColor: "#ead8ca", borderRadius: 999, paddingVertical: 12, alignItems: "center" },
   wsetButtonText: { color: "#6f1d1b", fontWeight: "700" },
-  saveButton: { backgroundColor: "#6f1d1b", borderRadius: 999, paddingVertical: 14, alignItems: "center" },
-  saveButtonText: { color: "#fffaf5", fontWeight: "700", fontSize: 15 },
 });

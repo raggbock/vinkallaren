@@ -328,7 +328,7 @@ const WineCard = React.memo(function WineCard({ wine, styles, highlighted, stora
     <View style={[styles.wineCard, highlighted && styles.wineCardHighlighted]}>
       <View style={styles.wineCardHeader}>
         {wine.image_url ? (
-          <Image source={{ uri: wine.image_url }} style={{ width: 64, height: 86, borderRadius: 10, backgroundColor: "#ead8ca" }} resizeMode="cover" />
+          <Image source={{ uri: wine.image_url }} style={styles.wineThumbnail} resizeMode="cover" />
         ) : null}
         <View style={styles.flex}>
           <Text style={styles.wineType}>{wine.type}</Text>

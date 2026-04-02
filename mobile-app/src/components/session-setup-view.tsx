@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { styles as theme } from "../styles/theme";
 import { Avatar } from "./avatar";
 import { PanelHeader } from "./form-controls";
 import { shareSession } from "../lib/session-actions";
@@ -23,15 +24,15 @@ export function SessionSetupView({ session, wines, participants, isHost, onStart
       <View style={s.infoCard}>
         <Text style={s.title}>{session.title}</Text>
         <View style={s.badgeRow}>
-          <View style={s.badge}>
-            <Text style={s.badgeText}>{session.mode === "blind" ? "Blind" : "Öppen"}</Text>
+          <View style={theme.infoBadge}>
+            <Text style={theme.infoBadgeText}>{session.mode === "blind" ? "Blind" : "Öppen"}</Text>
           </View>
-          <View style={s.badge}>
-            <Text style={s.badgeText}>{session.format.toUpperCase()}</Text>
+          <View style={theme.infoBadge}>
+            <Text style={theme.infoBadgeText}>{session.format.toUpperCase()}</Text>
           </View>
           {session.free_order ? (
-            <View style={s.badge}>
-              <Text style={s.badgeText}>Valfri ordning</Text>
+            <View style={theme.infoBadge}>
+              <Text style={theme.infoBadgeText}>Valfri ordning</Text>
             </View>
           ) : null}
         </View>
@@ -39,8 +40,8 @@ export function SessionSetupView({ session, wines, participants, isHost, onStart
       </View>
 
       {/* Share button */}
-      <Pressable onPress={() => shareSession(session.title, session.join_code)} style={s.shareBtn}>
-        <Text style={s.shareBtnText}>Bjud in deltagare</Text>
+      <Pressable onPress={() => shareSession(session.title, session.join_code)} style={theme.primaryButton}>
+        <Text style={theme.primaryButtonText}>Bjud in deltagare</Text>
       </Pressable>
 
       {/* SessionParticipants */}
@@ -104,11 +105,7 @@ const s = StyleSheet.create({
   infoCard: { backgroundColor: "#fffaf5", borderRadius: 18, padding: 16, gap: 8, borderWidth: 1, borderColor: "#ead8ca", alignItems: "center" },
   title: { color: "#231815", fontSize: 22, fontWeight: "800", textAlign: "center" },
   badgeRow: { flexDirection: "row", gap: 6 },
-  badge: { backgroundColor: "#ead8ca", borderRadius: 8, paddingHorizontal: 10, paddingVertical: 3 },
-  badgeText: { color: "#6f1d1b", fontSize: 11, fontWeight: "700", letterSpacing: 1 },
   joinCode: { color: "#564a40", fontSize: 14, fontWeight: "600" },
-  shareBtn: { backgroundColor: "#6f1d1b", borderRadius: 999, paddingVertical: 14, alignItems: "center" },
-  shareBtnText: { color: "#fffaf5", fontWeight: "700", fontSize: 15 },
   section: { gap: 8 },
   sectionTitle: { color: "#564a40", fontSize: 12, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.6 },
   hint: { color: "#8f8178", fontSize: 13, fontStyle: "italic" },

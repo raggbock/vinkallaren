@@ -2,6 +2,7 @@ import { type ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { AvatarRow } from "./avatar";
 import { getPersonalProgress, getWineProgress, isAllDone } from "../lib/session-progress";
+import { styles as theme } from "../styles/theme";
 import type { SessionParticipant, SessionTastingRow, SessionToast, SessionWineRow, TastingSessionRow } from "../types/tasting-session";
 
 export { isAllDone } from "../lib/session-progress";
@@ -31,11 +32,11 @@ export function ActiveSessionView({
       <View style={s.headerRow}>
         <View style={{ flex: 1 }}>
           <View style={s.badgeRow}>
-            <View style={s.badge}>
-              <Text style={s.badgeText}>{session.mode === "blind" ? "Blind" : "Öppen"}</Text>
+            <View style={theme.infoBadge}>
+              <Text style={theme.infoBadgeText}>{session.mode === "blind" ? "Blind" : "Öppen"}</Text>
             </View>
-            <View style={s.badge}>
-              <Text style={s.badgeText}>{session.format.toUpperCase()}</Text>
+            <View style={theme.infoBadge}>
+              <Text style={theme.infoBadgeText}>{session.format.toUpperCase()}</Text>
             </View>
           </View>
           <Text style={s.title}>{session.title}</Text>
@@ -125,8 +126,6 @@ export function ActiveSessionView({
 const s = StyleSheet.create({
   headerRow: { flexDirection: "row", alignItems: "flex-start", gap: 12, zIndex: 999 },
   badgeRow: { flexDirection: "row", gap: 6, marginBottom: 4 },
-  badge: { backgroundColor: "#ead8ca", borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2 },
-  badgeText: { color: "#6f1d1b", fontSize: 11, fontWeight: "700", letterSpacing: 1 },
   title: { color: "#231815", fontSize: 20, fontWeight: "800" },
   meta: { color: "#564a40", fontSize: 13, marginTop: 2 },
   participantRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 4 },

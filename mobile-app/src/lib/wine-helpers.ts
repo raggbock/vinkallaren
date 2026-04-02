@@ -2,6 +2,7 @@ import * as ImageManipulator from "expo-image-manipulator";
 import { supabase } from "./supabase";
 import { cacheCatalogEntry, type ProductCatalogEntry } from "./product-catalog";
 import { emptyToNull, normalizeLookupValue, parseTags, resolveImportedValue, toNumberOrNull } from "./cellar-helpers";
+import { applyNullableCatalogFilter } from "./query-helpers";
 import type { ImportFieldSelection, ImportMode, WineDraft } from "../types/cellar-drafts";
 import type { ProductCatalogWineRow } from "../types/product-catalog";
 import type { ReferenceOptionRow } from "../types/reference-data";
@@ -75,46 +76,23 @@ export function applyCatalogLocksToDraft(
   }
 
   const nextDraft = { ...current, ...patch };
+  const e = selectedCatalogEntry;
 
-  if (selectedCatalogEntry.name && !("name" in patch)) {
-    nextDraft.name = selectedCatalogEntry.name;
+  // Lock name only if not explicitly being edited
+  if (e.name && !("name" in patch)) nextDraft.name = e.name;
+
+  // Lock all other catalog fields unconditionally
+  const directFields = [
+    ["producer", "producer"], ["country", "country"], ["region", "region"],
+    ["grape", "grape"], ["type", "type"], ["barcode", "barcode"],
+  ] as const;
+  for (const [src, dst] of directFields) {
+    if (e[src]) (nextDraft as Record<string, unknown>)[dst] = e[src];
   }
 
-  if (selectedCatalogEntry.producer) {
-    nextDraft.producer = selectedCatalogEntry.producer;
-  }
-
-  if (selectedCatalogEntry.country) {
-    nextDraft.country = selectedCatalogEntry.country;
-  }
-
-  if (selectedCatalogEntry.region) {
-    nextDraft.region = selectedCatalogEntry.region;
-  }
-
-  if (selectedCatalogEntry.grape) {
-    nextDraft.grape = selectedCatalogEntry.grape;
-  }
-
-  if (selectedCatalogEntry.vintage) {
-    nextDraft.vintage = String(selectedCatalogEntry.vintage);
-  }
-
-  if (selectedCatalogEntry.type) {
-    nextDraft.type = selectedCatalogEntry.type;
-  }
-
-  if (selectedCatalogEntry.barcode) {
-    nextDraft.barcode = selectedCatalogEntry.barcode;
-  }
-
-  if (selectedCatalogEntry.systembolaget_product_id) {
-    nextDraft.systembolagetProductId = selectedCatalogEntry.systembolaget_product_id;
-  }
-
-  if (selectedCatalogEntry.food_pairings.length > 0) {
-    nextDraft.foodPairings = selectedCatalogEntry.food_pairings.join(", ");
-  }
+  if (e.vintage) nextDraft.vintage = String(e.vintage);
+  if (e.systembolaget_product_id) nextDraft.systembolagetProductId = e.systembolaget_product_id;
+  if (e.food_pairings.length > 0) nextDraft.foodPairings = e.food_pairings.join(", ");
 
   return nextDraft;
 }
@@ -134,11 +112,6 @@ export function scoreCatalogCompleteness(entry: ProductCatalogWineRow) {
   ].filter(Boolean).length;
 }
 
-function applyNullableCatalogFilter<
-  TQuery extends { eq: (column: string, value: any) => TQuery; is: (column: string, value: null) => TQuery }
->(query: TQuery, column: string, value: string | number | null) {
-  return value === null ? query.is(column, null) : query.eq(column, value);
-}
 
 export function getMissingCatalogFields(source: Pick<WineDraft, "producer" | "country" | "region" | "grape" | "type">) {
   const missing: string[] = [];
@@ -376,71 +349,56 @@ export async function cacheWineRecordAsCatalogEntry(wine: WineRecord, userId: st
   );
 }
 
-export async function syncCatalogEntryForEditedWine(previousWine: WineRecord, nextWine: WineRow, userId: string) {
-  if (!canBeSavedAsCatalogEntry(nextWine)) {
-    return;
-  }
-
-  const nextPayload = {
-    name: nextWine.name.trim(),
-    producer: nextWine.producer ?? null,
-    country: nextWine.country ?? null,
-    region: nextWine.region ?? null,
-    grape: nextWine.grape ?? null,
-    type: nextWine.type ?? null,
-    vintage: nextWine.vintage ?? null,
-    food_pairings: nextWine.food_pairings ?? [],
-    source_label: "MinVinkällare",
-    source_confidence: "high",
-    barcode: nextWine.barcode?.trim() || null,
-    systembolaget_product_id: nextWine.systembolaget_product_id?.trim() || null,
+function buildCatalogPayload(wine: WineRow, userId: string) {
+  return {
+    name: wine.name.trim(),
+    producer: wine.producer ?? null, country: wine.country ?? null,
+    region: wine.region ?? null, grape: wine.grape ?? null,
+    type: wine.type ?? null, vintage: wine.vintage ?? null,
+    food_pairings: wine.food_pairings ?? [],
+    source_label: "MinVinkällare", source_confidence: "high",
+    barcode: wine.barcode?.trim() || null,
+    systembolaget_product_id: wine.systembolaget_product_id?.trim() || null,
     created_by: userId,
   };
+}
 
-  const previousBarcode = previousWine.barcode?.trim();
-  const previousArticleNumber = previousWine.systembolaget_product_id?.trim();
-
+function findExistingCatalogEntry(wine: WineRecord) {
   let lookup = supabase.from("product_catalog_wines").select("id").limit(1);
+  const barcode = wine.barcode?.trim();
+  const articleNumber = wine.systembolaget_product_id?.trim();
 
-  if (previousBarcode) {
-    lookup = lookup.eq("barcode", previousBarcode);
-  } else if (previousArticleNumber) {
-    lookup = lookup.eq("systembolaget_product_id", previousArticleNumber);
-  } else {
-    lookup = lookup.eq("name", previousWine.name);
-    lookup = applyNullableCatalogFilter(lookup, "producer", previousWine.producer ?? null);
-    lookup = applyNullableCatalogFilter(lookup, "country", previousWine.country ?? null);
-    lookup = applyNullableCatalogFilter(lookup, "region", previousWine.region ?? null);
-    lookup = applyNullableCatalogFilter(lookup, "grape", previousWine.grape ?? null);
-    lookup = applyNullableCatalogFilter(lookup, "type", previousWine.type ?? null);
-    lookup = applyNullableCatalogFilter(lookup, "vintage", previousWine.vintage ?? null);
+  if (barcode) return lookup.eq("barcode", barcode);
+  if (articleNumber) return lookup.eq("systembolaget_product_id", articleNumber);
+
+  lookup = lookup.eq("name", wine.name);
+  for (const col of ["producer", "country", "region", "grape", "type", "vintage"] as const) {
+    lookup = applyNullableCatalogFilter(lookup, col, wine[col] ?? null);
   }
+  return lookup;
+}
 
-  const { data, error } = await lookup.maybeSingle();
+export async function syncCatalogEntryForEditedWine(previousWine: WineRecord, nextWine: WineRow, userId: string) {
+  if (!canBeSavedAsCatalogEntry(nextWine)) return;
+
+  const payload = buildCatalogPayload(nextWine, userId);
+  const { data, error } = await findExistingCatalogEntry(previousWine).maybeSingle();
 
   if (!error && data?.id) {
-    const { error: updateError } = await supabase.from("product_catalog_wines").update(nextPayload).eq("id", data.id);
-
-    if (!updateError) {
-      return;
-    }
+    const { error: updateError } = await supabase.from("product_catalog_wines").update(payload).eq("id", data.id);
+    if (!updateError) return;
   }
 
   await cacheCatalogEntry(
     {
-      barcode: nextPayload.barcode || undefined,
-      systembolagetProductId: nextPayload.systembolaget_product_id || undefined,
-      name: nextPayload.name,
-      producer: nextPayload.producer || undefined,
-      country: nextPayload.country || undefined,
-      region: nextPayload.region || undefined,
-      grape: nextPayload.grape || undefined,
-      type: nextPayload.type || undefined,
-      vintage: nextPayload.vintage || undefined,
-      foodPairings: nextPayload.food_pairings,
-      sourceLabel: "MinVinkällare",
-      sourceConfidence: "high",
+      barcode: payload.barcode || undefined,
+      systembolagetProductId: payload.systembolaget_product_id || undefined,
+      name: payload.name, producer: payload.producer || undefined,
+      country: payload.country || undefined, region: payload.region || undefined,
+      grape: payload.grape || undefined, type: payload.type || undefined,
+      vintage: payload.vintage || undefined, foodPairings: payload.food_pairings,
+      sourceLabel: "MinVinkällare", sourceConfidence: "high",
     },
-    userId
+    userId,
   );
 }

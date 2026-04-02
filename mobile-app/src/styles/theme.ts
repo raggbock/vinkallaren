@@ -677,4 +677,39 @@ export const styles = StyleSheet.create({
     fontSize: 10,
     textDecorationLine: "underline",
   },
+  statBox: {
+    flex: 1,
+    backgroundColor: "#ead8ca",
+    borderRadius: 14,
+    padding: 12,
+    alignItems: "center",
+  },
+  statBoxValue: {
+    color: "#6f1d1b",
+    fontSize: 20,
+    fontWeight: "800",
+  },
+  statBoxLabel: {
+    color: "#564a40",
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  infoBadge: {
+    backgroundColor: "#ead8ca",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+  },
+  infoBadgeText: {
+    color: "#6f1d1b",
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 1,
+  },
+  wineThumbnail: {
+    width: 64,
+    height: 86,
+    borderRadius: 10,
+    backgroundColor: "#ead8ca",
+  },
 });

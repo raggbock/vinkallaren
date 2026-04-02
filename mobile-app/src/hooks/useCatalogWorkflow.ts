@@ -11,8 +11,7 @@ import {
   scoreCatalogCompleteness,
 } from "../lib/wine-helpers";
 import { recognizeLabel, parseWineLabel } from "../lib/label-ocr";
-import type { ImportFieldSelection, ImportMode, WineDraft } from "../types/cellar-drafts";
-import { defaultImportSelection } from "../types/cellar-drafts";
+import { defaultImportSelection, type ImportFieldSelection, type ImportMode, type WineDraft } from "../types/cellar-drafts";
 import type { CatalogTextMatch, ProductCatalogWineRow } from "../types/product-catalog";
 import type { WineRecord } from "../types/wine";
 

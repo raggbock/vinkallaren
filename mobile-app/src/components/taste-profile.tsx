@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { fetchTasteProfile, type TasteProfileData, type SessionSummary } from "../lib/taste-profile";
+import { formatDateLong, formatDateShort } from "../lib/format-date";
+import { styles as theme } from "../styles/theme";
 
 type Props = {
   userId: string;
@@ -32,7 +34,7 @@ export function TasteProfile({ userId, onOpenSession }: Props) {
 
       {data.stats.lastSessionDate ? (
         <Text style={s.lastSession}>
-          Senaste provning: {new Date(data.stats.lastSessionDate).toLocaleDateString("sv-SE", { day: "numeric", month: "long", year: "numeric" })}
+          Senaste provning: {formatDateLong(data.stats.lastSessionDate)}
         </Text>
       ) : null}
 
@@ -98,15 +100,15 @@ export function TasteProfile({ userId, onOpenSession }: Props) {
 
 function StatBox({ label, value }: { label: string; value: string }) {
   return (
-    <View style={s.statBox}>
-      <Text style={s.statValue}>{value}</Text>
-      <Text style={s.statLabel}>{label}</Text>
+    <View style={theme.statBox}>
+      <Text style={theme.statBoxValue}>{value}</Text>
+      <Text style={theme.statBoxLabel}>{label}</Text>
     </View>
   );
 }
 
 function SessionHistoryCard({ session, onPress }: { session: SessionSummary; onPress: () => void }) {
-  const dateStr = new Date(session.date).toLocaleDateString("sv-SE", { day: "numeric", month: "short" });
+  const dateStr = formatDateShort(session.date);
   return (
     <Pressable onPress={onPress} style={s.historyCard}>
       <View style={{ flex: 1 }}>
@@ -124,9 +126,6 @@ const s = StyleSheet.create({
   container: { gap: 16 },
   hint: { color: "#8f8178", fontSize: 13, lineHeight: 20 },
   statsRow: { flexDirection: "row", gap: 8 },
-  statBox: { flex: 1, backgroundColor: "#ead8ca", borderRadius: 14, padding: 12, alignItems: "center" },
-  statValue: { color: "#6f1d1b", fontSize: 22, fontWeight: "800" },
-  statLabel: { color: "#564a40", fontSize: 11, marginTop: 2 },
   lastSession: { color: "#564a40", fontSize: 12 },
   section: { gap: 8 },
   sectionTitle: { color: "#564a40", fontSize: 12, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.6 },

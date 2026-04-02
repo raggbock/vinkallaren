@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { styles as theme } from "../styles/theme";
 import { Avatar } from "./avatar";
 import { Expandable } from "./form-controls";
-import type { SessionResults, WineResult } from "../lib/session-results";
-import { getWsetParameterComparison, getSharedAromas } from "../lib/session-results";
-import { buildWsetSummary } from "../lib/wset-data";
-import type { WsetTastingData } from "../lib/wset-data";
+import { getWsetParameterComparison, getSharedAromas, type SessionResults, type WineResult } from "../lib/session-results";
+import { buildWsetSummary, type WsetTastingData } from "../lib/wset-data";
 import type { SessionParticipant } from "../types/tasting-session";
+import { formatDateShort } from "../lib/format-date";
 
 type Props = {
   results: SessionResults;
@@ -30,7 +30,7 @@ export function ResultsDashboard({ results, participants, onBack }: Props) {
       <View style={s.statsRow}>
         <StatBox label="Viner" value={String(results.wineCount)} />
         <StatBox label="Deltagare" value={String(results.participantCount)} />
-        <StatBox label="Datum" value={new Date(results.date).toLocaleDateString("sv-SE", { day: "numeric", month: "short" })} />
+        <StatBox label="Datum" value={formatDateShort(results.date)} />
       </View>
 
       {/* Highlights */}
@@ -67,9 +67,9 @@ export function ResultsDashboard({ results, participants, onBack }: Props) {
 
 function StatBox({ label, value }: { label: string; value: string }) {
   return (
-    <View style={s.statBox}>
-      <Text style={s.statValue}>{value}</Text>
-      <Text style={s.statLabel}>{label}</Text>
+    <View style={theme.statBox}>
+      <Text style={theme.statBoxValue}>{value}</Text>
+      <Text style={theme.statBoxLabel}>{label}</Text>
     </View>
   );
 }
@@ -203,9 +203,6 @@ const s = StyleSheet.create({
   backBtn: {},
   backText: { color: "#6f1d1b", fontSize: 14, fontWeight: "600" },
   statsRow: { flexDirection: "row", gap: 8 },
-  statBox: { flex: 1, backgroundColor: "#ead8ca", borderRadius: 14, padding: 12, alignItems: "center" },
-  statValue: { color: "#6f1d1b", fontSize: 22, fontWeight: "800" },
-  statLabel: { color: "#564a40", fontSize: 11, marginTop: 2 },
   highlight: { backgroundColor: "#fffaf5", borderRadius: 14, padding: 14, borderWidth: 1, borderColor: "#ead8ca" },
   highlightTitle: { color: "#564a40", fontSize: 11, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.5 },
   highlightWine: { color: "#231815", fontSize: 16, fontWeight: "700", marginTop: 2 },

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { PanelHeader } from "./form-controls";
-import type { Suggestion } from "./form-controls";
+import { PanelHeader, type Suggestion } from "./form-controls";
 import { ActiveSessionView } from "./session-active-view";
 import { SessionTastingView } from "./session-tasting-view";
 import { advanceReveal, fetchSessionParticipants, finishReveal, saveTasting, startSession } from "../lib/session-actions";
@@ -54,6 +53,19 @@ export function TastingSessionPanel({
 
   useEffect(() => { onFetchSessions(); setView("list"); setTastingWine(null); }, []);
 
+  async function handleSaveTasting(data: { rating: number | null; notes: string | null; foodPairings: string[]; wsetData?: WsetTastingData | null }) {
+    if (!activeSession || !tastingWine) return;
+    setSavingTasting(true);
+    const result = await saveTasting({
+      session_id: activeSession.id, session_wine_id: tastingWine.id,
+      user_id: userId, rating: data.rating, notes: data.notes,
+      food_pairings: data.foodPairings, tasting_data: data.wsetData ?? null,
+    });
+    setSavingTasting(false);
+    if (result.error) { setInlineError("Kunde inte spara provning"); return; }
+    setTastingWine(null);
+  }
+
   useEffect(() => {
     if (!activeSession) { setParticipants([]); return; }
     const fetchParticipants = () => fetchSessionParticipants(activeSession.id).then((r) => {
@@ -69,33 +81,14 @@ export function TastingSessionPanel({
 
   // Tasting a specific wine
   if (activeSession && tastingWine) {
-    const existing = activeTastings.find(
-      (t) => t.session_wine_id === tastingWine.id && t.user_id === userId,
-    );
+    const existing = activeTastings.find((t) => t.session_wine_id === tastingWine.id && t.user_id === userId);
     return (
       <View style={styles.panel}>
-        <SessionTastingView
-          wine={tastingWine}
-          format={activeSession.format}
-          initialRating={existing?.rating ?? null}
-          initialNotes={existing?.notes ?? null}
-          initialFoodPairings={existing?.food_pairings ?? []}
-          initialWsetData={wsetData}
-          saving={savingTasting}
-          onSave={async (data) => {
-            setSavingTasting(true);
-            const result = await saveTasting({
-              session_id: activeSession.id, session_wine_id: tastingWine.id,
-              user_id: userId, rating: data.rating, notes: data.notes,
-              food_pairings: data.foodPairings, tasting_data: data.wsetData ?? null,
-            });
-            setSavingTasting(false);
-            if (result.error) { setInlineError("Kunde inte spara provning"); return; }
-            setTastingWine(null);
-          }}
-          onOpenWset={() => onOpenWset(tastingWine.type || "")}
-          onBack={() => setTastingWine(null)}
-        />
+        <SessionTastingView wine={tastingWine} format={activeSession.format}
+          initialRating={existing?.rating ?? null} initialNotes={existing?.notes ?? null}
+          initialFoodPairings={existing?.food_pairings ?? []} initialWsetData={wsetData}
+          saving={savingTasting} onSave={handleSaveTasting}
+          onOpenWset={() => onOpenWset(tastingWine.type || "")} onBack={() => setTastingWine(null)} />
       </View>
     );
   }
@@ -200,6 +193,26 @@ export function TastingSessionPanel({
 
   // Session list / create / join
   return (
+    <SessionListView
+      styles={styles} view={view} setView={setView} sessions={sessions} loading={loading}
+      inlineError={inlineError} setInlineError={setInlineError}
+      onBack={onBack} onCreateSession={onCreateSession} onJoinSession={onJoinSession} onOpenSession={onOpenSession}
+    />
+  );
+}
+
+/* ── Session list / create / join ── */
+
+function SessionListView({ styles, view, setView, sessions, loading, inlineError, setInlineError, onBack, onCreateSession, onJoinSession, onOpenSession }: {
+  styles: SharedStyles; view: "list" | "create" | "join"; setView: (v: "list" | "create" | "join") => void;
+  sessions: TastingSessionRow[]; loading: boolean;
+  inlineError: string | null; setInlineError: (e: string | null) => void;
+  onBack: () => void;
+  onCreateSession: (input: CreateSessionInput) => Promise<TastingSessionRow | null>;
+  onJoinSession: (code: string) => Promise<TastingSessionRow | null>;
+  onOpenSession: (session: TastingSessionRow) => void;
+}) {
+  return (
     <View style={styles.panel}>
       <PanelHeader title="Provningar" rightLabel="Tillbaka" onRightPress={onBack} />
       <InlineError message={inlineError} />
@@ -231,7 +244,7 @@ export function TastingSessionPanel({
             <Pressable key={ses.id} style={local.sessionCard} onPress={() => onOpenSession(ses)}>
               <Text style={local.sessionTitle}>{ses.title}</Text>
               <Text style={local.sessionMeta}>
-                {ses.mode === "blind" ? "Blind" : "Öppen"} · {ses.format.toUpperCase()} · {ses.status === "setup" ? "Förbereder" : ses.status === "active" ? "Pågår" : ses.status === "revealing" ? "Avslöjas" : "Avslutad"}
+                {ses.mode === "blind" ? "Blind" : "Öppen"} · {ses.format.toUpperCase()} · {statusLabel(ses.status)}
               </Text>
             </Pressable>
           ))}
@@ -240,6 +253,11 @@ export function TastingSessionPanel({
       )}
     </View>
   );
+}
+
+function statusLabel(status: TastingSessionRow["status"]): string {
+  const labels: Record<string, string> = { setup: "Förbereder", active: "Pågår", revealing: "Avslöjas", ended: "Avslutad" };
+  return labels[status] ?? status;
 }
 
 /* ── Local styles (only what theme doesn't cover) ── */

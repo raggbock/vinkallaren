@@ -67,73 +67,10 @@ export function WsetTastingModal({
         </View>
 
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          {step === 0 ? (
-            <>
-              <OptionRow
-                label="Intensitet"
-                options={[...APPEARANCE_INTENSITY]}
-                selected={data.appearance.intensity}
-                onSelect={(v) => setData({ ...data, appearance: { ...data.appearance, intensity: v as WsetTastingData["appearance"]["intensity"] } })}
-              />
-              <OptionRow
-                label="Färg"
-                options={getColourOptions(wineType)}
-                selected={data.appearance.colour}
-                onSelect={(v) => setData({ ...data, appearance: { ...data.appearance, colour: v } })}
-              />
-            </>
-          ) : step === 1 ? (
-            <>
-              <OptionRow
-                label="Intensitet"
-                options={[...NOSE_INTENSITY]}
-                selected={data.nose.intensity}
-                onSelect={(v) => setData({ ...data, nose: { ...data.nose, intensity: v as WsetTastingData["nose"]["intensity"] } })}
-              />
-              <Text style={styles.sectionLabel}>Aromas</Text>
-              <TagSelector
-                sections={AROMA_LEXICON}
-                selected={data.nose.aromas}
-                onToggle={(tag) => setData({ ...data, nose: { ...data.nose, aromas: toggleTag(data.nose.aromas, tag) } })}
-              />
-              <TextInput
-                style={styles.textInput}
-                placeholder="Additional aroma notes..."
-                placeholderTextColor="#8f8178"
-                value={data.nose.aromaNote ?? ""}
-                onChangeText={(v) => setData({ ...data, nose: { ...data.nose, aromaNote: v || null } })}
-                multiline
-              />
-            </>
-          ) : step === 2 ? (
-            <>
-              <OptionRow label="Sweetness" options={[...PALATE_SWEETNESS]} selected={data.palate.sweetness} onSelect={(v) => setData({ ...data, palate: { ...data.palate, sweetness: v as any } })} />
-              <OptionRow label="Acidity" options={[...PALATE_ACIDITY]} selected={data.palate.acidity} onSelect={(v) => setData({ ...data, palate: { ...data.palate, acidity: v as any } })} />
-              {showTannin(wineType) ? (
-                <OptionRow label="Tannin" options={[...PALATE_TANNIN]} selected={data.palate.tannin} onSelect={(v) => setData({ ...data, palate: { ...data.palate, tannin: v as any } })} />
-              ) : null}
-              <OptionRow label="Alcohol" options={[...PALATE_ALCOHOL]} selected={data.palate.alcohol} onSelect={(v) => setData({ ...data, palate: { ...data.palate, alcohol: v as any } })} />
-              <OptionRow label="Body" options={[...PALATE_BODY]} selected={data.palate.body} onSelect={(v) => setData({ ...data, palate: { ...data.palate, body: v as any } })} />
-              <OptionRow label="Flavour intensity" options={[...PALATE_FLAVOUR_INTENSITY]} selected={data.palate.flavourIntensity} onSelect={(v) => setData({ ...data, palate: { ...data.palate, flavourIntensity: v as any } })} />
-              <Text style={styles.sectionLabel}>Flavours</Text>
-              <TagSelector
-                sections={AROMA_LEXICON}
-                selected={data.palate.flavours}
-                onToggle={(tag) => setData({ ...data, palate: { ...data.palate, flavours: toggleTag(data.palate.flavours, tag) } })}
-              />
-              <TextInput
-                style={styles.textInput}
-                placeholder="Additional flavour notes..."
-                placeholderTextColor="#8f8178"
-                value={data.palate.flavourNote ?? ""}
-                onChangeText={(v) => setData({ ...data, palate: { ...data.palate, flavourNote: v || null } })}
-                multiline
-              />
-              <OptionRow label="Finish" options={[...PALATE_FINISH]} selected={data.palate.finish} onSelect={(v) => setData({ ...data, palate: { ...data.palate, finish: v as any } })} />
-            </>
-          ) : (
-            <OptionRow label="Quality" options={[...QUALITY_OPTIONS]} selected={data.conclusions.quality} onSelect={(v) => setData({ ...data, conclusions: { quality: v as any } })} />
-          )}
+          {step === 0 ? <AppearanceStep data={data} setData={setData} wineType={wineType} />
+           : step === 1 ? <NoseStep data={data} setData={setData} toggleTag={toggleTag} />
+           : step === 2 ? <PalateStep data={data} setData={setData} wineType={wineType} toggleTag={toggleTag} />
+           : <OptionRow label="Quality" options={[...QUALITY_OPTIONS]} selected={data.conclusions.quality} onSelect={(v) => setData({ ...data, conclusions: { quality: v as any } })} />}
         </ScrollView>
 
         <View style={styles.nav}>
@@ -153,6 +90,56 @@ export function WsetTastingModal({
           )}
         </View>
     </AnimatedModal>
+  );
+}
+
+// --- Step components ---
+
+type StepProps = { data: WsetTastingData; setData: (d: WsetTastingData) => void };
+
+function AppearanceStep({ data, setData, wineType }: StepProps & { wineType: string }) {
+  return (
+    <>
+      <OptionRow label="Intensitet" options={[...APPEARANCE_INTENSITY]} selected={data.appearance.intensity}
+        onSelect={(v) => setData({ ...data, appearance: { ...data.appearance, intensity: v as WsetTastingData["appearance"]["intensity"] } })} />
+      <OptionRow label="Färg" options={getColourOptions(wineType)} selected={data.appearance.colour}
+        onSelect={(v) => setData({ ...data, appearance: { ...data.appearance, colour: v } })} />
+    </>
+  );
+}
+
+function NoseStep({ data, setData, toggleTag }: StepProps & { toggleTag: (list: string[], tag: string) => string[] }) {
+  return (
+    <>
+      <OptionRow label="Intensitet" options={[...NOSE_INTENSITY]} selected={data.nose.intensity}
+        onSelect={(v) => setData({ ...data, nose: { ...data.nose, intensity: v as WsetTastingData["nose"]["intensity"] } })} />
+      <Text style={styles.sectionLabel}>Aromas</Text>
+      <TagSelector sections={AROMA_LEXICON} selected={data.nose.aromas}
+        onToggle={(tag) => setData({ ...data, nose: { ...data.nose, aromas: toggleTag(data.nose.aromas, tag) } })} />
+      <TextInput style={styles.textInput} placeholder="Additional aroma notes..." placeholderTextColor="#8f8178"
+        value={data.nose.aromaNote ?? ""} onChangeText={(v) => setData({ ...data, nose: { ...data.nose, aromaNote: v || null } })} multiline />
+    </>
+  );
+}
+
+function PalateStep({ data, setData, wineType, toggleTag }: StepProps & { wineType: string; toggleTag: (list: string[], tag: string) => string[] }) {
+  return (
+    <>
+      <OptionRow label="Sweetness" options={[...PALATE_SWEETNESS]} selected={data.palate.sweetness} onSelect={(v) => setData({ ...data, palate: { ...data.palate, sweetness: v as any } })} />
+      <OptionRow label="Acidity" options={[...PALATE_ACIDITY]} selected={data.palate.acidity} onSelect={(v) => setData({ ...data, palate: { ...data.palate, acidity: v as any } })} />
+      {showTannin(wineType) ? (
+        <OptionRow label="Tannin" options={[...PALATE_TANNIN]} selected={data.palate.tannin} onSelect={(v) => setData({ ...data, palate: { ...data.palate, tannin: v as any } })} />
+      ) : null}
+      <OptionRow label="Alcohol" options={[...PALATE_ALCOHOL]} selected={data.palate.alcohol} onSelect={(v) => setData({ ...data, palate: { ...data.palate, alcohol: v as any } })} />
+      <OptionRow label="Body" options={[...PALATE_BODY]} selected={data.palate.body} onSelect={(v) => setData({ ...data, palate: { ...data.palate, body: v as any } })} />
+      <OptionRow label="Flavour intensity" options={[...PALATE_FLAVOUR_INTENSITY]} selected={data.palate.flavourIntensity} onSelect={(v) => setData({ ...data, palate: { ...data.palate, flavourIntensity: v as any } })} />
+      <Text style={styles.sectionLabel}>Flavours</Text>
+      <TagSelector sections={AROMA_LEXICON} selected={data.palate.flavours}
+        onToggle={(tag) => setData({ ...data, palate: { ...data.palate, flavours: toggleTag(data.palate.flavours, tag) } })} />
+      <TextInput style={styles.textInput} placeholder="Additional flavour notes..." placeholderTextColor="#8f8178"
+        value={data.palate.flavourNote ?? ""} onChangeText={(v) => setData({ ...data, palate: { ...data.palate, flavourNote: v || null } })} multiline />
+      <OptionRow label="Finish" options={[...PALATE_FINISH]} selected={data.palate.finish} onSelect={(v) => setData({ ...data, palate: { ...data.palate, finish: v as any } })} />
+    </>
   );
 }
 

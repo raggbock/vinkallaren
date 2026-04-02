@@ -1,6 +1,7 @@
 import { supabase } from "./supabase";
 import type { ProductCatalogEntry, ProductCatalogWineInsert, ProductCatalogWineRow, ProductLookupInput } from "../types/product-catalog";
 import { findOpenFoodFactsMatch } from "./wine-inference";
+import { applyNullableCatalogFilter } from "./query-helpers";
 
 export type { ProductCatalogEntry, ProductLookupInput };
 
@@ -318,12 +319,12 @@ function mapEntryToCatalogInsert(entry: ProductCatalogEntry, userId?: string | n
 async function findExistingManualCatalogEntryId(payload: ProductCatalogWineInsert) {
   let query = supabase.from("product_catalog_wines").select("id").eq("name", payload.name).limit(1);
 
-  query = applyNullableEqualityFilter(query, "producer", payload.producer ?? null);
-  query = applyNullableEqualityFilter(query, "country", payload.country ?? null);
-  query = applyNullableEqualityFilter(query, "region", payload.region ?? null);
-  query = applyNullableEqualityFilter(query, "grape", payload.grape ?? null);
-  query = applyNullableEqualityFilter(query, "type", payload.type ?? null);
-  query = applyNullableEqualityFilter(query, "vintage", payload.vintage ?? null);
+  query = applyNullableCatalogFilter(query, "producer", payload.producer ?? null);
+  query = applyNullableCatalogFilter(query, "country", payload.country ?? null);
+  query = applyNullableCatalogFilter(query, "region", payload.region ?? null);
+  query = applyNullableCatalogFilter(query, "grape", payload.grape ?? null);
+  query = applyNullableCatalogFilter(query, "type", payload.type ?? null);
+  query = applyNullableCatalogFilter(query, "vintage", payload.vintage ?? null);
 
   const { data, error } = await query.maybeSingle();
 
@@ -332,18 +333,6 @@ async function findExistingManualCatalogEntryId(payload: ProductCatalogWineInser
   }
 
   return data.id as string;
-}
-
-function applyNullableEqualityFilter<TQuery extends { eq: (column: string, value: any) => TQuery; is: (column: string, value: null) => TQuery }>(
-  query: TQuery,
-  column: string,
-  value: string | number | null
-) {
-  if (value === null) {
-    return query.is(column, null);
-  }
-
-  return query.eq(column, value);
 }
 
 function escapeFilterValue(value: string) {

@@ -1,5 +1,6 @@
 import { ActivityIndicator, Animated, Image, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { Children, useEffect, useRef, useState, type ComponentProps, type ReactNode } from "react";
+import { styles as theme } from "../styles/theme";
 
 import type { ReferenceOptionRow } from "../types/reference-data";
 import type { StorageSpaceRow } from "../types/storage-space";
@@ -32,11 +33,11 @@ export { AutocompleteInput } from "./autocomplete-input";
 
 export function LabeledInput({ label, multiline, ...props }: ComponentProps<typeof TextInput> & { label: string }) {
   return (
-    <View style={styles.inputGroup}>
-      <Text style={styles.inputLabel}>{label}</Text>
+    <View style={theme.inputGroup}>
+      <Text style={theme.inputLabel}>{label}</Text>
       <TextInput
         placeholderTextColor="#8f8178"
-        style={[styles.input, multiline && styles.textarea]}
+        style={[theme.input, multiline && styles.textarea]}
         multiline={multiline}
         {...props}
       />
@@ -47,14 +48,14 @@ export function LabeledInput({ label, multiline, ...props }: ComponentProps<type
 export function DateInput({ label, value, onChangeText }: { label: string; value: string; onChangeText: (value: string) => void }) {
   if (Platform.OS === "web") {
     return (
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>{label}</Text>
+      <View style={theme.inputGroup}>
+        <Text style={theme.inputLabel}>{label}</Text>
         <TextInput
           value={value}
           onChangeText={onChangeText}
           placeholder="ÅÅÅÅ-MM-DD"
           placeholderTextColor="#8f8178"
-          style={styles.input}
+          style={theme.input}
           // @ts-expect-error -- react-native-web supports type="date" but it's not in RN types
           type="date"
         />
@@ -63,14 +64,14 @@ export function DateInput({ label, value, onChangeText }: { label: string; value
   }
 
   return (
-    <View style={styles.inputGroup}>
-      <Text style={styles.inputLabel}>{label}</Text>
+    <View style={theme.inputGroup}>
+      <Text style={theme.inputLabel}>{label}</Text>
       <TextInput
         value={value}
         onChangeText={onChangeText}
         placeholder="ÅÅÅÅ-MM-DD"
         placeholderTextColor="#8f8178"
-        style={styles.input}
+        style={theme.input}
       />
     </View>
   );
@@ -92,7 +93,7 @@ export function DoubleRow({ children }: { children: ReactNode }) {
 export function InsightCard({ label, value }: { label: string; value: string }) {
   return (
     <View style={styles.insightCard}>
-      <Text style={styles.inputLabel}>{label}</Text>
+      <Text style={theme.inputLabel}>{label}</Text>
       <Text style={styles.insightValue}>{value}</Text>
     </View>
   );
@@ -115,7 +116,7 @@ export function SuggestionRow({
 }) {
   return (
     <View style={styles.foodSection}>
-      <Text style={styles.inputLabel}>{title}</Text>
+      <Text style={theme.inputLabel}>{title}</Text>
       <View style={styles.tagRow}>
         {options.map((option) => {
           const isSelected = Array.isArray(selected) ? selected.includes(option) : selected === option;
@@ -153,7 +154,7 @@ export function GroupedSuggestionRow({
 
   return (
     <View style={styles.foodSection}>
-      <Text style={styles.inputLabel}>{title}</Text>
+      <Text style={theme.inputLabel}>{title}</Text>
       {visibleGroups.map((group) => (
         <View key={group.label} style={{ marginBottom: 8 }}>
           <Text style={styles.groupLabel}>{group.label}</Text>
@@ -206,7 +207,7 @@ export function StorageSpaceSelector({
 
   return (
     <View style={styles.foodSection}>
-      {title ? <Text style={styles.inputLabel}>{title}</Text> : null}
+      {title ? <Text style={theme.inputLabel}>{title}</Text> : null}
       <View style={styles.tagRow}>
         <Pressable
           onPress={() => onSelect("")}
@@ -254,7 +255,7 @@ export function StorageSpaceForm({
       </Pressable>
       <Expandable expanded={expanded}>
         <View style={styles.storageSpaceForm}>
-          <Text style={styles.inputLabel}>Ny förvaringsplats</Text>
+          <Text style={theme.inputLabel}>Ny förvaringsplats</Text>
           <LabeledInput label="Namn" value={draft.name} onChangeText={(v) => onDraftChange({ name: v })} placeholder="t.ex. Vinkyl köket" />
           <SuggestionRow
             title="Typ"
@@ -276,8 +277,8 @@ export function StorageSpaceForm({
             </View>
           ) : null}
           <View style={styles.doubleRow}>
-            <Pressable onPress={async () => { await onSave(); setExpanded(false); }} style={[styles.primaryButton, { flex: 1 }]} disabled={saving}>
-              <Text style={styles.primaryButtonText}>{saving ? "Sparar..." : "Spara plats"}</Text>
+            <Pressable onPress={async () => { await onSave(); setExpanded(false); }} style={[theme.primaryButton, { flex: 1 }]} disabled={saving}>
+              <Text style={theme.primaryButtonText}>{saving ? "Sparar..." : "Spara plats"}</Text>
             </Pressable>
             <Pressable onPress={() => setExpanded(false)} style={[styles.secondaryButton, { flex: 1 }]}>
               <Text style={styles.secondaryButtonText}>Avbryt</Text>
@@ -335,37 +336,12 @@ export function LoadingInline({ label = "Laddar viner..." }: { label?: string })
 
 
 const styles = StyleSheet.create({
-  inputGroup: {
-    gap: 6,
-  },
-  inputLabel: {
-    color: "#564a40",
-    fontSize: 12,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.6,
-  },
-  input: {
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 13,
-    backgroundColor: "#fffaf5",
-    color: "#231815",
-    fontSize: 15,
-    borderWidth: 1,
-    borderColor: "#e6d7c8",
-  },
   textarea: {
     minHeight: 96,
     textAlignVertical: "top",
   },
-  doubleRow: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  doubleRowItem: {
-    flex: 1,
-  },
+  doubleRow: { flexDirection: "row", gap: 12 },
+  doubleRowItem: { flex: 1 },
   insightCard: {
     backgroundColor: "#fffaf5",
     borderRadius: 18,
@@ -377,9 +353,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
   },
-  foodSection: {
-    gap: 8,
-  },
+  foodSection: { gap: 8 },
   tagRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -448,17 +422,6 @@ const styles = StyleSheet.create({
   notesText: {
     color: "#564a40",
     lineHeight: 21,
-  },
-  primaryButton: {
-    backgroundColor: "#6f1d1b",
-    borderRadius: 999,
-    paddingVertical: 14,
-    alignItems: "center",
-  },
-  primaryButtonText: {
-    color: "#fffaf5",
-    fontWeight: "700",
-    fontSize: 15,
   },
   secondaryButton: {
     backgroundColor: "#ead8ca",

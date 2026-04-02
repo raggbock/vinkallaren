@@ -1,6 +1,6 @@
 import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
 import { AnimatedModal } from "./animated-modal";
-import type { CatalogTextMatch } from "../hooks/useCellarData";
+import type { CatalogTextMatch } from "../types/product-catalog";
 
 export function LabelMatchPickerModal({
   visible,
