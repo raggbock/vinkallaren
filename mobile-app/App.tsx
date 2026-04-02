@@ -94,6 +94,7 @@ function CellarScreen({ session }: { session: Session }) {
   const userProfile = useProfile(session.user.id);
   const [profileVisible, setProfileVisible] = useState(false);
   const [promptDismissed, setPromptDismissed] = useState(false);
+  const [promptSaving, setPromptSaving] = useState(false);
 
   const drink = useDrinkWineModal({
     userId: session.user.id,
@@ -343,14 +344,18 @@ function CellarScreen({ session }: { session: Session }) {
       <StatusBar style="light" />
       <DisplayNamePrompt
         visible={userProfile.needsDisplayName && !promptDismissed}
-        saving={false}
+        saving={promptSaving}
         onSave={async (name) => {
+          setPromptSaving(true);
           const ok = await userProfile.saveDisplayName(name);
+          setPromptSaving(false);
           if (ok) setPromptDismissed(true);
         }}
         onSkip={async () => {
+          setPromptSaving(true);
           const guestName = `Gäst${String(Math.floor(1000 + Math.random() * 9000))}`;
           await userProfile.saveDisplayName(guestName);
+          setPromptSaving(false);
           setPromptDismissed(true);
         }}
       />
