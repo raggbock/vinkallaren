@@ -4,7 +4,7 @@ import { AutocompleteInput, Expandable, LabeledInput, PanelHeader, SuggestionRow
 import type { Suggestion } from "./form-controls";
 import { ActiveSessionView, isAllDone } from "./session-active-view";
 import { SessionTastingView } from "./session-tasting-view";
-import { addWineToSession, endSession, fetchSessionParticipants, revealSession, saveTasting, shareSession } from "../lib/session-actions";
+import { addWineToSession, advanceReveal, endSession, fetchSessionParticipants, finishReveal, revealSession, saveTasting, shareSession } from "../lib/session-actions";
 import { confirmAction, showError } from "../lib/show-error";
 import type { CreateSessionInput, SessionTastingRow, SessionWineRow, TastingSessionRow } from "../types/tasting-session";
 import type { WsetTastingData } from "../lib/wset-data";
@@ -13,7 +13,6 @@ import type { SessionToast } from "../hooks/useTastingSessions";
 import { ResultsDashboard } from "./results-dashboard";
 import { buildSessionResults } from "../lib/session-results";
 import { RevealView } from "./reveal-view";
-import { advanceReveal, finishReveal } from "../lib/session-actions";
 
 import type { styles as themeStyles } from "../styles/theme";
 type SharedStyles = typeof themeStyles;
