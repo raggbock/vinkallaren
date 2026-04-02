@@ -12,7 +12,7 @@ import {
   uploadWineImage,
 } from "./wine-helpers";
 import type { CatalogEditorDraft, WineDraft } from "../types/cellar-drafts";
-import type { WineHistoryInsert } from "../types/wine-history";
+import type { WineHistoryInsert, WineHistoryRow } from "../types/wine-history";
 import type { WineInsert, WineRecord, WineRow } from "../types/wine";
 import type { ProductCatalogWineRow } from "../types/product-catalog";
 import type { WsatTastingData } from "./wsat-data";
@@ -26,7 +26,7 @@ type SaveWineArgs = {
   selectedCatalogNameEntry: ProductCatalogWineRow | null;
 };
 
-export async function saveNewWine(args: SaveWineArgs): Promise<Result<true>> {
+export async function saveNewWine(args: SaveWineArgs): Promise<Result<WineRow>> {
   const { userId, draft, storageSpaceId, storageRow, storageSlot, selectedCatalogNameEntry } = args;
   if (!draft.name.trim()) return fail("Namn saknas: Skriv in vilket vin du vill lägga till.");
   const missingFields = getMissingCatalogFields(draft);
@@ -57,10 +57,11 @@ export async function saveNewWine(args: SaveWineArgs): Promise<Result<true>> {
     notes: emptyToNull(draft.notes),
     image_path: imagePath,
   };
-  const { error } = await supabase.from("wines").insert(payload);
+  const { data, error } = await supabase.from("wines").insert(payload).select().single();
   if (error) return fail(error.message);
-  await cacheWineDraftAsCatalogEntry(payload, userId);
-  return ok(true as const);
+  if (!data) return fail("Ingen data returnerades");
+  void cacheWineDraftAsCatalogEntry(payload, userId);
+  return ok(data as WineRow);
 }
 
 type SaveTastingArgs = {
@@ -71,7 +72,7 @@ type SaveTastingArgs = {
   wsatData: WsatTastingData | null;
 };
 
-export async function saveTastingEntry(args: SaveTastingArgs): Promise<Result<true>> {
+export async function saveTastingEntry(args: SaveTastingArgs): Promise<Result<WineHistoryRow>> {
   const { userId, draft, tastingRating, tastingDate, wsatData } = args;
   if (!draft.name.trim()) return fail("Namn saknas: Skriv in vilket vin du provade.");
   let imagePath: string | null = null;
@@ -94,9 +95,10 @@ export async function saveTastingEntry(args: SaveTastingArgs): Promise<Result<tr
     consumed_at: tastingDate || null,
     tasting_data: wsatData ?? null,
   };
-  const { error } = await supabase.from("wine_history").insert(payload);
+  const { data, error } = await supabase.from("wine_history").insert(payload).select().single();
   if (error) return fail(error.message);
-  return ok(true as const);
+  if (!data) return fail("Ingen data returnerades");
+  return ok(data as WineHistoryRow);
 }
 
 type SaveDrinkArgs = {
@@ -110,7 +112,7 @@ type SaveDrinkArgs = {
   setWines: React.Dispatch<React.SetStateAction<WineRecord[]>>;
 };
 
-export async function saveDrinkEntry(args: SaveDrinkArgs): Promise<Result<true>> {
+export async function saveDrinkEntry(args: SaveDrinkArgs): Promise<Result<WineHistoryRow>> {
   const { userId, wine, rating, notes, consumedDate, imageUri, wsatData, setWines } = args;
   let imagePath = wine.image_path;
   if (imageUri) imagePath = await uploadWineImage(userId, imageUri);
@@ -128,8 +130,9 @@ export async function saveDrinkEntry(args: SaveDrinkArgs): Promise<Result<true>>
     tasting_data: wsatData ?? null,
     consumed_at: consumedDate || null,
   };
-  const { error: historyError } = await supabase.from("wine_history").insert(payload);
+  const { data: historyData, error: historyError } = await supabase.from("wine_history").insert(payload).select().single();
   if (historyError) return fail(historyError.message);
+  if (!historyData) return fail("Ingen data returnerades");
   if (wine.quantity <= 1) {
     const { error } = await supabase.from("wines").delete().eq("id", wine.id);
     if (error) return fail(error.message);
@@ -140,7 +143,7 @@ export async function saveDrinkEntry(args: SaveDrinkArgs): Promise<Result<true>>
     const [hydrated] = await hydrateWineRecords([data as WineRow]);
     setWines((current) => current.map((w) => (w.id === wine.id ? hydrated : w)));
   }
-  return ok(true as const);
+  return ok(historyData as WineHistoryRow);
 }
 
 type SaveWineEditArgs = {

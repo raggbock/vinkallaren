@@ -322,6 +322,7 @@ export function useCellarData(userId: string) {
     wines,
     setWines,
     historyEntries,
+    setHistoryEntries,
     storageSpaces,
     catalogEntries,
     referenceOptions,

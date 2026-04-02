@@ -6,6 +6,7 @@ import type { Session } from "@supabase/supabase-js";
 import { supabase, supabaseConfigured } from "./src/lib/supabase";
 import { buildMealRecommendations } from "./src/lib/cellar-helpers";
 import { openSystembolaget, saveNewWine } from "./src/lib/cellar-actions";
+import { hydrateWineRecords } from "./src/lib/wine-helpers";
 import { showError } from "./src/lib/show-error";
 import { BottomTabBar, HistoryPanel, MealPlannerPanel } from "./src/components/cellar-sections";
 import { MinKallarePanel } from "./src/components/min-kallare-panel";
@@ -106,7 +107,7 @@ function CellarScreen({ session }: { session: Session }) {
 
   const drink = useDrinkWineModal({
     userId: session.user.id,
-    fetchHistoryEntries: data.fetchHistoryEntries,
+    setHistoryEntries: data.setHistoryEntries,
     setWines: data.setWines,
     showSuccess: success.show,
     pickImageFromLibrary: images.pickImageFromLibrary,
@@ -146,7 +147,7 @@ function CellarScreen({ session }: { session: Session }) {
     userId: session.user.id,
     draft,
     resetDraft: useCallback(() => setDraft(defaultDraft), []),
-    fetchHistoryEntries: data.fetchHistoryEntries,
+    setHistoryEntries: data.setHistoryEntries,
     showSuccess: success.show,
   });
 
@@ -166,7 +167,10 @@ function CellarScreen({ session }: { session: Session }) {
     if (result.error) { showError("Kunde inte spara", result.error); return; }
     setDraft(defaultDraft); catalog.setSelectedCatalogNameEntry(null);
     storage.setSelectedStorageRow("1"); storage.setSelectedStorageSlot("1");
-    await Promise.all([data.fetchWines(), data.fetchCatalogEntries(), data.fetchReferenceOptions()]);
+    const savedRow = result.data!;
+    const [hydrated] = await hydrateWineRecords([savedRow]);
+    data.setWines(prev => [hydrated, ...prev]);
+    data.mergeReferenceOptions(savedRow);
     success.show("wine_added");
     Alert.alert("Vinet är sparat!", "Vad vill du göra nu?", [
       { text: "Lägg till fler", style: "default" },

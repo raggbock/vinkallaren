@@ -1,12 +1,14 @@
 import { useCallback, useState } from "react";
 import { showError } from "../lib/show-error";
+import { hydrateWineHistoryRecords } from "../lib/wine-helpers";
 import type { WineRecord } from "../types/wine";
+import type { WineHistoryRecord } from "../types/wine-history";
 import type { WsatTastingData } from "../lib/wsat-data";
 import { saveDrinkEntry } from "../lib/cellar-actions";
 
 type Deps = {
   userId: string;
-  fetchHistoryEntries: () => Promise<void>;
+  setHistoryEntries: React.Dispatch<React.SetStateAction<WineHistoryRecord[]>>;
   setWines: React.Dispatch<React.SetStateAction<WineRecord[]>>;
   showSuccess: (key: string) => void;
   pickImageFromLibrary: () => Promise<string | null>;
@@ -45,7 +47,8 @@ export function useDrinkWineModal(deps: Deps) {
     setSaving(true);
     const result = await saveDrinkEntry({ userId: deps.userId, wine, rating, notes, consumedDate, imageUri, wsatData, setWines: deps.setWines });
     if (result.error) { showError("Kunde inte spara historiken", result.error); setSaving(false); return; }
-    await deps.fetchHistoryEntries();
+    const [hydrated] = await hydrateWineHistoryRecords([result.data!]);
+    deps.setHistoryEntries(prev => [hydrated, ...prev]);
     setVisible(false);
     setWine(null);
     deps.showSuccess("wine_drunk");

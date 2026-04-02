@@ -1,14 +1,16 @@
 import { useCallback, useState } from "react";
 import { showError } from "../lib/show-error";
+import { hydrateWineHistoryRecords } from "../lib/wine-helpers";
 import type { WineDraft } from "../types/cellar-drafts";
 import type { WsatTastingData } from "../lib/wsat-data";
+import type { WineHistoryRecord } from "../types/wine-history";
 import { saveTastingEntry } from "../lib/cellar-actions";
 
 type Deps = {
   userId: string;
   draft: WineDraft;
   resetDraft: () => void;
-  fetchHistoryEntries: () => Promise<void>;
+  setHistoryEntries: React.Dispatch<React.SetStateAction<WineHistoryRecord[]>>;
   showSuccess: (key: string) => void;
 };
 
@@ -28,7 +30,8 @@ export function useAddWineTasting(deps: Deps) {
     setRating("");
     setWsatData(null);
     setDate(new Date().toISOString().slice(0, 10));
-    await deps.fetchHistoryEntries();
+    const [hydrated] = await hydrateWineHistoryRecords([result.data!]);
+    deps.setHistoryEntries(prev => [hydrated, ...prev]);
     deps.showSuccess("tasting_saved");
     setSaving(false);
   }, [deps, rating, date, wsatData]);
