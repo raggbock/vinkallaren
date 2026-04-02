@@ -31,6 +31,8 @@ export function useTastingSessions(userId: string) {
   // Active session state
   const [activeSession, setActiveSession] = useState<TastingSessionRow | null>(null);
   const [activeWines, setActiveWines] = useState<SessionWineRow[]>([]);
+  const activeWinesRef = useRef<SessionWineRow[]>([]);
+  useEffect(() => { activeWinesRef.current = activeWines; }, [activeWines]);
   const [activeTastings, setActiveTastings] = useState<SessionTastingRow[]>([]);
 
   const fetchSessions = useCallback(async () => {
@@ -95,9 +97,20 @@ export function useTastingSessions(userId: string) {
           if (payload.eventType === "INSERT") {
             const tasting = payload.new as SessionTastingRow;
             setActiveTastings((prev) => {
+              const next = [...prev.filter((t) => t.id !== tasting.id), tasting];
               const isNewParticipant = !prev.some((t) => t.user_id === tasting.user_id);
               if (isNewParticipant && tasting.user_id !== userId) pushToast("Ny deltagare gick med!");
-              return [...prev.filter((t) => t.id !== tasting.id), tasting];
+
+              // Check if all participants have now tasted this wine
+              if (tasting.rating != null && tasting.user_id !== userId) {
+                const participants = new Set(next.map((t) => t.user_id));
+                const wineTastings = next.filter((t) => t.session_wine_id === tasting.session_wine_id && t.rating != null);
+                if (wineTastings.length === participants.size && participants.size > 1) {
+                  const wineName = activeWinesRef.current.find((w) => w.id === tasting.session_wine_id)?.name;
+                  if (wineName) pushToast(`Alla har smakat ${wineName}`);
+                }
+              }
+              return next;
             });
           } else if (payload.eventType === "UPDATE") {
             const tasting = payload.new as SessionTastingRow;
