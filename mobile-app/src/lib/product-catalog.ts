@@ -1,26 +1,8 @@
 import { supabase } from "./supabase";
-import type { ProductCatalogWineInsert, ProductCatalogWineRow } from "../types/product-catalog";
+import type { ProductCatalogEntry, ProductCatalogWineInsert, ProductCatalogWineRow, ProductLookupInput } from "../types/product-catalog";
 import { findOpenFoodFactsMatch } from "./wine-inference";
 
-export type ProductCatalogEntry = {
-  systembolagetProductId?: string;
-  barcode?: string;
-  name: string;
-  producer?: string;
-  country?: string;
-  region?: string;
-  grape?: string;
-  type?: string;
-  vintage?: number;
-  foodPairings?: string[];
-  sourceLabel: string;
-  sourceConfidence?: "high" | "medium" | "low";
-};
-
-export type ProductLookupInput = {
-  barcode?: string;
-  systembolagetProductId?: string;
-};
+export type { ProductCatalogEntry, ProductLookupInput };
 
 const barcodeSeedCatalog: ProductCatalogEntry[] = [
   {
@@ -266,14 +248,12 @@ async function findCustomRemoteCatalogMatch(endpoint: string, input: ProductLook
   return data;
 }
 
-export async function cacheCatalogEntry(entry: ProductCatalogEntry, userId?: string | null) {
+export async function cacheCatalogEntry(entry: ProductCatalogEntry, userId?: string | null): Promise<boolean> {
   const payload = mapEntryToCatalogInsert(entry, userId);
 
   if (!payload.name?.trim()) {
-    return;
+    return false;
   }
-
-  let error: { message: string } | null = null;
 
   // Find existing entry by barcode, systembolaget_product_id, or name+producer+vintage
   let existingId: string | null = null;
@@ -291,14 +271,12 @@ export async function cacheCatalogEntry(entry: ProductCatalogEntry, userId?: str
 
   if (existingId) {
     const result = await supabase.from("product_catalog_wines").update(payload).eq("id", existingId);
-    error = result.error;
+    if (result.error) console.warn("Could not cache product catalog entry", result.error.message);
+    return false;
   } else {
     const result = await supabase.from("product_catalog_wines").insert(payload);
-    error = result.error;
-  }
-
-  if (error) {
-    console.warn("Could not cache product catalog entry", error.message);
+    if (result.error) console.warn("Could not cache product catalog entry", result.error.message);
+    return !result.error;
   }
 }
 

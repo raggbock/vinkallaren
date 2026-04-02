@@ -2,29 +2,11 @@ import * as ImageManipulator from "expo-image-manipulator";
 import { supabase } from "./supabase";
 import { cacheCatalogEntry, type ProductCatalogEntry } from "./product-catalog";
 import { emptyToNull, normalizeLookupValue, parseTags, resolveImportedValue, toNumberOrNull } from "./cellar-helpers";
-import type { CatalogEditorDraft, ImportFieldSelection, ImportMode, WineDraft } from "../types/cellar-drafts";
+import type { ImportFieldSelection, ImportMode, WineDraft } from "../types/cellar-drafts";
 import type { ProductCatalogWineRow } from "../types/product-catalog";
 import type { ReferenceOptionRow } from "../types/reference-data";
 import type { WineHistoryRecord, WineHistoryRow } from "../types/wine-history";
 import type { WineInsert, WineRecord, WineRow } from "../types/wine";
-
-export function toCatalogEditorDraft(entry: ProductCatalogWineRow): CatalogEditorDraft {
-  return {
-    id: entry.id,
-    barcode: entry.barcode ?? "",
-    systembolagetProductId: entry.systembolaget_product_id ?? "",
-    name: entry.name,
-    producer: entry.producer ?? "",
-    country: entry.country ?? "",
-    region: entry.region ?? "",
-    grape: entry.grape ?? "",
-    type: entry.type ?? "",
-    vintage: entry.vintage ? String(entry.vintage) : "",
-    foodPairings: entry.food_pairings.join(", "),
-    sourceLabel: entry.source_label ?? "",
-    sourceConfidence: entry.source_confidence ?? "high",
-  };
-}
 
 export function toWineDraft(wine: WineRecord): WineDraft {
   return {
@@ -152,14 +134,10 @@ export function scoreCatalogCompleteness(entry: ProductCatalogWineRow) {
   ].filter(Boolean).length;
 }
 
-export function applyNullableCatalogFilter<
+function applyNullableCatalogFilter<
   TQuery extends { eq: (column: string, value: any) => TQuery; is: (column: string, value: null) => TQuery }
 >(query: TQuery, column: string, value: string | number | null) {
-  if (value === null) {
-    return query.is(column, null);
-  }
-
-  return query.eq(column, value);
+  return value === null ? query.is(column, null) : query.eq(column, value);
 }
 
 export function getMissingCatalogFields(source: Pick<WineDraft, "producer" | "country" | "region" | "grape" | "type">) {
@@ -301,25 +279,7 @@ export function mergeReferenceRows(rows: ReferenceOptionRow[]) {
   });
 }
 
-export function toWineNameReferenceRows(
-  seeds: Array<{ name: string; producer?: string | null; country?: string | null; region?: string | null }>,
-  idPrefix: string
-): ReferenceOptionRow[] {
-  return seeds
-    .filter((seed) => Boolean(seed.name?.trim()))
-    .map((seed, index) => ({
-    id: `${idPrefix}-${index}`,
-    name: seed.name,
-    category: "wine_name" as const,
-    aliases: [seed.producer, seed.country, seed.region].filter((value): value is string => Boolean(value)),
-    parent_name: seed.producer ?? null,
-    sort_order: index,
-    created_at: "",
-    updated_at: "",
-  }));
-}
-
-export async function hydrateWineRecords(rows: WineRow[]): Promise<WineRecord[]> {
+async function hydrateImageUrls<T extends { image_path: string | null }>(rows: T[]): Promise<(T & { image_url: string | null })[]> {
   const paths = rows.map((row) => row.image_path).filter((value): value is string => Boolean(value));
   const signedUrlMap = new Map<string, string>();
 
@@ -339,24 +299,12 @@ export async function hydrateWineRecords(rows: WineRow[]): Promise<WineRecord[]>
   }));
 }
 
-export async function hydrateWineHistoryRecords(rows: WineHistoryRow[]): Promise<WineHistoryRecord[]> {
-  const paths = rows.map((row) => row.image_path).filter((value): value is string => Boolean(value));
-  const signedUrlMap = new Map<string, string>();
+export function hydrateWineRecords(rows: WineRow[]): Promise<WineRecord[]> {
+  return hydrateImageUrls(rows);
+}
 
-  if (paths.length > 0) {
-    const { data } = await supabase.storage.from("wine-images").createSignedUrls(paths, 60 * 60);
-
-    for (const entry of data ?? []) {
-      if (entry.path && entry.signedUrl) {
-        signedUrlMap.set(entry.path, entry.signedUrl);
-      }
-    }
-  }
-
-  return rows.map((row) => ({
-    ...row,
-    image_url: row.image_path ? signedUrlMap.get(row.image_path) ?? null : null,
-  }));
+export function hydrateWineHistoryRecords(rows: WineHistoryRow[]): Promise<WineHistoryRecord[]> {
+  return hydrateImageUrls(rows);
 }
 
 export async function uploadWineImage(userId: string, uri: string) {
@@ -408,8 +356,8 @@ export async function cacheWineDraftAsCatalogEntry(payload: WineInsert, userId: 
   );
 }
 
-export async function cacheWineRecordAsCatalogEntry(wine: WineRecord, userId: string) {
-  await cacheCatalogEntry(
+export async function cacheWineRecordAsCatalogEntry(wine: WineRecord, userId: string): Promise<boolean> {
+  return cacheCatalogEntry(
     {
       barcode: wine.barcode?.trim() || undefined,
       systembolagetProductId: wine.systembolaget_product_id?.trim() || undefined,

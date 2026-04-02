@@ -271,12 +271,14 @@ export function useCellarData(userId: string) {
     }
     let cancelled = false;
     const runBackfill = async () => {
+      let insertedCount = 0;
       for (const wine of completeWines) {
         if (cancelled) return;
-        await cacheWineRecordAsCatalogEntry(wine, userId);
+        const inserted = await cacheWineRecordAsCatalogEntry(wine, userId);
+        if (inserted) insertedCount++;
       }
       if (!cancelled) {
-        await fetchCatalogEntries();
+        if (insertedCount > 0) await fetchCatalogEntries();
         setCatalogBackfillDone(true);
       }
     };

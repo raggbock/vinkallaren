@@ -137,9 +137,9 @@ function CellarScreen({ session }: { session: Session }) {
   const [refreshing, setRefreshing] = useState(false);
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([data.fetchWines(), data.fetchStorageSpaces(), data.fetchHistoryEntries()]);
+    await Promise.all([data.fetchWines(), data.fetchStorageSpaces(), data.fetchHistoryEntries(), data.fetchCatalogEntries(), data.fetchReferenceOptions()]);
     setRefreshing(false);
-  }, [data.fetchWines, data.fetchStorageSpaces, data.fetchHistoryEntries]);
+  }, [data.fetchWines, data.fetchStorageSpaces, data.fetchHistoryEntries, data.fetchCatalogEntries, data.fetchReferenceOptions]);
   const [tastingSessionsVisible, setTastingSessionsVisible] = useState(false);
   const [saving, setSaving] = useState(false);
 
