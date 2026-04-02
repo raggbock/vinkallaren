@@ -8,7 +8,7 @@ import type { TastingSessionRow } from "../types/tasting-session";
 import type { WineHistoryRecord } from "../types/wine-history";
 import type { WineRecord } from "../types/wine";
 import type { CellarSection } from "../types/cellar";
-import { LoadingInline } from "./form-controls";
+import { LoadingInline, PanelHeader } from "./form-controls";
 
 import type { styles as themeStyles } from "../styles/theme";
 type SharedStyles = typeof themeStyles;
@@ -71,10 +71,7 @@ export function MealPlannerPanel({
 }) {
   return (
     <View style={styles.panel}>
-      <View style={styles.panelHeaderRow}>
-        <Text style={styles.panelTitle}>Vad ska vi äta?</Text>
-        {selectedMeal ? <Text style={styles.mealSelectedLabel}>{selectedMeal}</Text> : null}
-      </View>
+      <PanelHeader title="Vad ska vi äta?" right={selectedMeal ? <Text style={styles.mealSelectedLabel}>{selectedMeal}</Text> : undefined} />
 
       {FOOD_CATEGORIES.map((category) => (
         <View key={category.label} style={styles.foodCategoryGroup}>
@@ -159,10 +156,7 @@ export function HistoryPanel({
 
   const listHeader = useMemo(() => (
     <View style={styles.panel}>
-      <View style={styles.panelHeaderRow}>
-        <Text style={styles.panelTitle}>Historik</Text>
-        <Text style={styles.linkText}>{filteredEntries.length} av {historyEntries.length} poster</Text>
-      </View>
+      <PanelHeader title="Historik" right={<Text style={styles.linkText}>{filteredEntries.length} av {historyEntries.length} poster</Text>} />
 
       {historyEntries.length > 0 ? (
         <TextInput

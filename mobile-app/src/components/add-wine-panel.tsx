@@ -7,7 +7,7 @@ import type { ProductCatalogWineRow } from "../types/product-catalog";
 import type { ReferenceOptionRow } from "../types/reference-data";
 import type { StorageSpaceRow } from "../types/storage-space";
 import type { ImportFieldSelection, ImportMode, StorageSpaceDraft, WineDraft } from "../types/cellar-drafts";
-import { AutocompleteInput, DateInput, DoubleRow, GroupedSuggestionRow, ImportSelectionRow, LabeledInput, StorageSpaceForm, StorageSpaceSelector, SuggestionRow, type Suggestion } from "./form-controls";
+import { AutocompleteInput, DateInput, DoubleRow, GroupedSuggestionRow, ImportSelectionRow, LabeledInput, PanelHeader, StorageSpaceForm, StorageSpaceSelector, SuggestionRow, type Suggestion } from "./form-controls";
 import type { styles as themeStyles } from "../styles/theme";
 
 type SharedStyles = typeof themeStyles;
@@ -91,7 +91,7 @@ export function AddWinePanel({
 
   return (
     <View style={styles.panel}>
-      <Text style={styles.panelTitle}>Lägg till vin</Text>
+      <PanelHeader title="Lägg till vin" />
 
       <SuggestionRow
         title="Läge"

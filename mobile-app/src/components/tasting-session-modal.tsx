@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import * as Clipboard from "expo-clipboard";
-import { AutocompleteInput, Expandable, LabeledInput, SuggestionRow } from "./form-controls";
+import { AutocompleteInput, Expandable, LabeledInput, PanelHeader, SuggestionRow } from "./form-controls";
 import type { Suggestion } from "./form-controls";
 import { SessionTastingView } from "./session-tasting-view";
 import { addWineToSession, buildShareMessage, endSession, fetchSessionParticipants, revealSession, saveTasting } from "../lib/session-actions";
@@ -133,10 +133,7 @@ export function TastingSessionPanel({
   // Session list / create / join
   return (
     <View style={styles.panel}>
-      <View style={styles.panelHeaderRow}>
-        <Text style={styles.panelTitle}>Provningar</Text>
-        <Pressable onPress={onBack}><Text style={styles.linkText}>Tillbaka</Text></Pressable>
-      </View>
+      <PanelHeader title="Provningar" right={<Pressable onPress={onBack}><Text style={styles.linkText}>Tillbaka</Text></Pressable>} />
 
       {view === "create" ? (
         <CreateForm onCreate={async (input) => { await onCreateSession(input); setView("list"); }}

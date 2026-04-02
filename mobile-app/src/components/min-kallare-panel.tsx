@@ -7,7 +7,7 @@ import { SPACE_TYPE_LABELS, SPACE_TYPE_OPTIONS, SPACE_TYPE_VALUES } from "../lib
 import type { StorageSpaceRow } from "../types/storage-space";
 import type { WineRecord } from "../types/wine";
 import type { StorageSpaceDraft } from "../types/cellar-drafts";
-import { Expandable, InsightCard, LabeledInput, LoadingInline, StorageSpaceForm, SuggestionRow } from "./form-controls";
+import { Expandable, InsightCard, LabeledInput, LoadingInline, PanelHeader, StorageSpaceForm, SuggestionRow } from "./form-controls";
 
 import type { styles as themeStyles } from "../styles/theme";
 type SharedStyles = typeof themeStyles;
@@ -191,10 +191,7 @@ export function MinKallarePanel({
 
   const listHeader = (
     <View style={styles.panel}>
-      <View style={styles.panelHeaderRow}>
-        <Text style={styles.panelTitle}>Min källare</Text>
-        <Pressable onPress={onSignOut}><Text style={styles.linkText}>Logga ut</Text></Pressable>
-      </View>
+      <PanelHeader title="Min källare" right={<Pressable onPress={onSignOut}><Text style={styles.linkText}>Logga ut</Text></Pressable>} />
 
       <Pressable onPress={() => setStatsExpanded((v) => !v)} style={styles.statsSummaryBar}>
         <Text style={styles.statsSummaryText}>{summaryText}</Text>

@@ -1,4 +1,4 @@
-import { ActivityIndicator, Animated, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Animated, Image, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { Children, useEffect, useRef, useState, type ComponentProps, type ReactNode } from "react";
 
 import type { ReferenceOptionRow } from "../types/reference-data";
@@ -308,6 +308,20 @@ export function ImportSelectionRow({
   );
 }
 
+const logoSquare = require("../../assets/logo-square.png");
+
+export function PanelHeader({ title, right }: { title: string; right?: ReactNode }) {
+  return (
+    <View style={styles.panelHeader}>
+      <View style={styles.panelHeaderLeft}>
+        <Image source={logoSquare} style={styles.panelHeaderLogo} resizeMode="contain" />
+        <Text style={styles.panelHeaderTitle}>{title}</Text>
+      </View>
+      {right}
+    </View>
+  );
+}
+
 export function LoadingInline({ label = "Laddar viner..." }: { label?: string }) {
   return (
     <View style={styles.loadingInline}>
@@ -453,6 +467,25 @@ const styles = StyleSheet.create({
   },
   secondaryButtonText: {
     color: "#6f1d1b",
+    fontWeight: "700",
+  },
+  panelHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  panelHeaderLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  panelHeaderLogo: {
+    width: 36,
+    height: 36,
+  },
+  panelHeaderTitle: {
+    color: "#231815",
+    fontSize: 24,
     fontWeight: "700",
   },
   storageSpaceForm: {
