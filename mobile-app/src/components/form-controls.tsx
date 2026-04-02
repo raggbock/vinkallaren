@@ -478,14 +478,14 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingTop: 20,
     paddingBottom: 14,
     alignItems: "center",
-    gap: 8,
+    gap: 10,
   },
   panelHeroLogo: {
-    width: 48,
-    height: 48,
+    width: 100,
+    height: 100,
   },
   panelHeroRow: {
     flexDirection: "row",
