@@ -10,6 +10,8 @@ import type { CreateSessionInput, SessionTastingRow, SessionWineRow, TastingSess
 import type { WsetTastingData } from "../lib/wset-data";
 import type { WineRecord } from "../types/wine";
 import type { SessionToast } from "../hooks/useTastingSessions";
+import { ResultsDashboard } from "./results-dashboard";
+import { buildSessionResults } from "../lib/session-results";
 
 import type { styles as themeStyles } from "../styles/theme";
 type SharedStyles = typeof themeStyles;
@@ -85,6 +87,20 @@ export function TastingSessionPanel({
           }}
           onOpenWset={() => onOpenWset(tastingWine.type || "")}
           onBack={() => setTastingWine(null)}
+        />
+      </View>
+    );
+  }
+
+  // Results view for ended/revealed sessions
+  if (activeSession && (activeSession.status === "ended" || activeSession.status === "revealed")) {
+    const results = buildSessionResults(activeWines, activeTastings, activeSession.format, activeSession.created_at);
+    return (
+      <View style={styles.panel}>
+        <ResultsDashboard
+          results={results}
+          participants={participants}
+          onBack={() => { onCloseSession(); setView("list"); }}
         />
       </View>
     );
