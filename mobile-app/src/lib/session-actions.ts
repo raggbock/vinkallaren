@@ -2,6 +2,7 @@ import { ok, fail, type Result } from "../types/result";
 import { supabase } from "./supabase";
 import type {
   CreateSessionInput,
+  SessionParticipant,
   SessionTastingInsert,
   SessionWineInsert,
   TastingSessionRow,
@@ -102,10 +103,10 @@ export async function endSession(sessionId: string): Promise<Result<true>> {
   return ok(true);
 }
 
-export async function fetchSessionParticipants(sessionId: string): Promise<Result<{ user_id: string; display_name: string; avatar_color: string | null }[]>> {
+export async function fetchSessionParticipants(sessionId: string): Promise<Result<SessionParticipant[]>> {
   const { data, error } = await supabase.rpc("get_session_participants", { p_session_id: sessionId });
   if (error) return fail(error.message);
-  return ok((data ?? []) as { user_id: string; display_name: string; avatar_color: string | null }[]);
+  return ok((data ?? []) as SessionParticipant[]);
 }
 
-export { buildShareMessage, shareSession } from "./join-link";
+export { shareSession } from "./join-link";

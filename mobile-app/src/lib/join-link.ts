@@ -9,7 +9,6 @@ export function parseJoinCodeFromUrl(): string | null {
   const path = window.location.pathname;
   const match = path.match(/^\/join\/([A-Z0-9]{6})$/i);
   if (!match) return null;
-  // Clean the URL so the join path doesn't persist on reload
   window.history.replaceState(null, "", "/");
   return match[1].toUpperCase();
 }

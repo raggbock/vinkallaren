@@ -104,19 +104,6 @@ export const FOOD_CATEGORIES: Array<{ label: string; items: string[] }> = [
   { label: "Sött", items: ["dessert", "choklad", "frukt"] },
 ];
 
-export function buildMealSuggestions(wines: WineRecord[]) {
-  const defaults = ["lamm", "nöt", "fisk", "skaldjur", "ost", "svamp"];
-  const values = new Set<string>(defaults);
-
-  for (const wine of wines) {
-    for (const pairing of wine.food_pairings) {
-      values.add(pairing);
-    }
-  }
-
-  return [...values];
-}
-
 export function buildValueOptions(wines: WineRecord[], selector: (wine: WineRecord) => string | null) {
   const values = new Set<string>(["Alla"]);
 

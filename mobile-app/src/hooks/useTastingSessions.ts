@@ -6,15 +6,13 @@ import {
   fetchSessionWines,
   joinSessionByCode,
 } from "../lib/session-actions";
-import { showError } from "../lib/show-error";
 import type {
   CreateSessionInput,
   SessionTastingRow,
+  SessionToast,
   SessionWineRow,
   TastingSessionRow,
 } from "../types/tasting-session";
-
-export type SessionToast = { id: number; message: string };
 
 export function useTastingSessions(userId: string) {
   const [sessions, setSessions] = useState<TastingSessionRow[]>([]);
@@ -64,18 +62,18 @@ export function useTastingSessions(userId: string) {
     setActiveTastings([]);
   }, []);
 
-  const handleCreate = useCallback(async (input: CreateSessionInput) => {
+  const handleCreate = useCallback(async (input: CreateSessionInput): Promise<TastingSessionRow | null> => {
     const result = await createSession(userId, input);
-    if (result.error) { showError("Kunde inte skapa provning", result.error); return null; }
+    if (result.error) return null;
     const session = result.data!;
     setSessions((prev) => [session, ...prev]);
     await openSession(session);
     return session;
   }, [userId, openSession]);
 
-  const handleJoin = useCallback(async (code: string) => {
+  const handleJoin = useCallback(async (code: string): Promise<TastingSessionRow | null> => {
     const result = await joinSessionByCode(code);
-    if (result.error) { showError("Kunde inte gå med", result.error); return null; }
+    if (result.error) return null;
     const session = result.data!;
     setSessions((prev) => {
       if (prev.some((s) => s.id === session.id)) return prev;

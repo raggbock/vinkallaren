@@ -2,12 +2,9 @@ import { type ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { AvatarRow } from "./avatar";
 import { getPersonalProgress, getWineProgress, isAllDone } from "../lib/session-progress";
-import type { SessionTastingRow, SessionWineRow, TastingSessionRow } from "../types/tasting-session";
-import type { SessionToast } from "../hooks/useTastingSessions";
+import type { SessionParticipant, SessionTastingRow, SessionToast, SessionWineRow, TastingSessionRow } from "../types/tasting-session";
 
 export { isAllDone } from "../lib/session-progress";
-
-type Participant = { user_id: string; display_name: string; avatar_color: string | null };
 
 type ActiveSessionViewProps = {
   session: TastingSessionRow;
@@ -15,7 +12,7 @@ type ActiveSessionViewProps = {
   wines: SessionWineRow[];
   tastings: SessionTastingRow[];
   toasts: SessionToast[];
-  participants: Participant[];
+  participants: SessionParticipant[];
   onTasteWine: (wine: SessionWineRow) => void;
   onBack: () => void;
   children?: ReactNode;

@@ -1,16 +1,15 @@
 import { useEffect, useState } from "react";
-import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
-import { AutocompleteInput, Expandable, LabeledInput, PanelHeader, SuggestionRow } from "./form-controls";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { PanelHeader } from "./form-controls";
 import type { Suggestion } from "./form-controls";
-import { ActiveSessionView, isAllDone } from "./session-active-view";
+import { ActiveSessionView } from "./session-active-view";
 import { SessionTastingView } from "./session-tasting-view";
-import { addWineToSession, advanceReveal, endSession, fetchSessionParticipants, finishReveal, revealSession, saveTasting, shareSession, startSession } from "../lib/session-actions";
+import { advanceReveal, fetchSessionParticipants, finishReveal, saveTasting, startSession } from "../lib/session-actions";
 import { SessionSetupView } from "./session-setup-view";
-import { confirmAction, showError } from "../lib/show-error";
-import type { CreateSessionInput, SessionTastingRow, SessionWineRow, TastingSessionRow } from "../types/tasting-session";
+import { AddWineForm, CreateForm, HostControls, InlineError, JoinForm, s } from "./session-forms";
+import type { CreateSessionInput, SessionParticipant, SessionTastingRow, SessionToast, SessionWineRow, TastingSessionRow } from "../types/tasting-session";
 import type { WsetTastingData } from "../lib/wset-data";
 import type { WineRecord } from "../types/wine";
-import type { SessionToast } from "../hooks/useTastingSessions";
 import { ResultsDashboard } from "./results-dashboard";
 import { buildSessionResults } from "../lib/session-results";
 import { RevealView } from "./reveal-view";
@@ -50,7 +49,8 @@ export function TastingSessionPanel({
   const [view, setView] = useState<"list" | "create" | "join">("list");
   const [tastingWine, setTastingWine] = useState<SessionWineRow | null>(null);
   const [savingTasting, setSavingTasting] = useState(false);
-  const [participants, setParticipants] = useState<{ user_id: string; display_name: string; avatar_color: string | null }[]>([]);
+  const [participants, setParticipants] = useState<SessionParticipant[]>([]);
+  const [inlineError, setInlineError] = useState<string | null>(null);
 
   useEffect(() => { onFetchSessions(); setView("list"); setTastingWine(null); }, []);
 
@@ -90,7 +90,7 @@ export function TastingSessionPanel({
               food_pairings: data.foodPairings, tasting_data: data.wsetData ?? null,
             });
             setSavingTasting(false);
-            if (result.error) { showError("Kunde inte spara provning", result.error); return; }
+            if (result.error) { setInlineError("Kunde inte spara provning"); return; }
             setTastingWine(null);
           }}
           onOpenWset={() => onOpenWset(tastingWine.type || "")}
@@ -128,12 +128,12 @@ export function TastingSessionPanel({
           onAdvance={async () => {
             const next = activeSession.revealed_up_to + 1;
             const r = await advanceReveal(activeSession.id, next);
-            if (r.error) { showError("Kunde inte avslöja nästa vin", r.error); return; }
+            if (r.error) { setInlineError("Kunde inte avslöja nästa vin"); return; }
             onSetActiveSession({ ...activeSession, revealed_up_to: next });
           }}
           onFinish={async () => {
             const r = await finishReveal(activeSession.id);
-            if (r.error) { showError("Kunde inte avsluta avslöjningen", r.error); return; }
+            if (r.error) { setInlineError("Kunde inte avsluta avslöjningen"); return; }
             onSetActiveSession({ ...activeSession, status: "ended" });
           }}
           onBack={() => { onCloseSession(); setView("list"); }}
@@ -147,6 +147,7 @@ export function TastingSessionPanel({
     const isHost = activeSession.host_id === userId;
     return (
       <View style={styles.panel}>
+        <InlineError message={inlineError} />
         <SessionSetupView
           session={activeSession}
           wines={activeWines}
@@ -154,7 +155,7 @@ export function TastingSessionPanel({
           isHost={isHost}
           onStart={async () => {
             const r = await startSession(activeSession.id);
-            if (r.error) { showError("Kunde inte starta", r.error); return; }
+            if (r.error) { setInlineError("Kunde inte starta"); return; }
             onSetActiveSession({ ...activeSession, status: "active" });
           }}
           onBack={() => { onCloseSession(); setView("list"); }}
@@ -201,13 +202,20 @@ export function TastingSessionPanel({
   return (
     <View style={styles.panel}>
       <PanelHeader title="Provningar" rightLabel="Tillbaka" onRightPress={onBack} />
+      <InlineError message={inlineError} />
 
       {view === "create" ? (
-        <CreateForm onCreate={async (input) => { await onCreateSession(input); setView("list"); }}
-          onCancel={() => setView("list")} />
+        <CreateForm onCreate={async (input) => {
+          const result = await onCreateSession(input);
+          if (!result) { setInlineError("Kunde inte skapa provning"); return; }
+          setView("list");
+        }} onCancel={() => setView("list")} />
       ) : view === "join" ? (
-        <JoinForm onJoin={async (code) => { await onJoinSession(code); setView("list"); }}
-          onCancel={() => setView("list")} />
+        <JoinForm onJoin={async (code) => {
+          const result = await onJoinSession(code);
+          if (!result) { setInlineError("Kunde inte gå med — kontrollera koden"); return; }
+          setView("list");
+        }} onCancel={() => setView("list")} />
       ) : (
         <>
           <View style={s.actionRow}>
@@ -218,200 +226,27 @@ export function TastingSessionPanel({
               <Text style={styles.secondaryButtonText}>Gå med (kod)</Text>
             </Pressable>
           </View>
-          {loading ? <Text style={s.meta}>Laddar...</Text> : null}
+          {loading ? <Text style={local.meta}>Laddar...</Text> : null}
           {sessions.map((ses) => (
-            <Pressable key={ses.id} style={s.sessionCard} onPress={() => onOpenSession(ses)}>
-              <Text style={s.sessionTitle}>{ses.title}</Text>
-              <Text style={s.sessionMeta}>
+            <Pressable key={ses.id} style={local.sessionCard} onPress={() => onOpenSession(ses)}>
+              <Text style={local.sessionTitle}>{ses.title}</Text>
+              <Text style={local.sessionMeta}>
                 {ses.mode === "blind" ? "Blind" : "Öppen"} · {ses.format.toUpperCase()} · {ses.status === "setup" ? "Förbereder" : ses.status === "active" ? "Pågår" : ses.status === "revealing" ? "Avslöjas" : "Avslutad"}
               </Text>
             </Pressable>
           ))}
-          {!loading && sessions.length === 0 ? <Text style={s.meta}>Inga provningar ännu.</Text> : null}
+          {!loading && sessions.length === 0 ? <Text style={local.meta}>Inga provningar ännu.</Text> : null}
         </>
       )}
     </View>
   );
 }
 
-/* ── Host controls ── */
-
-function HostControls({ session, onSetSession, onEnd, activeTastings, activeWines, participantCount }: {
-  session: TastingSessionRow; onSetSession: (s: TastingSessionRow | null) => void; onEnd: () => void;
-  activeTastings: SessionTastingRow[]; activeWines: SessionWineRow[]; participantCount: number;
-}) {
-  const allDone = isAllDone(activeWines, activeTastings, participantCount);
-  return (
-    <View style={s.hostControls}>
-      <Pressable onPress={() => shareSession(session.title, session.join_code)} style={s.hostButton}>
-        <Text style={s.hostButtonText}>Dela provning</Text>
-      </Pressable>
-      {session.status === "active" && session.mode === "blind" ? (
-        <Pressable onPress={() => confirmAction("Starta avslöjningen?", "Alla kommer se resultaten ett vin i taget.", async () => { const r = await revealSession(session.id); if (r.error) { showError("Kunde inte avslöja", r.error); return; } onSetSession({ ...session, status: "revealing", revealed_up_to: 1 }); })}
-          style={[s.hostButton, allDone && s.hostButtonHighlight]}>
-          <Text style={[s.hostButtonText, allDone && { color: "#6f1d1b" }]}>{allDone ? "Alla klara \u2014 Avsl\u00F6ja!" : "Avsl\u00F6ja"}</Text>
-        </Pressable>
-      ) : null}
-      {session.status !== "ended" ? (
-        <Pressable onPress={() => confirmAction("Avsluta provning?", "Provningen avslutas och sparas i historiken.", async () => { const r = await endSession(session.id); if (r.error) { showError("Kunde inte avsluta", r.error); return; } onSetSession({ ...session, status: "ended" }); onEnd(); })} style={[s.hostButton, { backgroundColor: "#ead8ca" }]}>
-          <Text style={[s.hostButtonText, { color: "#6f1d1b" }]}>Avsluta</Text>
-        </Pressable>
-      ) : null}
-    </View>
-  );
-}
-
-/* ── Create session form ── */
-
-function CreateForm({ onCreate, onCancel }: {
-  onCreate: (input: CreateSessionInput) => void; onCancel: () => void;
-}) {
-  const [title, setTitle] = useState("");
-  const [mode, setMode] = useState<"blind" | "open">("blind");
-  const [format, setFormat] = useState<"quick" | "wset">("quick");
-  const [freeOrder, setFreeOrder] = useState(false);
-  return (
-    <View style={s.formSection}>
-      <LabeledInput label="Titel" value={title} onChangeText={setTitle} placeholder="t.ex. Italiensk kväll" />
-      <SuggestionRow title="Läge" options={["Blind", "Öppen"]}
-        selected={mode === "blind" ? "Blind" : "Öppen"}
-        onSelect={(v: string) => setMode(v === "Blind" ? "blind" : "open")} />
-      <SuggestionRow title="Format" options={["Snabb", "WSET"]}
-        selected={format === "quick" ? "Snabb" : "WSET"}
-        onSelect={(v: string) => setFormat(v === "Snabb" ? "quick" : "wset")} />
-      <SuggestionRow title="Ordning" options={["I ordning", "Valfri"]}
-        selected={freeOrder ? "Valfri" : "I ordning"}
-        onSelect={(v: string) => setFreeOrder(v === "Valfri")} />
-      <View style={s.actionRow}>
-        <Pressable onPress={() => { if (!title.trim()) { Alert.alert("Titel saknas"); return; } onCreate({ title: title.trim(), mode, format, free_order: freeOrder }); }} style={s.primaryBtn}>
-          <Text style={s.primaryBtnText}>Skapa</Text>
-        </Pressable>
-        <Pressable onPress={onCancel} style={s.secondaryBtn}>
-          <Text style={s.secondaryBtnText}>Avbryt</Text>
-        </Pressable>
-      </View>
-    </View>
-  );
-}
-
-/* ── Join session form ── */
-
-function JoinForm({ onJoin, onCancel }: { onJoin: (code: string) => void; onCancel: () => void }) {
-  const [code, setCode] = useState("");
-  return (
-    <View style={s.formSection}>
-      <LabeledInput label="Provningskod" value={code}
-        onChangeText={(v) => setCode(v.toUpperCase())} placeholder="ABC123" autoCapitalize="characters" />
-      <View style={s.actionRow}>
-        <Pressable onPress={() => { if (code.length < 6) { Alert.alert("Skriv in en 6-teckens kod"); return; } onJoin(code); }} style={s.primaryBtn}>
-          <Text style={s.primaryBtnText}>Gå med</Text>
-        </Pressable>
-        <Pressable onPress={onCancel} style={s.secondaryBtn}>
-          <Text style={s.secondaryBtnText}>Avbryt</Text>
-        </Pressable>
-      </View>
-    </View>
-  );
-}
-
-/* ── Add wine form ── */
-
-function AddWineForm({ sessionId, wineCount, wines, searchWineNames }: {
-  sessionId: string; wineCount: number; wines: WineRecord[];
-  searchWineNames: (query: string, offset?: number) => Promise<{ suggestions: Suggestion[]; hasMore: boolean; nextOffset: number }>;
-}) {
-  const [expanded, setExpanded] = useState(false);
-  const [source, setSource] = useState<"manual" | "cellar">("manual");
-  const [name, setName] = useState("");
-  const [producer, setProducer] = useState("");
-  const [vintage, setVintage] = useState("");
-  const [cellarFilter, setCellarFilter] = useState("");
-  const [selectedWineId, setSelectedWineId] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-
-  function prefill(wineName: string, wineProducer: string | null, wineVintage: number | null, wineId?: string | null) {
-    setName(wineName);
-    setProducer(wineProducer || "");
-    setVintage(wineVintage ? String(wineVintage) : "");
-    setSelectedWineId(wineId || null);
-  }
-
-  const filteredCellarWines = cellarFilter.length >= 2
-    ? wines.filter((w) => w.name.toLowerCase().includes(cellarFilter.toLowerCase())).slice(0, 8)
-    : wines.slice(0, 8);
-
-  async function handleAdd() {
-    if (!name.trim()) { Alert.alert("Namn saknas"); return; }
-    setSaving(true);
-    const result = await addWineToSession({
-      session_id: sessionId, position: wineCount + 1, name: name.trim(),
-      producer: producer.trim() || null, vintage: vintage ? Number(vintage) : null,
-      wine_id: selectedWineId,
-    });
-    setSaving(false);
-    if (result.error) { showError("Kunde inte lägga till vin", result.error); return; }
-    setName(""); setProducer(""); setVintage(""); setCellarFilter("");
-    setSelectedWineId(null); setExpanded(false);
-  }
-
-  return (
-    <View>
-      <Pressable onPress={() => setExpanded(!expanded)} style={s.secondaryBtn}>
-        <Text style={s.secondaryBtnText}>{expanded ? "Dölj" : "+ Lägg till vin"}</Text>
-      </Pressable>
-      <Expandable expanded={expanded}>
-        <View style={s.formSection}>
-          <SuggestionRow title="Källa" options={["Sök", "Från källaren"]}
-            selected={source === "manual" ? "Sök" : "Från källaren"}
-            onSelect={(v: string) => setSource(v === "Sök" ? "manual" : "cellar")} />
-
-          {source === "cellar" ? (
-            <>
-              <LabeledInput label="Filtrera" value={cellarFilter} onChangeText={setCellarFilter} placeholder="Sök bland dina viner..." />
-              {filteredCellarWines.map((w) => (
-                <Pressable key={w.id} style={s.cellarPick} onPress={() => prefill(w.name, w.producer, w.vintage, w.id)}>
-                  <Text style={s.cellarPickName}>{w.name}</Text>
-                  <Text style={s.cellarPickMeta}>{[w.producer, w.vintage].filter(Boolean).join(" · ")}</Text>
-                </Pressable>
-              ))}
-            </>
-          ) : (
-            <AutocompleteInput label="Sök vin" value={name} onChangeText={setName}
-              onOptionSelected={(v, parentName) => prefill(v, parentName || null, null)}
-              options={[]} searchAsync={searchWineNames} placeholder="Skriv minst 4 bokstäver" minimumQueryLength={4} />
-          )}
-
-          <LabeledInput label="Namn" value={name} onChangeText={setName} placeholder="t.ex. Barolo 2018" />
-          <LabeledInput label="Producent" value={producer} onChangeText={setProducer} />
-          <LabeledInput label="Årgång" value={vintage} onChangeText={setVintage} keyboardType="number-pad" />
-
-          <Pressable onPress={handleAdd} style={s.primaryBtn} disabled={saving}>
-            <Text style={s.primaryBtnText}>{saving ? "Lägger till..." : "Lägg till"}</Text>
-          </Pressable>
-        </View>
-      </Expandable>
-    </View>
-  );
-}
-
 /* ── Local styles (only what theme doesn't cover) ── */
 
-const s = StyleSheet.create({
+const local = StyleSheet.create({
   meta: { color: "#564a40", fontSize: 13, marginTop: 2 },
-  actionRow: { flexDirection: "row", gap: 10 },
-  primaryBtn: { flex: 1, backgroundColor: "#6f1d1b", borderRadius: 999, paddingVertical: 14, alignItems: "center" },
-  primaryBtnText: { color: "#fffaf5", fontWeight: "700", fontSize: 15 },
-  secondaryBtn: { flex: 1, backgroundColor: "#ead8ca", borderRadius: 999, paddingVertical: 12, alignItems: "center" },
-  secondaryBtnText: { color: "#6f1d1b", fontWeight: "700" },
   sessionCard: { backgroundColor: "#fffaf5", borderRadius: 18, padding: 14, gap: 4, borderWidth: 1, borderColor: "#ead8ca" },
   sessionTitle: { color: "#231815", fontSize: 16, fontWeight: "700" },
   sessionMeta: { color: "#564a40", fontSize: 13 },
-  formSection: { gap: 12 },
-  hostControls: { flexDirection: "row", gap: 8, flexWrap: "wrap" },
-  hostButton: { backgroundColor: "#6f1d1b", borderRadius: 999, paddingVertical: 10, paddingHorizontal: 16 },
-  hostButtonText: { color: "#fffaf5", fontWeight: "700", fontSize: 13 },
-  hostButtonHighlight: { backgroundColor: "#f4c38c", borderWidth: 2, borderColor: "#6f1d1b" },
-  cellarPick: { backgroundColor: "#fffaf5", borderRadius: 12, padding: 10, borderWidth: 1, borderColor: "#ead8ca" },
-  cellarPickName: { color: "#231815", fontSize: 14, fontWeight: "600" },
-  cellarPickMeta: { color: "#564a40", fontSize: 12 },
 });

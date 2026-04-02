@@ -1,4 +1,5 @@
 import type { SessionTastingRow, SessionWineRow } from "../types/tasting-session";
+import { averageRating } from "./session-results";
 
 export type ParticipantProgress = {
   user_id: string;
@@ -37,12 +38,11 @@ export function getWineProgress(
   for (const wine of wines) {
     const wineTastings = tastings.filter((t) => t.session_wine_id === wine.id);
     const done = new Set(wineTastings.filter((t) => t.rating != null).map((t) => t.user_id));
-    const ratings = wineTastings.map((t) => t.rating).filter((r): r is number => r != null);
     map.set(wine.id, {
       wineId: wine.id,
       tastings: wineTastings,
       participantsDone: done,
-      averageRating: ratings.length > 0 ? ratings.reduce((a, b) => a + b, 0) / ratings.length : null,
+      averageRating: averageRating(wineTastings.map((t) => t.rating)),
     });
   }
   return map;

@@ -2,14 +2,12 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Avatar } from "./avatar";
 import { PanelHeader } from "./form-controls";
 import { shareSession } from "../lib/session-actions";
-import type { SessionWineRow, TastingSessionRow } from "../types/tasting-session";
-
-type Participant = { user_id: string; display_name: string; avatar_color: string | null };
+import type { SessionParticipant, SessionWineRow, TastingSessionRow } from "../types/tasting-session";
 
 type Props = {
   session: TastingSessionRow;
   wines: SessionWineRow[];
-  participants: Participant[];
+  participants: SessionParticipant[];
   isHost: boolean;
   onStart: () => void;
   onBack: () => void;
@@ -45,7 +43,7 @@ export function SessionSetupView({ session, wines, participants, isHost, onStart
         <Text style={s.shareBtnText}>Bjud in deltagare</Text>
       </Pressable>
 
-      {/* Participants */}
+      {/* SessionParticipants */}
       <View style={s.section}>
         <Text style={s.sectionTitle}>Deltagare ({participants.length})</Text>
         {participants.length === 0 ? (

@@ -4,7 +4,7 @@ import { ActivityIndicator, FlatList, Image, Pressable, RefreshControl, StyleShe
 import { FOOD_CATEGORIES } from "../lib/cellar-helpers";
 import { buildWsetSummary, type WsetTastingData } from "../lib/wset-data";
 import type { StorageSpaceRow } from "../types/storage-space";
-import type { TastingSessionRow } from "../types/tasting-session";
+import type { SessionParticipant, TastingSessionRow } from "../types/tasting-session";
 import type { WineHistoryRecord } from "../types/wine-history";
 import type { WineRecord } from "../types/wine";
 import type { CellarSection } from "../types/cellar";
@@ -161,7 +161,7 @@ export function HistoryPanel({
   const sessionCount = endedSessions?.length ?? 0;
 
   const listHeader = useMemo(() => (
-    <View style={styles.panel}>
+    <>
       <PanelHeader title="Historik" />
 
       {/* Sub-tabs */}
@@ -206,7 +206,7 @@ export function HistoryPanel({
       {tab === "viner" && !loadingHistory && historyEntries.length > 0 && filteredEntries.length === 0 ? (
         <Text style={styles.emptyState}>Inga träffar för "{searchQuery}"</Text>
       ) : null}
-    </View>
+    </>
   ), [styles, tab, sessionCount, filteredEntries.length, historyEntries.length, searchQuery, endedSessions, loadingHistory]);
 
   return (
@@ -215,7 +215,7 @@ export function HistoryPanel({
       keyExtractor={(item) => item.id}
       renderItem={renderItem}
       ListHeaderComponent={listHeader}
-      contentContainerStyle={styles.scrollContent}
+      contentContainerStyle={[styles.scrollContent, styles.panel]}
       keyboardShouldPersistTaps="handled"
       refreshControl={
         onRefresh ? <RefreshControl refreshing={refreshing ?? false} onRefresh={onRefresh} tintColor="#6f1d1b" colors={["#6f1d1b"]} /> : undefined
@@ -234,7 +234,7 @@ function ExpandableSessionCard({ session, styles }: { session: TastingSessionRow
   const [expanded, setExpanded] = useState(false);
   const [wines, setWines] = useState<SessionWineRow[]>([]);
   const [tastings, setTastings] = useState<SessionTastingRow[]>([]);
-  const [participants, setParticipants] = useState<{ user_id: string; display_name: string | null; avatar_color: string | null }[]>([]);
+  const [participants, setParticipants] = useState<SessionParticipant[]>([]);
   const [loaded, setLoaded] = useState(false);
 
   function handleToggle() {

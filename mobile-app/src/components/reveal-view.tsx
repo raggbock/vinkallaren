@@ -1,15 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
 import { Avatar } from "./avatar";
-import type { SessionTastingRow, SessionWineRow, TastingSessionRow } from "../types/tasting-session";
-
-type Participant = { user_id: string; display_name: string; avatar_color: string | null };
+import type { SessionParticipant, SessionTastingRow, SessionWineRow, TastingSessionRow } from "../types/tasting-session";
+import { averageRating, consensusLevel, stddev } from "../lib/session-results";
 
 type Props = {
   session: TastingSessionRow;
   wines: SessionWineRow[];
   tastings: SessionTastingRow[];
-  participants: Participant[];
+  participants: SessionParticipant[];
   isHost: boolean;
   onAdvance: () => void;
   onFinish: () => void;
@@ -63,13 +62,12 @@ export function RevealView({ session, wines, tastings, participants, isHost, onA
       {/* Previously revealed wines (collapsed) */}
       {wines.filter((w) => w.position < session.revealed_up_to).reverse().map((w) => {
         const wt = tastings.filter((t) => t.session_wine_id === w.id);
-        const ratings = wt.map((t) => t.rating).filter((r): r is number => r != null);
-        const avg = ratings.length > 0 ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1) : null;
+        const avg = averageRating(wt.map((t) => t.rating));
         return (
           <View key={w.id} style={s.prevWine}>
             <Text style={s.prevPosition}>{w.position}</Text>
             <Text style={s.prevName}>{w.name}</Text>
-            {avg ? <Text style={s.prevRating}>{avg}</Text> : null}
+            {avg != null ? <Text style={s.prevRating}>{avg.toFixed(1)}</Text> : null}
           </View>
         );
       })}
@@ -80,7 +78,7 @@ export function RevealView({ session, wines, tastings, participants, isHost, onA
 function RevealCard({ wine, tastings, participantMap }: {
   wine: SessionWineRow;
   tastings: SessionTastingRow[];
-  participantMap: Map<string, Participant>;
+  participantMap: Map<string, SessionParticipant>;
 }) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
@@ -99,8 +97,8 @@ function RevealCard({ wine, tastings, participantMap }: {
   }, [wine.id]);
 
   const ratings = tastings.map((t) => t.rating).filter((r): r is number => r != null);
-  const avg = ratings.length > 0 ? ratings.reduce((a, b) => a + b, 0) / ratings.length : null;
-  const spread = ratings.length >= 2 ? Math.sqrt(ratings.reduce((sum, r) => sum + (r - avg!) ** 2, 0) / ratings.length) : 0;
+  const avg = averageRating(tastings.map((t) => t.rating));
+  const spread = stddev(ratings);
 
   return (
     <Animated.View style={[s.card, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
@@ -121,9 +119,9 @@ function RevealCard({ wine, tastings, participantMap }: {
           {avg != null ? (
             <View style={s.summaryRow}>
               <Text style={s.avgLabel}>Snitt: {avg.toFixed(1)}/5</Text>
-              <View style={[s.consensusBadge, spread < 0.8 ? s.consensusHigh : s.consensusLow]}>
-                <Text style={[s.consensusText, spread < 0.8 ? s.consensusTextHigh : s.consensusTextLow]}>
-                  {spread < 0.8 ? "Eniga" : "Delade"}
+              <View style={[s.consensusBadge, consensusLevel(spread) === "high" ? s.consensusHigh : s.consensusLow]}>
+                <Text style={[s.consensusText, consensusLevel(spread) === "high" ? s.consensusTextHigh : s.consensusTextLow]}>
+                  {consensusLevel(spread) === "high" ? "Eniga" : "Delade"}
                 </Text>
               </View>
             </View>
@@ -135,7 +133,7 @@ function RevealCard({ wine, tastings, participantMap }: {
 }
 
 function RatingRow({ participant, rating, notes, delay }: {
-  participant: Participant | null; rating: number; notes: string | null; delay: number;
+  participant: SessionParticipant | null; rating: number; notes: string | null; delay: number;
 }) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
 

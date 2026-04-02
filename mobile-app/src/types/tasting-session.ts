@@ -67,3 +67,11 @@ export type CreateSessionInput = {
   format: "quick" | "wset";
   free_order: boolean;
 };
+
+export type SessionParticipant = {
+  user_id: string;
+  display_name: string;
+  avatar_color: string | null;
+};
+
+export type SessionToast = { id: number; message: string };

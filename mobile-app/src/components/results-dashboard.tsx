@@ -6,10 +6,11 @@ import type { SessionResults, WineResult } from "../lib/session-results";
 import { getWsetParameterComparison, getSharedAromas } from "../lib/session-results";
 import { buildWsetSummary } from "../lib/wset-data";
 import type { WsetTastingData } from "../lib/wset-data";
+import type { SessionParticipant } from "../types/tasting-session";
 
 type Props = {
   results: SessionResults;
-  participants: Array<{ user_id: string; display_name: string | null; avatar_color: string | null }>;
+  participants: SessionParticipant[];
   onBack: () => void;
 };
 

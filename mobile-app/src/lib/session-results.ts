@@ -22,11 +22,22 @@ export type SessionResults = {
   participantIds: string[];
 };
 
-function stddev(values: number[]): number {
+export const CONSENSUS_THRESHOLD = 0.8;
+
+export function stddev(values: number[]): number {
   if (values.length < 2) return 0;
   const mean = values.reduce((a, b) => a + b, 0) / values.length;
   const variance = values.reduce((sum, v) => sum + (v - mean) ** 2, 0) / values.length;
   return Math.sqrt(variance);
+}
+
+export function averageRating(ratings: (number | null)[]): number | null {
+  const valid = ratings.filter((r): r is number => r != null);
+  return valid.length > 0 ? valid.reduce((a, b) => a + b, 0) / valid.length : null;
+}
+
+export function consensusLevel(spread: number): "high" | "low" {
+  return spread < CONSENSUS_THRESHOLD ? "high" : "low";
 }
 
 const QUALITY_ORDER = ["poor", "acceptable", "good", "very good", "outstanding"];
@@ -39,7 +50,7 @@ function getWsetQuality(tasting: SessionTastingRow): string | null {
 function buildWineResult(wine: SessionWineRow, tastings: SessionTastingRow[]): WineResult {
   const wineTastings = tastings.filter((t) => t.session_wine_id === wine.id);
   const ratings = wineTastings.map((t) => t.rating).filter((r): r is number => r != null);
-  const avg = ratings.length > 0 ? ratings.reduce((a, b) => a + b, 0) / ratings.length : null;
+  const avg = averageRating(wineTastings.map((t) => t.rating));
   const spread = stddev(ratings);
 
   const qualityCounts: Record<string, number> = {};
@@ -57,7 +68,7 @@ function buildWineResult(wine: SessionWineRow, tastings: SessionTastingRow[]): W
     tastings: wineTastings,
     averageRating: avg,
     ratingSpread: spread,
-    consensus: spread < 0.8 ? "high" : "low",
+    consensus: consensusLevel(spread),
     qualityCounts,
     averageQuality: goodOrBetter.length > 0 ? goodOrBetter[0][0] : null,
   };
