@@ -257,8 +257,8 @@ const s = StyleSheet.create({
 
   // Marketing column
   marketing: { flex: 1, justifyContent: "center", paddingBottom: 24, maxWidth: 520 },
-  heroBanner: { width: "100%", height: 220, marginBottom: 16 },
-  heroBannerWide: { height: 280 },
+  heroBanner: { width: "110%", height: 300, marginLeft: "-5%", marginBottom: 16 },
+  heroBannerWide: { height: 380 },
   subheadline: {
     color: "#c4a882",
     fontSize: 14,
