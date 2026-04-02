@@ -235,6 +235,8 @@ function CellarScreen({ session }: { session: Session }) {
       onLoadMoreWines={data.fetchMoreWines}
       highlightedWineId={highlightedWineId}
       onClearHighlight={() => setHighlightedWineId(null)}
+      refreshing={refreshing}
+      onRefresh={onRefresh}
     />
   );
   if (activeSection === "cellar" && tastingSessionsVisible) {
@@ -360,7 +362,7 @@ function CellarScreen({ session }: { session: Session }) {
         storageSpaceDraft={data.storageSpaceDraft} savingStorageSpace={data.savingStorageSpace}
         onStorageSpaceDraftChange={(patch) => data.setStorageSpaceDraft((c) => ({ ...c, ...patch }))}
       />
-      {activeSection === "history" ? (
+      {activeSection === "history" || (activeSection === "cellar" && !tastingSessionsVisible) ? (
         <RNView style={styles.scrollFlex}>
           {activePanel}
         </RNView>

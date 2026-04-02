@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
-import { Alert, Image, Pressable, Text, View } from "react-native";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, Alert, Image, Pressable, RefreshControl, SectionList, Text, View } from "react-native";
 
 import { getWineStoragePlacementLabel } from "../lib/cellar-helpers";
+import { SPACE_TYPE_LABELS, SPACE_TYPE_OPTIONS, SPACE_TYPE_VALUES } from "../lib/storage-types";
 import type { StorageSpaceRow } from "../types/storage-space";
 import type { WineRecord } from "../types/wine";
 import type { StorageSpaceDraft } from "../types/cellar-drafts";
@@ -9,6 +10,16 @@ import { Expandable, InsightCard, LabeledInput, LoadingInline, StorageSpaceForm,
 
 import type { styles as themeStyles } from "../styles/theme";
 type SharedStyles = typeof themeStyles;
+
+type WineSection = {
+  key: string;
+  title: string;
+  spaceType: string;
+  bottleCount: number;
+  isUnplaced: boolean;
+  space?: StorageSpaceRow;
+  data: WineRecord[];
+};
 
 export function MinKallarePanel({
   styles, stats, searchQuery, selectedPairingFilter, selectedCountryFilter,
@@ -24,6 +35,7 @@ export function MinKallarePanel({
   selectedStorageSpaceFilterId, onStorageSpaceFilterChange,
   hasMoreWines, onLoadMoreWines,
   highlightedWineId, onClearHighlight,
+  refreshing, onRefresh,
 }: {
   styles: SharedStyles;
   stats: { totalBottles: number; totalLabels: number; topCountry: string; topType: string; topPairing: string; averageVintage: string };
@@ -69,6 +81,8 @@ export function MinKallarePanel({
   onLoadMoreWines: () => void;
   highlightedWineId?: string | null;
   onClearHighlight?: () => void;
+  refreshing?: boolean;
+  onRefresh?: () => void;
 }) {
   const [statsExpanded, setStatsExpanded] = useState(false);
   const [expandedSpaceIds, setExpandedSpaceIds] = useState<Set<string>>(new Set(["__unplaced__"]));
@@ -82,24 +96,32 @@ export function MinKallarePanel({
     });
   }
 
-  const winesBySpace = new Map<string, WineRecord[]>();
-  const unplacedWines: WineRecord[] = [];
-  for (const wine of filteredWines) {
-    if (wine.storage_space_id) {
-      const list = winesBySpace.get(wine.storage_space_id) || [];
-      list.push(wine);
-      winesBySpace.set(wine.storage_space_id, list);
-    } else {
-      unplacedWines.push(wine);
+  const winesBySpace = useMemo(() => {
+    const map = new Map<string, WineRecord[]>();
+    for (const wine of filteredWines) {
+      if (wine.storage_space_id) {
+        const list = map.get(wine.storage_space_id) || [];
+        list.push(wine);
+        map.set(wine.storage_space_id, list);
+      }
     }
-  }
+    return map;
+  }, [filteredWines]);
 
-  const spaceCards: Array<{ id: string; name: string; spaceType: string; wines: WineRecord[]; bottleCount: number }> = [];
-  for (const space of storageSpaces) {
-    const wines = winesBySpace.get(space.id) || [];
-    const bottleCount = storageSpaceBottleCounts.get(space.id) || 0;
-    spaceCards.push({ id: space.id, name: space.name, spaceType: space.space_type, wines, bottleCount });
-  }
+  const unplacedWines = useMemo(
+    () => filteredWines.filter((w) => !w.storage_space_id),
+    [filteredWines],
+  );
+
+  const spaceCards = useMemo(() => {
+    const cards: Array<{ id: string; name: string; spaceType: string; wines: WineRecord[]; bottleCount: number }> = [];
+    for (const space of storageSpaces) {
+      const wines = winesBySpace.get(space.id) || [];
+      const bottleCount = storageSpaceBottleCounts.get(space.id) || 0;
+      cards.push({ id: space.id, name: space.name, spaceType: space.space_type, wines, bottleCount });
+    }
+    return cards;
+  }, [storageSpaces, winesBySpace, storageSpaceBottleCounts]);
 
   useEffect(() => {
     if (!highlightedWineId) return;
@@ -116,10 +138,57 @@ export function MinKallarePanel({
     return () => clearTimeout(timer);
   }, [highlightedWineId, filteredWines, onClearHighlight]);
 
+  const sections = useMemo((): WineSection[] => {
+    const result: WineSection[] = [];
+    if (unplacedWines.length > 0) {
+      result.push({
+        key: "__unplaced__", title: "Otilldelade", spaceType: "Behöver plats",
+        bottleCount: unplacedWines.length, isUnplaced: true,
+        data: expandedSpaceIds.has("__unplaced__") ? unplacedWines : [],
+      });
+    }
+    for (const card of spaceCards) {
+      result.push({
+        key: card.id, title: card.name,
+        spaceType: SPACE_TYPE_LABELS[card.spaceType] || card.spaceType,
+        bottleCount: card.bottleCount, isUnplaced: false,
+        space: storageSpaceById.get(card.id),
+        data: expandedSpaceIds.has(card.id) ? card.wines : [],
+      });
+    }
+    return result;
+  }, [unplacedWines, spaceCards, expandedSpaceIds, storageSpaceById]);
+
+  const renderSectionHeader = useCallback(({ section }: { section: WineSection }) => (
+    <View>
+      <Pressable onPress={() => toggleSpace(section.key)} style={[styles.storageCard, section.isUnplaced && { borderWidth: 2, borderColor: "#f4c38c" }]}>
+        <View style={styles.storageCardHeader}>
+          <View style={styles.flex}>
+            <Text style={styles.wineType}>{section.spaceType}</Text>
+            <Text style={styles.wineName}>{section.title}</Text>
+          </View>
+          <View style={styles.storageCardRight}>
+            <View style={[styles.quantityBadge, section.isUnplaced && { backgroundColor: "#f4c38c" }]}>
+              <Text style={styles.quantityBadgeText}>{section.bottleCount} st</Text>
+            </View>
+            <Text style={styles.statsSummaryToggle}>{expandedSpaceIds.has(section.key) ? "▲" : "▼"}</Text>
+          </View>
+        </View>
+      </Pressable>
+      {!section.isUnplaced && section.space && expandedSpaceIds.has(section.key) ? (
+        <StorageSpaceActions space={section.space} styles={styles} onUpdate={onUpdateStorageSpace} onDelete={onDeleteStorageSpace} />
+      ) : null}
+    </View>
+  ), [styles, expandedSpaceIds, onUpdateStorageSpace, onDeleteStorageSpace]);
+
+  const renderItem = useCallback(({ item }: { item: WineRecord }) => (
+    <WineCard wine={item} styles={styles} highlighted={item.id === highlightedWineId} storageSpaceById={storageSpaceById} onOpenSystembolaget={onOpenSystembolaget} onEditWine={onEditWine} onDrinkWine={onDrinkWine} onDeleteWine={onDeleteWine} />
+  ), [styles, highlightedWineId, storageSpaceById, onOpenSystembolaget, onEditWine, onDrinkWine, onDeleteWine]);
+
   const totalCountries = new Set(filteredWines.map((w) => w.country).filter(Boolean)).size;
   const summaryText = `${stats.totalBottles} flaskor · ${totalCountries} länder · snitt ${stats.averageVintage}`;
 
-  return (
+  const listHeader = useMemo(() => (
     <View style={styles.panel}>
       <View style={styles.panelHeaderRow}>
         <Text style={styles.panelTitle}>Min källare</Text>
@@ -171,7 +240,7 @@ export function MinKallarePanel({
 
       <StorageSpaceForm draft={storageSpaceDraft} saving={savingStorageSpace} onDraftChange={onStorageSpaceDraftChange} onSave={onSaveStorageSpace} />
 
-      {!loading && spaceCards.length === 0 && unplacedWines.length === 0 ? (
+      {!loading && sections.length === 0 ? (
         <View style={styles.emptyStateCard}>
           <Text style={styles.emptyStateTitle}>Din källare är tom</Text>
           <Text style={styles.emptyState}>Kom igång genom att lägga till ditt första vin — skanna en streckkod eller fyll i för hand.</Text>
@@ -180,69 +249,40 @@ export function MinKallarePanel({
           </Pressable>
         </View>
       ) : null}
-
-      {unplacedWines.length > 0 ? (
-        <View>
-          <Pressable onPress={() => toggleSpace("__unplaced__")} style={[styles.storageCard, { borderWidth: 2, borderColor: "#f4c38c" }]}>
-            <View style={styles.storageCardHeader}>
-              <View style={styles.flex}>
-                <Text style={styles.wineType}>Behöver plats</Text>
-                <Text style={styles.wineName}>Otilldelade</Text>
-              </View>
-              <View style={styles.storageCardRight}>
-                <View style={[styles.quantityBadge, { backgroundColor: "#f4c38c" }]}>
-                  <Text style={styles.quantityBadgeText}>{unplacedWines.length} st</Text>
-                </View>
-                <Text style={styles.statsSummaryToggle}>{expandedSpaceIds.has("__unplaced__") ? "▲" : "▼"}</Text>
-              </View>
-            </View>
-          </Pressable>
-          <Expandable expanded={expandedSpaceIds.has("__unplaced__")}>
-            <View>{unplacedWines.map((wine) => (
-              <WineCard key={wine.id} wine={wine} styles={styles} highlighted={wine.id === highlightedWineId} storageSpaceById={storageSpaceById} onOpenSystembolaget={onOpenSystembolaget} onEditWine={onEditWine} onDrinkWine={onDrinkWine} onDeleteWine={onDeleteWine} />
-            ))}</View>
-          </Expandable>
-        </View>
-      ) : null}
-
-      {spaceCards.map((card) => {
-        const isExpanded = expandedSpaceIds.has(card.id);
-        return (
-          <View key={card.id}>
-            <Pressable onPress={() => toggleSpace(card.id)} style={styles.storageCard}>
-              <View style={styles.storageCardHeader}>
-                <View style={styles.flex}>
-                  <Text style={styles.wineType}>{SPACE_TYPE_LABELS[card.spaceType] || card.spaceType}</Text>
-                  <Text style={styles.wineName}>{card.name}</Text>
-                </View>
-                <View style={styles.storageCardRight}>
-                  <View style={styles.quantityBadge}><Text style={styles.quantityBadgeText}>{card.bottleCount} st</Text></View>
-                  <Text style={styles.statsSummaryToggle}>{isExpanded ? "▲" : "▼"}</Text>
-                </View>
-              </View>
-            </Pressable>
-            <Expandable expanded={isExpanded}>
-              <View>
-                <StorageSpaceActions space={storageSpaceById.get(card.id)!} styles={styles} onUpdate={onUpdateStorageSpace} onDelete={onDeleteStorageSpace} />
-                {card.wines.map((wine) => (
-                  <WineCard key={wine.id} wine={wine} styles={styles} highlighted={wine.id === highlightedWineId} storageSpaceById={storageSpaceById} onOpenSystembolaget={onOpenSystembolaget} onEditWine={onEditWine} onDrinkWine={onDrinkWine} onDeleteWine={onDeleteWine} />
-                ))}
-              </View>
-            </Expandable>
-          </View>
-        );
-      })}
-
-      {hasMoreWines ? (
-        <Pressable onPress={onLoadMoreWines} style={styles.secondaryButton}>
-          <Text style={styles.secondaryButtonText}>Ladda fler viner</Text>
-        </Pressable>
-      ) : null}
     </View>
+  ), [
+    styles, stats, summaryText, statsExpanded, searchQuery, selectedPairingFilter,
+    selectedCountryFilter, selectedRegionFilter, selectedTypeFilter, selectedVintageFilter,
+    pairingOptions, countryOptions, regionOptions, typeOptions, vintageOptions,
+    storageSpaces, storageSpaceById, selectedStorageSpaceFilterId, loading, sections.length,
+    storageSpaceDraft, savingStorageSpace, onSignOut, onRefreshStats, onSearchChange,
+    onPairingChange, onCountryChange, onRegionChange, onTypeChange, onVintageChange,
+    onStorageSpaceFilterChange, onOpenTastingSessions, onStorageSpaceDraftChange,
+    onSaveStorageSpace, onNavigateToAdd,
+  ]);
+
+  return (
+    <SectionList
+      sections={sections}
+      keyExtractor={(item) => item.id}
+      renderItem={renderItem}
+      renderSectionHeader={renderSectionHeader}
+      ListHeaderComponent={listHeader}
+      contentContainerStyle={styles.scrollContent}
+      keyboardShouldPersistTaps="handled"
+      refreshControl={
+        onRefresh ? <RefreshControl refreshing={refreshing ?? false} onRefresh={onRefresh} tintColor="#6f1d1b" colors={["#6f1d1b"]} /> : undefined
+      }
+      onEndReached={hasMoreWines ? onLoadMoreWines : undefined}
+      onEndReachedThreshold={0.5}
+      ListFooterComponent={hasMoreWines ? <ActivityIndicator style={{ padding: 16 }} color="#6f1d1b" /> : null}
+      initialNumToRender={15}
+      maxToRenderPerBatch={10}
+      windowSize={5}
+      stickySectionHeadersEnabled={false}
+    />
   );
 }
-
-import { SPACE_TYPE_LABELS, SPACE_TYPE_OPTIONS, SPACE_TYPE_VALUES } from "../lib/storage-types";
 
 function StorageSpaceActions({ space, styles, onUpdate, onDelete }: {
   space: StorageSpaceRow; styles: SharedStyles;
