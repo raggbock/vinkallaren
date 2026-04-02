@@ -310,14 +310,16 @@ export function ImportSelectionRow({
 
 const logoSquare = require("../../assets/logo-square.png");
 
-export function PanelHeader({ title, right }: { title: string; right?: ReactNode }) {
+export function PanelHeader({ title, rightLabel, onRightPress }: { title: string; rightLabel?: string; onRightPress?: () => void }) {
   return (
-    <View style={styles.panelHeader}>
-      <View style={styles.panelHeaderLeft}>
-        <Image source={logoSquare} style={styles.panelHeaderLogo} resizeMode="contain" />
-        <Text style={styles.panelHeaderTitle}>{title}</Text>
+    <View style={styles.panelHero}>
+      <Image source={logoSquare} style={styles.panelHeroLogo} resizeMode="contain" />
+      <View style={styles.panelHeroRow}>
+        <Text style={styles.panelHeroTitle}>{title}</Text>
+        {rightLabel ? (
+          <Pressable onPress={onRightPress}><Text style={styles.panelHeroLink}>{rightLabel}</Text></Pressable>
+        ) : null}
       </View>
-      {right}
     </View>
   );
 }
@@ -469,24 +471,37 @@ const styles = StyleSheet.create({
     color: "#6f1d1b",
     fontWeight: "700",
   },
-  panelHeader: {
+  panelHero: {
+    backgroundColor: "#2b1714",
+    marginTop: -16,
+    marginHorizontal: -16,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 14,
+    alignItems: "center",
+    gap: 8,
+  },
+  panelHeroLogo: {
+    width: 48,
+    height: 48,
+  },
+  panelHeroRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    width: "100%",
   },
-  panelHeaderLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  panelHeaderLogo: {
-    width: 36,
-    height: 36,
-  },
-  panelHeaderTitle: {
-    color: "#231815",
-    fontSize: 24,
+  panelHeroTitle: {
+    color: "#f4c38c",
+    fontSize: 20,
     fontWeight: "700",
+  },
+  panelHeroLink: {
+    color: "#c4a882",
+    fontWeight: "600",
+    fontSize: 13,
   },
   storageSpaceForm: {
     backgroundColor: "#fffaf5",

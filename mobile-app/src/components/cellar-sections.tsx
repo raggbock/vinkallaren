@@ -71,7 +71,7 @@ export function MealPlannerPanel({
 }) {
   return (
     <View style={styles.panel}>
-      <PanelHeader title="Vad ska vi äta?" right={selectedMeal ? <Text style={styles.mealSelectedLabel}>{selectedMeal}</Text> : undefined} />
+      <PanelHeader title="Vad ska vi äta?" rightLabel={selectedMeal || undefined} />
 
       {FOOD_CATEGORIES.map((category) => (
         <View key={category.label} style={styles.foodCategoryGroup}>
@@ -156,7 +156,7 @@ export function HistoryPanel({
 
   const listHeader = useMemo(() => (
     <View style={styles.panel}>
-      <PanelHeader title="Historik" right={<Text style={styles.linkText}>{filteredEntries.length} av {historyEntries.length} poster</Text>} />
+      <PanelHeader title="Historik" rightLabel={`${filteredEntries.length} av ${historyEntries.length} poster`} />
 
       {historyEntries.length > 0 ? (
         <TextInput

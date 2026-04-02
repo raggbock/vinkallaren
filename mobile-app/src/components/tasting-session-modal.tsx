@@ -133,7 +133,7 @@ export function TastingSessionPanel({
   // Session list / create / join
   return (
     <View style={styles.panel}>
-      <PanelHeader title="Provningar" right={<Pressable onPress={onBack}><Text style={styles.linkText}>Tillbaka</Text></Pressable>} />
+      <PanelHeader title="Provningar" rightLabel="Tillbaka" onRightPress={onBack} />
 
       {view === "create" ? (
         <CreateForm onCreate={async (input) => { await onCreateSession(input); setView("list"); }}
