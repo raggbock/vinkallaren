@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { AutocompleteInput, Expandable, LabeledInput, PanelHeader, SuggestionRow } from "./form-controls";
 import type { Suggestion } from "./form-controls";
-import { AvatarRow } from "./avatar";
+import { ActiveSessionView, isAllDone } from "./session-active-view";
 import { SessionTastingView } from "./session-tasting-view";
 import { addWineToSession, endSession, fetchSessionParticipants, revealSession, saveTasting, shareSession } from "../lib/session-actions";
 import { confirmAction, showError } from "../lib/show-error";
@@ -46,8 +46,16 @@ export function TastingSessionPanel({
   const [view, setView] = useState<"list" | "create" | "join">("list");
   const [tastingWine, setTastingWine] = useState<SessionWineRow | null>(null);
   const [savingTasting, setSavingTasting] = useState(false);
+  const [participants, setParticipants] = useState<{ user_id: string; display_name: string; avatar_color: string | null }[]>([]);
 
   useEffect(() => { onFetchSessions(); setView("list"); setTastingWine(null); }, []);
+
+  useEffect(() => {
+    if (!activeSession) { setParticipants([]); return; }
+    fetchSessionParticipants(activeSession.id).then((r) => {
+      if (r.data) setParticipants(r.data);
+    });
+  }, [activeSession?.id, activeTastings.length]);
 
   // Tasting a specific wine
   if (activeSession && tastingWine) {
@@ -85,47 +93,28 @@ export function TastingSessionPanel({
   // Active session view
   if (activeSession) {
     const isHost = activeSession.host_id === userId;
-    const participantCount = new Set(activeTastings.map((t) => t.user_id)).size;
     return (
       <View style={styles.panel}>
-        <View style={[styles.panelHeaderRow, { zIndex: 999 }]}>
-          <View style={{ flex: 1 }}>
-            <Text style={s.eyebrow}>
-              {activeSession.mode === "blind" ? "Blindprovning" : "Öppen provning"} · {activeSession.format.toUpperCase()}
-            </Text>
-            <Text style={styles.panelTitle}>{activeSession.title}</Text>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 4, zIndex: 999 }}>
-              <ParticipantBadge sessionId={activeSession.id} count={participantCount} />
-              <Text style={s.meta}> · {activeWines.length} viner</Text>
-            </View>
-          </View>
-          <Pressable onPress={() => { onCloseSession(); setView("list"); }}>
-            <Text style={styles.linkText}>Tillbaka</Text>
-          </Pressable>
-        </View>
-
-        {toasts.map((toast) => (
-          <View key={toast.id} style={s.toast}>
-            <Text style={s.toastText}>{toast.message}</Text>
-          </View>
-        ))}
-
-        {activeWines.map((wine) => (
-          <WineCardRow key={wine.id} wine={wine} userId={userId}
-            activeTastings={activeTastings} sessionStatus={activeSession.status}
-            sessionMode={activeSession.mode}
-            onPress={() => activeSession.status === "active" ? setTastingWine(wine) : null} />
-        ))}
-
-        {isHost && activeSession.status === "active" ? (
-          <AddWineForm sessionId={activeSession.id} wineCount={activeWines.length}
-            wines={wines} searchWineNames={searchWineNames} />
-        ) : null}
-
-        {isHost ? (
-          <HostControls session={activeSession} onSetSession={onSetActiveSession}
-            onEnd={() => { onCloseSession(); setView("list"); onSessionEnded(); }} />
-        ) : null}
+        <ActiveSessionView
+          session={activeSession}
+          userId={userId}
+          wines={activeWines}
+          tastings={activeTastings}
+          toasts={toasts}
+          participants={participants}
+          onTasteWine={(wine) => activeSession.status === "active" ? setTastingWine(wine) : null}
+          onBack={() => { onCloseSession(); setView("list"); }}
+        >
+          {isHost && activeSession.status === "active" ? (
+            <AddWineForm sessionId={activeSession.id} wineCount={activeWines.length}
+              wines={wines} searchWineNames={searchWineNames} />
+          ) : null}
+          {isHost ? (
+            <HostControls session={activeSession} onSetSession={onSetActiveSession}
+              activeTastings={activeTastings} activeWines={activeWines} participantCount={participants.length}
+              onEnd={() => { onCloseSession(); setView("list"); onSessionEnded(); }} />
+          ) : null}
+        </ActiveSessionView>
       </View>
     );
   }
@@ -167,50 +156,22 @@ export function TastingSessionPanel({
   );
 }
 
-/* ── Wine card row ── */
-
-function WineCardRow({ wine, userId, activeTastings, sessionStatus, sessionMode, onPress }: {
-  wine: SessionWineRow; userId: string; activeTastings: SessionTastingRow[];
-  sessionStatus: string; sessionMode: string; onPress: () => void;
-}) {
-  const mine = activeTastings.find((t) => t.session_wine_id === wine.id && t.user_id === userId);
-  const total = activeTastings.filter((t) => t.session_wine_id === wine.id).length;
-  return (
-    <Pressable style={s.wineCard} onPress={onPress}>
-      <View style={s.wineCardHeader}>
-        <Text style={s.winePosition}>{wine.position}</Text>
-        <View style={{ flex: 1 }}>
-          <Text style={s.wineCardName}>{wine.name}</Text>
-          <Text style={s.wineCardMeta}>{[wine.producer, wine.vintage].filter(Boolean).join(" · ")}</Text>
-        </View>
-        <View style={[s.statusBadge, mine && { backgroundColor: "#6f1d1b" }]}>
-          <Text style={[s.statusText, mine && { color: "#fffaf5" }]}>{mine ? "✓" : `${total} st`}</Text>
-        </View>
-      </View>
-      {(sessionMode === "open" || sessionStatus !== "active") ? (
-        <View style={s.otherTastings}>
-          {activeTastings.filter((t) => t.session_wine_id === wine.id && t.user_id !== userId).map((t) => (
-            <Text key={t.id} style={s.otherTasting}>{t.rating ? `${t.rating}/5` : "—"}{t.notes ? ` "${t.notes}"` : ""}</Text>
-          ))}
-        </View>
-      ) : null}
-    </Pressable>
-  );
-}
-
 /* ── Host controls ── */
 
-function HostControls({ session, onSetSession, onEnd }: {
+function HostControls({ session, onSetSession, onEnd, activeTastings, activeWines, participantCount }: {
   session: TastingSessionRow; onSetSession: (s: TastingSessionRow | null) => void; onEnd: () => void;
+  activeTastings: SessionTastingRow[]; activeWines: SessionWineRow[]; participantCount: number;
 }) {
+  const allDone = isAllDone(activeWines, activeTastings, participantCount);
   return (
     <View style={s.hostControls}>
       <Pressable onPress={() => shareSession(session.title, session.join_code)} style={s.hostButton}>
         <Text style={s.hostButtonText}>Dela provning</Text>
       </Pressable>
       {session.status === "active" && session.mode === "blind" ? (
-        <Pressable onPress={() => confirmAction("Avslöja viner?", "Alla deltagare kommer se varandras betyg och noteringar.", async () => { const r = await revealSession(session.id); if (r.error) { showError("Kunde inte avslöja", r.error); return; } onSetSession({ ...session, status: "revealed" }); })} style={s.hostButton}>
-          <Text style={s.hostButtonText}>Avslöja</Text>
+        <Pressable onPress={() => confirmAction("Avslöja viner?", "Alla deltagare kommer se varandras betyg och noteringar.", async () => { const r = await revealSession(session.id); if (r.error) { showError("Kunde inte avslöja", r.error); return; } onSetSession({ ...session, status: "revealed" }); })}
+          style={[s.hostButton, allDone && s.hostButtonHighlight]}>
+          <Text style={[s.hostButtonText, allDone && { color: "#6f1d1b" }]}>{allDone ? "Alla klara \u2014 Avsl\u00F6ja!" : "Avsl\u00F6ja"}</Text>
         </Pressable>
       ) : null}
       {session.status !== "ended" ? (
@@ -355,51 +316,9 @@ function AddWineForm({ sessionId, wineCount, wines, searchWineNames }: {
   );
 }
 
-/* ── Participant hover badge ── */
-
-function ParticipantBadge({ sessionId, count }: { sessionId: string; count: number }) {
-  const [participants, setParticipants] = useState<{ user_id: string; display_name: string; avatar_color: string | null }[]>([]);
-  const [showTooltip, setShowTooltip] = useState(false);
-  const [fetched, setFetched] = useState(false);
-
-  useEffect(() => { setFetched(false); }, [count]);
-
-  useEffect(() => {
-    if (fetched) return;
-    fetchSessionParticipants(sessionId).then((result) => {
-      if (result.data) setParticipants(result.data);
-      setFetched(true);
-    });
-  }, [sessionId, fetched]);
-
-  return (
-    <View>
-      <Pressable
-        onHoverIn={() => setShowTooltip(true)}
-        onHoverOut={() => setShowTooltip(false)}
-        onPress={() => setShowTooltip((v) => !v)}
-        style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
-      >
-        {participants.length > 0 ? (
-          <AvatarRow participants={participants} size={24} />
-        ) : null}
-        <Text style={[s.meta, { textDecorationLine: "underline" }]}>{count} deltagare</Text>
-      </Pressable>
-      {showTooltip && participants.length > 0 ? (
-        <View style={s.tooltip}>
-          {participants.map((p) => (
-            <Text key={p.user_id} style={s.tooltipText}>{p.display_name || "Anonym"}</Text>
-          ))}
-        </View>
-      ) : null}
-    </View>
-  );
-}
-
 /* ── Local styles (only what theme doesn't cover) ── */
 
 const s = StyleSheet.create({
-  eyebrow: { color: "#6f1d1b", fontSize: 11, fontWeight: "700", letterSpacing: 2, textTransform: "uppercase" },
   meta: { color: "#564a40", fontSize: 13, marginTop: 2 },
   actionRow: { flexDirection: "row", gap: 10 },
   primaryBtn: { flex: 1, backgroundColor: "#6f1d1b", borderRadius: 999, paddingVertical: 14, alignItems: "center" },
@@ -410,22 +329,10 @@ const s = StyleSheet.create({
   sessionTitle: { color: "#231815", fontSize: 16, fontWeight: "700" },
   sessionMeta: { color: "#564a40", fontSize: 13 },
   formSection: { gap: 12 },
-  wineCard: { backgroundColor: "#fffaf5", borderRadius: 18, padding: 14, gap: 8, borderWidth: 1, borderColor: "#ead8ca" },
-  wineCardHeader: { flexDirection: "row", alignItems: "center", gap: 12 },
-  winePosition: { color: "#6f1d1b", fontSize: 20, fontWeight: "700", width: 28 },
-  wineCardName: { color: "#231815", fontSize: 15, fontWeight: "600" },
-  wineCardMeta: { color: "#564a40", fontSize: 13 },
-  statusBadge: { backgroundColor: "#ead8ca", borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4 },
-  statusText: { color: "#6f1d1b", fontSize: 12, fontWeight: "700" },
-  otherTastings: { gap: 4, paddingLeft: 40 },
-  otherTasting: { color: "#564a40", fontSize: 13 },
   hostControls: { flexDirection: "row", gap: 8, flexWrap: "wrap" },
   hostButton: { backgroundColor: "#6f1d1b", borderRadius: 999, paddingVertical: 10, paddingHorizontal: 16 },
   hostButtonText: { color: "#fffaf5", fontWeight: "700", fontSize: 13 },
-  tooltip: { position: "absolute" as const, top: 22, left: 0, backgroundColor: "#231815", borderRadius: 10, padding: 10, gap: 2, zIndex: 999, minWidth: 140, elevation: 10 },
-  tooltipText: { color: "#fffaf5", fontSize: 13 },
-  toast: { backgroundColor: "#6f1d1b", borderRadius: 12, paddingVertical: 8, paddingHorizontal: 14 },
-  toastText: { color: "#fffaf5", fontSize: 13, fontWeight: "600", textAlign: "center" as const },
+  hostButtonHighlight: { backgroundColor: "#f4c38c", borderWidth: 2, borderColor: "#6f1d1b" },
   cellarPick: { backgroundColor: "#fffaf5", borderRadius: 12, padding: 10, borderWidth: 1, borderColor: "#ead8ca" },
   cellarPickName: { color: "#231815", fontSize: 14, fontWeight: "600" },
   cellarPickMeta: { color: "#564a40", fontSize: 12 },
