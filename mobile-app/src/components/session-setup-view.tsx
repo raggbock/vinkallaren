@@ -1,9 +1,8 @@
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Avatar } from "./avatar";
+import { PanelHeader } from "./form-controls";
 import { shareSession } from "../lib/session-actions";
 import type { SessionWineRow, TastingSessionRow } from "../types/tasting-session";
-
-const logoBanner = require("../../assets/logo-banner.png");
 
 type Participant = { user_id: string; display_name: string; avatar_color: string | null };
 
@@ -20,8 +19,7 @@ type Props = {
 export function SessionSetupView({ session, wines, participants, isHost, onStart, onBack, children }: Props) {
   return (
     <View style={s.container}>
-      {/* Logo */}
-      <Image source={logoBanner} style={s.logo} resizeMode="contain" />
+      <PanelHeader title="Provning" rightLabel="Tillbaka" onRightPress={onBack} />
 
       {/* Session info */}
       <View style={s.infoCard}>
@@ -99,17 +97,12 @@ export function SessionSetupView({ session, wines, participants, isHost, onStart
         </View>
       )}
 
-      {/* Back */}
-      <Pressable onPress={onBack} style={s.backBtn}>
-        <Text style={s.backBtnText}>Tillbaka</Text>
-      </Pressable>
     </View>
   );
 }
 
 const s = StyleSheet.create({
   container: { gap: 14 },
-  logo: { width: "100%", height: 160, marginBottom: 4 },
   infoCard: { backgroundColor: "#fffaf5", borderRadius: 18, padding: 16, gap: 8, borderWidth: 1, borderColor: "#ead8ca", alignItems: "center" },
   title: { color: "#231815", fontSize: 22, fontWeight: "800", textAlign: "center" },
   badgeRow: { flexDirection: "row", gap: 6 },
@@ -133,6 +126,4 @@ const s = StyleSheet.create({
   startBtnText: { color: "#fffaf5", fontWeight: "800", fontSize: 17 },
   waitCard: { backgroundColor: "rgba(244,195,140,0.12)", borderRadius: 14, padding: 16, borderWidth: 1, borderColor: "rgba(244,195,140,0.2)" },
   waitText: { color: "#c4a882", fontSize: 14, textAlign: "center", fontStyle: "italic" },
-  backBtn: { alignItems: "center", paddingVertical: 8 },
-  backBtnText: { color: "#6f1d1b", fontSize: 14, fontWeight: "600" },
 });
