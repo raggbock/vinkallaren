@@ -36,6 +36,9 @@ import { useCatalogEditorModal } from "./src/hooks/useCatalogEditorModal";
 import { useModalToggle } from "./src/hooks/useModalToggle";
 import { useAddWineTasting } from "./src/hooks/useAddWineTasting";
 import { useSessionWset } from "./src/hooks/useSessionWset";
+import { useProfile } from "./src/hooks/useProfile";
+import { DisplayNamePrompt } from "./src/components/display-name-prompt";
+import { ProfilePage } from "./src/components/profile-page";
 
 function useWebHoverStyles() {
   useEffect(() => {
@@ -88,6 +91,9 @@ function CellarScreen({ session }: { session: Session }) {
     takePhoto: images.takePhoto,
   });
   const tastingSessions = useTastingSessions(session.user.id);
+  const userProfile = useProfile(session.user.id);
+  const [profileVisible, setProfileVisible] = useState(false);
+  const [promptDismissed, setPromptDismissed] = useState(false);
 
   const drink = useDrinkWineModal({
     userId: session.user.id,
@@ -176,6 +182,25 @@ function CellarScreen({ session }: { session: Session }) {
     if (error) showError("Kunde inte logga ut", error.message);
   }
 
+  if (profileVisible && userProfile.profile) {
+    return (
+      <SafeAreaView style={styles.screen}>
+        <StatusBar style="light" />
+        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" style={styles.scrollFlex}>
+          <RNView style={styles.panel}>
+            <ProfilePage
+              profile={userProfile.profile}
+              onUpdateName={userProfile.updateName}
+              onSignOut={signOut}
+              onBack={() => setProfileVisible(false)}
+            />
+          </RNView>
+        </ScrollView>
+        <BottomTabBar activeSection={activeSection} sections={CELLAR_SECTIONS} styles={styles} onSelect={(s) => { setProfileVisible(false); setActiveSection(s); }} />
+      </SafeAreaView>
+    );
+  }
+
   let activePanel = (
     <MinKallarePanel
       styles={styles} stats={data.stats}
@@ -199,7 +224,7 @@ function CellarScreen({ session }: { session: Session }) {
       onRegionChange={filters.setSelectedRegionFilter}
       onTypeChange={filters.setSelectedTypeFilter}
       onVintageChange={filters.setSelectedVintageFilter}
-      onSignOut={signOut}
+      onSignOut={() => setProfileVisible(true)}
       onOpenSystembolaget={handleOpenSystembolaget}
       onEditWine={edit.actions.open}
       onDrinkWine={drink.actions.open}
@@ -316,6 +341,19 @@ function CellarScreen({ session }: { session: Session }) {
   return (
     <SafeAreaView style={styles.screen}>
       <StatusBar style="light" />
+      <DisplayNamePrompt
+        visible={userProfile.needsDisplayName && !promptDismissed}
+        saving={false}
+        onSave={async (name) => {
+          const ok = await userProfile.saveDisplayName(name);
+          if (ok) setPromptDismissed(true);
+        }}
+        onSkip={async () => {
+          const guestName = `Gäst${String(Math.floor(1000 + Math.random() * 9000))}`;
+          await userProfile.saveDisplayName(guestName);
+          setPromptDismissed(true);
+        }}
+      />
       <SuccessOverlay config={success.config} onDone={success.clear} />
       <PrivacyPolicyModal visible={privacy.visible} styles={styles} onClose={privacy.close} />
       <BarcodeScannerModal visible={catalog.scannerVisible} styles={styles} onClose={() => catalog.setScannerVisible(false)} onBarcodeScanned={({ data: d }) => catalog.handleBarcodeScanned(d, draft, setDraft)} onLabelPhoto={() => catalog.handleLabelPhoto(setDraft)} />

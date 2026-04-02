@@ -191,7 +191,7 @@ export function MinKallarePanel({
 
   const listHeader = (
     <View style={styles.panel}>
-      <PanelHeader title="Min källare" rightLabel="Logga ut" onRightPress={onSignOut} />
+      <PanelHeader title="Min källare" rightLabel="Profil" onRightPress={onSignOut} />
 
       <Pressable onPress={() => setStatsExpanded((v) => !v)} style={styles.statsSummaryBar}>
         <Text style={styles.statsSummaryText}>{summaryText}</Text>
