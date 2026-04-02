@@ -32,6 +32,15 @@ import type { CatalogTextMatch } from "../types/product-catalog";
 
 const WINES_PAGE_SIZE = 50;
 
+function createGuardedFetcher<T>(fn: () => Promise<T>): () => Promise<T | undefined> {
+  let inFlight: Promise<T> | null = null;
+  return () => {
+    if (inFlight) return inFlight;
+    inFlight = fn().finally(() => { inFlight = null; });
+    return inFlight;
+  };
+}
+
 export function useCellarData(userId: string) {
   const [wines, setWines] = useState<WineRecord[]>([]);
   const [hasMoreWines, setHasMoreWines] = useState(false);
@@ -49,7 +58,7 @@ export function useCellarData(userId: string) {
 
   // --- Data fetching ---
 
-  async function fetchWines() {
+  async function fetchWinesRaw() {
     setLoading(true);
     const { data, error } = await supabase.from("wines").select("*").order("created_at", { ascending: false }).limit(WINES_PAGE_SIZE);
     if (error) { showError("Kunde inte hämta viner", error.message); setLoading(false); return; }
@@ -58,6 +67,7 @@ export function useCellarData(userId: string) {
     setWines(await hydrateWineRecords(rows));
     setLoading(false);
   }
+  const fetchWines = createGuardedFetcher(fetchWinesRaw);
 
   async function fetchMoreWines() {
     if (!hasMoreWines) return;
@@ -70,7 +80,7 @@ export function useCellarData(userId: string) {
     setWines((prev) => [...prev, ...hydrated]);
   }
 
-  async function fetchHistoryEntries() {
+  async function fetchHistoryEntriesRaw() {
     setLoadingHistory(true);
     const { data, error } = await supabase.from("wine_history").select("*").order("consumed_at", { ascending: false }).limit(100);
     if (error) {
@@ -81,6 +91,7 @@ export function useCellarData(userId: string) {
     setHistoryEntries(await hydrateWineHistoryRecords((data ?? []) as WineHistoryRow[]));
     setLoadingHistory(false);
   }
+  const fetchHistoryEntries = createGuardedFetcher(fetchHistoryEntriesRaw);
 
   async function fetchStorageSpaces() {
     setLoadingStorageSpaces(true);
@@ -94,7 +105,7 @@ export function useCellarData(userId: string) {
     setLoadingStorageSpaces(false);
   }
 
-  async function fetchCatalogEntries() {
+  async function fetchCatalogEntriesRaw() {
     setLoadingCatalogEntries(true);
     const { data, error } = await supabase.from("product_catalog_wines").select("*").order("updated_at", { ascending: false }).limit(12);
     if (error) {
@@ -105,6 +116,7 @@ export function useCellarData(userId: string) {
     setCatalogEntries((data ?? []) as ProductCatalogWineRow[]);
     setLoadingCatalogEntries(false);
   }
+  const fetchCatalogEntries = createGuardedFetcher(fetchCatalogEntriesRaw);
 
   async function searchCatalogWineNames(query: string, offset = 0): Promise<{ suggestions: Suggestion[]; hasMore: boolean; nextOffset: number }> {
     const BATCH_SIZE = 50;
@@ -160,6 +172,20 @@ export function useCellarData(userId: string) {
       return;
     }
     setReferenceOptions((data ?? []) as ReferenceOptionRow[]);
+  }
+
+  function mergeReferenceOptions(wine: WineRow) {
+    setReferenceOptions(prev => {
+      const additions: ReferenceOptionRow[] = [];
+      for (const [category, value] of [
+        ["grape", wine.grape], ["country", wine.country], ["region", wine.region],
+      ] as const) {
+        if (value && !prev.some(o => o.category === category && o.name === value)) {
+          additions.push({ category, name: value, sort_order: 999, id: `local-${category}-${value}`, aliases: [], parent_name: null, created_at: "", updated_at: "" });
+        }
+      }
+      return additions.length > 0 ? [...prev, ...additions] : prev;
+    });
   }
 
   async function saveStorageSpace(): Promise<string | null> {
@@ -314,6 +340,7 @@ export function useCellarData(userId: string) {
     fetchStorageSpaces,
     fetchCatalogEntries,
     fetchReferenceOptions,
+    mergeReferenceOptions,
 
     // Catalog search (server-side, debounced by caller)
     searchCatalogWineNames,
