@@ -8,13 +8,13 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 
 import { supabase } from "../lib/supabase";
 import { showError } from "../lib/show-error";
-import { LabeledInput } from "../components/form-controls";
 
 type AuthMode = "signin" | "signup";
 
@@ -29,6 +29,69 @@ function useIsWide() {
     return () => sub.remove();
   }, []);
   return wide;
+}
+
+function useAuthForm() {
+  const [mode, setMode] = useState<AuthMode>("signin");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [guestBusy, setGuestBusy] = useState(false);
+  const [signupNotice, setSignupNotice] = useState("");
+  const [awaitingVerification, setAwaitingVerification] = useState(false);
+
+  async function handleAuth() {
+    if (!email.trim() || !password.trim()) {
+      showError("Saknar uppgifter", "Fyll i både e-post och lösenord.");
+      return;
+    }
+    setBusy(true);
+    setSignupNotice("");
+    try {
+      if (mode === "signup") {
+        const { data, error } = await supabase.auth.signUp({ email: email.trim(), password: password.trim() });
+        if (error) throw error;
+        const msg = "Kontot är skapat. Kolla din e-post och bekräfta adressen innan du loggar in.";
+        setSignupNotice(msg);
+        setAwaitingVerification(!data.session);
+        if (Platform.OS !== "web") {
+          Alert.alert("Konto skapat", data.session ? "Kontot skapades och du är nu inloggad." : msg);
+        }
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password: password.trim() });
+        if (error) throw error;
+      }
+    } catch (error) {
+      showError("Inloggning misslyckades", error instanceof Error ? error.message : "Försök igen.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleGuestSignIn() {
+    setGuestBusy(true);
+    setSignupNotice("");
+    try {
+      const { error } = await supabase.auth.signInAnonymously();
+      if (error) throw error;
+    } catch (error) {
+      showError(
+        "Gästläge gick inte att starta",
+        error instanceof Error
+          ? `${error.message} Aktivera Anonymous Sign-Ins i Supabase Authentication om du vill använda gästläge.`
+          : "Aktivera Anonymous Sign-Ins i Supabase Authentication om du vill använda gästläge."
+      );
+    } finally {
+      setGuestBusy(false);
+    }
+  }
+
+  function resetVerification() {
+    setAwaitingVerification(false);
+    setMode("signin");
+  }
+
+  return { mode, setMode, email, setEmail, password, setPassword, busy, guestBusy, signupNotice, awaitingVerification, handleAuth, handleGuestSignIn, resetVerification };
 }
 
 const FEATURES = [
@@ -63,148 +126,66 @@ function MarketingContent() {
   );
 }
 
+type VerificationViewProps = {
+  email: string;
+  onBack: () => void;
+  onGuestSignIn: () => void;
+  guestBusy: boolean;
+};
+
+function VerificationView({ email, onBack, onGuestSignIn, guestBusy }: VerificationViewProps) {
+  return (
+    <View style={s.formCard}>
+      <Text style={s.verifyTitle}>Verifiera din e-post</Text>
+      <Text style={s.verifyText}>
+        Vi har skickat ett bekräftelsemail till {email}. Öppna mailet och klicka på länken, kom sedan tillbaka och logga in.
+      </Text>
+      <Text style={s.verifyHint}>
+        Hittar du inget mail? Kolla skräppost eller försök registrera igen om adressen blev fel.
+      </Text>
+      <Pressable onPress={onBack} style={s.primaryCta}>
+        <Text style={s.primaryCtaText}>Jag har verifierat min mail</Text>
+      </Pressable>
+      <Pressable onPress={onGuestSignIn} style={s.guestCta} disabled={guestBusy}>
+        <Text style={s.guestCtaText}>
+          {guestBusy ? "Startar gästläge..." : "Fortsätt som gäst i stället"}
+        </Text>
+      </Pressable>
+    </View>
+  );
+}
+
 function AuthForm() {
-  const [mode, setMode] = useState<AuthMode>("signin");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [guestBusy, setGuestBusy] = useState(false);
-  const [signupNotice, setSignupNotice] = useState("");
-  const [awaitingVerification, setAwaitingVerification] = useState(false);
-
-  async function handleAuth() {
-    if (!email.trim() || !password.trim()) {
-      showError("Saknar uppgifter", "Fyll i både e-post och lösenord.");
-      return;
-    }
-    setBusy(true);
-    setSignupNotice("");
-    try {
-      if (mode === "signup") {
-        const { data, error } = await supabase.auth.signUp({
-          email: email.trim(),
-          password: password.trim(),
-        });
-        if (error) throw error;
-        const msg = "Kontot är skapat. Kolla din e-post och bekräfta adressen innan du loggar in.";
-        setSignupNotice(msg);
-        setAwaitingVerification(!data.session);
-        if (Platform.OS !== "web") {
-          Alert.alert("Konto skapat", data.session ? "Kontot skapades och du är nu inloggad." : msg);
-        }
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
-          password: password.trim(),
-        });
-        if (error) throw error;
-      }
-    } catch (error) {
-      showError("Inloggning misslyckades", error instanceof Error ? error.message : "Försök igen.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function handleGuestSignIn() {
-    setGuestBusy(true);
-    setSignupNotice("");
-    try {
-      const { error } = await supabase.auth.signInAnonymously();
-      if (error) throw error;
-    } catch (error) {
-      showError(
-        "Gästläge gick inte att starta",
-        error instanceof Error
-          ? `${error.message} Aktivera Anonymous Sign-Ins i Supabase Authentication om du vill använda gästläge.`
-          : "Aktivera Anonymous Sign-Ins i Supabase Authentication om du vill använda gästläge."
-      );
-    } finally {
-      setGuestBusy(false);
-    }
-  }
+  const { mode, setMode, email, setEmail, password, setPassword, busy, guestBusy, signupNotice, awaitingVerification, handleAuth, handleGuestSignIn, resetVerification } = useAuthForm();
 
   if (awaitingVerification) {
-    return (
-      <View style={s.formCard}>
-        <Text style={s.verifyTitle}>Verifiera din e-post</Text>
-        <Text style={s.verifyText}>
-          Vi har skickat ett bekräftelsemail till {email}. Öppna mailet och klicka på länken, kom sedan tillbaka och logga in.
-        </Text>
-        <Text style={s.verifyHint}>
-          Hittar du inget mail? Kolla skräppost eller försök registrera igen om adressen blev fel.
-        </Text>
-        <Pressable
-          onPress={() => { setAwaitingVerification(false); setMode("signin"); }}
-          style={s.primaryCta}
-        >
-          <Text style={s.primaryCtaText}>Jag har verifierat min mail</Text>
-        </Pressable>
-        <Pressable onPress={handleGuestSignIn} style={s.guestCta} disabled={guestBusy}>
-          <Text style={s.guestCtaText}>
-            {guestBusy ? "Startar gästläge..." : "Fortsätt som gäst i stället"}
-          </Text>
-        </Pressable>
-      </View>
-    );
+    return <VerificationView email={email} onBack={resetVerification} onGuestSignIn={handleGuestSignIn} guestBusy={guestBusy} />;
   }
 
   return (
     <View style={s.formCard}>
       <View style={s.segment}>
-        <Pressable
-          onPress={() => setMode("signin")}
-          style={[s.segmentTab, mode === "signin" && s.segmentTabActive]}
-        >
+        <Pressable onPress={() => setMode("signin")} style={[s.segmentTab, mode === "signin" && s.segmentTabActive]}>
           <Text style={[s.segmentLabel, mode === "signin" && s.segmentLabelActive]}>Logga in</Text>
         </Pressable>
-        <Pressable
-          onPress={() => setMode("signup")}
-          style={[s.segmentTab, mode === "signup" && s.segmentTabActive]}
-        >
+        <Pressable onPress={() => setMode("signup")} style={[s.segmentTab, mode === "signup" && s.segmentTabActive]}>
           <Text style={[s.segmentLabel, mode === "signup" && s.segmentLabelActive]}>Skapa konto</Text>
         </Pressable>
       </View>
-
       <View style={s.fieldGroup}>
         <Text style={s.fieldLabel}>E-post</Text>
-        <LabeledInput
-          label=""
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          keyboardType="email-address"
-          returnKeyType="next"
-          placeholder="namn@exempel.se"
-          style={s.fieldInput}
-        />
+        <TextInput value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" returnKeyType="next" placeholder="namn@exempel.se" style={s.fieldInput} placeholderTextColor="#8f8178" />
       </View>
-
       <View style={s.fieldGroup}>
         <Text style={s.fieldLabel}>Lösenord</Text>
-        <LabeledInput
-          label=""
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          returnKeyType="go"
-          onSubmitEditing={handleAuth}
-          style={s.fieldInput}
-        />
+        <TextInput value={password} onChangeText={setPassword} secureTextEntry returnKeyType="go" onSubmitEditing={handleAuth} style={s.fieldInput} placeholderTextColor="#8f8178" />
       </View>
-
       <Pressable onPress={handleAuth} style={s.primaryCta} disabled={busy}>
-        <Text style={s.primaryCtaText}>
-          {busy ? "Arbetar..." : mode === "signup" ? "Skapa konto" : "Logga in"}
-        </Text>
+        <Text style={s.primaryCtaText}>{busy ? "Arbetar..." : mode === "signup" ? "Skapa konto" : "Logga in"}</Text>
       </Pressable>
-
       {signupNotice ? <Text style={s.notice}>{signupNotice}</Text> : null}
-
       <Pressable onPress={handleGuestSignIn} style={s.guestCta} disabled={guestBusy}>
-        <Text style={s.guestCtaText}>
-          {guestBusy ? "Startar gästläge..." : "Testa utan konto"}
-        </Text>
+        <Text style={s.guestCtaText}>{guestBusy ? "Startar gästläge..." : "Testa utan konto"}</Text>
       </Pressable>
     </View>
   );
@@ -216,14 +197,8 @@ export function LandingScreen() {
   return (
     <View style={s.root}>
       <StatusBar style="light" />
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={s.flex}
-      >
-        <ScrollView
-          contentContainerStyle={[s.container, isWide && s.containerWide]}
-          keyboardShouldPersistTaps="handled"
-        >
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={s.flex}>
+        <ScrollView contentContainerStyle={[s.container, isWide && s.containerWide]} keyboardShouldPersistTaps="handled">
           <MarketingContent />
           <View style={[s.authColumn, isWide && s.authColumnWide]}>
             <AuthForm />
@@ -237,17 +212,16 @@ export function LandingScreen() {
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: "#2b1714" },
   flex: { flex: 1 },
-  container: { flexGrow: 1, padding: 24, gap: 0 },
+  container: { flexGrow: 1, padding: 24 },
   containerWide: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     padding: 48,
-    gap: 0,
   },
 
   // Marketing column
-  marketing: { flex: 1, justifyContent: "center", paddingRight: 0, paddingBottom: 24, maxWidth: 520 },
+  marketing: { flex: 1, justifyContent: "center", paddingBottom: 24, maxWidth: 520 },
   eyebrow: {
     color: "#f4c38c",
     fontSize: 11,
