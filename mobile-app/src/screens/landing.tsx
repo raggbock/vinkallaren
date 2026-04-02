@@ -218,6 +218,7 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     padding: 48,
+    gap: 48,
   },
 
   // Marketing column
@@ -259,10 +260,12 @@ const s = StyleSheet.create({
   featureDesc: { color: "#c4a882", fontSize: 11, lineHeight: 16, marginTop: 2 },
 
   // Auth column
-  authColumn: { width: "100%" },
+  authColumn: { width: "100%", backgroundColor: "#3d2220", borderRadius: 20, padding: 24 },
   authColumnWide: {
+    flexBasis: 380,
+    flexShrink: 0,
+    flexGrow: 0,
     width: 380,
-    flex: 0,
     backgroundColor: "#3d2220",
     borderRadius: 20,
     padding: 32,
