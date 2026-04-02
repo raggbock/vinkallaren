@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { Avatar } from "./avatar";
 import { PanelHeader } from "./form-controls";
+import { TasteProfile } from "./taste-profile";
 import type { ProfileRow } from "../lib/profile-actions";
 
 type ProfilePageProps = {
@@ -9,9 +10,10 @@ type ProfilePageProps = {
   onUpdateName: (name: string) => Promise<boolean>;
   onSignOut: () => void;
   onBack: () => void;
+  onOpenSession?: (sessionId: string) => void;
 };
 
-export function ProfilePage({ profile, onUpdateName, onSignOut, onBack }: ProfilePageProps) {
+export function ProfilePage({ profile, onUpdateName, onSignOut, onBack, onOpenSession }: ProfilePageProps) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(profile.display_name || "");
   const [saving, setSaving] = useState(false);
@@ -64,8 +66,8 @@ export function ProfilePage({ profile, onUpdateName, onSignOut, onBack }: Profil
       </View>
 
       <View style={s.section}>
-        <Text style={s.sectionTitle}>Statistik</Text>
-        <Text style={s.placeholder}>Smakprofil och provningshistorik kommer i framtida uppdateringar.</Text>
+        <Text style={s.sectionTitle}>Smakprofil</Text>
+        <TasteProfile userId={profile.id} onOpenSession={onOpenSession ?? (() => {})} />
       </View>
 
       <View style={s.section}>
@@ -141,11 +143,6 @@ const s = StyleSheet.create({
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 0.6,
-  },
-  placeholder: {
-    color: "#8f8178",
-    fontSize: 13,
-    lineHeight: 20,
   },
   signOutBtn: {
     borderWidth: 1.5,
