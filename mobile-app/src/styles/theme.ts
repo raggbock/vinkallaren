@@ -261,6 +261,7 @@ export const styles = StyleSheet.create({
     backgroundColor: "#6f1d1b",
     borderRadius: 999,
     paddingVertical: 14,
+    paddingHorizontal: 24,
     alignItems: "center",
   },
   primaryButtonText: {
