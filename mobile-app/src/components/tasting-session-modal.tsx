@@ -12,6 +12,8 @@ import type { WineRecord } from "../types/wine";
 import type { SessionToast } from "../hooks/useTastingSessions";
 import { ResultsDashboard } from "./results-dashboard";
 import { buildSessionResults } from "../lib/session-results";
+import { RevealView } from "./reveal-view";
+import { advanceReveal, finishReveal } from "../lib/session-actions";
 
 import type { styles as themeStyles } from "../styles/theme";
 type SharedStyles = typeof themeStyles;
@@ -100,6 +102,34 @@ export function TastingSessionPanel({
         <ResultsDashboard
           results={results}
           participants={participants}
+          onBack={() => { onCloseSession(); setView("list"); }}
+        />
+      </View>
+    );
+  }
+
+  // Reveal ceremony for blind sessions
+  if (activeSession && activeSession.status === "revealing") {
+    const isHost = activeSession.host_id === userId;
+    return (
+      <View style={styles.panel}>
+        <RevealView
+          session={activeSession}
+          wines={activeWines}
+          tastings={activeTastings}
+          participants={participants}
+          isHost={isHost}
+          onAdvance={async () => {
+            const next = activeSession.revealed_up_to + 1;
+            const r = await advanceReveal(activeSession.id, next);
+            if (r.error) { showError("Kunde inte avslöja nästa vin", r.error); return; }
+            onSetActiveSession({ ...activeSession, revealed_up_to: next });
+          }}
+          onFinish={async () => {
+            const r = await finishReveal(activeSession.id);
+            if (r.error) { showError("Kunde inte avsluta avslöjningen", r.error); return; }
+            onSetActiveSession({ ...activeSession, status: "ended" });
+          }}
           onBack={() => { onCloseSession(); setView("list"); }}
         />
       </View>
