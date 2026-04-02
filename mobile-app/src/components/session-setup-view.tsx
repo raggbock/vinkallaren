@@ -109,7 +109,7 @@ export function SessionSetupView({ session, wines, participants, isHost, onStart
 
 const s = StyleSheet.create({
   container: { gap: 14 },
-  logo: { width: "100%", height: 120 },
+  logo: { width: "100%", height: 160, marginBottom: 4 },
   infoCard: { backgroundColor: "#fffaf5", borderRadius: 18, padding: 16, gap: 8, borderWidth: 1, borderColor: "#ead8ca", alignItems: "center" },
   title: { color: "#231815", fontSize: 22, fontWeight: "800", textAlign: "center" },
   badgeRow: { flexDirection: "row", gap: 6 },
