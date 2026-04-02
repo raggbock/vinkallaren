@@ -5,19 +5,20 @@ import { Alert, Platform, Pressable, RefreshControl, SafeAreaView, ScrollView, T
 import type { Session } from "@supabase/supabase-js";
 import { supabase, supabaseConfigured } from "./src/lib/supabase";
 import { buildMealRecommendations } from "./src/lib/cellar-helpers";
-import { hydrateWineRecords, toWineDraft } from "./src/lib/wine-helpers";
-import { deleteCatalogEntryById, openSystembolaget, saveCatalogEditorEntry, saveDrinkEntry, saveNewWine, saveTastingEntry, saveWineEditEntry } from "./src/lib/cellar-actions";
-import { BottomTabBar, HistoryPanel, MealPlannerPanel, MinKallarePanel } from "./src/components/cellar-sections";
-import { AddWinePanel, BarcodeScannerModal, CatalogEditorModal, DrinkWineModal, EditWineModal, VintagePickerModal } from "./src/components/cellar-workflows";
+import { openSystembolaget, saveNewWine } from "./src/lib/cellar-actions";
+import { showError } from "./src/lib/show-error";
+import { BottomTabBar, HistoryPanel, MealPlannerPanel } from "./src/components/cellar-sections";
+import { MinKallarePanel } from "./src/components/min-kallare-panel";
+import { BarcodeScannerModal, CatalogEditorModal, DrinkWineModal, VintagePickerModal } from "./src/components/cellar-workflows";
+import { AddWinePanel } from "./src/components/add-wine-panel";
+import { EditWineModal } from "./src/components/edit-wine-modal";
 import { WsatTastingModal } from "./src/components/wsat-tasting-modal";
 import { TastingSessionPanel } from "./src/components/tasting-session-modal";
 import { LabelMatchPickerModal } from "./src/components/label-match-picker";
 import { PrivacyPolicyModal } from "./src/components/privacy-policy-modal";
 import { SuccessOverlay, useSuccessOverlay } from "./src/components/success-overlay";
 import { CELLAR_SECTIONS, type CellarSection } from "./src/types/cellar";
-import { defaultDraft, type CatalogEditorDraft, type WineDraft } from "./src/types/cellar-drafts";
-import type { WineRecord } from "./src/types/wine";
-import type { WsatTastingData } from "./src/lib/wsat-data";
+import { defaultDraft, type WineDraft } from "./src/types/cellar-drafts";
 import { styles } from "./src/styles/theme";
 import { BUILD_VERSION } from "./src/lib/build-version";
 import { AuthScreen, LoadingScreen, SetupScreen } from "./src/screens/auth";
@@ -27,6 +28,12 @@ import { useImagePicker } from "./src/hooks/useImagePicker";
 import { useStorageSelection } from "./src/hooks/useStorageSelection";
 import { useCatalogWorkflow } from "./src/hooks/useCatalogWorkflow";
 import { useTastingSessions } from "./src/hooks/useTastingSessions";
+import { useDrinkWineModal } from "./src/hooks/useDrinkWineModal";
+import { useEditWineModal } from "./src/hooks/useEditWineModal";
+import { useCatalogEditorModal } from "./src/hooks/useCatalogEditorModal";
+import { useModalToggle } from "./src/hooks/useModalToggle";
+import { useAddWineTasting } from "./src/hooks/useAddWineTasting";
+import { useSessionWsat } from "./src/hooks/useSessionWsat";
 
 function useWebMeta() {
   useEffect(() => {
@@ -48,7 +55,6 @@ function useWebMeta() {
     og("og:title", "Vinkällaren");
     og("og:description", "Din digitala vinsamling — gratis och utan reklam.");
     og("og:type", "website");
-    // Global press/hover feedback for all interactive elements on web
     const style = doc.createElement("style");
     style.textContent = [
       'div[tabindex="0"] { transition: opacity 0.15s, filter 0.15s; }',
@@ -98,6 +104,31 @@ function CellarScreen({ session }: { session: Session }) {
   });
   const tastingSessions = useTastingSessions(session.user.id);
 
+  const drink = useDrinkWineModal({
+    userId: session.user.id,
+    fetchHistoryEntries: data.fetchHistoryEntries,
+    setWines: data.setWines,
+    showSuccess: success.show,
+    pickImageFromLibrary: images.pickImageFromLibrary,
+    takePhoto: images.takePhoto,
+  });
+  const edit = useEditWineModal({
+    userId: session.user.id,
+    setWines: data.setWines,
+    fetchCatalogEntries: data.fetchCatalogEntries,
+    showSuccess: success.show,
+    storageSpaces: data.storageSpaces,
+    saveStorageSpace: data.saveStorageSpace,
+    getOccupiedPositions: storage.getOccupiedPositions,
+    pickImageFromLibrary: images.pickImageFromLibrary,
+    takePhoto: images.takePhoto,
+  });
+  const catalogEditor = useCatalogEditorModal({
+    fetchCatalogEntries: data.fetchCatalogEntries,
+  });
+  const privacy = useModalToggle();
+  const sessionWsat = useSessionWsat();
+
   const [draft, setDraft] = useState<WineDraft>(defaultDraft);
   const [activeSection, setActiveSection] = useState<CellarSection>("cellar");
   const [highlightedWineId, setHighlightedWineId] = useState<string | null>(null);
@@ -108,173 +139,51 @@ function CellarScreen({ session }: { session: Session }) {
     await Promise.all([data.fetchWines(), data.fetchStorageSpaces(), data.fetchHistoryEntries()]);
     setRefreshing(false);
   }, [data.fetchWines, data.fetchStorageSpaces, data.fetchHistoryEntries]);
-  const [catalogEditorVisible, setCatalogEditorVisible] = useState(false);
-  const [catalogEditorDraft, setCatalogEditorDraft] = useState<CatalogEditorDraft | null>(null);
-  const [savingCatalogEdit, setSavingCatalogEdit] = useState(false);
-  const [drinkModalVisible, setDrinkModalVisible] = useState(false);
-  const [selectedDrinkWine, setSelectedDrinkWine] = useState<WineRecord | null>(null);
-  const [drinkRating, setDrinkRating] = useState("");
-  const [drinkNotes, setDrinkNotes] = useState("");
-  const [drinkConsumedDate, setDrinkConsumedDate] = useState("");
-  const [drinkImageUri, setDrinkImageUri] = useState("");
-  const [drinkWsatData, setDrinkWsatData] = useState<WsatTastingData | null>(null);
-  const [drinkWsatModalVisible, setDrinkWsatModalVisible] = useState(false);
-  const [savingDrinkHistory, setSavingDrinkHistory] = useState(false);
-  const [editWineVisible, setEditWineVisible] = useState(false);
-  const [editingWine, setEditingWine] = useState<WineRecord | null>(null);
-  const [editWineDraft, setEditWineDraft] = useState<WineDraft | null>(null);
-  const [savingWineEdit, setSavingWineEdit] = useState(false);
-  const [tastingMode, setTastingMode] = useState(false);
-  const [tastingRating, setTastingRating] = useState("");
-  const [tastingDate, setTastingDate] = useState(new Date().toISOString().slice(0, 10));
-  const [savingTasting, setSavingTasting] = useState(false);
-  const [wsatData, setWsatData] = useState<WsatTastingData | null>(null);
-  const [wsatModalVisible, setWsatModalVisible] = useState(false);
   const [tastingSessionsVisible, setTastingSessionsVisible] = useState(false);
-  const [sessionWsatData, setSessionWsatData] = useState<WsatTastingData | null>(null);
-  const [sessionWsatVisible, setSessionWsatVisible] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [privacyVisible, setPrivacyVisible] = useState(false);
 
-  const selectedEditStorageSpace = data.storageSpaces.find((s) => s.id === (editWineDraft?.storageSpaceId || "")) ?? null;
+  const tasting = useAddWineTasting({
+    userId: session.user.id,
+    draft,
+    resetDraft: useCallback(() => setDraft(defaultDraft), []),
+    fetchHistoryEntries: data.fetchHistoryEntries,
+    showSuccess: success.show,
+  });
+
   const mealRecommendations = useMemo(() => buildMealRecommendations(data.wines, selectedMeal), [selectedMeal, data.wines]);
-
-  function openDrinkModal(wine: WineRecord) {
-    setSelectedDrinkWine(wine); setDrinkRating(""); setDrinkNotes("");
-    setDrinkConsumedDate(new Date().toISOString().slice(0, 10));
-    setDrinkImageUri(""); setDrinkWsatData(null); setDrinkModalVisible(true);
-  }
-  function closeDrinkModal() {
-    if (savingDrinkHistory) return;
-    setDrinkModalVisible(false); setSelectedDrinkWine(null);
-  }
-
-  async function openEditWineModal(wine: WineRecord) {
-    let freshWine = wine;
-    if (wine.image_path && !wine.image_url) {
-      const [hydrated] = await hydrateWineRecords([wine as any]);
-      freshWine = hydrated;
-    }
-    setEditingWine(freshWine); setEditWineDraft(toWineDraft(freshWine)); setEditWineVisible(true);
-  }
-  function closeEditWineModal() {
-    if (savingWineEdit) return;
-    setEditWineVisible(false); setEditingWine(null); setEditWineDraft(null);
-  }
 
   async function handleSaveWine() {
     setSaving(true);
-    try {
-      const ok = await saveNewWine({
-        userId: session.user.id,
-        draft,
-        storageSpaceId: storage.selectedStorageSpaceId,
-        storageRow: storage.selectedStorageRow,
-        storageSlot: storage.selectedStorageSlot,
-        selectedCatalogNameEntry: catalog.selectedCatalogNameEntry,
-      });
-      if (ok) {
-        setDraft(defaultDraft); catalog.setSelectedCatalogNameEntry(null);
-        storage.setSelectedStorageRow("1"); storage.setSelectedStorageSlot("1");
-        await Promise.all([data.fetchWines(), data.fetchCatalogEntries(), data.fetchReferenceOptions()]);
-        success.show("wine_added");
-        Alert.alert("Vinet är sparat!", "Vad vill du göra nu?", [
-          { text: "Lägg till fler", style: "default" },
-          { text: "Gå till min källare", onPress: () => setActiveSection("cellar") },
-        ]);
-      }
-    } catch (error) {
-      Alert.alert("Kunde inte spara", error instanceof Error ? error.message : "Försök igen.");
-    } finally {
-      setSaving(false);
-    }
+    const result = await saveNewWine({
+      userId: session.user.id,
+      draft,
+      storageSpaceId: storage.selectedStorageSpaceId,
+      storageRow: storage.selectedStorageRow,
+      storageSlot: storage.selectedStorageSlot,
+      selectedCatalogNameEntry: catalog.selectedCatalogNameEntry,
+    });
+    setSaving(false);
+    if (result.error) { showError("Kunde inte spara", result.error); return; }
+    setDraft(defaultDraft); catalog.setSelectedCatalogNameEntry(null);
+    storage.setSelectedStorageRow("1"); storage.setSelectedStorageSlot("1");
+    await Promise.all([data.fetchWines(), data.fetchCatalogEntries(), data.fetchReferenceOptions()]);
+    success.show("wine_added");
+    Alert.alert("Vinet är sparat!", "Vad vill du göra nu?", [
+      { text: "Lägg till fler", style: "default" },
+      { text: "Gå till min källare", onPress: () => setActiveSection("cellar") },
+    ]);
   }
 
-  async function handleSaveTasting() {
-    setSavingTasting(true);
-    try {
-      const ok = await saveTastingEntry({ userId: session.user.id, draft, tastingRating, tastingDate, wsatData });
-      if (ok) {
-        setDraft(defaultDraft); setTastingRating(""); setWsatData(null);
-        setTastingDate(new Date().toISOString().slice(0, 10));
-        await data.fetchHistoryEntries();
-        success.show("tasting_saved");
-      }
-    } catch (error) {
-      Alert.alert("Kunde inte spara", error instanceof Error ? error.message : "Försök igen.");
-    } finally {
-      setSavingTasting(false);
-    }
-  }
-
-  async function handleSaveDrink() {
-    if (!selectedDrinkWine) return;
-    setSavingDrinkHistory(true);
-    try {
-      await saveDrinkEntry({
-        userId: session.user.id, wine: selectedDrinkWine,
-        rating: drinkRating, notes: drinkNotes,
-        consumedDate: drinkConsumedDate, imageUri: drinkImageUri,
-        wsatData: drinkWsatData,
-        setWines: data.setWines,
-      });
-      await data.fetchHistoryEntries();
-      closeDrinkModal();
-      success.show("wine_drunk");
-    } catch (error) {
-      Alert.alert("Kunde inte spara historiken", error instanceof Error ? error.message : "Försök igen.");
-    } finally {
-      setSavingDrinkHistory(false);
-    }
-  }
-
-  async function handleSaveWineEdit() {
-    if (!editingWine || !editWineDraft) return;
-    setSavingWineEdit(true);
-    try {
-      await saveWineEditEntry({ userId: session.user.id, editingWine, editWineDraft, setWines: data.setWines });
-      await data.fetchCatalogEntries();
-      closeEditWineModal();
-      success.show("edit_saved");
-    } catch (error) {
-      if (error instanceof Error && (error.message === "missing_name" || error.message === "missing_fields")) return;
-      Alert.alert("Kunde inte spara ändringen", error instanceof Error ? error.message : "Försök igen.");
-    } finally {
-      setSavingWineEdit(false);
-    }
-  }
-
-  async function handleSaveCatalogEditor() {
-    if (!catalogEditorDraft) return;
-    setSavingCatalogEdit(true);
-    try {
-      await saveCatalogEditorEntry(catalogEditorDraft);
-      setCatalogEditorVisible(false); setCatalogEditorDraft(null); await data.fetchCatalogEntries();
-    } catch (error) {
-      if (error instanceof Error && error.message === "missing_name") return;
-      Alert.alert("Kunde inte spara ändringen", error instanceof Error ? error.message : "Försök igen.");
-    } finally {
-      setSavingCatalogEdit(false);
-    }
-  }
-
-  async function handleDeleteCatalogEntry(id: string) {
-    setSavingCatalogEdit(true);
-    try {
-      await deleteCatalogEntryById(id);
-      if (catalogEditorDraft?.id === id) { setCatalogEditorVisible(false); setCatalogEditorDraft(null); }
-      await data.fetchCatalogEntries();
-    } catch (error) {
-      Alert.alert("Kunde inte ta bort produkt", error instanceof Error ? error.message : "Försök igen.");
-    } finally {
-      setSavingCatalogEdit(false);
-    }
+  async function handleOpenSystembolaget(productId: string) {
+    const result = await openSystembolaget(productId);
+    if (result.error) showError("Kunde inte öppna länken", result.error);
   }
 
   async function signOut() {
     const { error } = await supabase.auth.signOut();
     if (error) Alert.alert("Kunde inte logga ut", error.message);
   }
+
   let activePanel = (
     <MinKallarePanel
       styles={styles} stats={data.stats}
@@ -299,9 +208,9 @@ function CellarScreen({ session }: { session: Session }) {
       onTypeChange={filters.setSelectedTypeFilter}
       onVintageChange={filters.setSelectedVintageFilter}
       onSignOut={signOut}
-      onOpenSystembolaget={openSystembolaget}
-      onEditWine={openEditWineModal}
-      onDrinkWine={openDrinkModal}
+      onOpenSystembolaget={handleOpenSystembolaget}
+      onEditWine={edit.actions.open}
+      onDrinkWine={drink.actions.open}
       onDeleteWine={(id, imagePath) => {
             Alert.alert("Ta bort vin", "Är du säker på att du vill ta bort det här vinet?", [
               { text: "Avbryt", style: "cancel" },
@@ -311,9 +220,9 @@ function CellarScreen({ session }: { session: Session }) {
       storageSpaceDraft={data.storageSpaceDraft}
       savingStorageSpace={data.savingStorageSpace}
       onStorageSpaceDraftChange={(patch) => data.setStorageSpaceDraft((c) => ({ ...c, ...patch }))}
-      onSaveStorageSpace={async () => { await data.saveStorageSpace(storage.selectedStorageSpaceId, storage.setSelectedStorageSpaceId, storage.setSelectedStorageRow, storage.setSelectedStorageSlot); success.show("storage_saved"); }}
+      onSaveStorageSpace={async () => { const newId = await data.saveStorageSpace(); if (newId) { storage.setSelectedStorageSpaceId(newId); storage.setSelectedStorageRow("1"); storage.setSelectedStorageSlot("1"); } success.show("storage_saved"); }}
       onUpdateStorageSpace={data.updateStorageSpace}
-      onDeleteStorageSpace={(id) => data.deleteStorageSpace(id, storage.selectedStorageSpaceId, storage.setSelectedStorageSpaceId, storage.setSelectedStorageRow, storage.setSelectedStorageSlot, filters.selectedStorageSpaceFilterId, filters.setSelectedStorageSpaceFilterId)}
+      onDeleteStorageSpace={async (id) => { const ok = await data.deleteStorageSpace(id); if (ok) { if (storage.selectedStorageSpaceId === id) { storage.setSelectedStorageSpaceId(""); storage.setSelectedStorageRow("1"); storage.setSelectedStorageSlot("1"); } if (filters.selectedStorageSpaceFilterId === id) { filters.setSelectedStorageSpaceFilterId(""); } } }}
       onNavigateToAdd={() => setActiveSection("add")}
       onOpenTastingSessions={() => { setTastingSessionsVisible(true); tastingSessions.fetchSessions(); }}
       selectedStorageSpaceFilterId={filters.selectedStorageSpaceFilterId}
@@ -328,7 +237,7 @@ function CellarScreen({ session }: { session: Session }) {
     activePanel = (
       <TastingSessionPanel
         styles={styles} userId={session.user.id}
-        sessions={tastingSessions.sessions} loading={tastingSessions.loading}
+        sessions={tastingSessions.sessions} loading={tastingSessions.loading} toasts={tastingSessions.toasts}
         activeSession={tastingSessions.activeSession} activeWines={tastingSessions.activeWines}
         activeTastings={tastingSessions.activeTastings} wines={data.wines}
         searchWineNames={data.searchCatalogWineNames}
@@ -337,11 +246,15 @@ function CellarScreen({ session }: { session: Session }) {
         onJoinSession={tastingSessions.joinSession} onOpenSession={tastingSessions.openSession}
         onCloseSession={tastingSessions.closeSession} onSetActiveWines={tastingSessions.setActiveWines}
         onSetActiveTastings={tastingSessions.setActiveTastings} onSetActiveSession={tastingSessions.setActiveSession}
-        onOpenWsat={() => setSessionWsatVisible(true)} wsatData={sessionWsatData}
+        onOpenWsat={sessionWsat.open} wsatData={sessionWsat.data}
+        onSessionEnded={() => { setTastingSessionsVisible(false); setActiveSection("history"); }}
       />
     );
   } else if (activeSection === "history") {
-    activePanel = <HistoryPanel styles={styles} historyEntries={data.historyEntries} loadingHistory={data.loadingHistory} storageSpaceById={data.storageSpaceById} />;
+    activePanel = <HistoryPanel styles={styles} historyEntries={data.historyEntries} loadingHistory={data.loadingHistory} storageSpaceById={data.storageSpaceById}
+      endedSessions={tastingSessions.sessions.filter((ses) => ses.status === "ended")}
+      onOpenSession={(ses) => { setTastingSessionsVisible(true); setActiveSection("cellar"); tastingSessions.openSession(ses); }}
+    />;
   } else if (activeSection === "meal") {
     activePanel = (
       <MealPlannerPanel styles={styles} selectedMeal={selectedMeal} mealRecommendations={mealRecommendations}
@@ -396,25 +309,16 @@ function CellarScreen({ session }: { session: Session }) {
         storageSpaceDraft={data.storageSpaceDraft}
         savingStorageSpace={data.savingStorageSpace}
         onStorageSpaceDraftChange={(patch) => data.setStorageSpaceDraft((c) => ({ ...c, ...patch }))}
-        onSaveStorageSpace={async () => { await data.saveStorageSpace(storage.selectedStorageSpaceId, storage.setSelectedStorageSpaceId, storage.setSelectedStorageRow, storage.setSelectedStorageSlot); success.show("storage_saved"); }}
+        onSaveStorageSpace={async () => { const newId = await data.saveStorageSpace(); if (newId) { storage.setSelectedStorageSpaceId(newId); storage.setSelectedStorageRow("1"); storage.setSelectedStorageSlot("1"); } success.show("storage_saved"); }}
         onStartBarcodeScanner={catalog.startBarcodeScanner}
-        onOpenSystembolaget={openSystembolaget}
+        onOpenSystembolaget={handleOpenSystembolaget}
         onSetImportMode={catalog.setImportMode}
         onApplyCatalogSuggestion={() => catalog.applyCatalogSuggestion(draft, setDraft)}
         onToggleImportField={catalog.toggleImportField}
         onChooseImage={async () => { const uri = await images.pickImageFromLibrary(); if (uri) setDraft((c) => ({ ...c, imageUri: uri })); }}
         onTakePhoto={async () => { const uri = await images.takePhoto(); if (uri) setDraft((c) => ({ ...c, imageUri: uri })); }}
         onSaveWine={handleSaveWine}
-        tastingMode={tastingMode}
-        onTastingModeChange={setTastingMode}
-        tastingRating={tastingRating}
-        onTastingRatingChange={setTastingRating}
-        tastingDate={tastingDate}
-        onTastingDateChange={setTastingDate}
-        onSaveTasting={handleSaveTasting}
-        savingTasting={savingTasting}
-        wsatData={wsatData}
-        onOpenWsat={() => setWsatModalVisible(true)}
+        {...tasting.panelProps}
       />
     );
   }
@@ -423,64 +327,39 @@ function CellarScreen({ session }: { session: Session }) {
     <SafeAreaView style={styles.screen}>
       <StatusBar style="light" />
       <SuccessOverlay config={success.config} onDone={success.clear} />
-      <PrivacyPolicyModal visible={privacyVisible} styles={styles} onClose={() => setPrivacyVisible(false)} />
+      <PrivacyPolicyModal visible={privacy.visible} styles={styles} onClose={privacy.close} />
       <BarcodeScannerModal visible={catalog.scannerVisible} styles={styles} onClose={() => catalog.setScannerVisible(false)} onBarcodeScanned={({ data: d }) => catalog.handleBarcodeScanned(d, draft, setDraft)} onLabelPhoto={() => catalog.handleLabelPhoto(setDraft)} />
       <LabelMatchPickerModal visible={catalog.labelPickerVisible} matches={catalog.labelMatches} onSelect={(m) => catalog.handleLabelMatchSelected(m, setDraft)} onDismiss={() => catalog.handleLabelMatchDismissed(setDraft)} />
-      <WsatTastingModal visible={wsatModalVisible} wineType={draft.type} initialData={wsatData} onSave={(d) => setWsatData(d)} onClose={() => setWsatModalVisible(false)} />
+      <WsatTastingModal {...tasting.wsatProps} wineType={draft.type} />
       <VintagePickerModal visible={catalog.vintagePickerVisible} wineName={catalog.vintagePickerWineName} vintages={catalog.vintagePickerOptions} onSelectVintage={(e) => catalog.handleVintageSelected(e, setDraft)} onAddNew={() => catalog.handleVintageAddNew(setDraft)} onClose={() => catalog.setVintagePickerVisible(false)} styles={styles} />
       <CatalogEditorModal
-        visible={catalogEditorVisible} styles={styles} draft={catalogEditorDraft} saving={savingCatalogEdit}
+        {...catalogEditor.modalProps} styles={styles}
         searchWineNames={data.searchCatalogWineNames}
         effectiveCountryOptions={data.effectiveCountryOptions} effectiveRegionOptions={data.effectiveRegionOptions}
         effectiveGrapeOptions={data.effectiveGrapeOptions}
         countryReferenceRows={data.countryReferenceRows} regionReferenceRows={data.regionReferenceRows}
         grapeReferenceRows={data.grapeReferenceRows}
-        onClose={() => { setCatalogEditorVisible(false); setCatalogEditorDraft(null); }}
-        onSave={handleSaveCatalogEditor}
-        onChange={(patch) => setCatalogEditorDraft((c) => (c ? { ...c, ...patch } : c))}
       />
-      <WsatTastingModal visible={drinkWsatModalVisible} wineType={selectedDrinkWine?.type || ""} initialData={drinkWsatData} onSave={(d) => setDrinkWsatData(d)} onClose={() => setDrinkWsatModalVisible(false)} />
-      <DrinkWineModal
-        visible={drinkModalVisible} styles={styles} wine={selectedDrinkWine}
-        rating={drinkRating} notes={drinkNotes} consumedDate={drinkConsumedDate}
-        imageUri={drinkImageUri} saving={savingDrinkHistory}
-        wsatData={drinkWsatData} onOpenWsat={() => setDrinkWsatModalVisible(true)}
-        onClose={closeDrinkModal} onRatingChange={setDrinkRating} onNotesChange={setDrinkNotes}
-        onConsumedDateChange={setDrinkConsumedDate}
-        onChooseImage={async () => { const uri = await images.pickImageFromLibrary(); if (uri) setDrinkImageUri(uri); }}
-        onTakePhoto={async () => { const uri = await images.takePhoto(); if (uri) setDrinkImageUri(uri); }}
-        onConfirm={handleSaveDrink}
-      />
-      <WsatTastingModal visible={sessionWsatVisible} wineType="" initialData={sessionWsatData} onSave={(d) => setSessionWsatData(d)} onClose={() => setSessionWsatVisible(false)} />
+      <WsatTastingModal {...drink.wsatProps} />
+      <DrinkWineModal {...drink.modalProps} styles={styles} />
+      <WsatTastingModal {...sessionWsat.wsatProps} />
       <EditWineModal
-        visible={editWineVisible} styles={styles} draft={editWineDraft}
-        storageSpaces={data.storageSpaces} selectedStorageSpace={selectedEditStorageSpace}
+        {...edit.modalProps} styles={styles}
+        storageSpaces={data.storageSpaces}
         storageSpaceById={data.storageSpaceById}
         searchWineNames={data.searchCatalogWineNames}
         effectiveCountryOptions={data.effectiveCountryOptions} effectiveRegionOptions={data.effectiveRegionOptions}
         effectiveGrapeOptions={data.effectiveGrapeOptions}
         countryReferenceRows={data.countryReferenceRows} regionReferenceRows={data.regionReferenceRows}
         grapeReferenceRows={data.grapeReferenceRows}
-        saving={savingWineEdit}
-        occupiedPositions={storage.getOccupiedPositions(editWineDraft?.storageSpaceId || "", editWineDraft?.storageRow || "1", editingWine?.id)}
         storageSpaceDraft={data.storageSpaceDraft} savingStorageSpace={data.savingStorageSpace}
         onStorageSpaceDraftChange={(patch) => data.setStorageSpaceDraft((c) => ({ ...c, ...patch }))}
-        onSaveStorageSpace={() => data.saveStorageSpace(editWineDraft?.storageSpaceId || "", (id) => setEditWineDraft((c) => c ? { ...c, storageSpaceId: id } : c), (v) => setEditWineDraft((c) => c ? { ...c, storageRow: v } : c), (v) => setEditWineDraft((c) => c ? { ...c, storageSlot: v } : c))}
-        onClose={closeEditWineModal}
-        onDraftChange={(patch) => setEditWineDraft((c) => (c ? { ...c, ...patch } : c))}
-        onStorageSpaceChange={(spaceId) => setEditWineDraft((c) => c ? { ...c, storageSpaceId: spaceId, storageRow: "1", storageSlot: "1" } : c)}
-        onStorageRowChange={(value) => setEditWineDraft((c) => (c ? { ...c, storageRow: value, storageSlot: "1" } : c))}
-        onStorageSlotChange={(value) => setEditWineDraft((c) => (c ? { ...c, storageSlot: value } : c))}
-        onChooseImage={async () => { const uri = await images.pickImageFromLibrary(); if (uri) setEditWineDraft((c) => c ? { ...c, imageUri: uri } : c); }}
-        onTakePhoto={async () => { const uri = await images.takePhoto(); if (uri) setEditWineDraft((c) => c ? { ...c, imageUri: uri } : c); }}
-        onRemoveImage={() => setEditWineDraft((c) => c ? { ...c, imageUri: "" } : c)}
-        onSave={handleSaveWineEdit}
       />
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" style={styles.scrollFlex} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6f1d1b" colors={["#6f1d1b"]} />}>
         {activePanel}
         <RNView style={styles.footerRow}>
           <RNText style={styles.footerVersion}>{BUILD_VERSION}</RNText>
-          <Pressable onPress={() => setPrivacyVisible(true)}><RNText style={styles.footerLink}>Integritetspolicy</RNText></Pressable>
+          <Pressable onPress={privacy.open}><RNText style={styles.footerLink}>Integritetspolicy</RNText></Pressable>
         </RNView>
       </ScrollView>
       <BottomTabBar activeSection={activeSection} sections={CELLAR_SECTIONS} styles={styles} onSelect={setActiveSection} />

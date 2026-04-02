@@ -1,6 +1,7 @@
-import { Alert, Linking } from "react-native";
+import { Linking } from "react-native";
 
 import { supabase } from "./supabase";
+import { ok, fail, type Result } from "../types/result";
 import { buildSystembolagetProductUrl, emptyToNull, parseTags, toNumberOrNull } from "./cellar-helpers";
 import {
   buildWineInsertFromDraft,
@@ -8,7 +9,6 @@ import {
   getMissingCatalogFields,
   hydrateWineRecords,
   syncCatalogEntryForEditedWine,
-  toCatalogEditorDraft,
   uploadWineImage,
 } from "./wine-helpers";
 import type { CatalogEditorDraft, WineDraft } from "../types/cellar-drafts";
@@ -26,17 +26,11 @@ type SaveWineArgs = {
   selectedCatalogNameEntry: ProductCatalogWineRow | null;
 };
 
-export async function saveNewWine(args: SaveWineArgs): Promise<boolean> {
+export async function saveNewWine(args: SaveWineArgs): Promise<Result<true>> {
   const { userId, draft, storageSpaceId, storageRow, storageSlot, selectedCatalogNameEntry } = args;
-  if (!draft.name.trim()) {
-    Alert.alert("Namn saknas", "Skriv in vilket vin du vill lägga till.");
-    return false;
-  }
+  if (!draft.name.trim()) return fail("Namn saknas: Skriv in vilket vin du vill lägga till.");
   const missingFields = getMissingCatalogFields(draft);
-  if (!selectedCatalogNameEntry && missingFields.length > 0) {
-    Alert.alert("Komplettera vinet", `Fyll i: ${missingFields.join(", ")}.`);
-    return false;
-  }
+  if (!selectedCatalogNameEntry && missingFields.length > 0) return fail(`Komplettera vinet: Fyll i: ${missingFields.join(", ")}.`);
   let imagePath: string | null = null;
   if (draft.imageUri) imagePath = await uploadWineImage(userId, draft.imageUri);
   const payload: WineInsert = {
@@ -64,9 +58,9 @@ export async function saveNewWine(args: SaveWineArgs): Promise<boolean> {
     image_path: imagePath,
   };
   const { error } = await supabase.from("wines").insert(payload);
-  if (error) throw error;
+  if (error) return fail(error.message);
   await cacheWineDraftAsCatalogEntry(payload, userId);
-  return true;
+  return ok(true as const);
 }
 
 type SaveTastingArgs = {
@@ -77,12 +71,9 @@ type SaveTastingArgs = {
   wsatData: WsatTastingData | null;
 };
 
-export async function saveTastingEntry(args: SaveTastingArgs): Promise<boolean> {
+export async function saveTastingEntry(args: SaveTastingArgs): Promise<Result<true>> {
   const { userId, draft, tastingRating, tastingDate, wsatData } = args;
-  if (!draft.name.trim()) {
-    Alert.alert("Namn saknas", "Skriv in vilket vin du provade.");
-    return false;
-  }
+  if (!draft.name.trim()) return fail("Namn saknas: Skriv in vilket vin du provade.");
   let imagePath: string | null = null;
   if (draft.imageUri) imagePath = await uploadWineImage(userId, draft.imageUri);
   const payload: WineHistoryInsert = {
@@ -104,8 +95,8 @@ export async function saveTastingEntry(args: SaveTastingArgs): Promise<boolean> 
     tasting_data: wsatData ?? null,
   };
   const { error } = await supabase.from("wine_history").insert(payload);
-  if (error) throw error;
-  return true;
+  if (error) return fail(error.message);
+  return ok(true as const);
 }
 
 type SaveDrinkArgs = {
@@ -119,7 +110,7 @@ type SaveDrinkArgs = {
   setWines: React.Dispatch<React.SetStateAction<WineRecord[]>>;
 };
 
-export async function saveDrinkEntry(args: SaveDrinkArgs): Promise<void> {
+export async function saveDrinkEntry(args: SaveDrinkArgs): Promise<Result<true>> {
   const { userId, wine, rating, notes, consumedDate, imageUri, wsatData, setWines } = args;
   let imagePath = wine.image_path;
   if (imageUri) imagePath = await uploadWineImage(userId, imageUri);
@@ -138,17 +129,18 @@ export async function saveDrinkEntry(args: SaveDrinkArgs): Promise<void> {
     consumed_at: consumedDate || null,
   };
   const { error: historyError } = await supabase.from("wine_history").insert(payload);
-  if (historyError) throw historyError;
+  if (historyError) return fail(historyError.message);
   if (wine.quantity <= 1) {
     const { error } = await supabase.from("wines").delete().eq("id", wine.id);
-    if (error) throw error;
+    if (error) return fail(error.message);
     setWines((current) => current.filter((w) => w.id !== wine.id));
   } else {
     const { data, error } = await supabase.from("wines").update({ quantity: wine.quantity - 1 }).eq("id", wine.id).select("*").single();
-    if (error) throw error;
+    if (error) return fail(error.message);
     const [hydrated] = await hydrateWineRecords([data as WineRow]);
     setWines((current) => current.map((w) => (w.id === wine.id ? hydrated : w)));
   }
+  return ok(true as const);
 }
 
 type SaveWineEditArgs = {
@@ -158,17 +150,11 @@ type SaveWineEditArgs = {
   setWines: React.Dispatch<React.SetStateAction<WineRecord[]>>;
 };
 
-export async function saveWineEditEntry(args: SaveWineEditArgs): Promise<void> {
+export async function saveWineEditEntry(args: SaveWineEditArgs): Promise<Result<true>> {
   const { userId, editingWine, editWineDraft, setWines } = args;
-  if (!editWineDraft.name.trim()) {
-    Alert.alert("Namn saknas", "Skriv in vilket vin du vill spara.");
-    throw new Error("missing_name");
-  }
+  if (!editWineDraft.name.trim()) return fail("Namn saknas: Skriv in vilket vin du vill spara.");
   const missingFields = getMissingCatalogFields(editWineDraft);
-  if (missingFields.length > 0) {
-    Alert.alert("Komplettera vinet", `Fyll i: ${missingFields.join(", ")}.`);
-    throw new Error("missing_fields");
-  }
+  if (missingFields.length > 0) return fail(`Komplettera vinet: Fyll i: ${missingFields.join(", ")}.`);
   let imagePath = editingWine.image_path;
   if (editWineDraft.imageUri && editWineDraft.imageUri !== editingWine.image_url) {
     imagePath = await uploadWineImage(userId, editWineDraft.imageUri);
@@ -181,20 +167,18 @@ export async function saveWineEditEntry(args: SaveWineEditArgs): Promise<void> {
   }
   const payload = buildWineInsertFromDraft(editWineDraft, editWineDraft.storageSpaceId, editWineDraft.storageRow, editWineDraft.storageSlot, imagePath);
   const { data, error } = await supabase.from("wines").update(payload).eq("id", editingWine.id).select("*").single();
-  if (error) throw error;
+  if (error) return fail(error.message);
   const updatedWine = data as WineRow | null;
   if (updatedWine) {
     await syncCatalogEntryForEditedWine(editingWine, updatedWine, userId);
     const [hydrated] = await hydrateWineRecords([updatedWine]);
     setWines((current) => current.map((w) => (w.id === editingWine.id ? hydrated : w)));
   }
+  return ok(true as const);
 }
 
-export async function saveCatalogEditorEntry(draft: CatalogEditorDraft): Promise<void> {
-  if (!draft.name.trim()) {
-    Alert.alert("Namn saknas", "Skriv in ett namn innan du sparar katalogposten.");
-    throw new Error("missing_name");
-  }
+export async function saveCatalogEditorEntry(draft: CatalogEditorDraft): Promise<Result<true>> {
+  if (!draft.name.trim()) return fail("Namn saknas: Skriv in ett namn innan du sparar katalogposten.");
   const { error } = await supabase.from("product_catalog_wines").update({
     barcode: emptyToNull(draft.barcode),
     systembolaget_product_id: emptyToNull(draft.systembolagetProductId),
@@ -209,24 +193,21 @@ export async function saveCatalogEditorEntry(draft: CatalogEditorDraft): Promise
     source_label: emptyToNull(draft.sourceLabel),
     source_confidence: emptyToNull(draft.sourceConfidence) || "high",
   }).eq("id", draft.id);
-  if (error) throw error;
+  if (error) return fail(error.message);
+  return ok(true as const);
 }
 
-export async function deleteCatalogEntryById(id: string): Promise<void> {
+export async function deleteCatalogEntryById(id: string): Promise<Result<true>> {
   const { error } = await supabase.from("product_catalog_wines").delete().eq("id", id);
-  if (error) throw error;
+  if (error) return fail(error.message);
+  return ok(true as const);
 }
 
-export async function openSystembolaget(productId: string): Promise<void> {
+export async function openSystembolaget(productId: string): Promise<Result<true>> {
   const url = buildSystembolagetProductUrl(productId);
   const supported = await Linking.canOpenURL(url);
-  if (!supported) {
-    Alert.alert("Kunde inte öppna länken", "Det gick inte att öppna Systembolaget just nu.");
-    return;
-  }
+  if (!supported) return fail("Det gick inte att öppna Systembolaget just nu.");
   await Linking.openURL(url);
+  return ok(true as const);
 }
 
-export function openCatalogEditor(entry: ProductCatalogWineRow): CatalogEditorDraft {
-  return toCatalogEditorDraft(entry);
-}
