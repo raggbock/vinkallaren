@@ -90,6 +90,4 @@ export async function fetchSessionParticipants(sessionId: string): Promise<Resul
   return ok((data ?? []) as { user_id: string; display_name: string; avatar_color: string | null }[]);
 }
 
-export function buildShareMessage(title: string, joinCode: string): string {
-  return `Vinprovning: ${title} — Gå med med kod: ${joinCode}`;
-}
+export { buildShareMessage, shareSession } from "./join-link";
