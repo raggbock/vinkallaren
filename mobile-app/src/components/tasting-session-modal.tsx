@@ -40,7 +40,7 @@ export function TastingSessionPanel({
   onSetActiveWines: (fn: (prev: SessionWineRow[]) => SessionWineRow[]) => void;
   onSetActiveTastings: (fn: (prev: SessionTastingRow[]) => SessionTastingRow[]) => void;
   onSetActiveSession: (session: TastingSessionRow | null) => void;
-  onOpenWset: () => void;
+  onOpenWset: (wineType?: string) => void;
   wsetData: WsetTastingData | null;
   onSessionEnded: () => void;
 }) {
@@ -76,7 +76,7 @@ export function TastingSessionPanel({
             if (result.error) { showError("Kunde inte spara provning", result.error); return; }
             setTastingWine(null);
           }}
-          onOpenWset={onOpenWset}
+          onOpenWset={() => onOpenWset(tastingWine.type || "")}
           onBack={() => setTastingWine(null)}
         />
       </View>

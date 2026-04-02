@@ -25,7 +25,7 @@ export function SessionTastingView({
   initialWsetData: WsetTastingData | null;
   saving: boolean;
   onSave: (data: { rating: number | null; notes: string | null; foodPairings: string[]; wsetData: WsetTastingData | null }) => void;
-  onOpenWset: () => void;
+  onOpenWset: (wineType?: string) => void;
   onBack: () => void;
 }) {
   const [rating, setRating] = useState(initialRating ? String(initialRating) : "");
@@ -62,12 +62,12 @@ export function SessionTastingView({
 
         {format === "wset" ? (
           initialWsetData ? (
-            <Pressable onPress={onOpenWset} style={localStyles.wsetCard}>
+            <Pressable onPress={() => onOpenWset(wine.type || "")} style={localStyles.wsetCard}>
               <Text style={localStyles.wsetLabel}>WSET Tasting</Text>
               <Text style={localStyles.wsetSummary}>{buildWsetSummary(initialWsetData)}</Text>
             </Pressable>
           ) : (
-            <Pressable onPress={onOpenWset} style={localStyles.wsetButton}>
+            <Pressable onPress={() => onOpenWset(wine.type || "")} style={localStyles.wsetButton}>
               <Text style={localStyles.wsetButtonText}>WSET Tasting</Text>
             </Pressable>
           )
