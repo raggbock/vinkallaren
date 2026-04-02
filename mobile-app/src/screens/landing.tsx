@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import {
   Alert,
   Dimensions,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -29,6 +30,25 @@ function useIsWide() {
     return () => sub.remove();
   }, []);
   return wide;
+}
+
+/** Injects a radial gradient background on web (RN doesn't support gradients natively) */
+function useWebGradient() {
+  useEffect(() => {
+    if (Platform.OS !== "web") return;
+    const style = document.createElement("style");
+    style.textContent = [
+      "[data-landing-root] { background: radial-gradient(ellipse at 30% 20%, #3d2220 0%, #2b1714 55%, #1a0f0e 100%) !important; }",
+      "[data-landing-glow] { box-shadow: 0 0 40px rgba(244,195,140,0.12), 0 0 80px rgba(244,195,140,0.06); }",
+      "[data-landing-icon] { box-shadow: 0 4px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05); transition: transform 0.2s; }",
+      "[data-landing-icon]:hover { transform: scale(1.08); }",
+      "[data-landing-cta] { transition: filter 0.15s, transform 0.15s; }",
+      "[data-landing-cta]:hover { filter: brightness(1.1); transform: translateY(-1px); }",
+      "[data-landing-cta]:active { transform: translateY(0); filter: brightness(0.95); }",
+    ].join("\n");
+    document.head.appendChild(style);
+    return () => { document.head.removeChild(style); };
+  }, []);
 }
 
 function useAuthForm() {
@@ -101,18 +121,30 @@ const FEATURES = [
   { icon: "\u2B50", title: "Smaknoteringar och betyg", desc: "Spara tasting notes med WSET-stöd. Bygg upp din smakhistorik över tid." },
 ] as const;
 
-function MarketingContent() {
+function Divider() {
+  return (
+    <View style={s.divider}>
+      <View style={s.dividerLine} />
+      <Text style={s.dividerDot}>{"\u{1F347}"}</Text>
+      <View style={s.dividerLine} />
+    </View>
+  );
+}
+
+const logoBanner = require("../../assets/logo-banner.png");
+
+function MarketingContent({ isWide }: { isWide: boolean }) {
   return (
     <View style={s.marketing}>
-      <Text style={s.eyebrow}>Vinkällaren</Text>
-      <Text style={s.headline}>Håll koll på hela{"\n"}din vinsamling</Text>
+      <Image source={logoBanner} style={[s.heroBanner, isWide && s.heroBannerWide]} resizeMode="contain" />
       <Text style={s.subheadline}>
-        Katalogisera, provsmaka och hitta rätt vin till maten — allt på ett ställe.
+        Din personliga vinsamling i fickan — katalogisera flaskor, håll provningar med vänner och hitta perfekta vinet till middagen.
       </Text>
+      <Divider />
       <View style={s.featureList}>
         {FEATURES.map((f) => (
           <View key={f.title} style={s.featureRow}>
-            <View style={s.iconBox}>
+            <View style={s.iconBox} dataSet={{ landingIcon: true }}>
               <Text style={s.iconText}>{f.icon}</Text>
             </View>
             <View style={s.featureText}>
@@ -135,7 +167,7 @@ type VerificationViewProps = {
 
 function VerificationView({ email, onBack, onGuestSignIn, guestBusy }: VerificationViewProps) {
   return (
-    <View style={s.formCard}>
+    <View style={s.formCard} dataSet={{ landingGlow: true }}>
       <Text style={s.verifyTitle}>Verifiera din e-post</Text>
       <Text style={s.verifyText}>
         Vi har skickat ett bekräftelsemail till {email}. Öppna mailet och klicka på länken, kom sedan tillbaka och logga in.
@@ -143,10 +175,10 @@ function VerificationView({ email, onBack, onGuestSignIn, guestBusy }: Verificat
       <Text style={s.verifyHint}>
         Hittar du inget mail? Kolla skräppost eller försök registrera igen om adressen blev fel.
       </Text>
-      <Pressable onPress={onBack} style={s.primaryCta}>
+      <Pressable onPress={onBack} style={s.primaryCta} dataSet={{ landingCta: true }}>
         <Text style={s.primaryCtaText}>Jag har verifierat min mail</Text>
       </Pressable>
-      <Pressable onPress={onGuestSignIn} style={s.guestCta} disabled={guestBusy}>
+      <Pressable onPress={onGuestSignIn} style={s.guestCta} disabled={guestBusy} dataSet={{ landingCta: true }}>
         <Text style={s.guestCtaText}>
           {guestBusy ? "Startar gästläge..." : "Fortsätt som gäst i stället"}
         </Text>
@@ -156,36 +188,37 @@ function VerificationView({ email, onBack, onGuestSignIn, guestBusy }: Verificat
 }
 
 function AuthForm() {
-  const { mode, setMode, email, setEmail, password, setPassword, busy, guestBusy, signupNotice, awaitingVerification, handleAuth, handleGuestSignIn, resetVerification } = useAuthForm();
+  const auth = useAuthForm();
 
-  if (awaitingVerification) {
-    return <VerificationView email={email} onBack={resetVerification} onGuestSignIn={handleGuestSignIn} guestBusy={guestBusy} />;
+  if (auth.awaitingVerification) {
+    return <VerificationView email={auth.email} onBack={auth.resetVerification} onGuestSignIn={auth.handleGuestSignIn} guestBusy={auth.guestBusy} />;
   }
 
   return (
-    <View style={s.formCard}>
+    <View style={s.formCard} dataSet={{ landingGlow: true }}>
+      <Text style={s.formWelcome}>Välkommen in</Text>
       <View style={s.segment}>
-        <Pressable onPress={() => setMode("signin")} style={[s.segmentTab, mode === "signin" && s.segmentTabActive]}>
-          <Text style={[s.segmentLabel, mode === "signin" && s.segmentLabelActive]}>Logga in</Text>
+        <Pressable onPress={() => auth.setMode("signin")} style={[s.segmentTab, auth.mode === "signin" && s.segmentTabActive]}>
+          <Text style={[s.segmentLabel, auth.mode === "signin" && s.segmentLabelActive]}>Logga in</Text>
         </Pressable>
-        <Pressable onPress={() => setMode("signup")} style={[s.segmentTab, mode === "signup" && s.segmentTabActive]}>
-          <Text style={[s.segmentLabel, mode === "signup" && s.segmentLabelActive]}>Skapa konto</Text>
+        <Pressable onPress={() => auth.setMode("signup")} style={[s.segmentTab, auth.mode === "signup" && s.segmentTabActive]}>
+          <Text style={[s.segmentLabel, auth.mode === "signup" && s.segmentLabelActive]}>Skapa konto</Text>
         </Pressable>
       </View>
       <View style={s.fieldGroup}>
         <Text style={s.fieldLabel}>E-post</Text>
-        <TextInput value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" returnKeyType="next" placeholder="namn@exempel.se" style={s.fieldInput} placeholderTextColor="#8f8178" />
+        <TextInput value={auth.email} onChangeText={auth.setEmail} autoCapitalize="none" keyboardType="email-address" returnKeyType="next" placeholder="namn@exempel.se" style={s.fieldInput} placeholderTextColor="#8f8178" />
       </View>
       <View style={s.fieldGroup}>
         <Text style={s.fieldLabel}>Lösenord</Text>
-        <TextInput value={password} onChangeText={setPassword} secureTextEntry returnKeyType="go" onSubmitEditing={handleAuth} style={s.fieldInput} placeholderTextColor="#8f8178" />
+        <TextInput value={auth.password} onChangeText={auth.setPassword} secureTextEntry returnKeyType="go" onSubmitEditing={auth.handleAuth} style={s.fieldInput} placeholderTextColor="#8f8178" />
       </View>
-      <Pressable onPress={handleAuth} style={s.primaryCta} disabled={busy}>
-        <Text style={s.primaryCtaText}>{busy ? "Arbetar..." : mode === "signup" ? "Skapa konto" : "Logga in"}</Text>
+      <Pressable onPress={auth.handleAuth} style={s.primaryCta} disabled={auth.busy} dataSet={{ landingCta: true }}>
+        <Text style={s.primaryCtaText}>{auth.busy ? "Arbetar..." : auth.mode === "signup" ? "Skapa konto" : "Logga in"}</Text>
       </Pressable>
-      {signupNotice ? <Text style={s.notice}>{signupNotice}</Text> : null}
-      <Pressable onPress={handleGuestSignIn} style={s.guestCta} disabled={guestBusy}>
-        <Text style={s.guestCtaText}>{guestBusy ? "Startar gästläge..." : "Testa utan konto"}</Text>
+      {auth.signupNotice ? <Text style={s.notice}>{auth.signupNotice}</Text> : null}
+      <Pressable onPress={auth.handleGuestSignIn} style={s.guestCta} disabled={auth.guestBusy} dataSet={{ landingCta: true }}>
+        <Text style={s.guestCtaText}>{auth.guestBusy ? "Startar gästläge..." : "Testa utan konto"}</Text>
       </Pressable>
     </View>
   );
@@ -193,13 +226,14 @@ function AuthForm() {
 
 export function LandingScreen() {
   const isWide = useIsWide();
+  useWebGradient();
 
   return (
-    <View style={s.root}>
+    <View style={s.root} dataSet={{ landingRoot: true }}>
       <StatusBar style="light" />
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={s.flex}>
         <ScrollView contentContainerStyle={[s.container, isWide && s.containerWide]} keyboardShouldPersistTaps="handled">
-          <MarketingContent />
+          <MarketingContent isWide={isWide} />
           <View style={[s.authColumn, isWide && s.authColumnWide]}>
             <AuthForm />
           </View>
@@ -223,58 +257,63 @@ const s = StyleSheet.create({
 
   // Marketing column
   marketing: { flex: 1, justifyContent: "center", paddingBottom: 24, maxWidth: 520 },
-  eyebrow: {
-    color: "#f4c38c",
-    fontSize: 11,
-    textTransform: "uppercase",
-    letterSpacing: 3,
-    marginBottom: 12,
-    fontWeight: "700",
-  },
-  headline: {
-    color: "#fffaf5",
-    fontSize: 28,
-    fontWeight: "800",
-    lineHeight: 34,
-    marginBottom: 12,
-  },
+  heroBanner: { width: "100%", height: 120, marginBottom: 16 },
+  heroBannerWide: { height: 150 },
   subheadline: {
     color: "#c4a882",
-    fontSize: 13,
-    lineHeight: 20,
-    marginBottom: 32,
+    fontSize: 14,
+    lineHeight: 22,
+    marginBottom: 24,
   },
+
+  // Decorative divider
+  divider: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 24 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: "rgba(244,195,140,0.2)" },
+  dividerDot: { fontSize: 14 },
+
+  // Feature list
   featureList: { gap: 20 },
   featureRow: { flexDirection: "row", alignItems: "flex-start", gap: 14 },
   iconBox: {
     backgroundColor: "#3d2220",
-    borderRadius: 10,
-    width: 40,
-    height: 40,
+    borderRadius: 12,
+    width: 44,
+    height: 44,
     alignItems: "center",
     justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(244,195,140,0.15)",
   },
-  iconText: { fontSize: 18 },
+  iconText: { fontSize: 20 },
   featureText: { flex: 1 },
-  featureTitle: { color: "#fffaf5", fontSize: 13, fontWeight: "700" },
-  featureDesc: { color: "#c4a882", fontSize: 11, lineHeight: 16, marginTop: 2 },
+  featureTitle: { color: "#fffaf5", fontSize: 14, fontWeight: "700" },
+  featureDesc: { color: "#c4a882", fontSize: 12, lineHeight: 18, marginTop: 3 },
 
   // Auth column
-  authColumn: { width: "100%", backgroundColor: "#3d2220", borderRadius: 20, padding: 24 },
+  authColumn: { width: "100%", backgroundColor: "rgba(61,34,32,0.7)", borderRadius: 24, padding: 24 },
   authColumnWide: {
-    flexBasis: 380,
+    flexBasis: 390,
     flexShrink: 0,
     flexGrow: 0,
-    width: 380,
-    backgroundColor: "#3d2220",
-    borderRadius: 20,
+    width: 390,
+    backgroundColor: "rgba(61,34,32,0.7)",
+    borderRadius: 24,
     padding: 32,
   },
   formCard: {
-    backgroundColor: "#2b1714",
-    borderRadius: 16,
+    backgroundColor: "rgba(43,23,20,0.9)",
+    borderRadius: 18,
     padding: 28,
     gap: 14,
+    borderWidth: 1,
+    borderColor: "rgba(244,195,140,0.08)",
+  },
+  formWelcome: {
+    color: "#f4c38c",
+    fontSize: 16,
+    fontWeight: "700",
+    textAlign: "center",
+    marginBottom: 4,
   },
 
   // Segment control
@@ -297,35 +336,35 @@ const s = StyleSheet.create({
 
   // Form fields
   fieldGroup: { gap: 4 },
-  fieldLabel: { color: "#c4a882", fontSize: 10 },
+  fieldLabel: { color: "#c4a882", fontSize: 11, fontWeight: "600" },
   fieldInput: {
     backgroundColor: "#1a0f0e",
     borderWidth: 1,
-    borderColor: "#5a3a38",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    borderColor: "rgba(90,58,56,0.6)",
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     color: "#fffaf5",
-    fontSize: 13,
+    fontSize: 14,
   },
 
   // CTAs
   primaryCta: {
     backgroundColor: "#f4c38c",
-    paddingVertical: 12,
-    borderRadius: 10,
+    paddingVertical: 13,
+    borderRadius: 12,
     alignItems: "center",
     marginTop: 6,
   },
-  primaryCtaText: { color: "#2b1714", fontWeight: "700", fontSize: 13 },
+  primaryCtaText: { color: "#2b1714", fontWeight: "700", fontSize: 14 },
   guestCta: {
     borderWidth: 1.5,
-    borderColor: "#f4c38c",
-    paddingVertical: 10,
-    borderRadius: 10,
+    borderColor: "rgba(244,195,140,0.5)",
+    paddingVertical: 11,
+    borderRadius: 12,
     alignItems: "center",
   },
-  guestCtaText: { color: "#f4c38c", fontWeight: "600", fontSize: 12 },
+  guestCtaText: { color: "#f4c38c", fontWeight: "600", fontSize: 13 },
 
   // Notices
   notice: { color: "#c4a882", fontSize: 11, lineHeight: 16 },
