@@ -31,6 +31,7 @@ import type { WineRecord, WineRow } from "../types/wine";
 import type { CatalogTextMatch } from "../types/product-catalog";
 
 const WINES_PAGE_SIZE = 50;
+const HISTORY_PAGE_SIZE = 50;
 
 function createGuardedFetcher<T>(fn: () => Promise<T>): () => Promise<T | undefined> {
   let inFlight: Promise<T> | null = null;
@@ -45,6 +46,7 @@ export function useCellarData(userId: string) {
   const [wines, setWines] = useState<WineRecord[]>([]);
   const [hasMoreWines, setHasMoreWines] = useState(false);
   const [historyEntries, setHistoryEntries] = useState<WineHistoryRecord[]>([]);
+  const [hasMoreHistory, setHasMoreHistory] = useState(false);
   const [storageSpaces, setStorageSpaces] = useState<StorageSpaceRow[]>([]);
   const [catalogEntries, setCatalogEntries] = useState<ProductCatalogWineRow[]>([]);
   const [referenceOptions, setReferenceOptions] = useState<ReferenceOptionRow[]>([]);
@@ -82,16 +84,29 @@ export function useCellarData(userId: string) {
 
   async function fetchHistoryEntriesRaw() {
     setLoadingHistory(true);
-    const { data, error } = await supabase.from("wine_history").select("*").order("consumed_at", { ascending: false }).limit(100);
+    const { data, error } = await supabase.from("wine_history").select("*").order("consumed_at", { ascending: false }).limit(HISTORY_PAGE_SIZE);
     if (error) {
       showError("Kunde inte hämta historiken", error.message);
       setLoadingHistory(false);
       return;
     }
-    setHistoryEntries(await hydrateWineHistoryRecords((data ?? []) as WineHistoryRow[]));
+    const rows = (data ?? []) as WineHistoryRow[];
+    setHasMoreHistory(rows.length === HISTORY_PAGE_SIZE);
+    setHistoryEntries(await hydrateWineHistoryRecords(rows));
     setLoadingHistory(false);
   }
   const fetchHistoryEntries = createGuardedFetcher(fetchHistoryEntriesRaw);
+
+  async function fetchMoreHistory() {
+    if (!hasMoreHistory) return;
+    const offset = historyEntries.length;
+    const { data, error } = await supabase.from("wine_history").select("*").order("consumed_at", { ascending: false }).range(offset, offset + HISTORY_PAGE_SIZE - 1);
+    if (error) { showError("Kunde inte hämta fler poster", error.message); return; }
+    const rows = (data ?? []) as WineHistoryRow[];
+    setHasMoreHistory(rows.length === HISTORY_PAGE_SIZE);
+    const hydrated = await hydrateWineHistoryRecords(rows);
+    setHistoryEntries((prev) => [...prev, ...hydrated]);
+  }
 
   async function fetchStorageSpaces() {
     setLoadingStorageSpaces(true);
@@ -340,6 +355,8 @@ export function useCellarData(userId: string) {
     fetchMoreWines,
     hasMoreWines,
     fetchHistoryEntries,
+    fetchMoreHistory,
+    hasMoreHistory,
     fetchStorageSpaces,
     fetchCatalogEntries,
     fetchReferenceOptions,
