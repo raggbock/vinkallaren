@@ -3,6 +3,7 @@ import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import * as Clipboard from "expo-clipboard";
 import { AutocompleteInput, Expandable, LabeledInput, PanelHeader, SuggestionRow } from "./form-controls";
 import type { Suggestion } from "./form-controls";
+import { AvatarRow } from "./avatar";
 import { SessionTastingView } from "./session-tasting-view";
 import { addWineToSession, buildShareMessage, endSession, fetchSessionParticipants, revealSession, saveTasting } from "../lib/session-actions";
 import { confirmAction, showError } from "../lib/show-error";
@@ -358,41 +359,37 @@ function AddWineForm({ sessionId, wineCount, wines, searchWineNames }: {
 /* ── Participant hover badge ── */
 
 function ParticipantBadge({ sessionId, count }: { sessionId: string; count: number }) {
-  const [names, setNames] = useState<string[]>([]);
+  const [participants, setParticipants] = useState<{ user_id: string; display_name: string; avatar_color: string | null }[]>([]);
   const [showTooltip, setShowTooltip] = useState(false);
   const [fetched, setFetched] = useState(false);
 
-  async function handleHover() {
-    setShowTooltip(true);
-    if (!fetched) {
-      const result = await fetchSessionParticipants(sessionId);
-      if (result.data) setNames(result.data.map((p) => p.display_name || "Anonym"));
-      setFetched(true);
-    }
-  }
-
-  // Re-fetch when count changes
   useEffect(() => { setFetched(false); }, [count]);
+
+  useEffect(() => {
+    if (fetched) return;
+    fetchSessionParticipants(sessionId).then((result) => {
+      if (result.data) setParticipants(result.data);
+      setFetched(true);
+    });
+  }, [sessionId, fetched]);
 
   return (
     <View>
       <Pressable
-        onHoverIn={handleHover} onHoverOut={() => setShowTooltip(false)}
-        onPress={async () => {
-          if (!fetched) {
-            const result = await fetchSessionParticipants(sessionId);
-            if (result.data) setNames(result.data.map((p) => p.display_name || "Anonym"));
-            setFetched(true);
-          }
-          setShowTooltip((v) => !v);
-        }}
+        onHoverIn={() => setShowTooltip(true)}
+        onHoverOut={() => setShowTooltip(false)}
+        onPress={() => setShowTooltip((v) => !v)}
+        style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
       >
+        {participants.length > 0 ? (
+          <AvatarRow participants={participants} size={24} />
+        ) : null}
         <Text style={[s.meta, { textDecorationLine: "underline" }]}>{count} deltagare</Text>
       </Pressable>
-      {showTooltip && names.length > 0 ? (
+      {showTooltip && participants.length > 0 ? (
         <View style={s.tooltip}>
-          {names.map((name, i) => (
-            <Text key={i} style={s.tooltipText}>{name}</Text>
+          {participants.map((p) => (
+            <Text key={p.user_id} style={s.tooltipText}>{p.display_name || "Anonym"}</Text>
           ))}
         </View>
       ) : null}
