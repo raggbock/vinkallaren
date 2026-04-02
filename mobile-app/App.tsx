@@ -7,7 +7,7 @@ import { supabase, supabaseConfigured } from "./src/lib/supabase";
 import { buildMealRecommendations } from "./src/lib/cellar-helpers";
 import { openSystembolaget, saveNewWine } from "./src/lib/cellar-actions";
 import { hydrateWineRecords } from "./src/lib/wine-helpers";
-import { showError } from "./src/lib/show-error";
+import { confirmAction, showError } from "./src/lib/show-error";
 import { BottomTabBar, HistoryPanel, MealPlannerPanel } from "./src/components/cellar-sections";
 import { MinKallarePanel } from "./src/components/min-kallare-panel";
 import { BarcodeScannerModal, CatalogEditorModal, DrinkWineModal, VintagePickerModal } from "./src/components/cellar-workflows";
@@ -172,10 +172,14 @@ function CellarScreen({ session }: { session: Session }) {
     data.setWines(prev => [hydrated, ...prev]);
     data.mergeReferenceOptions(savedRow);
     success.show("wine_added");
-    Alert.alert("Vinet är sparat!", "Vad vill du göra nu?", [
-      { text: "Lägg till fler", style: "default" },
-      { text: "Gå till min källare", onPress: () => setActiveSection("cellar") },
-    ]);
+    if (Platform.OS === "web") {
+      if (window.confirm("Vinet är sparat! Vill du gå till din källare?")) setActiveSection("cellar");
+    } else {
+      Alert.alert("Vinet är sparat!", "Vad vill du göra nu?", [
+        { text: "Lägg till fler", style: "default" },
+        { text: "Gå till min källare", onPress: () => setActiveSection("cellar") },
+      ]);
+    }
   }
 
   async function handleOpenSystembolaget(productId: string) {
@@ -185,7 +189,7 @@ function CellarScreen({ session }: { session: Session }) {
 
   async function signOut() {
     const { error } = await supabase.auth.signOut();
-    if (error) Alert.alert("Kunde inte logga ut", error.message);
+    if (error) showError("Kunde inte logga ut", error.message);
   }
 
   let activePanel = (
@@ -215,12 +219,7 @@ function CellarScreen({ session }: { session: Session }) {
       onOpenSystembolaget={handleOpenSystembolaget}
       onEditWine={edit.actions.open}
       onDrinkWine={drink.actions.open}
-      onDeleteWine={(id, imagePath) => {
-            Alert.alert("Ta bort vin", "Är du säker på att du vill ta bort det här vinet?", [
-              { text: "Avbryt", style: "cancel" },
-              { text: "Ta bort", style: "destructive", onPress: () => data.deleteWine(id, imagePath) },
-            ]);
-          }}
+      onDeleteWine={(id, imagePath) => confirmAction("Ta bort vin", "Är du säker på att du vill ta bort det här vinet?", () => data.deleteWine(id, imagePath))}
       storageSpaceDraft={data.storageSpaceDraft}
       savingStorageSpace={data.savingStorageSpace}
       onStorageSpaceDraftChange={(patch) => data.setStorageSpaceDraft((c) => ({ ...c, ...patch }))}

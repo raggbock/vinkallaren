@@ -5,7 +5,7 @@ import { AutocompleteInput, Expandable, LabeledInput, SuggestionRow } from "./fo
 import type { Suggestion } from "./form-controls";
 import { SessionTastingView } from "./session-tasting-view";
 import { addWineToSession, buildShareMessage, endSession, fetchSessionParticipants, revealSession, saveTasting } from "../lib/session-actions";
-import { showError } from "../lib/show-error";
+import { confirmAction, showError } from "../lib/show-error";
 import type { CreateSessionInput, SessionTastingRow, SessionWineRow, TastingSessionRow } from "../types/tasting-session";
 import type { WsatTastingData } from "../lib/wsat-data";
 import type { WineRecord } from "../types/wine";
@@ -212,18 +212,12 @@ function HostControls({ session, onSetSession, onEnd }: {
         <Text style={s.hostButtonText}>Dela kod: {session.join_code}</Text>
       </Pressable>
       {session.status === "active" && session.mode === "blind" ? (
-        <Pressable onPress={() => Alert.alert("Avslöja viner?", "Alla deltagare kommer se varandras betyg och noteringar.", [
-          { text: "Avbryt", style: "cancel" },
-          { text: "Avslöja", onPress: async () => { const r = await revealSession(session.id); if (r.error) { showError("Kunde inte avslöja", r.error); return; } onSetSession({ ...session, status: "revealed" }); } },
-        ])} style={s.hostButton}>
+        <Pressable onPress={() => confirmAction("Avslöja viner?", "Alla deltagare kommer se varandras betyg och noteringar.", async () => { const r = await revealSession(session.id); if (r.error) { showError("Kunde inte avslöja", r.error); return; } onSetSession({ ...session, status: "revealed" }); })} style={s.hostButton}>
           <Text style={s.hostButtonText}>Avslöja</Text>
         </Pressable>
       ) : null}
       {session.status !== "ended" ? (
-        <Pressable onPress={() => Alert.alert("Avsluta provning?", "Provningen avslutas och sparas i historiken.", [
-          { text: "Avbryt", style: "cancel" },
-          { text: "Avsluta", style: "destructive", onPress: async () => { const r = await endSession(session.id); if (r.error) { showError("Kunde inte avsluta", r.error); return; } onSetSession({ ...session, status: "ended" }); onEnd(); } },
-        ])} style={[s.hostButton, { backgroundColor: "#ead8ca" }]}>
+        <Pressable onPress={() => confirmAction("Avsluta provning?", "Provningen avslutas och sparas i historiken.", async () => { const r = await endSession(session.id); if (r.error) { showError("Kunde inte avsluta", r.error); return; } onSetSession({ ...session, status: "ended" }); onEnd(); })} style={[s.hostButton, { backgroundColor: "#ead8ca" }]}>
           <Text style={[s.hostButtonText, { color: "#6f1d1b" }]}>Avsluta</Text>
         </Pressable>
       ) : null}

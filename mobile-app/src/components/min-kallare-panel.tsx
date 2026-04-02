@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Alert, Image, Pressable, RefreshControl, SectionList, Text, View } from "react-native";
+import { ActivityIndicator, Image, Pressable, RefreshControl, SectionList, Text, View } from "react-native";
 
 import { getWineStoragePlacementLabel } from "../lib/cellar-helpers";
+import { confirmAction } from "../lib/show-error";
 import { SPACE_TYPE_LABELS, SPACE_TYPE_OPTIONS, SPACE_TYPE_VALUES } from "../lib/storage-types";
 import type { StorageSpaceRow } from "../types/storage-space";
 import type { WineRecord } from "../types/wine";
@@ -290,10 +291,7 @@ function StorageSpaceActions({ space, styles, onUpdate, onDelete }: {
     return (
       <View style={styles.actionRow}>
         <Pressable onPress={() => setEditing(true)}><Text style={styles.linkText}>Redigera</Text></Pressable>
-        <Pressable onPress={() => Alert.alert("Ta bort förvaringsplats", `Vill du ta bort "${space.name}"?`, [
-          { text: "Avbryt", style: "cancel" },
-          { text: "Ta bort", style: "destructive", onPress: () => onDelete(space.id) },
-        ])}><Text style={styles.dangerText}>Ta bort</Text></Pressable>
+        <Pressable onPress={() => confirmAction("Ta bort förvaringsplats", `Vill du ta bort "${space.name}"?`, () => onDelete(space.id))}><Text style={styles.dangerText}>Ta bort</Text></Pressable>
       </View>
     );
   }
