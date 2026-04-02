@@ -22,7 +22,8 @@ import { CELLAR_SECTIONS, type CellarSection } from "./src/types/cellar";
 import { defaultDraft, type WineDraft } from "./src/types/cellar-drafts";
 import { styles } from "./src/styles/theme";
 import { BUILD_VERSION } from "./src/lib/build-version";
-import { AuthScreen, LoadingScreen, SetupScreen } from "./src/screens/auth";
+import { LoadingScreen, SetupScreen } from "./src/screens/auth";
+import { LandingScreen } from "./src/screens/landing";
 import { useCellarData } from "./src/hooks/useCellarData";
 import { useCellarFilters } from "./src/hooks/useCellarFilters";
 import { useImagePicker } from "./src/hooks/useImagePicker";
@@ -69,7 +70,7 @@ export default function App() {
 
   if (!supabaseConfigured) return <SetupScreen />;
   if (loadingSession) return <LoadingScreen label="Kopplar upp vinkällaren..." />;
-  if (!session) return <AuthScreen />;
+  if (!session) return <LandingScreen />;
   return <CellarScreen session={session} />;
 }
 
