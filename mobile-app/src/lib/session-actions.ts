@@ -21,13 +21,19 @@ export async function createSession(userId: string, input: CreateSessionInput): 
     const joinCode = generateJoinCode();
     const { data, error } = await supabase
       .from("tasting_sessions")
-      .insert({ host_id: userId, title: input.title, join_code: joinCode, mode: input.mode, format: input.format, free_order: input.free_order })
+      .insert({ host_id: userId, title: input.title, join_code: joinCode, mode: input.mode, format: input.format, free_order: input.free_order, status: "setup" })
       .select("*")
       .single();
     if (!error) return ok(data as TastingSessionRow);
     if (error.code !== "23505") return fail(error.message);
   }
   return fail("Försök igen.");
+}
+
+export async function startSession(sessionId: string): Promise<Result<true>> {
+  const { error } = await supabase.from("tasting_sessions").update({ status: "active" }).eq("id", sessionId);
+  if (error) return fail(error.message);
+  return ok(true);
 }
 
 export async function joinSessionByCode(code: string): Promise<Result<TastingSessionRow>> {

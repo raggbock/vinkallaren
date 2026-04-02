@@ -190,7 +190,7 @@ export function TastingSessionPanel({
             <Pressable key={ses.id} style={s.sessionCard} onPress={() => onOpenSession(ses)}>
               <Text style={s.sessionTitle}>{ses.title}</Text>
               <Text style={s.sessionMeta}>
-                {ses.mode === "blind" ? "Blind" : "Öppen"} · {ses.format.toUpperCase()} · {ses.status === "active" ? "Pågår" : ses.status === "revealing" ? "Avslöjas" : "Avslutad"}
+                {ses.mode === "blind" ? "Blind" : "Öppen"} · {ses.format.toUpperCase()} · {ses.status === "setup" ? "Förbereder" : ses.status === "active" ? "Pågår" : ses.status === "revealing" ? "Avslöjas" : "Avslutad"}
               </Text>
             </Pressable>
           ))}
