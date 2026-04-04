@@ -91,6 +91,7 @@ const normalized = wines.filter((w) => {
     type: normalizeType(w.type),
     vintage,
     grape: w.grape || null,
+    imageUrl: w.imageUrl || null,
     systembolagetProductId: w.systembolagetProductId || null,
     sourceLabel: w.sourceLabel || "Munskänkarna",
     sourceConfidence: "catalog",

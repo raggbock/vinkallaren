@@ -98,6 +98,10 @@ function mapWine(p) {
     ? p.grapes.join(", ")
     : null;
 
+  const imageUrl = p.images?.[0]?.imageUrl
+    ? `${p.images[0].imageUrl}_400.png`
+    : null;
+
   return stripTrailingYear({
     name: name || null,
     producer: p.producerName || null,
@@ -106,6 +110,7 @@ function mapWine(p) {
     vintage: p.vintage || null,
     type: normalizeType(p.categoryLevel2),
     grape,
+    imageUrl,
     systembolagetProductId: p.productNumber || null,
     sourceLabel: "Systembolaget",
     sourceUrl: p.productNumber

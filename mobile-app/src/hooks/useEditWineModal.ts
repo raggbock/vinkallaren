@@ -4,7 +4,8 @@ import type { WineRecord } from "../types/wine";
 import type { WineDraft } from "../types/cellar-drafts";
 import type { StorageSpaceRow } from "../types/storage-space";
 import { hydrateWineRecords, toWineDraft } from "../lib/wine-helpers";
-import { saveWineEditEntry } from "../lib/cellar-actions";
+import { saveNewWine, saveWineEditEntry } from "../lib/cellar-actions";
+import { toNumberOrNull } from "../lib/cellar-helpers";
 
 type Deps = {
   userId: string;
@@ -45,13 +46,26 @@ export function useEditWineModal(deps: Deps) {
   const save = useCallback(async () => {
     if (!editingWine || !draft) return;
     setSaving(true);
-    const result = await saveWineEditEntry({ userId: deps.userId, editingWine, editWineDraft: draft, setWines: deps.setWines });
-    if (result.error) { showError("Kunde inte spara ändringen", result.error); setSaving(false); return; }
+    const newVintage = toNumberOrNull(draft.vintage);
+    const vintageChanged = newVintage !== editingWine.vintage && newVintage !== null && newVintage >= 1800 && newVintage <= 2100;
+    if (vintageChanged) {
+      const result = await saveNewWine({
+        userId: deps.userId, draft: { ...draft, quantity: "1" },
+        storageSpaceId: draft.storageSpaceId, storageRow: draft.storageRow, storageSlot: draft.storageSlot,
+        selectedCatalogNameEntry: null,
+      });
+      if (result.error) { showError("Kunde inte spara ny årgång", result.error); setSaving(false); return; }
+      const [hydrated] = await hydrateWineRecords([result.data!]);
+      deps.setWines((current) => [hydrated, ...current]);
+    } else {
+      const result = await saveWineEditEntry({ userId: deps.userId, editingWine, editWineDraft: draft, setWines: deps.setWines });
+      if (result.error) { showError("Kunde inte spara ändringen", result.error); setSaving(false); return; }
+    }
     await deps.fetchCatalogEntries();
     setVisible(false);
     setEditingWine(null);
     setDraft(null);
-    deps.showSuccess("edit_saved");
+    deps.showSuccess(vintageChanged ? "new_vintage_saved" : "edit_saved");
     setSaving(false);
   }, [editingWine, draft, deps]);
 

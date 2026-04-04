@@ -95,6 +95,11 @@ function mapWine(match, typeLabel) {
 
   if (!name || !producer) return null;
 
+  const rawImageUrl = v.image?.variations?.bottle_medium || v.image?.location || null;
+  const imageUrl = rawImageUrl
+    ? (rawImageUrl.startsWith("//") ? `https:${rawImageUrl}` : rawImageUrl)
+    : null;
+
   return stripTrailingYear({
     name,
     producer,
@@ -103,6 +108,7 @@ function mapWine(match, typeLabel) {
     vintage,
     type: typeLabel,
     grape: grapes,
+    imageUrl,
     sourceLabel: "Vivino",
   });
 }

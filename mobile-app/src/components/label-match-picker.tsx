@@ -1,6 +1,6 @@
-import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
 import { AnimatedModal } from "./animated-modal";
-import type { CatalogTextMatch } from "../hooks/useCellarData";
+import type { CatalogTextMatch } from "../types/product-catalog";
 
 export function LabelMatchPickerModal({
   visible,
@@ -28,6 +28,11 @@ export function LabelMatchPickerModal({
                 style={pickerStyles.matchRow}
                 onPress={() => onSelect(match)}
               >
+                {match.image_url ? (
+                  <Image source={{ uri: match.image_url }} style={pickerStyles.matchThumb} />
+                ) : (
+                  <View style={[pickerStyles.matchThumb, pickerStyles.matchThumbPlaceholder]} />
+                )}
                 <View style={pickerStyles.matchInfo}>
                   <Text style={pickerStyles.matchName}>{match.name}</Text>
                   <Text style={pickerStyles.matchMeta}>
@@ -84,6 +89,16 @@ const pickerStyles = StyleSheet.create({
     marginBottom: 8,
     borderWidth: 1,
     borderColor: "#5a3a36",
+  },
+  matchThumb: {
+    width: 36,
+    height: 48,
+    borderRadius: 4,
+    marginRight: 12,
+    resizeMode: "contain",
+  } as any,
+  matchThumbPlaceholder: {
+    backgroundColor: "#5a3a36",
   },
   matchInfo: {
     flex: 1,

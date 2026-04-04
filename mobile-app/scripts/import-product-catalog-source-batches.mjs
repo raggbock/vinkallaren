@@ -103,6 +103,7 @@ function scoreSeed(seed) {
     seed.region,
     seed.type,
     seed.vintage,
+    seed.imageUrl,
     seed.systembolagetProductId,
     seed.sourceUrl,
   ].filter(Boolean).length;
@@ -143,6 +144,7 @@ for (const sourceEntry of selectedSources.sort((left, right) => (left.priority ?
         region: row.region ?? null,
         type: normalizeType(row.type),
         vintage: row.vintage ?? null,
+        imageUrl: row.imageUrl ?? null,
         systembolagetProductId: row.systembolagetProductId ?? null,
         sourceLabel: row.sourceLabel ?? sourceEntry.source,
         sourceUrl: row.sourceUrl ?? null,

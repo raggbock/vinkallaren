@@ -109,6 +109,7 @@ const normalized = wines
       type: normalizeType(w.type),
       vintage,
       grape: w.grape || null,
+      imageUrl: w.imageUrl || null,
       systembolagetProductId: w.systembolagetProductId || null,
       sourceLabel: w.sourceLabel || "Systembolaget",
       sourceConfidence: "catalog",

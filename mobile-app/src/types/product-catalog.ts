@@ -10,11 +10,41 @@ export type ProductCatalogWineRow = {
   type: string | null;
   vintage: number | null;
   food_pairings: string[];
+  image_url: string | null;
   source_label: string | null;
   source_confidence: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
+};
+
+export type CatalogTextMatch = {
+  id: string;
+  name: string;
+  producer: string | null;
+  vintage: number | null;
+  image_url: string | null;
+  similarity: number;
+};
+
+export type ProductLookupInput = {
+  barcode?: string;
+  systembolagetProductId?: string;
+};
+
+export type ProductCatalogEntry = {
+  barcode?: string;
+  systembolagetProductId?: string;
+  name: string;
+  producer?: string;
+  country?: string;
+  region?: string;
+  grape?: string;
+  type?: string;
+  vintage?: number;
+  foodPairings: string[];
+  sourceLabel: string;
+  sourceConfidence?: "high" | "medium" | "low";
 };
 
 export type ProductCatalogWineInsert = {
@@ -28,6 +58,7 @@ export type ProductCatalogWineInsert = {
   type?: string | null;
   vintage?: number | null;
   food_pairings?: string[];
+  image_url?: string | null;
   source_label?: string | null;
   source_confidence?: string | null;
   created_by?: string | null;

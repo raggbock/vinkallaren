@@ -3,7 +3,7 @@ import { Alert, Platform } from "react-native";
 import { showError } from "../lib/show-error";
 import { useCameraPermissions } from "expo-camera";
 
-import { cacheCatalogEntry, findCatalogMatch, type ProductCatalogEntry } from "../lib/product-catalog";
+import { cacheCatalogEntry, findCatalogMatch, saveOcrTextForCatalogEntry, type ProductCatalogEntry } from "../lib/product-catalog";
 import { normalizeLookupValue } from "../lib/cellar-helpers";
 import {
   applyCatalogLocksToDraft,
@@ -39,6 +39,7 @@ export function useCatalogWorkflow(deps: CatalogWorkflowDeps) {
   const [labelMatches, setLabelMatches] = useState<CatalogTextMatch[]>([]);
   const [labelPickerVisible, setLabelPickerVisible] = useState(false);
   const [labelOcrText, setLabelOcrText] = useState<string | null>(null);
+  const [labelRawOcrText, setLabelRawOcrText] = useState<string | null>(null);
 
   // --- Barcode scanner ---
   const [scannerVisible, setScannerVisible] = useState(false);
@@ -236,6 +237,7 @@ export function useCatalogWorkflow(deps: CatalogWorkflowDeps) {
       if (!parsed.searchQuery) { showLabelError(); return; }
 
       setLabelOcrText(parsed.name);
+      setLabelRawOcrText(parsed.rawText);
       if (parsed.vintage) {
         setDraft((current) => ({ ...current, vintage: current.vintage || parsed.vintage! }));
       }
@@ -266,6 +268,9 @@ export function useCatalogWorkflow(deps: CatalogWorkflowDeps) {
   async function handleLabelMatchSelected(match: CatalogTextMatch, setDraft: React.Dispatch<React.SetStateAction<WineDraft>>) {
     setLabelPickerVisible(false);
     setLabelMatches([]);
+    if (labelRawOcrText) {
+      void saveOcrTextForCatalogEntry(match.id, labelRawOcrText);
+    }
     const entries = await fetchCatalogEntriesByName(match.name);
     if (entries.length > 0) {
       const best = entries.reduce((a, b) => scoreCatalogCompleteness(b) > scoreCatalogCompleteness(a) ? b : a);
