@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { stripProducerPrefix, collapseSpaces, normalizeApostrophes } from "./lib/normalize.mjs";
 
 const [, , outputArg = "./data/catalog-sources/systembolaget-wine-batch.json"] =
   process.argv;
@@ -68,23 +69,6 @@ function normalizeType(categoryLevel2) {
   return categoryLevel2.trim();
 }
 
-function stripProducerPrefix(name, producer) {
-  if (!name || !producer) return name;
-  if (name.toLowerCase().startsWith(producer.toLowerCase() + " ")) {
-    const stripped = name.slice(producer.length).trim();
-    if (stripped.length > 0) return stripped;
-  }
-  return name;
-}
-
-function collapseSpaces(str) {
-  return str ? str.replace(/\s{2,}/g, " ").trim() : str;
-}
-
-function normalizeApostrophes(str) {
-  return str ? str.replace(/[\u2018\u2019\u201A\u201B\u00B4\u0060]/g, "'") : str;
-}
-
 function mapWine(p) {
   const rawName = normalizeApostrophes((p.productNameThin || p.productNameBold || "").trim());
   const producer = normalizeApostrophes((p.producerName || "").trim());
@@ -99,7 +83,7 @@ function mapWine(p) {
     : null;
 
   const imageUrl = p.images?.[0]?.imageUrl
-    ? `${p.images[0].imageUrl}_400.png`
+    ? `${p.images[0].imageUrl}_800.png`
     : null;
 
   return stripTrailingYear({
@@ -135,8 +119,26 @@ console.log(`Total wines: ${total} (${totalPages} pages of ${PAGE_SIZE})\n`);
 
 const merged = new Map();
 
+// Only include bottles (skip boxes, bag-in-box, cans, etc.)
+const BOTTLE_VOLUMES = new Set([187, 200, 250, 375, 500, 750, 1000, 1500, 3000]);
+function isBottle(p) {
+  const vol = p.volume;
+  if (!vol) return true; // keep if unknown
+  // Typical box sizes: 2000ml, 3000ml (3L box ≠ 3L magnum — check name)
+  if (vol === 2000) return false;
+  if (vol >= 3000) {
+    const name = (p.productNameBold || "").toLowerCase();
+    // Reject if name signals bag-in-box
+    if (name.includes("box") || name.includes("bag")) return false;
+    // Magnums/jeroboams have "magnum" or specific bottle terms
+    return name.includes("magnum") || name.includes("jeroboam") || name.includes("dubbel");
+  }
+  return true;
+}
+
 function addWines(products) {
   for (const p of products) {
+    if (!isBottle(p)) continue;
     const wine = mapWine(p);
     if (!wine.name || !wine.producer) continue;
 

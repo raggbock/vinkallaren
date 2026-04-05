@@ -3,7 +3,7 @@ import path from "node:path";
 import { supabase } from "./lib/supabase-client.mjs";
 import { stripProducerPrefix, collapseSpaces, normalizeApostrophes, normalizeType } from "./lib/normalize.mjs";
 
-const [, , inputArg = "./data/catalog-sources/systembolaget-wine-batch.json"] =
+const [, , inputArg = "./data/catalog-sources/vivino-extended-batch.json"] =
   process.argv;
 const inputPath = path.resolve(process.cwd(), inputArg);
 
@@ -15,21 +15,6 @@ if (!fs.existsSync(inputPath)) {
 const wines = JSON.parse(fs.readFileSync(inputPath, "utf8"));
 console.log(`Loaded ${wines.length} wines from ${inputPath}`);
 
-// Fetch existing systembolaget IDs to skip duplicates
-console.log("Fetching existing Systembolaget IDs from database...");
-const { data: existingRows, error: fetchError } = await supabase
-  .from("product_catalog_wines")
-  .select("systembolaget_product_id")
-  .not("systembolaget_product_id", "is", null);
-
-if (fetchError) {
-  console.error("Failed to fetch existing IDs:", fetchError.message);
-  process.exit(1);
-}
-
-const existingIds = new Set(existingRows.map((r) => r.systembolaget_product_id));
-console.log(`Found ${existingIds.size} existing Systembolaget IDs in database`);
-
 function normalizeWine(w) {
   let name = w.name;
   let vintage = w.vintage && /^\d{4}$/.test(String(w.vintage)) ? String(w.vintage) : null;
@@ -37,7 +22,7 @@ function normalizeWine(w) {
   const yearMatch = name && name.match(/\s+((?:18|19|20)\d{2})\s*$/);
   if (yearMatch) {
     if (!vintage) vintage = yearMatch[1];
-    name = name.replace(/\s+(18|19|20)\d{2}\s*$/, '');
+    name = name.replace(/\s+(18|19|20)\d{2}\s*$/, "");
   }
 
   const producer = normalizeApostrophes(w.producer || null);
@@ -50,22 +35,20 @@ function normalizeWine(w) {
     vintage,
     grape: w.grape || null,
     imageUrl: w.imageUrl || null,
-    systembolagetProductId: w.systembolagetProductId || null,
-    sourceLabel: w.sourceLabel || "Systembolaget",
+    systembolagetProductId: null,
+    sourceLabel: w.sourceLabel || "Vivino",
     sourceConfidence: "catalog",
   };
 }
 
 const normalized = wines
-  .filter((w) => {
-    if (w.systembolagetProductId && existingIds.has(w.systembolagetProductId)) return false;
-    if (!w.name || !w.producer) return false;
-    return true;
-  })
+  .filter((w) => !(!w.name || !w.producer))
   .map(normalizeWine);
 
-console.log(`${wines.length - normalized.length} wines skipped (SB-ID already in DB)`);
-console.log(`${normalized.length} new wines to import`);
+console.log(
+  `${wines.length - normalized.length} wines skipped (missing name/producer/vintage)`,
+);
+console.log(`${normalized.length} wines to import`);
 
 const BATCH_SIZE = 200;
 let totalImported = 0;
@@ -78,7 +61,10 @@ for (let i = 0; i < normalized.length; i += BATCH_SIZE) {
   });
 
   if (error) {
-    console.error(`Batch ${Math.floor(i / BATCH_SIZE) + 1} failed:`, error.message);
+    console.error(
+      `Batch ${Math.floor(i / BATCH_SIZE) + 1} failed:`,
+      error.message,
+    );
     continue;
   }
 

@@ -10,7 +10,7 @@ import {
   mergeDraftWithCatalogSuggestion,
   scoreCatalogCompleteness,
 } from "../lib/wine-helpers";
-import { recognizeLabel, parseWineLabel } from "../lib/label-ocr";
+import { recognizeLabel, parseWineLabel, normalizeOcrText } from "../lib/label-ocr";
 import { defaultImportSelection, type ImportFieldSelection, type ImportMode, type WineDraft } from "../types/cellar-drafts";
 import type { CatalogTextMatch, ProductCatalogWineRow } from "../types/product-catalog";
 import type { WineRecord } from "../types/wine";
@@ -19,7 +19,7 @@ type CatalogWorkflowDeps = {
   sessionUserId: string;
   wines: WineRecord[];
   fetchCatalogEntriesByName: (name: string) => Promise<ProductCatalogWineRow[]>;
-  matchCatalogByText: (query: string) => Promise<CatalogTextMatch[]>;
+  matchCatalogByText: (query: string, maxResults?: number, rawOcrQuery?: string, vintage?: number | null) => Promise<CatalogTextMatch[]>;
   takePhoto: () => Promise<string | null>;
 };
 
@@ -55,15 +55,17 @@ export function useCatalogWorkflow(deps: CatalogWorkflowDeps) {
     return applyCatalogLocksToDraft(current, patch, selectedCatalogNameEntry);
   }
 
-  function applySelectedCatalogEntry(entry: ProductCatalogWineRow, setDraft: React.Dispatch<React.SetStateAction<WineDraft>>) {
+  function applySelectedCatalogEntry(entry: ProductCatalogWineRow, setDraft: React.Dispatch<React.SetStateAction<WineDraft>>, allEntries?: ProductCatalogWineRow[]) {
     setSelectedCatalogNameEntry(entry);
+    // If this entry lacks grape, try to find it from another entry with same name/producer
+    const grape = entry.grape ?? allEntries?.find((e) => e.grape)?.grape ?? "";
     setDraft((current) => ({
       ...current,
       name: entry.name,
       producer: entry.producer ?? "",
       country: entry.country ?? "",
       region: entry.region ?? "",
-      grape: entry.grape ?? "",
+      grape,
       vintage: entry.vintage ? String(entry.vintage) : "",
       type: entry.type ?? current.type,
       barcode: entry.barcode ?? "",
@@ -96,7 +98,7 @@ export function useCatalogWorkflow(deps: CatalogWorkflowDeps) {
       .sort((a, b) => b.year.localeCompare(a.year));
     if (uniqueVintages.length <= 1) {
       const bestEntry = entries.reduce((best, e) => scoreCatalogCompleteness(e) > scoreCatalogCompleteness(best) ? e : best);
-      applySelectedCatalogEntry(bestEntry, setDraft);
+      applySelectedCatalogEntry(bestEntry, setDraft, entries);
       return;
     }
     setVintagePickerWineName(entries[0].name);
@@ -223,6 +225,7 @@ export function useCatalogWorkflow(deps: CatalogWorkflowDeps) {
 
   async function handleLabelPhoto(setDraft: React.Dispatch<React.SetStateAction<WineDraft>>) {
     setScannerVisible(false);
+    setLabelRawOcrText(null);
     const uri = await takePhoto();
     if (!uri) { setScannerVisible(true); return; }
 
@@ -241,7 +244,10 @@ export function useCatalogWorkflow(deps: CatalogWorkflowDeps) {
         setDraft((current) => ({ ...current, vintage: current.vintage || parsed.vintage! }));
       }
 
-      const matches = await matchCatalogByText(parsed.searchQuery);
+      // Normalize the search query to handle OCR errors (accents, l/1/I, rn/m, etc.)
+      const normalizedQuery = normalizeOcrText(parsed.searchQuery);
+      const parsedVintage = parsed.vintage ? parseInt(parsed.vintage, 10) : null;
+      const matches = await matchCatalogByText(normalizedQuery, 5, parsed.rawSearchQuery, parsedVintage);
       if (matches.length > 0) {
         setLabelMatches(matches);
         setLabelPickerVisible(true);

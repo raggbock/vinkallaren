@@ -9,6 +9,7 @@ export type LabelParseResult = {
   producer: string | null;
   vintage: string | null;
   searchQuery: string;
+  rawSearchQuery: string;
 };
 
 /**
@@ -81,5 +82,42 @@ export function parseWineLabel(blocks: TextBlock[]): LabelParseResult {
 
   const searchQuery = [name, producer].filter(Boolean).join(" ");
 
-  return { rawText, name, producer, vintage, searchQuery };
+  // Build a broader search query from all significant OCR lines
+  const rawSearchQuery = candidateLines
+    .slice(0, 4)
+    .map(normalizeOcrText)
+    .filter((l) => l.length >= 3)
+    .join(" ");
+
+  return { rawText, name, producer, vintage, searchQuery, rawSearchQuery };
+}
+
+// Common OCR misreads on wine labels
+const OCR_REPLACEMENTS: [RegExp, string][] = [
+  [/[|]/g, "l"],          // pipe → l
+  [/(?<=[a-z])0/g, "o"],  // zero after letter → o
+  [/(?<=[A-Z])0/g, "O"],  // zero after uppercase → O
+  [/1(?=[a-z])/g, "l"],   // 1 before lowercase → l
+  [/(?<=[b-df-hj-np-tv-z])rn(?=[b-df-hj-np-tv-z])/gi, "m"], // rn→m between consonants where rn is unlikely
+];
+
+/**
+ * Normalize OCR text to improve fuzzy matching.
+ * Strips accents, fixes common Tesseract misreads,
+ * and removes noise characters.
+ */
+export function normalizeOcrText(text: string): string {
+  // Strip diacritics (é→e, ö→o, â→a, etc.)
+  let normalized = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+  // Apply common OCR error corrections
+  for (const [pattern, replacement] of OCR_REPLACEMENTS) {
+    normalized = normalized.replace(pattern, replacement);
+  }
+
+  // Remove non-alphanumeric noise except spaces
+  normalized = normalized.replace(/[^\w\s]/g, " ");
+
+  // Collapse whitespace
+  return normalized.replace(/\s+/g, " ").trim();
 }

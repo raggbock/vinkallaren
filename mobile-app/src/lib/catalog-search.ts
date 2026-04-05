@@ -44,12 +44,36 @@ export async function fetchCatalogEntriesByName(name: string): Promise<ProductCa
   return (data ?? []) as ProductCatalogWineRow[];
 }
 
-export async function matchCatalogByText(query: string, maxResults = 5): Promise<CatalogTextMatch[]> {
+export async function matchCatalogByText(query: string, maxResults = 5, rawOcrQuery?: string, vintage?: number | null): Promise<CatalogTextMatch[]> {
   if (query.trim().length < 3) return [];
-  const { data, error } = await supabase.rpc("match_catalog_by_text", {
+
+  const rpcParams: Record<string, unknown> = {
     query: query.trim(),
     max_results: maxResults,
-  });
-  if (error) return [];
-  return (data ?? []) as CatalogTextMatch[];
+  };
+  if (vintage) rpcParams.query_vintage = vintage;
+
+  const { data, error } = await supabase.rpc("match_catalog_by_text", rpcParams);
+  const primary = (!error && data ? data : []) as CatalogTextMatch[];
+
+  // If we have raw OCR text that differs from the parsed query, search with that too
+  const rawTrimmed = rawOcrQuery?.trim() ?? "";
+  if (rawTrimmed.length >= 3 && rawTrimmed !== query.trim()) {
+    const { data: extra } = await supabase.rpc("match_catalog_by_text", {
+      ...rpcParams,
+      query: rawTrimmed,
+    });
+    if (extra) {
+      const seenIds = new Set(primary.map((m) => m.id));
+      for (const match of extra as CatalogTextMatch[]) {
+        if (!seenIds.has(match.id)) {
+          primary.push(match);
+          seenIds.add(match.id);
+        }
+      }
+    }
+  }
+
+  // Re-sort by similarity descending and cap
+  return primary.sort((a, b) => b.similarity - a.similarity).slice(0, maxResults);
 }

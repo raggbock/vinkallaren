@@ -1,25 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { createClient } from "@supabase/supabase-js";
-
-// Parse .env manually to avoid dotenv dependency
-const envPath = path.resolve(process.cwd(), ".env");
-if (fs.existsSync(envPath)) {
-  for (const line of fs.readFileSync(envPath, "utf8").split("\n")) {
-    const match = line.match(/^([^#=]+)=(.*)$/);
-    if (match) process.env[match[1].trim()] = match[2].trim();
-  }
-}
-
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error("Missing EXPO_PUBLIC_SUPABASE_URL or EXPO_PUBLIC_SUPABASE_ANON_KEY in .env");
-  process.exit(1);
-}
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { supabase } from "./lib/supabase-client.mjs";
 
 const [, , outputDirArg = "./data/catalog-images"] = process.argv;
 const outputDir = path.resolve(process.cwd(), outputDirArg);
@@ -34,7 +15,6 @@ if (!fs.existsSync(outputDir)) {
   fs.mkdirSync(outputDir, { recursive: true });
 }
 
-// Track already-downloaded images
 const existingFiles = new Set(fs.readdirSync(outputDir));
 
 console.log("Fetching catalog wines with image URLs...\n");
@@ -97,7 +77,6 @@ while (true) {
   if (wines.length < BATCH_SIZE) break;
 }
 
-// Write an index file mapping wine IDs to filenames
 const indexPath = path.join(outputDir, "index.json");
 const indexEntries = fs.readdirSync(outputDir)
   .filter((f) => f !== "index.json" && !f.startsWith("."))

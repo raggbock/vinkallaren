@@ -27,7 +27,6 @@ export type CatalogTextMatch = {
   similarity: number;
 };
 
-
 export type ProductCatalogEntry = {
   barcode?: string;
   systembolagetProductId?: string;
@@ -48,7 +47,6 @@ export type ProductLookupInput = {
   systembolagetProductId?: string;
   name?: string;
 };
-
 
 export type ProductCatalogWineInsert = {
   barcode?: string | null;
