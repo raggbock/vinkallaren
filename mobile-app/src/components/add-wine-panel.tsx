@@ -1,4 +1,4 @@
-import { ActivityIndicator, Image, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Dimensions, Image, Platform, Pressable, Text, View } from "react-native";
 
 import { buildNumericOptions, FOOD_CATEGORIES, getWineStoragePlacementLabel, mergeTagText, parseTags } from "../lib/cellar-helpers";
 import { buildWsetSummary, type WsetTastingData } from "../lib/wset-data";
@@ -82,6 +82,8 @@ export function AddWinePanel({
   wsetData: WsetTastingData | null;
   onOpenWset: () => void;
 }) {
+  const isDesktopWeb = Platform.OS === "web" && Dimensions.get("window").width > 768;
+
   const isLockedByCatalog = (field: keyof ProductCatalogWineRow) => {
     if (!selectedCatalogNameEntry) return false;
     const value = selectedCatalogNameEntry[field];
@@ -105,18 +107,26 @@ export function AddWinePanel({
         <Text style={styles.inputLabel}>Snabbimport</Text>
         {!draft.name.trim() ? (
           <>
-            <Text style={styles.notesText}>Har du flaskan? Skanna streckkoden för att fylla i automatiskt.</Text>
-            <Pressable onPress={onStartBarcodeScanner} style={[styles.primaryButton, { marginBottom: 12 }]}>
-              <Text style={styles.primaryButtonText}>Skanna streckkod</Text>
-            </Pressable>
-            <Text style={styles.notesText}>Eller fyll i streckkod / artikelnummer manuellt:</Text>
+            {isDesktopWeb ? (
+              <Text style={styles.notesText}>Fyll i streckkod eller artikelnummer för att hämta vindata automatiskt.</Text>
+            ) : (
+              <>
+                <Text style={styles.notesText}>Har du flaskan? Skanna streckkoden för att fylla i automatiskt.</Text>
+                <Pressable onPress={onStartBarcodeScanner} style={[styles.primaryButton, { marginBottom: 12 }]}>
+                  <Text style={styles.primaryButtonText}>Skanna streckkod</Text>
+                </Pressable>
+                <Text style={styles.notesText}>Eller fyll i streckkod / artikelnummer manuellt:</Text>
+              </>
+            )}
           </>
         ) : (
           <>
             <Text style={styles.notesText}>Har du en streckkod eller ett Systembolaget-artikelnummer? Fyll i det så försöker vi hämta resten automatiskt.</Text>
-            <Pressable onPress={onStartBarcodeScanner} style={styles.secondaryButton}>
-              <Text style={styles.secondaryButtonText}>Skanna streckkod</Text>
-            </Pressable>
+            {!isDesktopWeb && (
+              <Pressable onPress={onStartBarcodeScanner} style={styles.secondaryButton}>
+                <Text style={styles.secondaryButtonText}>Skanna streckkod</Text>
+              </Pressable>
+            )}
           </>
         )}
         <LabeledInput label="Streckkod" value={draft.barcode} onChangeText={onBarcodeChange} editable={!isLockedByCatalog("barcode")} />
@@ -181,12 +191,20 @@ export function AddWinePanel({
       )}
 
       <View style={styles.imageButtonRow}>
-        <Pressable onPress={onTakePhoto} style={styles.secondaryButton}>
-          <Text style={styles.secondaryButtonText}>Ta foto av etiketten</Text>
-        </Pressable>
-        <Pressable onPress={onChooseImage} style={styles.secondaryButton}>
-          <Text style={styles.secondaryButtonText}>{draft.imageUri ? "Byt bild" : "Välj flaskbild"}</Text>
-        </Pressable>
+        {isDesktopWeb ? (
+          <Pressable onPress={onChooseImage} style={styles.secondaryButton}>
+            <Text style={styles.secondaryButtonText}>Ladda upp bild av etiketten</Text>
+          </Pressable>
+        ) : (
+          <>
+            <Pressable onPress={onTakePhoto} style={styles.secondaryButton}>
+              <Text style={styles.secondaryButtonText}>Ta foto av etiketten</Text>
+            </Pressable>
+            <Pressable onPress={onChooseImage} style={styles.secondaryButton}>
+              <Text style={styles.secondaryButtonText}>{draft.imageUri ? "Byt bild" : "Välj flaskbild"}</Text>
+            </Pressable>
+          </>
+        )}
       </View>
       {draft.imageUri ? <Image source={{ uri: draft.imageUri }} style={styles.wineImage} resizeMode="contain" /> : null}
 
