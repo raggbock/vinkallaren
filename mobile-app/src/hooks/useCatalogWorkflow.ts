@@ -251,23 +251,22 @@ export function useCatalogWorkflow(deps: CatalogWorkflowDeps) {
       if (matches.length > 0) {
         setLabelMatches(matches);
         setLabelPickerVisible(true);
+        setLookupMessage("");
       } else {
         if (parsed.name) setDraft((current) => ({ ...current, name: current.name || parsed.name! }));
         if (parsed.producer) setDraft((current) => ({ ...current, producer: current.producer || parsed.producer! }));
-        Alert.alert("Inga matchningar hittades", "Texten från etiketten har fyllts i — korrigera vid behov.");
+        setLookupMessage("Ingen katalogträff — etikettexten har fyllts i, korrigera vid behov.");
       }
     } catch {
-      showError("Kunde inte läsa etiketten", "Försök igen med bättre belysning.");
+      setLookupMessage("Kunde inte läsa etiketten. Försök igen med bättre belysning.");
     } finally {
       setLookupBusy(false);
-      setLookupMessage("");
     }
   }
 
   function showLabelError() {
-    showError("Kunde inte läsa etiketten", "Försök igen med bättre belysning.");
     setLookupBusy(false);
-    setLookupMessage("");
+    setLookupMessage("Kunde inte läsa etiketten. Försök igen med bättre belysning.");
   }
 
   async function handleLabelMatchSelected(match: CatalogTextMatch, setDraft: React.Dispatch<React.SetStateAction<WineDraft>>) {
@@ -308,9 +307,9 @@ export function useCatalogWorkflow(deps: CatalogWorkflowDeps) {
     setLabelMatches([]);
     if (labelOcrText) {
       setDraft((current) => ({ ...current, name: current.name || labelOcrText! }));
-      Alert.alert("Ingen matchning vald", "Texten från etiketten har fyllts i — korrigera vid behov.");
+      setLookupMessage("Ingen matchning vald — etikettexten har fyllts i, korrigera vid behov.");
     } else {
-      Alert.alert("Ingen matchning vald", "Fyll i vinets uppgifter manuellt.");
+      setLookupMessage("Ingen matchning vald. Fyll i vinets uppgifter manuellt.");
     }
   }
 

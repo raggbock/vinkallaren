@@ -147,7 +147,7 @@ export function AddWinePanel({
       {lookupBusy ? (
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginVertical: 4 }}>
           <ActivityIndicator size="small" color="#6f1d1b" />
-          <Text style={styles.notesText}>Söker efter produktdata...</Text>
+          <Text style={styles.notesText}>{lookupMessage || "Söker efter produktdata..."}</Text>
         </View>
       ) : null}
       {!lookupBusy && lookupMessage ? <Text style={styles.notesText}>{lookupMessage}</Text> : null}
