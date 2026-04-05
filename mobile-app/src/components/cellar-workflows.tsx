@@ -1,5 +1,5 @@
 import { CameraView } from "expo-camera";
-import { Image, Platform, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
 import { AnimatedModal } from "./animated-modal";
 
 import type { ProductCatalogWineRow } from "../types/product-catalog";
@@ -48,11 +48,9 @@ export function BarcodeScannerModal({
 
         <Text style={styles.scannerHint}>Om koden redan finns i din källare fyller appen i relevanta fält automatiskt.</Text>
 
-        {Platform.OS !== "web" ? (
-          <Pressable onPress={onLabelPhoto} style={styles.secondaryButton}>
-            <Text style={styles.secondaryButtonText}>Fotografera etiketten</Text>
-          </Pressable>
-        ) : null}
+        <Pressable onPress={onLabelPhoto} style={styles.secondaryButton}>
+          <Text style={styles.secondaryButtonText}>Fotografera etiketten</Text>
+        </Pressable>
       </SafeAreaView>
     </AnimatedModal>
   );

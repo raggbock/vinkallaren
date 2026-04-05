@@ -257,7 +257,8 @@ export function MinKallarePanel({
       renderItem={renderItem}
       renderSectionHeader={renderSectionHeader}
       ListHeaderComponent={listHeader}
-      contentContainerStyle={styles.scrollContent}
+      style={{ backgroundColor: "#f8f1e8" }}
+      contentContainerStyle={[styles.scrollContent, { flexGrow: 1 }]}
       keyboardShouldPersistTaps="handled"
       refreshControl={
         onRefresh ? <RefreshControl refreshing={refreshing ?? false} onRefresh={onRefresh} tintColor="#6f1d1b" colors={["#6f1d1b"]} /> : undefined

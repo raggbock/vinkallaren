@@ -10,6 +10,7 @@ export type ProductCatalogWineRow = {
   type: string | null;
   vintage: number | null;
   food_pairings: string[];
+  image_url: string | null;
   source_label: string | null;
   source_confidence: string | null;
   created_by: string | null;
@@ -22,8 +23,10 @@ export type CatalogTextMatch = {
   name: string;
   producer: string | null;
   vintage: number | null;
+  image_url: string | null;
   similarity: number;
 };
+
 
 export type ProductCatalogEntry = {
   barcode?: string;
@@ -46,6 +49,7 @@ export type ProductLookupInput = {
   name?: string;
 };
 
+
 export type ProductCatalogWineInsert = {
   barcode?: string | null;
   systembolaget_product_id?: string | null;
@@ -57,6 +61,7 @@ export type ProductCatalogWineInsert = {
   type?: string | null;
   vintage?: number | null;
   food_pairings?: string[];
+  image_url?: string | null;
   source_label?: string | null;
   source_confidence?: string | null;
   created_by?: string | null;

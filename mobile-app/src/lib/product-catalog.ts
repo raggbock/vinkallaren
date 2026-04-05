@@ -338,3 +338,7 @@ async function findExistingManualCatalogEntryId(payload: ProductCatalogWineInser
 function escapeFilterValue(value: string) {
   return value.replace(/,/g, "\\,");
 }
+
+export async function saveOcrTextForCatalogEntry(catalogId: string, ocrText: string) {
+  await supabase.rpc("set_image_ocr_text", { wine_id: catalogId, ocr_text: ocrText });
+}

@@ -80,6 +80,7 @@ const valuesSql = seeds
       ${sqlString(seed.type ?? null)},
       ${sqlInteger(seed.vintage ?? null)},
       ${sqlTextArray(seed.foodPairings)},
+      ${sqlString(seed.imageUrl ?? null)},
       ${sqlString(seed.sourceLabel ?? "Import seed")},
       ${sqlString(seed.sourceConfidence ?? "medium")}
     )`
@@ -100,6 +101,7 @@ ${valuesSql}
   type,
   vintage,
   food_pairings,
+  image_url,
   source_label,
   source_confidence
 )
@@ -114,6 +116,7 @@ when matched then
     type = source.type,
     vintage = source.vintage,
     food_pairings = source.food_pairings,
+    image_url = coalesce(source.image_url, target.image_url),
     source_label = source.source_label,
     source_confidence = source.source_confidence
 when not matched then
@@ -127,6 +130,7 @@ when not matched then
     type,
     vintage,
     food_pairings,
+    image_url,
     source_label,
     source_confidence
   )
@@ -140,6 +144,7 @@ when not matched then
     source.type,
     source.vintage,
     source.food_pairings,
+    source.image_url,
     source.source_label,
     source.source_confidence
   );

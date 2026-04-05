@@ -101,6 +101,7 @@ const valuesSql = seeds
       ${sqlString(seed.region ?? null)},
       ${sqlString(normalizeType(seed.type))},
       ${sqlInteger(seed.vintage ?? null)},
+      ${sqlString(seed.imageUrl ?? null)},
       ${sqlString(seed.systembolagetProductId ?? null)},
       ${sqlString(seed.sourceLabel ?? "Seed import")},
       'high'
@@ -119,6 +120,7 @@ ${valuesSql}
   region,
   type,
   vintage,
+  image_url,
   systembolaget_product_id,
   source_label,
   source_confidence
@@ -141,6 +143,7 @@ when matched then
     region = coalesce(target.region, source.region),
     type = coalesce(target.type, source.type),
     vintage = coalesce(target.vintage, source.vintage),
+    image_url = coalesce(target.image_url, source.image_url),
     systembolaget_product_id = coalesce(target.systembolaget_product_id, source.systembolaget_product_id),
     source_label = coalesce(target.source_label, source.source_label),
     source_confidence = coalesce(target.source_confidence, source.source_confidence)
@@ -152,6 +155,7 @@ when not matched then
     region,
     type,
     vintage,
+    image_url,
     systembolaget_product_id,
     source_label,
     source_confidence
@@ -163,6 +167,7 @@ when not matched then
     source.region,
     source.type,
     source.vintage,
+    source.image_url,
     source.systembolaget_product_id,
     source.source_label,
     source.source_confidence

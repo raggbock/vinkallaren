@@ -1,6 +1,6 @@
 import { Platform } from "react-native";
 
-// ML Kit is native-only — use dynamic import to avoid crashing web builds
+// ML Kit is native-only; Tesseract.js is used for web OCR
 type TextBlock = { lines: { text: string }[] };
 
 export type LabelParseResult = {
@@ -12,17 +12,28 @@ export type LabelParseResult = {
 };
 
 /**
- * Run on-device OCR on a photo URI.
- * Returns the raw TextBlock array from ML Kit.
- * Throws on web — callers should guard with Platform.OS !== "web".
+ * Run OCR on a photo URI.
+ * Native: ML Kit text recognition.
+ * Web: Tesseract.js with Swedish + English language packs.
  */
 export async function recognizeLabel(imageUri: string): Promise<TextBlock[]> {
   if (Platform.OS === "web") {
-    throw new Error("Label scanning is not available on web");
+    return recognizeLabelWeb(imageUri);
   }
   const TextRecognition = (await import("@react-native-ml-kit/text-recognition")).default;
   const result = await TextRecognition.recognize(imageUri);
   return result.blocks;
+}
+
+async function recognizeLabelWeb(imageUri: string): Promise<TextBlock[]> {
+  const Tesseract = await import("tesseract.js");
+  const { data } = await Tesseract.recognize(imageUri, "swe+eng");
+  // Map Tesseract blocks → TextBlock format expected by parseWineLabel
+  return (data.blocks ?? []).map((b) => ({
+    lines: (b.paragraphs ?? []).flatMap((p) =>
+      (p.lines ?? []).map((l) => ({ text: l.text }))
+    ),
+  }));
 }
 
 /**

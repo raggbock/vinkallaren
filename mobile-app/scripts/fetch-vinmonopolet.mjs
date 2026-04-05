@@ -277,6 +277,11 @@ function mapSearchResult(p) {
 
   const type = normalizeType(p.main_category);
 
+  const productImage = Array.isArray(p.images)
+    ? p.images.find((img) => img.format === "product")
+    : null;
+  const imageUrl = productImage?.url || p.images?.[0]?.url || null;
+
   return {
     vinmonopoletCode: p.code || null,
     rawName,
@@ -288,6 +293,7 @@ function mapSearchResult(p) {
     type,
     grape: null,
     barcode: null,
+    imageUrl,
     sourceLabel: "Vinmonopolet",
     sourceUrl: p.url
       ? `https://www.vinmonopolet.no${p.url}`
@@ -457,9 +463,11 @@ const withProducer = outputRows.filter((w) => w.producer).length;
 const withBarcode = outputRows.filter((w) => w.barcode).length;
 const withGrape = outputRows.filter((w) => w.grape).length;
 const withVintage = outputRows.filter((w) => w.vintage).length;
+const withImage = outputRows.filter((w) => w.imageUrl).length;
 
 console.log(`\nDone! Wrote ${outputRows.length} wines to ${outputPath}`);
 console.log(`  - With producer: ${withProducer}`);
 console.log(`  - With grape: ${withGrape}`);
 console.log(`  - With vintage: ${withVintage}`);
 console.log(`  - With barcode: ${withBarcode}`);
+console.log(`  - With image: ${withImage}`);
