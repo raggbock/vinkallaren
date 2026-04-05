@@ -39,6 +39,8 @@ let totalProcessed = 0;
 let totalUpdated = 0;
 let totalFailed = 0;
 let totalSkipped = 0;
+const skippedWines = [];
+const failedWines = [];
 
 while (true) {
   // Fetch wines that have an image but no OCR text yet (via security definer RPC)
@@ -63,6 +65,7 @@ while (true) {
 
       if (!res.ok) {
         totalFailed++;
+        failedWines.push({ id: wine.id, name: wine.name, image_url: wine.image_url, reason: `HTTP ${res.status}` });
         continue;
       }
 
@@ -74,6 +77,7 @@ while (true) {
 
       if (!ocrText) {
         totalSkipped++;
+        skippedWines.push({ id: wine.id, name: wine.name, image_url: wine.image_url, reason: "no text extracted" });
         continue;
       }
 
@@ -97,8 +101,9 @@ while (true) {
       }
 
       await sleep(DELAY_MS);
-    } catch {
+    } catch (err) {
       totalFailed++;
+      failedWines.push({ id: wine.id, name: wine.name, image_url: wine.image_url, reason: err?.message || "unknown error" });
     }
   }
 
@@ -108,6 +113,12 @@ while (true) {
 }
 
 await worker.terminate();
+
+if (skippedWines.length || failedWines.length) {
+  const outPath = path.resolve(process.cwd(), "data/catalog-sources/ocr-unprocessable.json");
+  fs.writeFileSync(outPath, JSON.stringify({ skipped: skippedWines, failed: failedWines }, null, 2));
+  console.log(`\nWrote ${skippedWines.length + failedWines.length} unprocessable entries to ${outPath}`);
+}
 
 console.log(`\nDone!`);
 console.log(`  Processed: ${totalProcessed}`);

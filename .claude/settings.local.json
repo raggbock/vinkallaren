@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -E \"\\\\.\\(sql|ts|js\\)$\")",
+      "Bash(grep -E \"\\\\.\\(ts|js\\)$\")",
+      "Bash(grep -r \"image\\\\|Image\\\\|thumbnail\\\\|photo\" /c/Projects/vinkallaren/mobile-app/scripts/*.mjs)",
+      "Bash(grep -v \"//\")",
+      "Bash(node -e ':*)",
+      "Bash(node:*)",
+      "WebFetch(domain:www.munskankarna.se)",
+      "Bash(npx tsc:*)",
+      "Bash(npx --package typescript tsc --noEmit)",
+      "Bash(claude mcp:*)",
+      "Bash(npx supabase:*)",
+      "Bash(supabase db:*)",
+      "mcp__supabase__list_migrations",
+      "mcp__supabase__apply_migration",
+      "Bash(npx expo:*)",
+      "Bash(npm install:*)",
+      "Bash(ls -d */)",
+      "Bash(ls:*)",
+      "Bash(grep:*)",
+      "mcp__supabase__get_project_url",
+      "mcp__supabase__get_publishable_keys",
+      "mcp__supabase__execute_sql",
+      "Bash(sort -t- -k3 -n)",
+      "Bash(git status:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(tasklist)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "supabase"
+  ]
+}
