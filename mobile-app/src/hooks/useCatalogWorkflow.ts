@@ -308,6 +308,9 @@ export function useCatalogWorkflow(deps: CatalogWorkflowDeps) {
     setLabelMatches([]);
     if (labelOcrText) {
       setDraft((current) => ({ ...current, name: current.name || labelOcrText! }));
+      Alert.alert("Ingen matchning vald", "Texten från etiketten har fyllts i — korrigera vid behov.");
+    } else {
+      Alert.alert("Ingen matchning vald", "Fyll i vinets uppgifter manuellt.");
     }
   }
 

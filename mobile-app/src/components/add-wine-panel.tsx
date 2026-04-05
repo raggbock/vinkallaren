@@ -23,7 +23,7 @@ export function AddWinePanel({
   importMode, importSelection, saving,
   onDraftChange, onNameSelected, onBarcodeChange, onArticleNumberChange,
   onStorageSpaceChange, onStorageRowChange, onStorageSlotChange,
-  onStartBarcodeScanner, onOpenSystembolaget, onSetImportMode, onApplyCatalogSuggestion,
+  onStartBarcodeScanner, onScanLabel, onOpenSystembolaget, onSetImportMode, onApplyCatalogSuggestion,
   onToggleImportField, onChooseImage, onTakePhoto, onSaveWine,
   tastingMode, onTastingModeChange, tastingRating, onTastingRatingChange,
   tastingDate, onTastingDateChange, onSaveTasting, savingTasting,
@@ -64,6 +64,7 @@ export function AddWinePanel({
   onStorageRowChange: (value: string) => void;
   onStorageSlotChange: (value: string) => void;
   onStartBarcodeScanner: () => void;
+  onScanLabel: () => void;
   onOpenSystembolaget: (productId: string) => void;
   onSetImportMode: (mode: ImportMode) => void;
   onApplyCatalogSuggestion: (mode: ImportMode) => void;
@@ -111,10 +112,15 @@ export function AddWinePanel({
               <Text style={styles.notesText}>Fyll i streckkod eller artikelnummer för att hämta vindata automatiskt.</Text>
             ) : (
               <>
-                <Text style={styles.notesText}>Har du flaskan? Skanna streckkoden för att fylla i automatiskt.</Text>
-                <Pressable onPress={onStartBarcodeScanner} style={[styles.primaryButton, { marginBottom: 12 }]}>
-                  <Text style={styles.primaryButtonText}>Skanna streckkod</Text>
-                </Pressable>
+                <Text style={styles.notesText}>Har du flaskan? Skanna för att fylla i automatiskt.</Text>
+                <View style={{ flexDirection: "row", gap: 8, marginBottom: 12 }}>
+                  <Pressable onPress={onStartBarcodeScanner} style={[styles.primaryButton, { flex: 1 }]}>
+                    <Text style={styles.primaryButtonText}>Skanna streckkod</Text>
+                  </Pressable>
+                  <Pressable onPress={onScanLabel} style={[styles.primaryButton, { flex: 1 }]}>
+                    <Text style={styles.primaryButtonText}>Skanna etikett</Text>
+                  </Pressable>
+                </View>
                 <Text style={styles.notesText}>Eller fyll i streckkod / artikelnummer manuellt:</Text>
               </>
             )}
@@ -123,9 +129,14 @@ export function AddWinePanel({
           <>
             <Text style={styles.notesText}>Har du en streckkod eller ett Systembolaget-artikelnummer? Fyll i det så försöker vi hämta resten automatiskt.</Text>
             {!isDesktopWeb && (
-              <Pressable onPress={onStartBarcodeScanner} style={styles.secondaryButton}>
-                <Text style={styles.secondaryButtonText}>Skanna streckkod</Text>
-              </Pressable>
+              <View style={{ flexDirection: "row", gap: 8 }}>
+                <Pressable onPress={onStartBarcodeScanner} style={[styles.secondaryButton, { flex: 1 }]}>
+                  <Text style={styles.secondaryButtonText}>Skanna streckkod</Text>
+                </Pressable>
+                <Pressable onPress={onScanLabel} style={[styles.secondaryButton, { flex: 1 }]}>
+                  <Text style={styles.secondaryButtonText}>Skanna etikett</Text>
+                </Pressable>
+              </View>
             )}
           </>
         )}

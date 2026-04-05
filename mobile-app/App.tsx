@@ -336,6 +336,7 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
         onStorageSpaceDraftChange={(patch) => data.setStorageSpaceDraft((c) => ({ ...c, ...patch }))}
         onSaveStorageSpace={async () => { const newId = await data.saveStorageSpace(); if (newId) { storage.setSelectedStorageSpaceId(newId); storage.setSelectedStorageRow("1"); storage.setSelectedStorageSlot("1"); } success.show("storage_saved"); }}
         onStartBarcodeScanner={catalog.startBarcodeScanner}
+        onScanLabel={() => catalog.handleLabelPhoto(setDraft)}
         onOpenSystembolaget={handleOpenSystembolaget}
         onSetImportMode={catalog.setImportMode}
         onApplyCatalogSuggestion={() => catalog.applyCatalogSuggestion(draft, setDraft)}
