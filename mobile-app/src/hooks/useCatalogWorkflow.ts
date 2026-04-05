@@ -232,7 +232,8 @@ export function useCatalogWorkflow(deps: CatalogWorkflowDeps) {
     setLookupBusy(true);
     setLookupMessage("Läser etiketten...");
     try {
-      const blocks = await recognizeLabel(uri);
+      const ocrTimeout = new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timeout")), 30_000));
+      const blocks = await Promise.race([recognizeLabel(uri), ocrTimeout]);
       if (blocks.length === 0) { showLabelError(); return; }
 
       const parsed = parseWineLabel(blocks);
@@ -244,7 +245,7 @@ export function useCatalogWorkflow(deps: CatalogWorkflowDeps) {
         setDraft((current) => ({ ...current, vintage: current.vintage || parsed.vintage! }));
       }
 
-      // Normalize the search query to handle OCR errors (accents, l/1/I, rn/m, etc.)
+      setLookupMessage("Söker i katalogen...");
       const normalizedQuery = normalizeOcrText(parsed.searchQuery);
       const parsedVintage = parsed.vintage ? parseInt(parsed.vintage, 10) : null;
       const matches = await matchCatalogByText(normalizedQuery, 5, parsed.rawSearchQuery, parsedVintage);
@@ -257,8 +258,11 @@ export function useCatalogWorkflow(deps: CatalogWorkflowDeps) {
         if (parsed.producer) setDraft((current) => ({ ...current, producer: current.producer || parsed.producer! }));
         setLookupMessage("Ingen katalogträff — etikettexten har fyllts i, korrigera vid behov.");
       }
-    } catch {
-      setLookupMessage("Kunde inte läsa etiketten. Försök igen med bättre belysning.");
+    } catch (err) {
+      const msg = err instanceof Error && err.message === "timeout"
+        ? "OCR tog för lång tid. Försök med en tydligare bild."
+        : "Kunde inte läsa etiketten. Försök igen med bättre belysning.";
+      setLookupMessage(msg);
     } finally {
       setLookupBusy(false);
     }
