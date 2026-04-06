@@ -1,6 +1,6 @@
 import "react-native-url-polyfill/auto";
 import { StatusBar } from "expo-status-bar";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Platform, Pressable, RefreshControl, SafeAreaView, ScrollView, Text as RNText, View as RNView } from "react-native";
 import type { Session } from "@supabase/supabase-js";
 import { supabase, supabaseConfigured } from "./src/lib/supabase";
@@ -39,6 +39,7 @@ import { useSessionWset } from "./src/hooks/useSessionWset";
 import { useProfile } from "./src/hooks/useProfile";
 import { DisplayNamePrompt } from "./src/components/display-name-prompt";
 import { ProfilePage } from "./src/components/profile-page";
+import { OcrDebugPage } from "./src/components/ocr-debug-page";
 import { parseJoinCodeFromUrl } from "./src/lib/join-link";
 
 function useWebHoverStyles() {
@@ -95,6 +96,19 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
   const tastingSessions = useTastingSessions(session.user.id);
   const userProfile = useProfile(session.user.id);
   const [profileVisible, setProfileVisible] = useState(false);
+  const [ocrDebugVisible, setOcrDebugVisible] = useState(false);
+  const versionTapCount = useRef(0);
+  const versionTapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const handleVersionTap = useCallback(() => {
+    versionTapCount.current++;
+    if (versionTapTimer.current) clearTimeout(versionTapTimer.current);
+    if (versionTapCount.current >= 5) {
+      versionTapCount.current = 0;
+      setOcrDebugVisible(true);
+    } else {
+      versionTapTimer.current = setTimeout(() => { versionTapCount.current = 0; }, 1500);
+    }
+  }, []);
   const [promptDismissed, setPromptDismissed] = useState(false);
   const [promptSaving, setPromptSaving] = useState(false);
 
@@ -191,6 +205,15 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
   async function signOut() {
     const { error } = await supabase.auth.signOut();
     if (error) showError("Kunde inte logga ut", error.message);
+  }
+
+  if (ocrDebugVisible) {
+    return (
+      <SafeAreaView style={styles.screen}>
+        <StatusBar style="light" />
+        <OcrDebugPage onClose={() => setOcrDebugVisible(false)} />
+      </SafeAreaView>
+    );
   }
 
   if (profileVisible && userProfile.profile) {
@@ -406,7 +429,7 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" style={styles.scrollFlex} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6f1d1b" colors={["#6f1d1b"]} />}>
           {activePanel}
           <RNView style={styles.footerRow}>
-            <RNText style={styles.footerVersion}>{BUILD_VERSION}</RNText>
+            <Pressable onPress={handleVersionTap}><RNText style={styles.footerVersion}>{BUILD_VERSION}</RNText></Pressable>
             <Pressable onPress={privacy.open}><RNText style={styles.footerLink}>Integritetspolicy</RNText></Pressable>
           </RNView>
         </ScrollView>

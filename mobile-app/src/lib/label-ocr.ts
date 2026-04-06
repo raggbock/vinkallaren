@@ -28,13 +28,62 @@ export async function recognizeLabel(imageUri: string): Promise<TextBlock[]> {
 
 async function recognizeLabelWeb(imageUri: string): Promise<TextBlock[]> {
   const Tesseract = await import("tesseract.js");
-  const { data } = await Tesseract.recognize(imageUri, "swe+eng");
+  const preprocessed = await preprocessImageForOcr(imageUri);
+  const { data } = await Tesseract.recognize(preprocessed, "swe+eng", {
+    tessedit_pageseg_mode: "6", // Assume uniform block of text
+    tessedit_char_whitelist: "",
+    preserve_interword_spaces: "1",
+  } as Record<string, string>);
   // Map Tesseract blocks → TextBlock format expected by parseWineLabel
   return (data.blocks ?? []).map((b) => ({
     lines: (b.paragraphs ?? []).flatMap((p) =>
       (p.lines ?? []).map((l) => ({ text: l.text }))
     ),
   }));
+}
+
+/**
+ * Preprocess image for better OCR: grayscale → contrast boost → binarization.
+ * Returns a data URL of the processed image.
+ */
+export async function preprocessImageForOcr(
+  imageUri: string,
+  options?: { contrast?: number; threshold?: number },
+): Promise<string> {
+  const contrast = options?.contrast ?? 1.8;
+  const threshold = options?.threshold ?? 140;
+
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) { resolve(imageUri); return; }
+
+      // Draw original
+      ctx.drawImage(img, 0, 0);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const d = imageData.data;
+
+      for (let i = 0; i < d.length; i += 4) {
+        // 1. Grayscale (luminance-weighted)
+        let gray = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+        // 2. Contrast boost
+        gray = ((gray / 255 - 0.5) * contrast + 0.5) * 255;
+        gray = Math.max(0, Math.min(255, gray));
+        // 3. Binarization (Otsu-like threshold)
+        const val = gray > threshold ? 255 : 0;
+        d[i] = d[i + 1] = d[i + 2] = val;
+      }
+      ctx.putImageData(imageData, 0, 0);
+      resolve(canvas.toDataURL("image/png"));
+    };
+    img.onerror = () => reject(new Error("Failed to load image for preprocessing"));
+    img.src = imageUri;
+  });
 }
 
 /**
