@@ -158,12 +158,10 @@ export function OcrDebugPage({ onClose }: { onClose: () => void }) {
   );
 }
 
-function buildRun(label: string, uri: string, data: { text: string; confidence: number; blocks?: unknown[] | null }, ms: number): OcrRun {
-  const blocks = (data.blocks ?? []).map((b: unknown) => {
-    const block = b as { paragraphs?: { lines?: { text: string }[] }[] };
-    return { lines: (block.paragraphs ?? []).flatMap((p) => (p.lines ?? []).map((l) => ({ text: l.text }))) };
-  });
+function buildRun(label: string, uri: string, data: { text: string; confidence: number }, ms: number): OcrRun {
+  // Use raw text lines — Tesseract.js blocks structure is often null/empty
   const rawLines = (data.text ?? "").split("\n").filter((l) => l.trim());
+  const blocks = [{ lines: rawLines.map((text) => ({ text })) }];
   const scoredLines = rawLines.map((text) => {
     const quality = lineQuality(text);
     return { text, quality, kept: quality >= 0.4 && text.length >= 3 };
