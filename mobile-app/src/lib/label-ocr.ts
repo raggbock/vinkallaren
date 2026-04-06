@@ -247,6 +247,20 @@ function unsharpMask(gray: Float32Array<ArrayBuffer>, w: number, h: number, amou
  * to real words (3+ consecutive letters). Noise lines score near 0,
  * "JOSETTA SAFFIRIO" scores near 1.
  */
+/**
+ * Strip noise tokens from an OCR line, keeping only real words (2+ letters)
+ * and 4-digit years. "- JOSETTA SAFFIRIO = 7" → "JOSETTA SAFFIRIO"
+ */
+function cleanOcrLine(line: string): string {
+  return line
+    .split(/\s+/)
+    .filter((token) =>
+      /[a-zA-ZÀ-ÿ]{2,}/.test(token) || /^\d{4}$/.test(token)
+    )
+    .join(" ")
+    .trim();
+}
+
 export function lineQuality(line: string): number {
   const wordChars = (line.match(/[a-zA-ZÀ-ÿ]{3,}/g) ?? [])
     .reduce((sum, w) => sum + w.length, 0);
@@ -285,10 +299,13 @@ export function parseWineLabel(blocks: TextBlock[]): LabelParseResult {
   }
   const vintage = years.length > 0 ? String(Math.max(...years)) : null;
 
-  // --- Score and filter lines ---
+  // --- Clean, score, and filter lines ---
   const scored = lines
     .filter((l) => !/^\d{4}$/.test(l.trim()))
-    .map((l) => ({ text: l, quality: lineQuality(l) }))
+    .map((l) => {
+      const cleaned = cleanOcrLine(l);
+      return { text: cleaned, quality: lineQuality(cleaned) };
+    })
     .filter((l) => l.quality >= 0.4 && l.text.length >= 3);
 
   // Sort by quality × sqrt(length) — balances quality and size
