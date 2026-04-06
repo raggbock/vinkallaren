@@ -12,7 +12,7 @@ export function useImagePicker() {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ["images"],
         allowsEditing: true,
-        quality: 1,
+        quality: 0.8,
       });
       return result.canceled ? null : result.assets[0].uri;
     } catch {
@@ -30,7 +30,7 @@ export function useImagePicker() {
     try {
       const result = await ImagePicker.launchCameraAsync({
         allowsEditing: true,
-        quality: 1,
+        quality: 0.8,
       });
       return result.canceled ? null : result.assets[0].uri;
     } catch {

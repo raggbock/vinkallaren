@@ -53,23 +53,24 @@ export async function matchCatalogByText(query: string, maxResults = 5, rawOcrQu
   };
   if (vintage) rpcParams.query_vintage = vintage;
 
-  const { data, error } = await supabase.rpc("match_catalog_by_text", rpcParams);
-  const primary = (!error && data ? data : []) as CatalogTextMatch[];
-
-  // If we have raw OCR text that differs from the parsed query, search with that too
+  // Run both queries in parallel if we have a separate raw OCR query
   const rawTrimmed = rawOcrQuery?.trim() ?? "";
-  if (rawTrimmed.length >= 3 && rawTrimmed !== query.trim()) {
-    const { data: extra } = await supabase.rpc("match_catalog_by_text", {
-      ...rpcParams,
-      query: rawTrimmed,
-    });
-    if (extra) {
-      const seenIds = new Set(primary.map((m) => m.id));
-      for (const match of extra as CatalogTextMatch[]) {
-        if (!seenIds.has(match.id)) {
-          primary.push(match);
-          seenIds.add(match.id);
-        }
+  const needsRawQuery = rawTrimmed.length >= 3 && rawTrimmed !== query.trim();
+
+  const [primaryRes, extraRes] = await Promise.all([
+    supabase.rpc("match_catalog_by_text", rpcParams),
+    needsRawQuery
+      ? supabase.rpc("match_catalog_by_text", { ...rpcParams, query: rawTrimmed })
+      : Promise.resolve({ data: null, error: null }),
+  ]);
+
+  const primary = (!primaryRes.error && primaryRes.data ? primaryRes.data : []) as CatalogTextMatch[];
+  if (extraRes.data) {
+    const seenIds = new Set(primary.map((m) => m.id));
+    for (const match of extraRes.data as CatalogTextMatch[]) {
+      if (!seenIds.has(match.id)) {
+        primary.push(match);
+        seenIds.add(match.id);
       }
     }
   }

@@ -29,32 +29,34 @@ export async function recognizeLabel(imageUri: string): Promise<TextBlock[]> {
 async function recognizeLabelWeb(imageUri: string): Promise<TextBlock[]> {
   const Tesseract = await import("tesseract.js");
 
-  // Run multiple preprocessing variants and pick the best result
-  const variants: { label: string; opts: PreprocessOptions }[] = [
-    { label: "soft", opts: { mode: "global", contrast: 1.4, threshold: 160, sharpen: false } },
-    { label: "soft-low", opts: { mode: "global", contrast: 1.2, threshold: 145, sharpen: false } },
-    { label: "soft-sharp", opts: { mode: "global", contrast: 1.4, threshold: 155, sharpen: true } },
+  const variants: PreprocessOptions[] = [
+    { mode: "global", contrast: 1.4, threshold: 160, sharpen: false },
+    { mode: "global", contrast: 1.2, threshold: 145, sharpen: false },
+    { mode: "global", contrast: 1.4, threshold: 155, sharpen: true },
   ];
 
-  let bestBlocks: TextBlock[] = [];
-  let bestConfidence = 0;
+  // Preprocess all variants in parallel, then run OCR in parallel
+  const processed = await Promise.all(
+    variants.map((opts) => preprocessImageForOcr(imageUri, opts))
+  );
+  const ocrOpts = {
+    tessedit_pageseg_mode: "3",
+    preserve_interword_spaces: "1",
+  } as Record<string, string>;
+  const results = await Promise.all(
+    processed.map((img) => Tesseract.recognize(img, "swe+eng", ocrOpts))
+  );
 
-  for (const v of variants) {
-    const processed = await preprocessImageForOcr(imageUri, v.opts);
-    const { data } = await Tesseract.recognize(processed, "swe+eng", {
-      tessedit_pageseg_mode: "3", // Fully automatic page segmentation
-      preserve_interword_spaces: "1",
-    } as Record<string, string>);
-    if (data.confidence > bestConfidence) {
-      bestConfidence = data.confidence;
-      bestBlocks = (data.blocks ?? []).map((b) => ({
-        lines: (b.paragraphs ?? []).flatMap((p) =>
-          (p.lines ?? []).map((l) => ({ text: l.text }))
-        ),
-      }));
-    }
+  // Pick the result with highest confidence
+  let best = results[0];
+  for (let i = 1; i < results.length; i++) {
+    if (results[i].data.confidence > best.data.confidence) best = results[i];
   }
-  return bestBlocks;
+  return (best.data.blocks ?? []).map((b) => ({
+    lines: (b.paragraphs ?? []).flatMap((p) =>
+      (p.lines ?? []).map((l) => ({ text: l.text }))
+    ),
+  }));
 }
 
 export type PreprocessOptions = {
@@ -90,7 +92,14 @@ export async function preprocessImageForOcr(
       const ctx = canvas.getContext("2d");
       if (!ctx) { resolve(imageUri); return; }
 
-      ctx.drawImage(img, 0, 0);
+      // Downscale large images — Tesseract doesn't benefit from >1500px
+      const maxDim = 1500;
+      if (img.width > maxDim || img.height > maxDim) {
+        const scale = maxDim / Math.max(img.width, img.height);
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+      }
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const d = imageData.data;
       const w = canvas.width;
