@@ -16,11 +16,11 @@ type OcrRun = {
 };
 
 const PRESETS: { label: string; opts: PreprocessOptions }[] = [
-  { label: "Mjuk", opts: { mode: "global", contrast: 1.4, threshold: 160, sharpen: false } },
-  { label: "Mjuk (låg)", opts: { mode: "global", contrast: 1.2, threshold: 145, sharpen: false } },
-  { label: "Mjuk + skärpa", opts: { mode: "global", contrast: 1.4, threshold: 155, sharpen: true } },
-  { label: "Mjuk (bred)", opts: { mode: "global", contrast: 1.6, threshold: 170, sharpen: false } },
-  { label: "Mjuk (minimal)", opts: { mode: "global", contrast: 1.1, threshold: 135, sharpen: false } },
+  { label: "Gråskala", opts: { mode: "grayscale", contrast: 1.4, sharpen: false } },
+  { label: "Gråskala + skärpa", opts: { mode: "grayscale", contrast: 1.6, sharpen: true } },
+  { label: "Gråskala (mild)", opts: { mode: "grayscale", contrast: 1.2, sharpen: false } },
+  { label: "Mjuk (binär)", opts: { mode: "global", contrast: 1.4, threshold: 160, sharpen: false } },
+  { label: "Mjuk hög (binär)", opts: { mode: "global", contrast: 1.2, threshold: 145, sharpen: false } },
 ];
 
 export function OcrDebugPage({ onClose }: { onClose: () => void }) {

@@ -30,9 +30,9 @@ async function recognizeLabelWeb(imageUri: string): Promise<TextBlock[]> {
   const Tesseract = await import("tesseract.js");
 
   const variants: PreprocessOptions[] = [
+    { mode: "grayscale", contrast: 1.4, sharpen: false },
+    { mode: "grayscale", contrast: 1.6, sharpen: true },
     { mode: "global", contrast: 1.4, threshold: 160, sharpen: false },
-    { mode: "global", contrast: 1.2, threshold: 145, sharpen: false },
-    { mode: "global", contrast: 1.4, threshold: 155, sharpen: true },
   ];
 
   // Preprocess all variants in parallel, then run OCR in parallel
@@ -63,7 +63,7 @@ function textToBlocks(text: string): TextBlock[] {
 }
 
 export type PreprocessOptions = {
-  mode: "global" | "adaptive";
+  mode: "global" | "adaptive" | "grayscale";
   contrast?: number;
   threshold?: number;
   blockSize?: number;  // For adaptive mode: local window size
@@ -143,18 +143,25 @@ export async function preprocessImageForOcr(
         sharpened = unsharpMask(gray, w, h, 1.5);
       }
 
-      // Step 3: Binarize
-      let binary: Uint8Array;
-      if (mode === "adaptive") {
-        binary = adaptiveThreshold(sharpened, w, h, blockSize, -8);
+      // Step 3: Binarize (or keep grayscale for LSTM engine)
+      if (mode === "grayscale") {
+        // No binarization — Tesseract's LSTM works better with grayscale
+        for (let i = 0; i < sharpened.length; i++) {
+          const p = i * 4;
+          const v = Math.max(0, Math.min(255, Math.round(sharpened[i])));
+          d[p] = d[p + 1] = d[p + 2] = v;
+        }
       } else {
-        binary = globalThreshold(sharpened, w, h, contrast, threshold);
-      }
-
-      // Write back
-      for (let i = 0; i < binary.length; i++) {
-        const p = i * 4;
-        d[p] = d[p + 1] = d[p + 2] = binary[i];
+        let binary: Uint8Array;
+        if (mode === "adaptive") {
+          binary = adaptiveThreshold(sharpened, w, h, blockSize, -8);
+        } else {
+          binary = globalThreshold(sharpened, w, h, contrast, threshold);
+        }
+        for (let i = 0; i < binary.length; i++) {
+          const p = i * 4;
+          d[p] = d[p + 1] = d[p + 2] = binary[i];
+        }
       }
       ctx.putImageData(imageData, 0, 0);
       resolve(canvas.toDataURL("image/png"));
