@@ -28,30 +28,57 @@ export async function recognizeLabel(imageUri: string): Promise<TextBlock[]> {
 
 async function recognizeLabelWeb(imageUri: string): Promise<TextBlock[]> {
   const Tesseract = await import("tesseract.js");
-  const preprocessed = await preprocessImageForOcr(imageUri);
-  const { data } = await Tesseract.recognize(preprocessed, "swe+eng", {
-    tessedit_pageseg_mode: "6", // Assume uniform block of text
-    tessedit_char_whitelist: "",
-    preserve_interword_spaces: "1",
-  } as Record<string, string>);
-  // Map Tesseract blocks → TextBlock format expected by parseWineLabel
-  return (data.blocks ?? []).map((b) => ({
-    lines: (b.paragraphs ?? []).flatMap((p) =>
-      (p.lines ?? []).map((l) => ({ text: l.text }))
-    ),
-  }));
+
+  // Run multiple preprocessing variants and pick the best result
+  const variants: { label: string; opts: PreprocessOptions }[] = [
+    { label: "adaptive", opts: { mode: "adaptive", blockSize: 15, sharpen: true } },
+    { label: "high-contrast", opts: { mode: "global", contrast: 2.5, threshold: 120, sharpen: true } },
+    { label: "soft", opts: { mode: "global", contrast: 1.4, threshold: 160, sharpen: false } },
+  ];
+
+  let bestBlocks: TextBlock[] = [];
+  let bestConfidence = 0;
+
+  for (const v of variants) {
+    const processed = await preprocessImageForOcr(imageUri, v.opts);
+    const { data } = await Tesseract.recognize(processed, "swe+eng", {
+      tessedit_pageseg_mode: "3", // Fully automatic page segmentation
+      preserve_interword_spaces: "1",
+    } as Record<string, string>);
+    if (data.confidence > bestConfidence) {
+      bestConfidence = data.confidence;
+      bestBlocks = (data.blocks ?? []).map((b) => ({
+        lines: (b.paragraphs ?? []).flatMap((p) =>
+          (p.lines ?? []).map((l) => ({ text: l.text }))
+        ),
+      }));
+    }
+  }
+  return bestBlocks;
 }
 
+export type PreprocessOptions = {
+  mode: "global" | "adaptive";
+  contrast?: number;
+  threshold?: number;
+  blockSize?: number;  // For adaptive mode: local window size
+  sharpen?: boolean;
+};
+
 /**
- * Preprocess image for better OCR: grayscale → contrast boost → binarization.
- * Returns a data URL of the processed image.
+ * Preprocess image for OCR. Two modes:
+ * - "global": grayscale → contrast → fixed threshold (good for clean labels)
+ * - "adaptive": grayscale → sharpen → local mean threshold (good for uneven lighting/curved surfaces)
  */
 export async function preprocessImageForOcr(
   imageUri: string,
-  options?: { contrast?: number; threshold?: number },
+  options?: PreprocessOptions,
 ): Promise<string> {
+  const mode = options?.mode ?? "adaptive";
   const contrast = options?.contrast ?? 1.8;
   const threshold = options?.threshold ?? 140;
+  const blockSize = options?.blockSize ?? 15;
+  const doSharpen = options?.sharpen ?? true;
 
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -63,20 +90,37 @@ export async function preprocessImageForOcr(
       const ctx = canvas.getContext("2d");
       if (!ctx) { resolve(imageUri); return; }
 
-      // Draw original
       ctx.drawImage(img, 0, 0);
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const d = imageData.data;
+      const w = canvas.width;
+      const h = canvas.height;
 
-      for (let i = 0; i < d.length; i += 4) {
-        // 1. Grayscale (luminance-weighted)
-        let gray = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
-        // 2. Contrast boost
-        gray = ((gray / 255 - 0.5) * contrast + 0.5) * 255;
-        gray = Math.max(0, Math.min(255, gray));
-        // 3. Binarization (Otsu-like threshold)
-        const val = gray > threshold ? 255 : 0;
-        d[i] = d[i + 1] = d[i + 2] = val;
+      // Step 1: Convert to grayscale array
+      const gray = new Float32Array(w * h);
+      for (let i = 0; i < gray.length; i++) {
+        const p = i * 4;
+        gray[i] = 0.299 * d[p] + 0.587 * d[p + 1] + 0.114 * d[p + 2];
+      }
+
+      // Step 2: Optional sharpening (unsharp mask)
+      let sharpened = gray;
+      if (doSharpen) {
+        sharpened = unsharpMask(gray, w, h, 1.5);
+      }
+
+      // Step 3: Binarize
+      let binary: Uint8Array;
+      if (mode === "adaptive") {
+        binary = adaptiveThreshold(sharpened, w, h, blockSize, -8);
+      } else {
+        binary = globalThreshold(sharpened, w, h, contrast, threshold);
+      }
+
+      // Write back
+      for (let i = 0; i < binary.length; i++) {
+        const p = i * 4;
+        d[p] = d[p + 1] = d[p + 2] = binary[i];
       }
       ctx.putImageData(imageData, 0, 0);
       resolve(canvas.toDataURL("image/png"));
@@ -84,6 +128,77 @@ export async function preprocessImageForOcr(
     img.onerror = () => reject(new Error("Failed to load image for preprocessing"));
     img.src = imageUri;
   });
+}
+
+function globalThreshold(
+  gray: Float32Array, w: number, h: number, contrast: number, thresh: number,
+): Uint8Array {
+  const out = new Uint8Array(w * h);
+  for (let i = 0; i < out.length; i++) {
+    let v = ((gray[i] / 255 - 0.5) * contrast + 0.5) * 255;
+    v = Math.max(0, Math.min(255, v));
+    out[i] = v > thresh ? 255 : 0;
+  }
+  return out;
+}
+
+/** Adaptive mean threshold — compares each pixel to the local average */
+function adaptiveThreshold(
+  gray: Float32Array, w: number, h: number, blockSize: number, c: number,
+): Uint8Array {
+  const half = Math.floor(blockSize / 2);
+  const out = new Uint8Array(w * h);
+
+  // Build integral image for fast local mean computation
+  const integral = new Float64Array((w + 1) * (h + 1));
+  for (let y = 0; y < h; y++) {
+    let rowSum = 0;
+    for (let x = 0; x < w; x++) {
+      rowSum += gray[y * w + x];
+      integral[(y + 1) * (w + 1) + (x + 1)] =
+        rowSum + integral[y * (w + 1) + (x + 1)];
+    }
+  }
+
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const x1 = Math.max(0, x - half);
+      const y1 = Math.max(0, y - half);
+      const x2 = Math.min(w - 1, x + half);
+      const y2 = Math.min(h - 1, y + half);
+      const area = (x2 - x1 + 1) * (y2 - y1 + 1);
+      const sum =
+        integral[(y2 + 1) * (w + 1) + (x2 + 1)] -
+        integral[y1 * (w + 1) + (x2 + 1)] -
+        integral[(y2 + 1) * (w + 1) + x1] +
+        integral[y1 * (w + 1) + x1];
+      const localMean = sum / area;
+      out[y * w + x] = gray[y * w + x] > localMean + c ? 255 : 0;
+    }
+  }
+  return out;
+}
+
+/** Simple 3x3 unsharp mask for edge enhancement */
+function unsharpMask(gray: Float32Array<ArrayBuffer>, w: number, h: number, amount: number): Float32Array<ArrayBuffer> {
+  const blurred = new Float32Array(w * h);
+  // 3x3 box blur
+  for (let y = 1; y < h - 1; y++) {
+    for (let x = 1; x < w - 1; x++) {
+      let sum = 0;
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          sum += gray[(y + dy) * w + (x + dx)];
+        }
+      }
+      blurred[y * w + x] = sum / 9;
+    }
+  }
+  const out = new Float32Array(w * h);
+  for (let i = 0; i < out.length; i++) {
+    out[i] = Math.max(0, Math.min(255, gray[i] + (gray[i] - blurred[i]) * amount));
+  }
+  return out;
 }
 
 /**

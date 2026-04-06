@@ -1,7 +1,7 @@
-import { useCallback, useRef, useState } from "react";
-import { ActivityIndicator, Image, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { useCallback, useState } from "react";
+import { ActivityIndicator, Image, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { preprocessImageForOcr, parseWineLabel, normalizeOcrText } from "../lib/label-ocr";
-import type { LabelParseResult } from "../lib/label-ocr";
+import type { LabelParseResult, PreprocessOptions } from "../lib/label-ocr";
 
 type OcrRun = {
   label: string;
@@ -12,13 +12,19 @@ type OcrRun = {
   confidence: number;
 };
 
+const PRESETS: { label: string; opts: PreprocessOptions }[] = [
+  { label: "Adaptiv + skärpa", opts: { mode: "adaptive", blockSize: 15, sharpen: true } },
+  { label: "Adaptiv (stor mask)", opts: { mode: "adaptive", blockSize: 25, sharpen: true } },
+  { label: "Hög kontrast", opts: { mode: "global", contrast: 2.5, threshold: 120, sharpen: true } },
+  { label: "Mjuk", opts: { mode: "global", contrast: 1.4, threshold: 160, sharpen: false } },
+  { label: "Ingen förbehandling", opts: { mode: "global", contrast: 1, threshold: 128, sharpen: false } },
+];
+
 export function OcrDebugPage({ onClose }: { onClose: () => void }) {
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [runs, setRuns] = useState<OcrRun[]>([]);
   const [busy, setBusy] = useState(false);
-  const [contrast, setContrast] = useState("1.8");
-  const [threshold, setThreshold] = useState("140");
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [progress, setProgress] = useState("");
 
   const handleFilePick = useCallback(() => {
     if (Platform.OS !== "web") return;
@@ -36,74 +42,47 @@ export function OcrDebugPage({ onClose }: { onClose: () => void }) {
       };
       reader.readAsDataURL(file);
     };
-    fileInputRef.current = input;
     input.click();
   }, []);
 
-  const runOcr = useCallback(async () => {
+  const runAllPasses = useCallback(async () => {
     if (!imageUri) return;
     setBusy(true);
-    try {
-      const Tesseract = await import("tesseract.js");
-      const c = parseFloat(contrast) || 1.8;
-      const t = parseFloat(threshold) || 140;
+    setRuns([]);
+    const Tesseract = await import("tesseract.js");
+    const results: OcrRun[] = [];
 
-      // Run with preprocessing
-      const preprocessed = await preprocessImageForOcr(imageUri, { contrast: c, threshold: t });
-      const start = performance.now();
-      const result = await Tesseract.recognize(preprocessed, "swe+eng", {
-        tessedit_pageseg_mode: "6",
-        preserve_interword_spaces: "1",
-      } as Record<string, string>);
-      const duration = performance.now() - start;
+    // First: raw image without any preprocessing
+    setProgress("Kör utan förbehandling...");
+    const startRaw = performance.now();
+    const rawResult = await Tesseract.recognize(imageUri, "swe+eng", {
+      tessedit_pageseg_mode: "3",
+      preserve_interword_spaces: "1",
+    } as Record<string, string>);
+    results.push(buildRun("Rå bild (ingen förbehandling)", imageUri, rawResult.data, performance.now() - startRaw));
 
-      const blocks = (result.data.blocks ?? []).map((b: { paragraphs?: { lines?: { text: string }[] }[] }) => ({
-        lines: (b.paragraphs ?? []).flatMap((p) =>
-          (p.lines ?? []).map((l) => ({ text: l.text }))
-        ),
-      }));
-      const parsed = parseWineLabel(blocks);
-      const rawLines = (result.data.text ?? "").split("\n").filter((l: string) => l.trim());
-
-      setRuns((prev) => [{
-        label: `K:${c} T:${t}`,
-        preprocessedUri: preprocessed,
-        rawLines,
-        parsed,
-        durationMs: Math.round(duration),
-        confidence: Math.round(result.data.confidence),
-      }, ...prev]);
-
-      // Also run WITHOUT preprocessing for comparison
-      const start2 = performance.now();
-      const result2 = await Tesseract.recognize(imageUri, "swe+eng", {
-        tessedit_pageseg_mode: "6",
-        preserve_interword_spaces: "1",
-      } as Record<string, string>);
-      const duration2 = performance.now() - start2;
-      const blocks2 = (result2.data.blocks ?? []).map((b: { paragraphs?: { lines?: { text: string }[] }[] }) => ({
-        lines: (b.paragraphs ?? []).flatMap((p) =>
-          (p.lines ?? []).map((l) => ({ text: l.text }))
-        ),
-      }));
-      const parsed2 = parseWineLabel(blocks2);
-      const rawLines2 = (result2.data.text ?? "").split("\n").filter((l: string) => l.trim());
-
-      setRuns((prev) => [{
-        label: "Utan förbehandling",
-        preprocessedUri: imageUri,
-        rawLines: rawLines2,
-        parsed: parsed2,
-        durationMs: Math.round(duration2),
-        confidence: Math.round(result2.data.confidence),
-      }, ...prev]);
-
-    } catch (err) {
-      setRuns((prev) => [{ label: "FEL", preprocessedUri: "", rawLines: [String(err)], parsed: { rawText: "", name: null, producer: null, vintage: null, searchQuery: "", rawSearchQuery: "" }, durationMs: 0, confidence: 0 }, ...prev]);
-    } finally {
-      setBusy(false);
+    // Then: each preset
+    for (const preset of PRESETS) {
+      setProgress(`Kör: ${preset.label}...`);
+      try {
+        const processed = await preprocessImageForOcr(imageUri, preset.opts);
+        const start = performance.now();
+        const result = await Tesseract.recognize(processed, "swe+eng", {
+          tessedit_pageseg_mode: "3",
+          preserve_interword_spaces: "1",
+        } as Record<string, string>);
+        results.push(buildRun(preset.label, processed, result.data, performance.now() - start));
+      } catch (err) {
+        results.push({ label: `${preset.label} (FEL)`, preprocessedUri: "", rawLines: [String(err)], parsed: emptyParsed(), durationMs: 0, confidence: 0 });
+      }
     }
-  }, [imageUri, contrast, threshold]);
+
+    // Sort by confidence (best first)
+    results.sort((a, b) => b.confidence - a.confidence);
+    setRuns(results);
+    setBusy(false);
+    setProgress("");
+  }, [imageUri]);
 
   return (
     <ScrollView style={s.container} contentContainerStyle={s.content}>
@@ -115,9 +94,7 @@ export function OcrDebugPage({ onClose }: { onClose: () => void }) {
       </View>
 
       <Pressable onPress={handleFilePick} style={s.pickBtn}>
-        <Text style={s.pickBtnText}>
-          {imageUri ? "Byt bild" : "Välj bild / Ta foto"}
-        </Text>
+        <Text style={s.pickBtnText}>{imageUri ? "Byt bild" : "Välj bild / Ta foto"}</Text>
       </Pressable>
 
       {imageUri && (
@@ -125,27 +102,23 @@ export function OcrDebugPage({ onClose }: { onClose: () => void }) {
           <Text style={s.sectionTitle}>Originalbild</Text>
           <Image source={{ uri: imageUri }} style={s.preview} resizeMode="contain" />
 
-          <Text style={s.sectionTitle}>Inställningar</Text>
-          <View style={s.row}>
-            <View style={s.inputGroup}>
-              <Text style={s.label}>Kontrast</Text>
-              <TextInput style={s.input} value={contrast} onChangeText={setContrast} keyboardType="numeric" />
-            </View>
-            <View style={s.inputGroup}>
-              <Text style={s.label}>Tröskel (0-255)</Text>
-              <TextInput style={s.input} value={threshold} onChangeText={setThreshold} keyboardType="numeric" />
-            </View>
-          </View>
-
-          <Pressable onPress={runOcr} style={[s.pickBtn, busy && s.disabled]} disabled={busy}>
-            {busy ? <ActivityIndicator color="#2b1714" /> : <Text style={s.pickBtnText}>Kör OCR</Text>}
+          <Pressable onPress={runAllPasses} style={[s.pickBtn, busy && s.disabled]} disabled={busy}>
+            {busy ? (
+              <View style={s.busyRow}>
+                <ActivityIndicator color="#2b1714" />
+                <Text style={s.pickBtnText}>{progress}</Text>
+              </View>
+            ) : (
+              <Text style={s.pickBtnText}>Kör alla {PRESETS.length + 1} varianter</Text>
+            )}
           </Pressable>
         </>
       )}
 
       {runs.map((run, i) => (
-        <View key={i} style={s.runCard}>
-          <Text style={s.runTitle}>{run.label} — {run.durationMs}ms — {run.confidence}% konfidens</Text>
+        <View key={i} style={[s.runCard, i === 0 && s.bestCard]}>
+          {i === 0 && <Text style={s.bestBadge}>BÄST</Text>}
+          <Text style={s.runTitle}>{run.label} — {run.durationMs}ms — {run.confidence}%</Text>
 
           {run.preprocessedUri ? (
             <Image source={{ uri: run.preprocessedUri }} style={s.previewSmall} resizeMode="contain" />
@@ -153,9 +126,9 @@ export function OcrDebugPage({ onClose }: { onClose: () => void }) {
 
           <Text style={s.sectionTitle}>Rå Tesseract-output</Text>
           <View style={s.codeBlock}>
-            {run.rawLines.map((line, j) => (
-              <Text key={j} style={s.codeLine}>{line}</Text>
-            ))}
+            {run.rawLines.length > 0
+              ? run.rawLines.map((line, j) => <Text key={j} style={s.codeLine}>{line}</Text>)
+              : <Text style={s.codeLine}>(tom)</Text>}
           </View>
 
           <Text style={s.sectionTitle}>Parsad etikett</Text>
@@ -164,7 +137,6 @@ export function OcrDebugPage({ onClose }: { onClose: () => void }) {
             <Text style={s.codeLine}>Producent: {run.parsed.producer ?? "(ingen)"}</Text>
             <Text style={s.codeLine}>Årgång: {run.parsed.vintage ?? "(ingen)"}</Text>
             <Text style={s.codeLine}>Sökfråga: {run.parsed.searchQuery || "(tom)"}</Text>
-            <Text style={s.codeLine}>Rå sökfråga: {run.parsed.rawSearchQuery || "(tom)"}</Text>
           </View>
 
           <Text style={s.sectionTitle}>Normaliserad text</Text>
@@ -179,6 +151,25 @@ export function OcrDebugPage({ onClose }: { onClose: () => void }) {
   );
 }
 
+function buildRun(label: string, uri: string, data: { text: string; confidence: number; blocks?: unknown[] | null }, ms: number): OcrRun {
+  const blocks = (data.blocks ?? []).map((b: unknown) => {
+    const block = b as { paragraphs?: { lines?: { text: string }[] }[] };
+    return { lines: (block.paragraphs ?? []).flatMap((p) => (p.lines ?? []).map((l) => ({ text: l.text }))) };
+  });
+  return {
+    label,
+    preprocessedUri: uri,
+    rawLines: (data.text ?? "").split("\n").filter((l) => l.trim()),
+    parsed: parseWineLabel(blocks),
+    durationMs: Math.round(ms),
+    confidence: Math.round(data.confidence),
+  };
+}
+
+function emptyParsed(): LabelParseResult {
+  return { rawText: "", name: null, producer: null, vintage: null, searchQuery: "", rawSearchQuery: "" };
+}
+
 const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#1a0f0d" },
   content: { padding: 18, gap: 14 },
@@ -188,15 +179,14 @@ const s = StyleSheet.create({
   closeBtnText: { color: "#ead8ca", fontSize: 14, fontWeight: "600" },
   pickBtn: { backgroundColor: "#ead8ca", paddingVertical: 14, borderRadius: 10, alignItems: "center" },
   pickBtnText: { color: "#2b1714", fontSize: 16, fontWeight: "700" },
-  disabled: { opacity: 0.5 },
+  disabled: { opacity: 0.6 },
+  busyRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   sectionTitle: { color: "#ead8ca", fontSize: 14, fontWeight: "700", marginTop: 6 },
   preview: { width: "100%", height: 300, borderRadius: 10, backgroundColor: "#120907" },
   previewSmall: { width: "100%", height: 200, borderRadius: 8, backgroundColor: "#120907" },
-  row: { flexDirection: "row", gap: 12 },
-  inputGroup: { flex: 1 },
-  label: { color: "#ead8ca", fontSize: 12, marginBottom: 4 },
-  input: { backgroundColor: "#3d2420", color: "#ead8ca", padding: 10, borderRadius: 8, fontSize: 16 },
   runCard: { backgroundColor: "#2b1714", borderRadius: 12, padding: 14, gap: 8, borderWidth: 1, borderColor: "#3d2420" },
+  bestCard: { borderColor: "#7a9a4a", borderWidth: 2 },
+  bestBadge: { color: "#7a9a4a", fontSize: 11, fontWeight: "800", letterSpacing: 1 },
   runTitle: { color: "#ead8ca", fontSize: 15, fontWeight: "700" },
   codeBlock: { backgroundColor: "#120907", borderRadius: 8, padding: 10 },
   codeLine: { color: "#c4a882", fontSize: 12, fontFamily: Platform.OS === "web" ? "monospace" : undefined, lineHeight: 18 },
