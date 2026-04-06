@@ -47,16 +47,19 @@ async function recognizeLabelWeb(imageUri: string): Promise<TextBlock[]> {
     processed.map((img) => Tesseract.recognize(img, "swe+eng", ocrOpts))
   );
 
-  // Pick the result with highest confidence
+  // Pick the result with highest confidence, use raw text (more reliable than blocks)
   let best = results[0];
   for (let i = 1; i < results.length; i++) {
     if (results[i].data.confidence > best.data.confidence) best = results[i];
   }
-  return (best.data.blocks ?? []).map((b) => ({
-    lines: (b.paragraphs ?? []).flatMap((p) =>
-      (p.lines ?? []).map((l) => ({ text: l.text }))
-    ),
-  }));
+  return textToBlocks(best.data.text);
+}
+
+/** Convert raw OCR text to TextBlock format (more reliable than Tesseract's block structure) */
+function textToBlocks(text: string): TextBlock[] {
+  const lines = text.split("\n").filter((l) => l.trim());
+  if (lines.length === 0) return [];
+  return [{ lines: lines.map((text) => ({ text })) }];
 }
 
 export type PreprocessOptions = {
@@ -105,11 +108,33 @@ export async function preprocessImageForOcr(
       const w = canvas.width;
       const h = canvas.height;
 
-      // Step 1: Convert to grayscale array
+      // Step 1: Convert to grayscale + compensate for horizontal shadow gradient
+      // Wine bottles typically have a shadow on one side — normalize by
+      // computing the average brightness per column and leveling it out
       const gray = new Float32Array(w * h);
       for (let i = 0; i < gray.length; i++) {
         const p = i * 4;
         gray[i] = 0.299 * d[p] + 0.587 * d[p + 1] + 0.114 * d[p + 2];
+      }
+      // Column-wise brightness normalization
+      const colAvg = new Float32Array(w);
+      for (let x = 0; x < w; x++) {
+        let sum = 0;
+        for (let y = 0; y < h; y++) sum += gray[y * w + x];
+        colAvg[x] = sum / h;
+      }
+      let globalAvg = 0;
+      for (let x = 0; x < w; x++) globalAvg += colAvg[x];
+      globalAvg /= w;
+      // Apply correction: shift each column to match the global average
+      if (globalAvg > 10) {
+        for (let x = 0; x < w; x++) {
+          const correction = globalAvg - colAvg[x];
+          for (let y = 0; y < h; y++) {
+            const idx = y * w + x;
+            gray[idx] = Math.max(0, Math.min(255, gray[idx] + correction));
+          }
+        }
       }
 
       // Step 2: Optional sharpening (unsharp mask)
