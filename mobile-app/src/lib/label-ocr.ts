@@ -31,9 +31,9 @@ async function recognizeLabelWeb(imageUri: string): Promise<TextBlock[]> {
 
   // Run multiple preprocessing variants and pick the best result
   const variants: { label: string; opts: PreprocessOptions }[] = [
-    { label: "adaptive", opts: { mode: "adaptive", blockSize: 15, sharpen: true } },
-    { label: "high-contrast", opts: { mode: "global", contrast: 2.5, threshold: 120, sharpen: true } },
     { label: "soft", opts: { mode: "global", contrast: 1.4, threshold: 160, sharpen: false } },
+    { label: "soft-low", opts: { mode: "global", contrast: 1.2, threshold: 145, sharpen: false } },
+    { label: "soft-sharp", opts: { mode: "global", contrast: 1.4, threshold: 155, sharpen: true } },
   ];
 
   let bestBlocks: TextBlock[] = [];
@@ -202,13 +202,25 @@ function unsharpMask(gray: Float32Array<ArrayBuffer>, w: number, h: number, amou
 }
 
 /**
+ * Score how "word-like" a line is: fraction of characters that belong
+ * to real words (3+ consecutive letters). Noise lines score near 0,
+ * "JOSETTA SAFFIRIO" scores near 1.
+ */
+export function lineQuality(line: string): number {
+  const wordChars = (line.match(/[a-zA-ZÀ-ÿ]{3,}/g) ?? [])
+    .reduce((sum, w) => sum + w.length, 0);
+  return line.length > 0 ? wordChars / line.length : 0;
+}
+
+/**
  * Parse OCR text blocks into wine label candidates.
  *
  * Strategy:
- * 1. Vintage: 4-digit year in range 1700–2030, pick latest if multiple.
- * 2. Wine name: longest text line (labels put the name largest; ML Kit returns blocks roughly by size).
- * 3. Producer: second longest line if sufficiently different from name.
- * 4. Search query: name + producer combined for trigram matching.
+ * 1. Score each line by "word quality" — real words vs noise characters.
+ * 2. Keep only lines where ≥40% of characters form real words.
+ * 3. Vintage: 4-digit year in range 1700–2030, pick latest if multiple.
+ * 4. Rank remaining lines by quality × length (rewards real text).
+ * 5. Wine name: highest-scoring line. Producer: second highest.
  */
 export function parseWineLabel(blocks: TextBlock[]): LabelParseResult {
   const lines: string[] = [];
@@ -232,11 +244,18 @@ export function parseWineLabel(blocks: TextBlock[]): LabelParseResult {
   }
   const vintage = years.length > 0 ? String(Math.max(...years)) : null;
 
-  // --- Filter lines: remove pure-year lines and very short lines ---
-  const candidateLines = lines
+  // --- Score and filter lines ---
+  const scored = lines
     .filter((l) => !/^\d{4}$/.test(l.trim()))
-    .filter((l) => l.length >= 3)
-    .sort((a, b) => b.length - a.length);
+    .map((l) => ({ text: l, quality: lineQuality(l) }))
+    .filter((l) => l.quality >= 0.4 && l.text.length >= 3);
+
+  // Sort by quality × sqrt(length) — balances quality and size
+  scored.sort((a, b) =>
+    b.quality * Math.sqrt(b.text.length) - a.quality * Math.sqrt(a.text.length)
+  );
+
+  const candidateLines = scored.map((s) => s.text);
 
   const name = candidateLines[0] ?? null;
   const producer =
@@ -248,7 +267,7 @@ export function parseWineLabel(blocks: TextBlock[]): LabelParseResult {
 
   // Build a broader search query from all significant OCR lines
   const rawSearchQuery = candidateLines
-    .slice(0, 4)
+    .slice(0, 6)
     .map(normalizeOcrText)
     .filter((l) => l.length >= 3)
     .join(" ");

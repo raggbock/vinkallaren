@@ -1,23 +1,26 @@
 import { useCallback, useState } from "react";
 import { ActivityIndicator, Image, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { preprocessImageForOcr, parseWineLabel, normalizeOcrText } from "../lib/label-ocr";
+import { preprocessImageForOcr, parseWineLabel, normalizeOcrText, lineQuality } from "../lib/label-ocr";
 import type { LabelParseResult, PreprocessOptions } from "../lib/label-ocr";
+
+type ScoredLine = { text: string; quality: number; kept: boolean };
 
 type OcrRun = {
   label: string;
   preprocessedUri: string;
   rawLines: string[];
+  scoredLines: ScoredLine[];
   parsed: LabelParseResult;
   durationMs: number;
   confidence: number;
 };
 
 const PRESETS: { label: string; opts: PreprocessOptions }[] = [
-  { label: "Adaptiv + skärpa", opts: { mode: "adaptive", blockSize: 15, sharpen: true } },
-  { label: "Adaptiv (stor mask)", opts: { mode: "adaptive", blockSize: 25, sharpen: true } },
-  { label: "Hög kontrast", opts: { mode: "global", contrast: 2.5, threshold: 120, sharpen: true } },
   { label: "Mjuk", opts: { mode: "global", contrast: 1.4, threshold: 160, sharpen: false } },
-  { label: "Ingen förbehandling", opts: { mode: "global", contrast: 1, threshold: 128, sharpen: false } },
+  { label: "Mjuk (låg)", opts: { mode: "global", contrast: 1.2, threshold: 145, sharpen: false } },
+  { label: "Mjuk + skärpa", opts: { mode: "global", contrast: 1.4, threshold: 155, sharpen: true } },
+  { label: "Mjuk (bred)", opts: { mode: "global", contrast: 1.6, threshold: 170, sharpen: false } },
+  { label: "Mjuk (minimal)", opts: { mode: "global", contrast: 1.1, threshold: 135, sharpen: false } },
 ];
 
 export function OcrDebugPage({ onClose }: { onClose: () => void }) {
@@ -73,7 +76,7 @@ export function OcrDebugPage({ onClose }: { onClose: () => void }) {
         } as Record<string, string>);
         results.push(buildRun(preset.label, processed, result.data, performance.now() - start));
       } catch (err) {
-        results.push({ label: `${preset.label} (FEL)`, preprocessedUri: "", rawLines: [String(err)], parsed: emptyParsed(), durationMs: 0, confidence: 0 });
+        results.push({ label: `${preset.label} (FEL)`, preprocessedUri: "", rawLines: [String(err)], scoredLines: [], parsed: emptyParsed(), durationMs: 0, confidence: 0 });
       }
     }
 
@@ -124,10 +127,14 @@ export function OcrDebugPage({ onClose }: { onClose: () => void }) {
             <Image source={{ uri: run.preprocessedUri }} style={s.previewSmall} resizeMode="contain" />
           ) : null}
 
-          <Text style={s.sectionTitle}>Rå Tesseract-output</Text>
+          <Text style={s.sectionTitle}>Rader (kvalitet | behållen)</Text>
           <View style={s.codeBlock}>
-            {run.rawLines.length > 0
-              ? run.rawLines.map((line, j) => <Text key={j} style={s.codeLine}>{line}</Text>)
+            {run.scoredLines.length > 0
+              ? run.scoredLines.map((line, j) => (
+                <Text key={j} style={[s.codeLine, line.kept ? s.keptLine : s.droppedLine]}>
+                  [{Math.round(line.quality * 100)}%] {line.kept ? "✓" : "✗"} {line.text}
+                </Text>
+              ))
               : <Text style={s.codeLine}>(tom)</Text>}
           </View>
 
@@ -156,10 +163,16 @@ function buildRun(label: string, uri: string, data: { text: string; confidence: 
     const block = b as { paragraphs?: { lines?: { text: string }[] }[] };
     return { lines: (block.paragraphs ?? []).flatMap((p) => (p.lines ?? []).map((l) => ({ text: l.text }))) };
   });
+  const rawLines = (data.text ?? "").split("\n").filter((l) => l.trim());
+  const scoredLines = rawLines.map((text) => {
+    const quality = lineQuality(text);
+    return { text, quality, kept: quality >= 0.4 && text.length >= 3 };
+  });
   return {
     label,
     preprocessedUri: uri,
-    rawLines: (data.text ?? "").split("\n").filter((l) => l.trim()),
+    rawLines,
+    scoredLines,
     parsed: parseWineLabel(blocks),
     durationMs: Math.round(ms),
     confidence: Math.round(data.confidence),
@@ -190,4 +203,6 @@ const s = StyleSheet.create({
   runTitle: { color: "#ead8ca", fontSize: 15, fontWeight: "700" },
   codeBlock: { backgroundColor: "#120907", borderRadius: 8, padding: 10 },
   codeLine: { color: "#c4a882", fontSize: 12, fontFamily: Platform.OS === "web" ? "monospace" : undefined, lineHeight: 18 },
+  keptLine: { color: "#7a9a4a" },
+  droppedLine: { color: "#6b5045", textDecorationLine: "line-through" as const },
 });
