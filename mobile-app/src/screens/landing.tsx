@@ -17,6 +17,9 @@ import { StatusBar } from "expo-status-bar";
 import { supabase } from "../lib/supabase";
 import { showError } from "../lib/show-error";
 
+// Expo Web supports dataSet prop for data-* attributes, but RN types don't include it.
+const web = (props: Record<string, unknown>) => props as Record<string, never>;
+
 type AuthMode = "signin" | "signup";
 
 const BREAKPOINT = 768;
@@ -144,7 +147,7 @@ function MarketingContent({ isWide }: { isWide: boolean }) {
       <View style={s.featureList}>
         {FEATURES.map((f) => (
           <View key={f.title} style={s.featureRow}>
-            <View style={s.iconBox} dataSet={{ landingIcon: true }}>
+            <View style={s.iconBox} {...web({ dataSet: { landingIcon: true } })}>
               <Text style={s.iconText}>{f.icon}</Text>
             </View>
             <View style={s.featureText}>
@@ -167,7 +170,7 @@ type VerificationViewProps = {
 
 function VerificationView({ email, onBack, onGuestSignIn, guestBusy }: VerificationViewProps) {
   return (
-    <View style={s.formCard} dataSet={{ landingGlow: true }}>
+    <View style={s.formCard} {...web({ dataSet: { landingGlow: true } })}>
       <Text style={s.verifyTitle}>Verifiera din e-post</Text>
       <Text style={s.verifyText}>
         Vi har skickat ett bekräftelsemail till {email}. Öppna mailet och klicka på länken, kom sedan tillbaka och logga in.
@@ -175,10 +178,10 @@ function VerificationView({ email, onBack, onGuestSignIn, guestBusy }: Verificat
       <Text style={s.verifyHint}>
         Hittar du inget mail? Kolla skräppost eller försök registrera igen om adressen blev fel.
       </Text>
-      <Pressable onPress={onBack} style={s.primaryCta} dataSet={{ landingCta: true }}>
+      <Pressable onPress={onBack} style={s.primaryCta} {...web({ dataSet: { landingCta: true } })}>
         <Text style={s.primaryCtaText}>Jag har verifierat min mail</Text>
       </Pressable>
-      <Pressable onPress={onGuestSignIn} style={s.guestCta} disabled={guestBusy} dataSet={{ landingCta: true }}>
+      <Pressable onPress={onGuestSignIn} style={s.guestCta} disabled={guestBusy} {...web({ dataSet: { landingCta: true } })}>
         <Text style={s.guestCtaText}>
           {guestBusy ? "Startar gästläge..." : "Fortsätt som gäst i stället"}
         </Text>
@@ -195,7 +198,7 @@ function AuthForm() {
   }
 
   return (
-    <View style={s.formCard} dataSet={{ landingGlow: true }}>
+    <View style={s.formCard} {...web({ dataSet: { landingGlow: true } })}>
       <Text style={s.formWelcome}>Välkommen in</Text>
       <View style={s.segment}>
         <Pressable onPress={() => auth.setMode("signin")} style={[s.segmentTab, auth.mode === "signin" && s.segmentTabActive]}>
@@ -213,11 +216,11 @@ function AuthForm() {
         <Text style={s.fieldLabel}>Lösenord</Text>
         <TextInput value={auth.password} onChangeText={auth.setPassword} secureTextEntry returnKeyType="go" onSubmitEditing={auth.handleAuth} style={s.fieldInput} placeholderTextColor="#8f8178" />
       </View>
-      <Pressable onPress={auth.handleAuth} style={s.primaryCta} disabled={auth.busy} dataSet={{ landingCta: true }}>
+      <Pressable onPress={auth.handleAuth} style={s.primaryCta} disabled={auth.busy} {...web({ dataSet: { landingCta: true } })}>
         <Text style={s.primaryCtaText}>{auth.busy ? "Arbetar..." : auth.mode === "signup" ? "Skapa konto" : "Logga in"}</Text>
       </Pressable>
       {auth.signupNotice ? <Text style={s.notice}>{auth.signupNotice}</Text> : null}
-      <Pressable onPress={auth.handleGuestSignIn} style={s.guestCta} disabled={auth.guestBusy} dataSet={{ landingCta: true }}>
+      <Pressable onPress={auth.handleGuestSignIn} style={s.guestCta} disabled={auth.guestBusy} {...web({ dataSet: { landingCta: true } })}>
         <Text style={s.guestCtaText}>{auth.guestBusy ? "Startar gästläge..." : "Testa utan konto"}</Text>
       </Pressable>
     </View>
@@ -229,7 +232,7 @@ export function LandingScreen({ pendingJoinCode }: { pendingJoinCode?: string | 
   useWebGradient();
 
   return (
-    <View style={s.root} dataSet={{ landingRoot: true }}>
+    <View style={s.root} {...web({ dataSet: { landingRoot: true } })}>
       <StatusBar style="light" />
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={s.flex}>
         <ScrollView contentContainerStyle={[s.container, isWide && s.containerWide]} keyboardShouldPersistTaps="handled">
