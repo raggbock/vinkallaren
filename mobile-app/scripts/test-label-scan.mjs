@@ -1,15 +1,16 @@
 /**
- * OCR accuracy test: fetch random wine label images from the catalog,
- * run OCR + text matching, compare against known wine name.
+ * OCR accuracy test: run OCR on wine label photos and match against catalog.
  *
- * Usage: node scripts/test-label-scan.mjs [count]
- * Default: 20 random wines with images
+ * Usage: node scripts/test-label-scan.mjs [folder]
+ * Default folder: ../etiketter
  */
+import fs from "node:fs";
+import path from "node:path";
 import sharp from "sharp";
 import Tesseract from "tesseract.js";
 import { supabase } from "./lib/supabase-client.mjs";
 
-const COUNT = parseInt(process.argv[2] || "20", 10);
+const folder = process.argv[2] || path.resolve(import.meta.dirname, "../../etiketter");
 
 // ── OCR helpers ────────────────────────────────────────────────────
 
@@ -29,12 +30,13 @@ const NOISE_PATTERNS = [
   /PRODUCT\s+OF/i, /IMBOTTIGLIATO/i, /BOTTLED\s+BY/i,
   /\bORIGIN[E]?\b/i, /APPELLATION.*CONTR[OÔ]L[ÉE]+/i,
   /CONTAINS\s+SUL[PF][HI]ITES/i, /MISE\s+EN\s+BOUTEILLE/i,
-  /PRODOTTO\s+IN/i, /PRODUCE[D]?\s+OF/i, /GROWN\s+IN/i,
-  /ALCOHOL|ALC[\.\s]*\d/i, /^\d+\s*[,.]?\d*\s*%/,
-  /VINO\s+(ROSSO|BIANCO|ROSATO)/i, /^(RED|WHITE|ROSE)\s+WINE$/i,
-  /ESTATE\s+BOTTLED/i, /WINE\s+OF\b/i, /VIN\s+DE\b/i,
-  /PROTECTED\s+DESIGN/i, /GOVERNO\s+ALL/i,
-  /ANNATA\b/i, /VENDEMMIA\b/i, /RÉCOLTE\b/i,
+  /PRODOTTO\s+IN\s+ITALIA/i, /GROWN\s+IN/i,
+  /^ALC[\.\s]*\d/i,
+  /^(RED|WHITE|ROS[ÉE])\s+WINE$/i,
+  /ESTATE\s+BOTTLED/i,
+  /DENOMINACI[OÓ]N\s+DE\s+ORIGEN/i, /QUALIT[AÄ]TSWEIN/i,
+  /INDICAZIONE\s+GEOGRAFICA/i,
+  /EMBOTELLADO\s+POR/i, /ELABORADO\s+POR/i,
 ];
 const WINE_TERMS = /CABERNET|MERLOT|PINOT|CHARDONNAY|SAUVIGNON|SANGIOVESE|NEBBIOLO|RIESLING|SYRAH|SHIRAZ|TEMPRANILLO|BAROLO|BARBERA|BRUNELLO|CHIANTI|PROSECCO|CHAMPAGNE|CREMANT|GRUNER/i;
 
@@ -65,11 +67,6 @@ function parseOcrText(text) {
   return { name, producer, vintage, searchQuery };
 }
 
-function normalizeForCompare(text) {
-  return (text || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase().replace(/[^\w\s]/g, " ").replace(/\s+/g, " ").trim();
-}
-
 function normalizeOcrText(text) {
   let n = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   n = n.replace(/[|]/g, "l").replace(/(?<=[a-z])0/g, "o").replace(/(?<=[A-Z])0/g, "O").replace(/1(?=[a-z])/g, "l");
@@ -79,48 +76,44 @@ function normalizeOcrText(text) {
 
 // ── Catalog search ─────────────────────────────────────────────────
 
-async function searchByText(query, vintage) {
+async function searchByText(query, vintage, rawQuery) {
   if (!query || query.length < 3) return [];
   const normalized = normalizeOcrText(query);
   if (normalized.length < 3) return [];
   const params = { query: normalized, max_results: 5 };
   if (vintage) params.query_vintage = parseInt(vintage, 10);
-  const { data, error } = await supabase.rpc("match_catalog_by_text", params);
-  if (error) return [];
-  return data ?? [];
-}
 
-// ── Fetch random wines with images ─────────────────────────────────
+  const rawNormalized = rawQuery ? normalizeOcrText(rawQuery) : "";
+  const needsRaw = rawNormalized.length >= 3 && rawNormalized !== normalized;
 
-async function fetchRandomWines(count) {
-  const { data, error } = await supabase.rpc("random_catalog_wines_with_images", {
-    count_limit: count,
-  });
-  if (error) {
-    console.error("Failed to fetch wines:", error.message);
-    return [];
+  const [res1, res2] = await Promise.all([
+    supabase.rpc("match_catalog_by_text", params),
+    needsRaw ? supabase.rpc("match_catalog_by_text", { ...params, query: rawNormalized }) : { data: [] },
+  ]);
+
+  if (res1.error) console.error("  RPC error:", res1.error.message);
+  const primary = res1.data ?? [];
+  const seenIds = new Set(primary.map(m => m.id));
+  for (const m of (res2.data ?? [])) {
+    if (!seenIds.has(m.id)) { primary.push(m); seenIds.add(m.id); }
   }
-  return data ?? [];
-}
-
-async function downloadImage(url) {
-  const res = await fetch(url);
-  if (!res.ok) return null;
-  return Buffer.from(await res.arrayBuffer());
+  return primary.sort((a, b) => b.similarity - a.similarity).slice(0, 5);
 }
 
 // ── OCR pipeline ───────────────────────────────────────────────────
 
 async function runOcr(worker, buffer) {
-  const rotated = sharp(buffer).rotate();
-  const meta = await rotated.metadata();
+  // Get dimensions after auto-rotation
+  const rotatedBuf = await sharp(buffer).rotate().toBuffer();
+  const meta = await sharp(rotatedBuf).metadata();
   const rw = meta.width ?? 1000;
   const rh = meta.height ?? 1000;
 
-  // 2 crops × 2 preprocessing = 4 variants (fast enough)
+  // 2 crops × 2 preprocessing = 4 OCR runs
+  const base = sharp(rotatedBuf);
   const crops = [
-    rotated.clone().resize(1500, null, { withoutEnlargement: true }),
-    rotated.clone()
+    base.clone().resize(1500, null, { withoutEnlargement: true }),
+    sharp(rotatedBuf)
       .extract({
         left: Math.round(rw * 0.15), top: Math.round(rh * 0.1),
         width: Math.round(rw * 0.7), height: Math.round(rh * 0.8),
@@ -129,7 +122,7 @@ async function runOcr(worker, buffer) {
   ];
 
   let bestScore = -1;
-  let bestResult = { name: null, producer: null, vintage: null, searchQuery: "", confidence: 0 };
+  let bestResult = { name: null, producer: null, vintage: null, searchQuery: "", confidence: 0, rawText: "" };
 
   for (const crop of crops) {
     const variants = [
@@ -139,14 +132,13 @@ async function runOcr(worker, buffer) {
     for (const v of variants) {
       const buf = await v.toBuffer();
       const { data } = await worker.recognize(buf);
-      // Score: confidence + wine term bonus + name bonus
       const wineHits = (data.text.match(WINE_TERMS) ?? []).length;
       const parsed = parseOcrText(data.text);
       const hasName = parsed.name && parsed.name.length > 3 ? 10 : 0;
       const score = data.confidence + wineHits * 8 + hasName;
       if (score > bestScore) {
         bestScore = score;
-        bestResult = { ...parsed, confidence: Math.round(data.confidence) };
+        bestResult = { ...parsed, confidence: Math.round(data.confidence), rawText: data.text };
       }
     }
   }
@@ -155,45 +147,38 @@ async function runOcr(worker, buffer) {
 
 // ── Main ───────────────────────────────────────────────────────────
 
-console.log(`\nFetching ${COUNT} random wines with images from catalog...\n`);
-const wines = await fetchRandomWines(COUNT);
-console.log(`Got ${wines.length} wines. Running OCR...\n`);
+const files = fs.readdirSync(folder).filter(f => /\.(jpg|jpeg|png|webp)$/i.test(f)).sort();
+console.log(`\nTesting ${files.length} images from ${folder}\n`);
 console.log("─".repeat(100));
 
 const worker = await Tesseract.createWorker("eng+fra+ita+deu+swe");
 const results = [];
 
-for (const wine of wines) {
+for (const file of files) {
+  const buffer = fs.readFileSync(path.join(folder, file));
   const t0 = performance.now();
-  const buffer = await downloadImage(wine.image_url);
-  if (!buffer) {
-    console.log(`  SKIP: ${wine.name} — image download failed`);
-    continue;
-  }
 
-  const ocr = await runOcr(worker, buffer);
-  const matches = await searchByText(ocr.searchQuery, ocr.vintage);
+  let ocr = { name: null, producer: null, vintage: null, searchQuery: "", confidence: 0, rawText: "" };
+  try { ocr = await runOcr(worker, buffer); } catch (e) { console.error("  OCR error:", e.message); }
+
+  // Build raw search query from all kept lines
+  const rawLines = (ocr.rawText || "").split("\n")
+    .map(l => cleanOcrLine(l.trim())).filter(l => lineQuality(l) >= 0.4 && l.length >= 3).slice(0, 6);
+  const rawSearchQuery = rawLines.join(" ");
+
+  let textMatches = [];
+  try { textMatches = await searchByText(ocr.searchQuery, ocr.vintage, rawSearchQuery); } catch {}
+
   const ms = Math.round(performance.now() - t0);
+  const topText = textMatches[0] ? `${textMatches[0].name} (${Math.round(textMatches[0].similarity * 100)}%)` : "-";
+  const shortName = file.length > 25 ? file.slice(0, 22) + "..." : file.padEnd(25);
 
-  // Check if correct wine is in top matches
-  const expectedNorm = normalizeForCompare(wine.name);
-  const topMatch = matches[0];
-  const topMatchNorm = topMatch ? normalizeForCompare(topMatch.name) : "";
-  const isCorrect = topMatch && topMatch.id === wine.id;
-  const isClose = topMatchNorm.includes(expectedNorm) || expectedNorm.includes(topMatchNorm);
-  const inTop5 = matches.some(m => m.id === wine.id);
-
-  const icon = isCorrect ? "✓" : isClose ? "~" : inTop5 ? "○" : "✗";
-  const shortExpected = wine.name.length > 35 ? wine.name.slice(0, 32) + "..." : wine.name.padEnd(35);
-  const topName = topMatch ? `${topMatch.name} (${Math.round(topMatch.similarity * 100)}%)` : "(ingen)";
-
-  console.log(`${icon} ${shortExpected} | conf: ${String(ocr.confidence).padStart(3)}% | ${ms}ms`);
-  console.log(`  OCR:     ${ocr.searchQuery || "(tom)"}`);
-  console.log(`  Topp:    ${topName}`);
-  if (!isCorrect && inTop5) console.log(`  (rätt vin i topp 5)`);
+  console.log(`${shortName} | conf: ${String(ocr.confidence).padStart(3)}% | ${ms}ms`);
+  console.log(`  OCR:      ${ocr.searchQuery || "(tom)"}`);
+  console.log(`  Träff:    ${topText}`);
   console.log("─".repeat(100));
 
-  results.push({ wine, ocr, topMatch, isCorrect, isClose, inTop5, ms });
+  results.push({ file, ocr, textMatches, ms });
 }
 
 await worker.terminate();
@@ -201,17 +186,15 @@ await worker.terminate();
 // ── Summary ────────────────────────────────────────────────────────
 
 const total = results.length;
-const correct = results.filter(r => r.isCorrect).length;
-const close = results.filter(r => r.isClose).length;
-const top5 = results.filter(r => r.inTop5).length;
 const withName = results.filter(r => r.ocr.name).length;
+const withMatch = results.filter(r => r.textMatches.length > 0).length;
+const highConf = results.filter(r => r.textMatches[0]?.similarity >= 0.5).length;
 const avgConf = total > 0 ? Math.round(results.reduce((s, r) => s + r.ocr.confidence, 0) / total) : 0;
 const avgMs = total > 0 ? Math.round(results.reduce((s, r) => s + r.ms, 0) / total) : 0;
 
 console.log(`\nSammanfattning (${total} bilder):`);
-console.log(`  ✓ Exakt rätt (topp 1):  ${correct}/${total} (${Math.round(correct/total*100)}%)`);
-console.log(`  ~ Nära (namn overlap):   ${close}/${total} (${Math.round(close/total*100)}%)`);
-console.log(`  ○ Rätt i topp 5:         ${top5}/${total} (${Math.round(top5/total*100)}%)`);
 console.log(`  OCR-namn extraherat:     ${withName}/${total}`);
+console.log(`  Katalogträff (any):      ${withMatch}/${total}`);
+console.log(`  Stark träff (≥50%):      ${highConf}/${total}`);
 console.log(`  Snitt-konfidens:         ${avgConf}%`);
 console.log(`  Snitt-tid:               ${avgMs}ms`);
