@@ -26,33 +26,50 @@ export async function recognizeLabel(imageUri: string): Promise<TextBlock[]> {
   return result.blocks;
 }
 
+const GOOD_ENOUGH_CONFIDENCE = 50;
+const OCR_LANGS = "eng+fra+ita+deu+swe";
+
 async function recognizeLabelWeb(imageUri: string): Promise<TextBlock[]> {
   const Tesseract = await import("tesseract.js");
 
   const variants: PreprocessOptions[] = [
     { mode: "grayscale", contrast: 1.4, sharpen: false },
-    { mode: "grayscale", contrast: 1.6, sharpen: true },
-    { mode: "global", contrast: 1.4, threshold: 160, sharpen: false },
+    { mode: "grayscale", contrast: 1.4, sharpen: false, crop: "center" },
+    { mode: "global", contrast: 1.4, threshold: 128, sharpen: false },
   ];
 
-  // Preprocess all variants in parallel, then run OCR in parallel
+  // Preprocess all variants in parallel
   const processed = await Promise.all(
     variants.map((opts) => preprocessImageForOcr(imageUri, opts))
   );
+
+  // Race: run OCR in parallel, return first "good enough" result
   const ocrOpts = {
     tessedit_pageseg_mode: "3",
     preserve_interword_spaces: "1",
   } as Record<string, string>;
-  const results = await Promise.all(
-    processed.map((img) => Tesseract.recognize(img, "eng+fra+ita+deu+swe", ocrOpts))
-  );
 
-  // Pick the result with highest confidence, use raw text (more reliable than blocks)
-  let best = results[0];
-  for (let i = 1; i < results.length; i++) {
-    if (results[i].data.confidence > best.data.confidence) best = results[i];
-  }
-  return textToBlocks(best.data.text);
+  let best: { text: string; confidence: number } | null = null;
+
+  const raceResult = await new Promise<string>((resolve) => {
+    let pending = processed.length;
+    for (const img of processed) {
+      Tesseract.recognize(img, OCR_LANGS, ocrOpts).then((result) => {
+        const { text, confidence } = result.data;
+        if (!best || confidence > best.confidence) {
+          best = { text, confidence };
+        }
+        if (confidence >= GOOD_ENOUGH_CONFIDENCE) {
+          resolve(text);
+        }
+        if (--pending === 0) {
+          resolve(best!.text);
+        }
+      });
+    }
+  });
+
+  return textToBlocks(raceResult);
 }
 
 /** Convert raw OCR text to TextBlock format (more reliable than Tesseract's block structure) */
@@ -68,6 +85,7 @@ export type PreprocessOptions = {
   threshold?: number;
   blockSize?: number;  // For adaptive mode: local window size
   sharpen?: boolean;
+  crop?: "center";     // Crop to center 70%×80% before OCR
 };
 
 /**
@@ -90,19 +108,27 @@ export async function preprocessImageForOcr(
     img.crossOrigin = "anonymous";
     img.onload = () => {
       const canvas = document.createElement("canvas");
-      canvas.width = img.width;
-      canvas.height = img.height;
+      // Apply center crop if requested
+      let sx = 0, sy = 0, sw = img.width, sh = img.height;
+      if (options?.crop === "center") {
+        sx = Math.round(img.width * 0.15);
+        sy = Math.round(img.height * 0.1);
+        sw = Math.round(img.width * 0.7);
+        sh = Math.round(img.height * 0.8);
+      }
+      canvas.width = sw;
+      canvas.height = sh;
       const ctx = canvas.getContext("2d");
       if (!ctx) { resolve(imageUri); return; }
 
       // Downscale large images — Tesseract doesn't benefit from >1500px
       const maxDim = 1500;
-      if (img.width > maxDim || img.height > maxDim) {
-        const scale = maxDim / Math.max(img.width, img.height);
-        canvas.width = Math.round(img.width * scale);
-        canvas.height = Math.round(img.height * scale);
+      if (sw > maxDim || sh > maxDim) {
+        const scale = maxDim / Math.max(sw, sh);
+        canvas.width = Math.round(sw * scale);
+        canvas.height = Math.round(sh * scale);
       }
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const d = imageData.data;
       const w = canvas.width;
