@@ -206,6 +206,22 @@ export async function deleteCatalogEntryById(id: string): Promise<Result<true>> 
   return ok(true as const);
 }
 
+type UpdateHistoryArgs = {
+  id: string;
+  rating: number | null;
+  tasting_notes: string | null;
+  consumed_at: string;
+  quantity_consumed: number;
+};
+
+export async function updateHistoryEntry(args: UpdateHistoryArgs): Promise<Result<WineHistoryRow>> {
+  const { id, ...payload } = args;
+  const { data, error } = await supabase.from("wine_history").update(payload).eq("id", id).select().single();
+  if (error) return fail(error.message);
+  if (!data) return fail("Ingen data returnerades");
+  return ok(data as WineHistoryRow);
+}
+
 export async function openSystembolaget(productId: string): Promise<Result<true>> {
   const url = buildSystembolagetProductUrl(productId);
   const supported = await Linking.canOpenURL(url);

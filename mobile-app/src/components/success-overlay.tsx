@@ -9,6 +9,7 @@ const PRESETS: Record<string, SuccessConfig> = {
   tasting_saved: { icon: "📝", title: "Sparat!", subtitle: "Provningsanteckning registrerad" },
   storage_saved: { icon: "📦", title: "Sparat!", subtitle: "Förvaringsplatsen är skapad" },
   edit_saved: { icon: "✓", title: "Uppdaterat!" },
+  history_edited: { icon: "✏️", title: "Uppdaterat!", subtitle: "Historikposten är ändrad" },
   generic: { icon: "✓", title: "Sparat!" },
 };
 

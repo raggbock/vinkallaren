@@ -1,3 +1,4 @@
+import React from "react";
 import { CameraView } from "expo-camera";
 import { Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
 import { AnimatedModal } from "./animated-modal";
@@ -6,6 +7,7 @@ import type { ProductCatalogWineRow } from "../types/product-catalog";
 import type { ReferenceOptionRow } from "../types/reference-data";
 import type { CatalogEditorDraft } from "../types/cellar-drafts";
 import type { WineRecord } from "../types/wine";
+import type { WineHistoryRecord } from "../types/wine-history";
 import { buildWsetSummary, type WsetTastingData } from "../lib/wset-data";
 import { AutocompleteInput, DateInput, DoubleRow, LabeledInput, SuggestionRow, type Suggestion } from "./form-controls";
 
@@ -224,6 +226,61 @@ export function DrinkWineModal({
               <Text style={styles.primaryButtonText}>{saving ? "Sparar..." : "Spara"}</Text>
             </Pressable>
           </View>
+    </AnimatedModal>
+  );
+}
+
+export function EditHistoryModal({
+  visible, styles, entry, saving,
+  onClose, onSave,
+}: {
+  visible: boolean;
+  styles: SharedStyles;
+  entry: WineHistoryRecord | null;
+  saving: boolean;
+  onClose: () => void;
+  onSave: (fields: { rating: string; notes: string; date: string; quantity: string }) => void;
+}) {
+  const [rating, setRating] = React.useState("");
+  const [notes, setNotes] = React.useState("");
+  const [date, setDate] = React.useState("");
+  const [quantity, setQuantity] = React.useState("1");
+
+  React.useEffect(() => {
+    if (!entry) return;
+    setRating(entry.rating ? String(entry.rating) : "");
+    setNotes(entry.tasting_notes || "");
+    setDate(entry.consumed_at?.slice(0, 10) || "");
+    setQuantity(String(entry.quantity_consumed));
+  }, [entry]);
+
+  return (
+    <AnimatedModal visible={visible} onClose={onClose} mode="centered" cardStyle={drinkStyles.card}>
+      <View style={styles.panelHeaderRow}>
+        <View style={styles.flex}>
+          <Text style={styles.eyebrow}>Redigera historik</Text>
+          <Text style={styles.panelTitle}>{entry?.name || "Vin"}</Text>
+        </View>
+        <Pressable onPress={onClose} disabled={saving}>
+          <Text style={styles.linkText}>Stäng</Text>
+        </Pressable>
+      </View>
+
+      <ScrollView contentContainerStyle={{ gap: 12 }} keyboardShouldPersistTaps="handled">
+        <DateInput label="Datum" value={date} onChangeText={setDate} />
+        <SuggestionRow title="Betyg" options={["1", "2", "3", "4", "5"]} selected={rating} onSelect={setRating} />
+        <LabeledInput label="Smaknotering" value={notes} onChangeText={setNotes} placeholder="t.ex. mörk frukt, bra syra" multiline />
+        <LabeledInput label="Antal flaskor" value={quantity} onChangeText={setQuantity} keyboardType="number-pad" />
+      </ScrollView>
+
+      <View style={styles.modalActionRow}>
+        <Pressable onPress={onClose} style={styles.secondaryButton} disabled={saving}>
+          <Text style={styles.secondaryButtonText}>Avbryt</Text>
+        </Pressable>
+        <Pressable onPress={() => onSave({ rating, notes, date, quantity })} style={styles.primaryButton} disabled={saving}>
+          <Text style={styles.primaryButtonText}>{saving ? "Sparar..." : "Spara"}</Text>
+        </Pressable>
+      </View>
     </AnimatedModal>
   );
 }

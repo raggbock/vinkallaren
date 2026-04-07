@@ -5,12 +5,12 @@ import { Alert, Platform, Pressable, RefreshControl, SafeAreaView, ScrollView, T
 import type { Session } from "@supabase/supabase-js";
 import { supabase, supabaseConfigured } from "./src/lib/supabase";
 import { buildMealRecommendations } from "./src/lib/cellar-helpers";
-import { openSystembolaget, saveNewWine } from "./src/lib/cellar-actions";
+import { openSystembolaget, saveNewWine, updateHistoryEntry } from "./src/lib/cellar-actions";
 import { hydrateWineRecords } from "./src/lib/wine-helpers";
 import { confirmAction, showError } from "./src/lib/show-error";
 import { BottomTabBar, HistoryPanel, MealPlannerPanel } from "./src/components/cellar-sections";
 import { MinKallarePanel } from "./src/components/min-kallare-panel";
-import { BarcodeScannerModal, CatalogEditorModal, DrinkWineModal, VintagePickerModal } from "./src/components/cellar-workflows";
+import { BarcodeScannerModal, CatalogEditorModal, DrinkWineModal, EditHistoryModal, VintagePickerModal } from "./src/components/cellar-workflows";
 import { AddWinePanel } from "./src/components/add-wine-panel";
 import { EditWineModal } from "./src/components/edit-wine-modal";
 import { WsetTastingModal } from "./src/components/wset-tasting-modal";
@@ -19,6 +19,7 @@ import { LabelMatchPickerModal } from "./src/components/label-match-picker";
 import { PrivacyPolicyModal } from "./src/components/privacy-policy-modal";
 import { SuccessOverlay, useSuccessOverlay } from "./src/components/success-overlay";
 import { CELLAR_SECTIONS, type CellarSection } from "./src/types/cellar";
+import type { WineHistoryRecord } from "./src/types/wine-history";
 import { defaultDraft, type WineDraft } from "./src/types/cellar-drafts";
 import { styles } from "./src/styles/theme";
 import { BUILD_VERSION } from "./src/lib/build-version";
@@ -144,6 +145,25 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
   });
   const privacy = useModalToggle();
   const sessionWset = useSessionWset();
+  const [editingHistory, setEditingHistory] = useState<WineHistoryRecord | null>(null);
+  const [editHistorySaving, setEditHistorySaving] = useState(false);
+
+  const handleSaveHistoryEdit = useCallback(async (fields: { rating: string; notes: string; date: string; quantity: string }) => {
+    if (!editingHistory) return;
+    setEditHistorySaving(true);
+    const result = await updateHistoryEntry({
+      id: editingHistory.id,
+      rating: fields.rating ? Number(fields.rating) : null,
+      tasting_notes: fields.notes.trim() || null,
+      consumed_at: fields.date,
+      quantity_consumed: Math.max(1, Number(fields.quantity) || 1),
+    });
+    setEditHistorySaving(false);
+    if (result.error) { showError("Kunde inte spara ändringen", result.error); return; }
+    data.setHistoryEntries((prev) => prev.map((e) => (e.id === editingHistory.id ? { ...e, ...result.data! } : e)));
+    setEditingHistory(null);
+    success.show("history_edited");
+  }, [editingHistory, data, success]);
 
   const [draft, setDraft] = useState<WineDraft>(defaultDraft);
   const [activeSection, setActiveSection] = useState<CellarSection>("cellar");
@@ -304,6 +324,7 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
     activePanel = <HistoryPanel styles={styles} historyEntries={data.historyEntries} loadingHistory={data.loadingHistory} storageSpaceById={data.storageSpaceById}
       endedSessions={tastingSessions.sessions.filter((ses) => ses.status === "ended")}
       refreshing={refreshing} onRefresh={onRefresh} hasMore={data.hasMoreHistory} onLoadMore={data.fetchMoreHistory}
+      onEditEntry={setEditingHistory}
     />;
   } else if (activeSection === "meal") {
     activePanel = (
@@ -404,6 +425,9 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
       />
       <WsetTastingModal {...drink.wsetProps} />
       <DrinkWineModal {...drink.modalProps} styles={styles} />
+      <EditHistoryModal visible={editingHistory !== null} styles={styles} entry={editingHistory} saving={editHistorySaving}
+        onClose={() => setEditingHistory(null)} onSave={handleSaveHistoryEdit}
+      />
       <WsetTastingModal {...sessionWset.wsetProps} />
       <EditWineModal
         {...edit.modalProps} styles={styles}

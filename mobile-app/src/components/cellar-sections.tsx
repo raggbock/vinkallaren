@@ -156,6 +156,7 @@ export function HistoryPanel({
   styles, historyEntries, loadingHistory, storageSpaceById,
   endedSessions,
   refreshing, onRefresh, hasMore, onLoadMore,
+  onEditEntry,
 }: {
   styles: SharedStyles;
   historyEntries: WineHistoryRecord[];
@@ -166,6 +167,7 @@ export function HistoryPanel({
   onRefresh?: () => void;
   hasMore?: boolean;
   onLoadMore?: () => void;
+  onEditEntry?: (entry: WineHistoryRecord) => void;
 }) {
   const [tab, setTab] = useState<"viner" | "provningar">("viner");
   const [searchQuery, setSearchQuery] = useState("");
@@ -180,8 +182,8 @@ export function HistoryPanel({
   }, [historyEntries, searchQuery]);
 
   const renderItem = useCallback(({ item }: { item: WineHistoryRecord }) => (
-    <HistoryRow entry={item} styles={styles} />
-  ), [styles]);
+    <HistoryRow entry={item} styles={styles} onEdit={onEditEntry} />
+  ), [styles, onEditEntry]);
 
   const sessionCount = endedSessions?.length ?? 0;
 
@@ -305,8 +307,8 @@ function ExpandableSessionCard({ session, styles }: { session: TastingSessionRow
   );
 }
 
-const HistoryRow = React.memo(function HistoryRow({ entry, styles }: {
-  entry: WineHistoryRecord; styles: SharedStyles;
+const HistoryRow = React.memo(function HistoryRow({ entry, styles, onEdit }: {
+  entry: WineHistoryRecord; styles: SharedStyles; onEdit?: (entry: WineHistoryRecord) => void;
 }) {
   return (
     <View style={styles.wineCard}>
@@ -340,6 +342,11 @@ const HistoryRow = React.memo(function HistoryRow({ entry, styles }: {
           <Text style={styles.notesText}>{buildWsetSummary(entry.tasting_data as WsetTastingData)}</Text>
         </View>
       ) : null}
+      {onEdit ? (
+        <Pressable onPress={() => onEdit(entry)} style={historyStyles.editButton}>
+          <Text style={historyStyles.editButtonText}>✏️ Redigera</Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 });
@@ -350,4 +357,6 @@ const historyStyles = StyleSheet.create({
   tabActive: { backgroundColor: "#6f1d1b" },
   tabText: { color: "#6f1d1b", fontSize: 13, fontWeight: "700" },
   tabTextActive: { color: "#fffaf5" },
+  editButton: { marginTop: 8, alignSelf: "flex-start" },
+  editButtonText: { color: "#6f1d1b", fontSize: 13, fontWeight: "600" },
 });
