@@ -1,64 +1,17 @@
 /**
- * Batch test: run OCR + pHash on all images in a folder.
- * Usage: node scripts/test-label-scan.mjs [folder]
- * Default folder: ../etiketter
+ * OCR accuracy test: fetch random wine label images from the catalog,
+ * run OCR + text matching, compare against known wine name.
+ *
+ * Usage: node scripts/test-label-scan.mjs [count]
+ * Default: 20 random wines with images
  */
-import fs from "node:fs";
-import path from "node:path";
 import sharp from "sharp";
 import Tesseract from "tesseract.js";
 import { supabase } from "./lib/supabase-client.mjs";
 
-const DHASH_WIDTH = 9;
-const DHASH_HEIGHT = 8;
-const folder = process.argv[2] || path.resolve(import.meta.dirname, "../../etiketter");
+const COUNT = parseInt(process.argv[2] || "20", 10);
 
-// ── dHash ───────────────────────────────────────────────────────────
-
-function computeDHash(grayPixels) {
-  let hash = "";
-  let bits = 0;
-  let bitCount = 0;
-  for (let y = 0; y < DHASH_HEIGHT; y++) {
-    for (let x = 0; x < DHASH_WIDTH - 1; x++) {
-      const idx = y * DHASH_WIDTH + x;
-      bits = (bits << 1) | (grayPixels[idx] > grayPixels[idx + 1] ? 1 : 0);
-      bitCount++;
-      if (bitCount === 4) {
-        hash += bits.toString(16);
-        bits = 0;
-        bitCount = 0;
-      }
-    }
-  }
-  return hash;
-}
-
-async function hashImage(buffer, cropLabel) {
-  let pipeline = sharp(buffer).rotate();  // Auto-rotate EXIF
-  const meta = await sharp(buffer).rotate().metadata();
-  const w = meta.width ?? 100;
-  const h = meta.height ?? 100;
-
-  if (cropLabel === "center") {
-    const cx = Math.round(w * 0.2), cy = Math.round(h * 0.2);
-    const cw = Math.round(w * 0.6), ch = Math.round(h * 0.6);
-    pipeline = pipeline.extract({ left: cx, top: cy, width: cw, height: ch });
-  } else if (cropLabel === "lower") {
-    const ly = Math.round(h * 0.4), lh = Math.round(h * 0.6);
-    pipeline = pipeline.extract({ left: 0, top: ly, width: w, height: lh });
-  }
-
-  const { data: pixels } = await pipeline
-    .resize(DHASH_WIDTH, DHASH_HEIGHT, { fit: "fill" })
-    .grayscale()
-    .raw()
-    .toBuffer({ resolveWithObject: true });
-
-  return computeDHash([...pixels]);
-}
-
-// ── OCR ─────────────────────────────────────────────────────────────
+// ── OCR helpers ────────────────────────────────────────────────────
 
 function cleanOcrLine(line) {
   return line.split(/\s+/)
@@ -76,6 +29,12 @@ const NOISE_PATTERNS = [
   /PRODUCT\s+OF/i, /IMBOTTIGLIATO/i, /BOTTLED\s+BY/i,
   /\bORIGIN[E]?\b/i, /APPELLATION.*CONTR[OÔ]L[ÉE]+/i,
   /CONTAINS\s+SUL[PF][HI]ITES/i, /MISE\s+EN\s+BOUTEILLE/i,
+  /PRODOTTO\s+IN/i, /PRODUCE[D]?\s+OF/i, /GROWN\s+IN/i,
+  /ALCOHOL|ALC[\.\s]*\d/i, /^\d+\s*[,.]?\d*\s*%/,
+  /VINO\s+(ROSSO|BIANCO|ROSATO)/i, /^(RED|WHITE|ROSE)\s+WINE$/i,
+  /ESTATE\s+BOTTLED/i, /WINE\s+OF\b/i, /VIN\s+DE\b/i,
+  /PROTECTED\s+DESIGN/i, /GOVERNO\s+ALL/i,
+  /ANNATA\b/i, /VENDEMMIA\b/i, /RÉCOLTE\b/i,
 ];
 const WINE_TERMS = /CABERNET|MERLOT|PINOT|CHARDONNAY|SAUVIGNON|SANGIOVESE|NEBBIOLO|RIESLING|SYRAH|SHIRAZ|TEMPRANILLO|BAROLO|BARBERA|BRUNELLO|CHIANTI|PROSECCO|CHAMPAGNE|CREMANT|GRUNER/i;
 
@@ -106,7 +65,10 @@ function parseOcrText(text) {
   return { name, producer, vintage, searchQuery };
 }
 
-// ── Catalog search ──────────────────────────────────────────────────
+function normalizeForCompare(text) {
+  return (text || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase().replace(/[^\w\s]/g, " ").replace(/\s+/g, " ").trim();
+}
 
 function normalizeOcrText(text) {
   let n = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -115,162 +77,141 @@ function normalizeOcrText(text) {
   return n.replace(/\s+/g, " ").trim();
 }
 
-async function searchByText(query, vintage, rawQuery) {
+// ── Catalog search ─────────────────────────────────────────────────
+
+async function searchByText(query, vintage) {
   if (!query || query.length < 3) return [];
   const normalized = normalizeOcrText(query);
   if (normalized.length < 3) return [];
   const params = { query: normalized, max_results: 5 };
   if (vintage) params.query_vintage = parseInt(vintage, 10);
-
-  const rawNormalized = rawQuery ? normalizeOcrText(rawQuery) : "";
-  const needsRaw = rawNormalized.length >= 3 && rawNormalized !== normalized;
-
-  const [res1, res2] = await Promise.all([
-    supabase.rpc("match_catalog_by_text", params),
-    needsRaw ? supabase.rpc("match_catalog_by_text", { ...params, query: rawNormalized }) : { data: [] },
-  ]);
-
-  if (res1.error) console.error("  RPC error:", res1.error.message, res1.error.details);
-  if (!res1.data?.length && normalized.length >= 3) console.log(`  [debug] query="${normalized}" → 0 results`);
-  const primary = res1.data ?? [];
-  const seenIds = new Set(primary.map(m => m.id));
-  for (const m of (res2.data ?? [])) {
-    if (!seenIds.has(m.id)) { primary.push(m); seenIds.add(m.id); }
-  }
-  return primary.sort((a, b) => b.similarity - a.similarity).slice(0, 5);
+  const { data, error } = await supabase.rpc("match_catalog_by_text", params);
+  if (error) return [];
+  return data ?? [];
 }
 
-async function searchByImage(hashes) {
-  const results = await Promise.all(
-    hashes.map(h => supabase.rpc("match_catalog_by_image", { query_hash: h.hash, max_results: 3 }))
-  );
-  const best = new Map();
-  for (const res of results) {
-    for (const m of (res.data ?? [])) {
-      const existing = best.get(m.id);
-      if (!existing || m.hash_distance < existing.hash_distance) best.set(m.id, m);
+// ── Fetch random wines with images ─────────────────────────────────
+
+async function fetchRandomWines(count) {
+  const { data, error } = await supabase.rpc("random_catalog_wines_with_images", {
+    count_limit: count,
+  });
+  if (error) {
+    console.error("Failed to fetch wines:", error.message);
+    return [];
+  }
+  return data ?? [];
+}
+
+async function downloadImage(url) {
+  const res = await fetch(url);
+  if (!res.ok) return null;
+  return Buffer.from(await res.arrayBuffer());
+}
+
+// ── OCR pipeline ───────────────────────────────────────────────────
+
+async function runOcr(worker, buffer) {
+  const rotated = sharp(buffer).rotate();
+  const meta = await rotated.metadata();
+  const rw = meta.width ?? 1000;
+  const rh = meta.height ?? 1000;
+
+  // 2 crops × 2 preprocessing = 4 variants (fast enough)
+  const crops = [
+    rotated.clone().resize(1500, null, { withoutEnlargement: true }),
+    rotated.clone()
+      .extract({
+        left: Math.round(rw * 0.15), top: Math.round(rh * 0.1),
+        width: Math.round(rw * 0.7), height: Math.round(rh * 0.8),
+      })
+      .resize(1500, null, { withoutEnlargement: true }),
+  ];
+
+  let bestScore = -1;
+  let bestResult = { name: null, producer: null, vintage: null, searchQuery: "", confidence: 0 };
+
+  for (const crop of crops) {
+    const variants = [
+      crop.clone().grayscale().normalise().sharpen({ sigma: 1.5 }),
+      crop.clone().grayscale().normalise(),
+    ];
+    for (const v of variants) {
+      const buf = await v.toBuffer();
+      const { data } = await worker.recognize(buf);
+      // Score: confidence + wine term bonus + name bonus
+      const wineHits = (data.text.match(WINE_TERMS) ?? []).length;
+      const parsed = parseOcrText(data.text);
+      const hasName = parsed.name && parsed.name.length > 3 ? 10 : 0;
+      const score = data.confidence + wineHits * 8 + hasName;
+      if (score > bestScore) {
+        bestScore = score;
+        bestResult = { ...parsed, confidence: Math.round(data.confidence) };
+      }
     }
   }
-  return [...best.values()].sort((a, b) => a.hash_distance - b.hash_distance).slice(0, 3);
+  return bestResult;
 }
 
-// ── Main ────────────────────────────────────────────────────────────
+// ── Main ───────────────────────────────────────────────────────────
 
-const files = fs.readdirSync(folder).filter(f => /\.(jpg|jpeg|png|webp)$/i.test(f)).sort();
-console.log(`\nTesting ${files.length} images from ${folder}\n`);
+console.log(`\nFetching ${COUNT} random wines with images from catalog...\n`);
+const wines = await fetchRandomWines(COUNT);
+console.log(`Got ${wines.length} wines. Running OCR...\n`);
 console.log("─".repeat(100));
 
 const worker = await Tesseract.createWorker("eng+fra+ita+deu+swe");
 const results = [];
 
-for (const file of files) {
-  const filePath = path.join(folder, file);
-  const buffer = fs.readFileSync(filePath);
+for (const wine of wines) {
   const t0 = performance.now();
+  const buffer = await downloadImage(wine.image_url);
+  if (!buffer) {
+    console.log(`  SKIP: ${wine.name} — image download failed`);
+    continue;
+  }
 
-  // OCR with grayscale preprocessing via sharp
-  let ocrResult = { name: null, producer: null, vintage: null, searchQuery: "", confidence: 0, rawText: "" };
-  try {
-    const rotated = sharp(buffer).rotate();
-    const meta = await sharp(buffer).rotate().metadata();
-    const rw = meta.width ?? 1000;
-    const rh = meta.height ?? 1000;
-
-    // Try full image and center crop (label is usually in the middle)
-    const crops = [
-      { label: "full", pipeline: rotated.clone().resize(1500, null, { withoutEnlargement: true }) },
-      { label: "center", pipeline: rotated.clone()
-        .extract({
-          left: Math.round(rw * 0.15), top: Math.round(rh * 0.1),
-          width: Math.round(rw * 0.7), height: Math.round(rh * 0.8),
-        })
-        .resize(1500, null, { withoutEnlargement: true })
-      },
-    ];
-
-    let bestConf = 0;
-    let bestRawText = "";
-    for (const crop of crops) {
-      const preprocessed = await crop.pipeline.grayscale().normalise().toBuffer();
-      const { data } = await worker.recognize(preprocessed);
-      if (data.confidence > bestConf) {
-        bestConf = data.confidence;
-        bestRawText = data.text;
-        const parsed = parseOcrText(data.text);
-        ocrResult = { ...parsed, confidence: Math.round(data.confidence), rawText: bestRawText };
-      }
-    }
-  } catch { /* OCR failed */ }
-
-  // pHash (3 crops)
-  let hashes = [];
-  try {
-    hashes = await Promise.all([
-      hashImage(buffer, "full").then(hash => ({ label: "full", hash })),
-      hashImage(buffer, "center").then(hash => ({ label: "center", hash })),
-      hashImage(buffer, "lower").then(hash => ({ label: "lower", hash })),
-    ]);
-  } catch { /* hash failed */ }
-
-  // Catalog search
-  let textMatches = [];
-  let imageMatches = [];
-  let rawSearchQuery = "";
-  try {
-    // Build raw search query from all kept lines
-    const rawSearchLines = (ocrResult.rawText || "").split("\n")
-      .map(l => cleanOcrLine(l.trim())).filter(l => lineQuality(l) >= 0.4 && l.length >= 3).slice(0, 6);
-    rawSearchQuery = rawSearchLines.join(" ");
-
-    [textMatches, imageMatches] = await Promise.all([
-      searchByText(ocrResult.searchQuery, ocrResult.vintage, rawSearchQuery),
-      hashes.length > 0 ? searchByImage(hashes) : Promise.resolve([]),
-    ]);
-  } catch { /* search failed */ }
-
+  const ocr = await runOcr(worker, buffer);
+  const matches = await searchByText(ocr.searchQuery, ocr.vintage);
   const ms = Math.round(performance.now() - t0);
 
-  // Format output
-  const shortName = file.length > 25 ? file.slice(0, 22) + "..." : file.padEnd(25);
-  const ocrName = (ocrResult.name || "(inget)").slice(0, 30).padEnd(30);
-  const topText = textMatches[0] ? `${textMatches[0].name} (${Math.round(textMatches[0].similarity * 100)}%)` : "-";
-  const topImage = imageMatches[0] ? `${imageMatches[0].name} (d=${imageMatches[0].hash_distance})` : "-";
+  // Check if correct wine is in top matches
+  const expectedNorm = normalizeForCompare(wine.name);
+  const topMatch = matches[0];
+  const topMatchNorm = topMatch ? normalizeForCompare(topMatch.name) : "";
+  const isCorrect = topMatch && topMatch.id === wine.id;
+  const isClose = topMatchNorm.includes(expectedNorm) || expectedNorm.includes(topMatchNorm);
+  const inTop5 = matches.some(m => m.id === wine.id);
 
-  // Show all kept OCR lines (quality filter)
-  const allKept = (ocrResult.rawText || "").split("\n")
-    .map(l => l.trim()).filter(Boolean)
-    .map(l => { const c = cleanOcrLine(l); return { text: c, q: lineQuality(c) }; })
-    .filter(l => l.q >= 0.4 && l.text.length >= 3)
-    .sort((a, b) => b.q * Math.sqrt(b.text.length) - a.q * Math.sqrt(a.text.length))
-    .slice(0, 5);
+  const icon = isCorrect ? "✓" : isClose ? "~" : inTop5 ? "○" : "✗";
+  const shortExpected = wine.name.length > 35 ? wine.name.slice(0, 32) + "..." : wine.name.padEnd(35);
+  const topName = topMatch ? `${topMatch.name} (${Math.round(topMatch.similarity * 100)}%)` : "(ingen)";
 
-  console.log(`${shortName} | conf: ${String(ocrResult.confidence).padStart(3)}% | ${ms}ms`);
-  console.log(`  OCR namn:  ${ocrResult.name || "(inget)"}`);
-  console.log(`  Sökfråga:  ${ocrResult.searchQuery || "(tom)"}`);
-  if (allKept.length > 0) {
-    console.log(`  Alla behållna rader:`);
-    allKept.forEach(l => console.log(`    [${Math.round(l.q * 100)}%] ${l.text}`));
-  }
-  console.log(`  Rå sökning: "${rawSearchQuery?.slice(0, 60) ?? ''}"`)
-  console.log(`  Text-träff: ${topText}`);
-  console.log(`  Bild-träff: ${topImage}`);
+  console.log(`${icon} ${shortExpected} | conf: ${String(ocr.confidence).padStart(3)}% | ${ms}ms`);
+  console.log(`  OCR:     ${ocr.searchQuery || "(tom)"}`);
+  console.log(`  Topp:    ${topName}`);
+  if (!isCorrect && inTop5) console.log(`  (rätt vin i topp 5)`);
   console.log("─".repeat(100));
 
-  results.push({ file, ocrResult, hashes, textMatches, imageMatches, ms });
+  results.push({ wine, ocr, topMatch, isCorrect, isClose, inTop5, ms });
 }
 
 await worker.terminate();
 
-// Summary
-const withOcrName = results.filter(r => r.ocrResult.name).length;
-const withTextMatch = results.filter(r => r.textMatches.length > 0).length;
-const withImageMatch = results.filter(r => r.imageMatches.length > 0).length;
-const avgConf = Math.round(results.reduce((s, r) => s + r.ocrResult.confidence, 0) / results.length);
-const avgMs = Math.round(results.reduce((s, r) => s + r.ms, 0) / results.length);
+// ── Summary ────────────────────────────────────────────────────────
 
-console.log(`\nSammanfattning (${results.length} bilder):`);
-console.log(`  OCR-namn extraherat: ${withOcrName}/${results.length}`);
-console.log(`  Katalogträff (text): ${withTextMatch}/${results.length}`);
-console.log(`  Katalogträff (bild): ${withImageMatch}/${results.length}`);
-console.log(`  Snitt-konfidens: ${avgConf}%`);
-console.log(`  Snitt-tid: ${avgMs}ms`);
+const total = results.length;
+const correct = results.filter(r => r.isCorrect).length;
+const close = results.filter(r => r.isClose).length;
+const top5 = results.filter(r => r.inTop5).length;
+const withName = results.filter(r => r.ocr.name).length;
+const avgConf = total > 0 ? Math.round(results.reduce((s, r) => s + r.ocr.confidence, 0) / total) : 0;
+const avgMs = total > 0 ? Math.round(results.reduce((s, r) => s + r.ms, 0) / total) : 0;
+
+console.log(`\nSammanfattning (${total} bilder):`);
+console.log(`  ✓ Exakt rätt (topp 1):  ${correct}/${total} (${Math.round(correct/total*100)}%)`);
+console.log(`  ~ Nära (namn overlap):   ${close}/${total} (${Math.round(close/total*100)}%)`);
+console.log(`  ○ Rätt i topp 5:         ${top5}/${total} (${Math.round(top5/total*100)}%)`);
+console.log(`  OCR-namn extraherat:     ${withName}/${total}`);
+console.log(`  Snitt-konfidens:         ${avgConf}%`);
+console.log(`  Snitt-tid:               ${avgMs}ms`);
