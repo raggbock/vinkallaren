@@ -160,7 +160,7 @@ const files = fs.readdirSync(folder).filter(f => /\.(jpg|jpeg|png|webp)$/i.test(
 console.log(`\nTesting ${files.length} images from ${folder}\n`);
 console.log("─".repeat(100));
 
-const worker = await Tesseract.createWorker("swe+eng");
+const worker = await Tesseract.createWorker("eng+fra+ita+deu+swe");
 const results = [];
 
 for (const file of files) {

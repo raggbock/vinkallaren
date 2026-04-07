@@ -44,7 +44,7 @@ async function recognizeLabelWeb(imageUri: string): Promise<TextBlock[]> {
     preserve_interword_spaces: "1",
   } as Record<string, string>;
   const results = await Promise.all(
-    processed.map((img) => Tesseract.recognize(img, "swe+eng", ocrOpts))
+    processed.map((img) => Tesseract.recognize(img, "eng+fra+ita+deu+swe", ocrOpts))
   );
 
   // Pick the result with highest confidence, use raw text (more reliable than blocks)
