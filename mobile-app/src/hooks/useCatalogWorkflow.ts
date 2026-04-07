@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Alert, Platform } from "react-native";
 import { showError } from "../lib/show-error";
 import { useCameraPermissions } from "expo-camera";
@@ -41,6 +41,9 @@ export function useCatalogWorkflow(deps: CatalogWorkflowDeps) {
   const [labelPickerVisible, setLabelPickerVisible] = useState(false);
   const [labelOcrText, setLabelOcrText] = useState<string | null>(null);
   const [labelRawOcrText, setLabelRawOcrText] = useState<string | null>(null);
+
+  // --- Lookup race guard ---
+  const lookupSeqRef = useRef(0);
 
   // --- Barcode scanner ---
   const [scannerVisible, setScannerVisible] = useState(false);
@@ -146,9 +149,11 @@ export function useCatalogWorkflow(deps: CatalogWorkflowDeps) {
       setLookupMessage("");
       return null;
     }
+    const seq = ++lookupSeqRef.current;
     setLookupBusy(true);
     try {
       const match = await findCatalogMatch({ barcode, systembolagetProductId });
+      if (seq !== lookupSeqRef.current) return null; // stale request
       const normalizedMatch = match && !match.barcode && barcode ? { ...match, barcode } : match;
       setCatalogSuggestion(normalizedMatch);
       setImportSelection(defaultImportSelection);
@@ -156,11 +161,12 @@ export function useCatalogWorkflow(deps: CatalogWorkflowDeps) {
       setLookupMessage(match ? `Träff hittad från ${match.sourceLabel}.` : barcode ? "Ingen träff på streckkoden ännu." : "Ingen träff på artikelnumret ännu.");
       return normalizedMatch;
     } catch {
+      if (seq !== lookupSeqRef.current) return null;
       setCatalogSuggestion(null);
       setLookupMessage("Kunde inte hämta produktdata just nu.");
       return null;
     } finally {
-      setLookupBusy(false);
+      if (seq === lookupSeqRef.current) setLookupBusy(false);
     }
   }
 

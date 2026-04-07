@@ -338,20 +338,14 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
         selectedCatalogNameEntry={catalog.selectedCatalogNameEntry}
         onDraftChange={(patch) => setDraft((c) => catalog.updateDraft(c, patch))}
         onNameSelected={(name, producer) => catalog.handleWineNameSelected(name, producer, setDraft)}
-        onBarcodeChange={(value) =>
-          setDraft((current) => {
-            const nextDraft = catalog.updateDraft(current, { barcode: value });
-            void catalog.maybeSuggestCatalogMatch(nextDraft);
-            return nextDraft;
-          })
-        }
-        onArticleNumberChange={(value) =>
-          setDraft((current) => {
-            const nextDraft = catalog.updateDraft(current, { systembolagetProductId: value });
-            void catalog.maybeSuggestCatalogMatch(nextDraft);
-            return nextDraft;
-          })
-        }
+        onBarcodeChange={(value) => {
+          setDraft((current) => catalog.updateDraft(current, { barcode: value }));
+          void catalog.maybeSuggestCatalogMatch({ ...draft, barcode: value });
+        }}
+        onArticleNumberChange={(value) => {
+          setDraft((current) => catalog.updateDraft(current, { systembolagetProductId: value }));
+          void catalog.maybeSuggestCatalogMatch({ ...draft, systembolagetProductId: value });
+        }}
         occupiedPositions={storage.getOccupiedPositions(storage.selectedStorageSpaceId, storage.selectedStorageRow)}
         onStorageSpaceChange={storage.changeStorageSpace}
         onStorageRowChange={storage.changeStorageRow}
