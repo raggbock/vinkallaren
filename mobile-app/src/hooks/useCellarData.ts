@@ -187,6 +187,7 @@ export function useCellarData(userId: string) {
   const regionOptions = useMemo(() => buildValueOptions(wines, (w) => w.region), [wines]);
   const typeOptions = useMemo(() => buildValueOptions(wines, (w) => w.type), [wines]);
   const vintageOptions = useMemo(() => buildVintageOptions(wines), [wines]);
+  const cellarGrapeOptions = useMemo(() => buildValueOptions(wines, (w) => w.grape ?? null), [wines]);
 
   // --- Reference rows ---
 
@@ -214,7 +215,7 @@ export function useCellarData(userId: string) {
     savingStorageSpace: storage.savingStorageSpace, saveStorageSpace: storage.saveStorageSpace,
     updateStorageSpace: storage.updateStorageSpace, deleteStorageSpace, deleteWine,
     stats, storageSpaceById, storageSpaceBottleCounts,
-    pairingOptions, countryOptions, regionOptions, typeOptions, vintageOptions,
+    pairingOptions, countryOptions, regionOptions, typeOptions, vintageOptions, cellarGrapeOptions,
     grapeReferenceRows, countryReferenceRows, regionReferenceRows,
     effectiveGrapeOptions, effectiveCountryOptions, effectiveRegionOptions,
     buildMealRecommendations: (meal: string) => buildMealRecommendations(wines, meal),

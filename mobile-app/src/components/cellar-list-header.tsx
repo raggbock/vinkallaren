@@ -22,11 +22,13 @@ export type CellarListHeaderProps = {
   selectedRegionFilter: string;
   selectedTypeFilter: string;
   selectedVintageFilter: string;
+  selectedGrapeFilter: string;
   pairingOptions: string[];
   countryOptions: string[];
   regionOptions: string[];
   typeOptions: string[];
   vintageOptions: string[];
+  grapeOptions: string[];
   storageSpaces: StorageSpaceRow[];
   storageSpaceById: Map<string, StorageSpaceRow>;
   selectedStorageSpaceFilterId: string;
@@ -35,6 +37,7 @@ export type CellarListHeaderProps = {
   onRegionChange: (value: string) => void;
   onTypeChange: (value: string) => void;
   onVintageChange: (value: string) => void;
+  onGrapeChange: (value: string) => void;
   onStorageSpaceFilterChange: (id: string) => void;
   onRefreshStats: () => void;
   onSignOut: () => void;
@@ -98,6 +101,7 @@ function CellarFilters({
   regionOptions, selectedRegionFilter, onRegionChange,
   typeOptions, selectedTypeFilter, onTypeChange,
   vintageOptions, selectedVintageFilter, onVintageChange,
+  grapeOptions, selectedGrapeFilter, onGrapeChange,
   storageSpaces, storageSpaceById, selectedStorageSpaceFilterId, onStorageSpaceFilterChange,
 }: CellarListHeaderProps) {
   return (
@@ -106,6 +110,7 @@ function CellarFilters({
       <SuggestionRow title="Filtrera mat" options={pairingOptions} selected={selectedPairingFilter} onSelect={onPairingChange} />
       <SuggestionRow title="Filtrera land" options={countryOptions} selected={selectedCountryFilter} onSelect={onCountryChange} />
       <SuggestionRow title="Filtrera region" options={regionOptions} selected={selectedRegionFilter} onSelect={onRegionChange} />
+      <SuggestionRow title="Filtrera druva" options={grapeOptions} selected={selectedGrapeFilter} onSelect={onGrapeChange} />
       <SuggestionRow title="Filtrera typ" options={typeOptions} selected={selectedTypeFilter} onSelect={onTypeChange} />
       <SuggestionRow title="Filtrera årgång" options={vintageOptions} selected={selectedVintageFilter} onSelect={onVintageChange} />
       {storageSpaces.length > 0 ? (

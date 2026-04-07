@@ -10,6 +10,7 @@ export function useCellarFilters(wines: WineRecord[], storageSpaceById: Map<stri
   const [selectedRegionFilter, setSelectedRegionFilter] = useState("Alla");
   const [selectedTypeFilter, setSelectedTypeFilter] = useState("Alla");
   const [selectedVintageFilter, setSelectedVintageFilter] = useState("Alla");
+  const [selectedGrapeFilter, setSelectedGrapeFilter] = useState("Alla");
   const [selectedStorageSpaceFilterId, setSelectedStorageSpaceFilterId] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -22,6 +23,7 @@ export function useCellarFilters(wines: WineRecord[], storageSpaceById: Map<stri
       const matchesType = selectedTypeFilter === "Alla" || wine.type === selectedTypeFilter;
       const matchesVintage =
         selectedVintageFilter === "Alla" || String(wine.vintage ?? "") === selectedVintageFilter;
+      const matchesGrape = selectedGrapeFilter === "Alla" || wine.grape === selectedGrapeFilter;
       const matchesStorageSpace =
         !selectedStorageSpaceFilterId || wine.storage_space_id === selectedStorageSpaceFilterId;
       const normalizedQuery = normalizeLookupValue(searchQuery.trim());
@@ -49,6 +51,7 @@ export function useCellarFilters(wines: WineRecord[], storageSpaceById: Map<stri
         matchesRegion &&
         matchesType &&
         matchesVintage &&
+        matchesGrape &&
         matchesStorageSpace &&
         matchesSearch
       );
@@ -57,6 +60,7 @@ export function useCellarFilters(wines: WineRecord[], storageSpaceById: Map<stri
     selectedStorageSpaceFilterId,
     searchQuery,
     selectedCountryFilter,
+    selectedGrapeFilter,
     selectedPairingFilter,
     selectedRegionFilter,
     selectedTypeFilter,
@@ -78,6 +82,8 @@ export function useCellarFilters(wines: WineRecord[], storageSpaceById: Map<stri
     setSelectedTypeFilter,
     selectedVintageFilter,
     setSelectedVintageFilter,
+    selectedGrapeFilter,
+    setSelectedGrapeFilter,
     selectedStorageSpaceFilterId,
     setSelectedStorageSpaceFilterId,
     filteredWines,

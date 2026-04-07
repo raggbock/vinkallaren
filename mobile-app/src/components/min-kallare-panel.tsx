@@ -31,11 +31,13 @@ type MinKallarePanelProps = {
   selectedRegionFilter: string;
   selectedTypeFilter: string;
   selectedVintageFilter: string;
+  selectedGrapeFilter: string;
   pairingOptions: string[];
   countryOptions: string[];
   regionOptions: string[];
   typeOptions: string[];
   vintageOptions: string[];
+  grapeOptions: string[];
   storageSpaces: StorageSpaceRow[];
   storageSpaceBottleCounts: Map<string, number>;
   filteredWines: WineRecord[];
@@ -48,6 +50,7 @@ type MinKallarePanelProps = {
   onRegionChange: (value: string) => void;
   onTypeChange: (value: string) => void;
   onVintageChange: (value: string) => void;
+  onGrapeChange: (value: string) => void;
   onSignOut: () => void;
   onOpenSystembolaget: (productId: string) => void;
   onEditWine: (wine: WineRecord) => void;
