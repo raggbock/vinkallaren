@@ -34,7 +34,7 @@ export function AddWinePanel(props: AddWinePanelProps) {
       ) : null}
       <NoMatchFallback styles={styles} draft={draft} catalogSuggestion={props.catalogSuggestion} />
 
-      <WineCoreFields draft={draft} tastingMode={tastingMode} selectedCatalogNameEntry={props.selectedCatalogNameEntry} effectiveCountryOptions={props.effectiveCountryOptions} effectiveRegionOptions={props.effectiveRegionOptions} effectiveGrapeOptions={props.effectiveGrapeOptions} countryReferenceRows={props.countryReferenceRows} regionReferenceRows={props.regionReferenceRows} grapeReferenceRows={props.grapeReferenceRows} searchWineNames={props.searchWineNames} onDraftChange={props.onDraftChange} onNameSelected={props.onNameSelected} />
+      <WineCoreFields draft={draft} tastingMode={tastingMode} effectiveCountryOptions={props.effectiveCountryOptions} effectiveRegionOptions={props.effectiveRegionOptions} effectiveGrapeOptions={props.effectiveGrapeOptions} countryReferenceRows={props.countryReferenceRows} regionReferenceRows={props.regionReferenceRows} grapeReferenceRows={props.grapeReferenceRows} searchWineNames={props.searchWineNames} onDraftChange={props.onDraftChange} onNameSelected={props.onNameSelected} />
 
       {tastingMode ? (
         <TastingFields styles={styles} draft={draft} tastingDate={props.tastingDate} tastingRating={props.tastingRating} wsetData={props.wsetData} onDraftChange={props.onDraftChange} onTastingDateChange={props.onTastingDateChange} onTastingRatingChange={props.onTastingRatingChange} onOpenWset={props.onOpenWset} />

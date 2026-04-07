@@ -244,9 +244,10 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
       selectedRegionFilter={filters.selectedRegionFilter}
       selectedTypeFilter={filters.selectedTypeFilter}
       selectedVintageFilter={filters.selectedVintageFilter}
+      selectedGrapeFilter={filters.selectedGrapeFilter}
       pairingOptions={data.pairingOptions} countryOptions={data.countryOptions}
       regionOptions={data.regionOptions} typeOptions={data.typeOptions}
-      vintageOptions={data.vintageOptions}
+      vintageOptions={data.vintageOptions} grapeOptions={data.cellarGrapeOptions}
       storageSpaces={data.storageSpaces}
       storageSpaceBottleCounts={data.storageSpaceBottleCounts}
       filteredWines={filters.filteredWines} loading={data.loading}
@@ -258,6 +259,7 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
       onRegionChange={filters.setSelectedRegionFilter}
       onTypeChange={filters.setSelectedTypeFilter}
       onVintageChange={filters.setSelectedVintageFilter}
+      onGrapeChange={filters.setSelectedGrapeFilter}
       onSignOut={() => setProfileVisible(true)}
       onOpenSystembolaget={handleOpenSystembolaget}
       onEditWine={edit.actions.open}
@@ -305,7 +307,7 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
     />;
   } else if (activeSection === "meal") {
     activePanel = (
-      <MealPlannerPanel styles={styles} selectedMeal={selectedMeal} mealRecommendations={mealRecommendations}
+      <MealPlannerPanel styles={styles} wines={data.wines} selectedMeal={selectedMeal} mealRecommendations={mealRecommendations}
         onSelectMeal={setSelectedMeal}
         onWinePress={(wine) => { setHighlightedWineId(wine.id); setActiveSection("cellar"); }}
       />

@@ -104,6 +104,21 @@ export const FOOD_CATEGORIES: Array<{ label: string; items: string[] }> = [
   { label: "Sött", items: ["dessert", "choklad", "frukt"] },
 ];
 
+export function buildCustomPairings(wines: WineRecord[]) {
+  const predefined = new Set(FOOD_CATEGORIES.flatMap((cat) => cat.items));
+  const custom = new Set<string>();
+
+  for (const wine of wines) {
+    for (const pairing of wine.food_pairings) {
+      if (!predefined.has(pairing)) {
+        custom.add(pairing);
+      }
+    }
+  }
+
+  return [...custom].sort();
+}
+
 export function buildValueOptions(wines: WineRecord[], selector: (wine: WineRecord) => string | null) {
   const values = new Set<string>(["Alla"]);
 

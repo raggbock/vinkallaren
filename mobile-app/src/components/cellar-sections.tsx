@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, Image, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from "react-native";
 
-import { FOOD_CATEGORIES } from "../lib/cellar-helpers";
+import { buildCustomPairings, FOOD_CATEGORIES } from "../lib/cellar-helpers";
 import { buildWsetSummary, type WsetTastingData } from "../lib/wset-data";
 import type { StorageSpaceRow } from "../types/storage-space";
 import type { SessionParticipant, TastingSessionRow } from "../types/tasting-session";
@@ -63,17 +63,21 @@ export function BottomTabBar({
 
 export function MealPlannerPanel({
   styles,
+  wines,
   selectedMeal,
   mealRecommendations,
   onSelectMeal,
   onWinePress,
 }: {
   styles: SharedStyles;
+  wines: WineRecord[];
   selectedMeal: string;
   mealRecommendations: WineRecord[];
   onSelectMeal: (value: string) => void;
   onWinePress?: (wine: WineRecord) => void;
 }) {
+  const customPairings = useMemo(() => buildCustomPairings(wines), [wines]);
+
   return (
     <View style={styles.panel}>
       <PanelHeader title="Vad ska vi äta?" rightLabel={selectedMeal || undefined} />
@@ -97,6 +101,26 @@ export function MealPlannerPanel({
           </View>
         </View>
       ))}
+
+      {customPairings.length > 0 && (
+        <View style={styles.foodCategoryGroup}>
+          <Text style={styles.foodCategoryLabel}>Övriga</Text>
+          <View style={styles.tagRow}>
+            {customPairings.map((item) => {
+              const isSelected = selectedMeal === item;
+              return (
+                <Pressable
+                  key={`food-custom-${item}`}
+                  onPress={() => onSelectMeal(isSelected ? "" : item)}
+                  style={[styles.foodPill, isSelected && styles.foodPillActive]}
+                >
+                  <Text style={[styles.foodText, isSelected && styles.foodTextActive]}>{item}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+      )}
 
       {selectedMeal && mealRecommendations.length === 0 ? (
         <Text style={styles.emptyState}>Inga viner matchar "{selectedMeal}" ännu.</Text>
