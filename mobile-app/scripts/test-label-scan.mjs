@@ -9,20 +9,27 @@ import sharp from "sharp";
 import Tesseract from "tesseract.js";
 import { supabase } from "./lib/supabase-client.mjs";
 
-const HASH_SIZE = 8;
+const DHASH_WIDTH = 9;
+const DHASH_HEIGHT = 8;
 const folder = process.argv[2] || path.resolve(import.meta.dirname, "../../etiketter");
 
-// ── pHash ───────────────────────────────────────────────────────────
+// ── dHash ───────────────────────────────────────────────────────────
 
-function computeAHash(grayPixels) {
-  const mean = grayPixels.reduce((a, b) => a + b, 0) / grayPixels.length;
+function computeDHash(grayPixels) {
   let hash = "";
-  for (let i = 0; i < grayPixels.length; i += 4) {
-    let nibble = 0;
-    for (let j = 0; j < 4 && i + j < grayPixels.length; j++) {
-      if (grayPixels[i + j] >= mean) nibble |= (1 << (3 - j));
+  let bits = 0;
+  let bitCount = 0;
+  for (let y = 0; y < DHASH_HEIGHT; y++) {
+    for (let x = 0; x < DHASH_WIDTH - 1; x++) {
+      const idx = y * DHASH_WIDTH + x;
+      bits = (bits << 1) | (grayPixels[idx] > grayPixels[idx + 1] ? 1 : 0);
+      bitCount++;
+      if (bitCount === 4) {
+        hash += bits.toString(16);
+        bits = 0;
+        bitCount = 0;
+      }
     }
-    hash += nibble.toString(16);
   }
   return hash;
 }
@@ -43,12 +50,12 @@ async function hashImage(buffer, cropLabel) {
   }
 
   const { data: pixels } = await pipeline
-    .resize(HASH_SIZE, HASH_SIZE, { fit: "fill" })
+    .resize(DHASH_WIDTH, DHASH_HEIGHT, { fit: "fill" })
     .grayscale()
     .raw()
     .toBuffer({ resolveWithObject: true });
 
-  return computeAHash([...pixels]);
+  return computeDHash([...pixels]);
 }
 
 // ── OCR ─────────────────────────────────────────────────────────────
@@ -64,6 +71,14 @@ function lineQuality(line) {
   return line.length > 0 ? wc / line.length : 0;
 }
 
+const NOISE_PATTERNS = [
+  /DENOMINAZ/i, /CONTROLLAT[AE]/i, /GARANTIT[AE]/i,
+  /PRODUCT\s+OF/i, /IMBOTTIGLIATO/i, /BOTTLED\s+BY/i,
+  /\bORIGIN[E]?\b/i, /APPELLATION.*CONTR[OÔ]L[ÉE]+/i,
+  /CONTAINS\s+SUL[PF][HI]ITES/i, /MISE\s+EN\s+BOUTEILLE/i,
+];
+const WINE_TERMS = /CABERNET|MERLOT|PINOT|CHARDONNAY|SAUVIGNON|SANGIOVESE|NEBBIOLO|RIESLING|SYRAH|SHIRAZ|TEMPRANILLO|BAROLO|BARBERA|BRUNELLO|CHIANTI|PROSECCO|CHAMPAGNE|CREMANT|GRUNER/i;
+
 function parseOcrText(text) {
   const lines = text.split("\n").filter(l => l.trim());
   const vintageRegex = /\b(1[7-9]\d{2}|20[0-2]\d|2030)\b/g;
@@ -76,8 +91,13 @@ function parseOcrText(text) {
 
   const scored = lines
     .filter(l => !/^\d{4}$/.test(l.trim()))
-    .map(l => { const c = cleanOcrLine(l); return { text: c, quality: lineQuality(c) }; })
-    .filter(l => l.quality >= 0.4 && l.text.length >= 3)
+    .map(l => {
+      const c = cleanOcrLine(l);
+      let q = lineQuality(c);
+      if (WINE_TERMS.test(c)) q = Math.min(1.0, q * 1.5);
+      return { text: c, quality: q };
+    })
+    .filter(l => l.quality >= 0.4 && l.text.length >= 3 && !NOISE_PATTERNS.some(p => p.test(l.text)))
     .sort((a, b) => b.quality * Math.sqrt(b.text.length) - a.quality * Math.sqrt(a.text.length));
 
   const name = scored[0]?.text ?? null;

@@ -1,9 +1,12 @@
 /**
- * Perceptual image hashing (aHash) for wine label matching.
+ * Perceptual image hashing (dHash) for wine label matching.
+ * dHash captures gradients (pixel-to-right-neighbor comparisons) which are
+ * more robust than aHash across different lighting and backgrounds.
  * Runs entirely in the browser via Canvas API — no external dependencies.
  */
 
-const HASH_SIZE = 8; // 8×8 = 64-bit hash
+const DHASH_WIDTH = 9;  // 9 wide so we get 8 horizontal comparisons per row
+const DHASH_HEIGHT = 8; // 8 rows × 8 comparisons = 64-bit hash
 
 type CropRegion = { label: string; x: number; y: number; w: number; h: number };
 
@@ -23,36 +26,43 @@ export async function computeImageHashes(imageUri: string): Promise<{ label: str
 
   return crops.map((crop) => ({
     label: crop.label,
-    hash: computeAHash(img, crop),
+    hash: computeDHash(img, crop),
   }));
 }
 
-/** Compute a single aHash for an image region */
-function computeAHash(img: HTMLImageElement, crop: CropRegion): string {
+/** Compute a single dHash for an image region */
+function computeDHash(img: HTMLImageElement, crop: CropRegion): string {
   const canvas = document.createElement("canvas");
-  canvas.width = HASH_SIZE;
-  canvas.height = HASH_SIZE;
+  canvas.width = DHASH_WIDTH;
+  canvas.height = DHASH_HEIGHT;
   const ctx = canvas.getContext("2d")!;
 
-  // Draw the cropped region scaled down to 8×8
-  ctx.drawImage(img, crop.x, crop.y, crop.w, crop.h, 0, 0, HASH_SIZE, HASH_SIZE);
-  const data = ctx.getImageData(0, 0, HASH_SIZE, HASH_SIZE).data;
+  // Draw the cropped region scaled down to 9×8
+  ctx.drawImage(img, crop.x, crop.y, crop.w, crop.h, 0, 0, DHASH_WIDTH, DHASH_HEIGHT);
+  const data = ctx.getImageData(0, 0, DHASH_WIDTH, DHASH_HEIGHT).data;
 
-  // Convert to grayscale and compute mean
+  // Convert to grayscale
   const pixels: number[] = [];
   for (let i = 0; i < data.length; i += 4) {
     pixels.push(0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]);
   }
-  const mean = pixels.reduce((a, b) => a + b, 0) / pixels.length;
 
-  // Build hash: each pixel above mean = 1
+  // Build hash: compare each pixel to its right neighbor
+  // 8 rows × 8 comparisons = 64 bits → 16 hex chars
   let hash = "";
-  for (let i = 0; i < pixels.length; i += 4) {
-    let nibble = 0;
-    for (let j = 0; j < 4 && i + j < pixels.length; j++) {
-      if (pixels[i + j] >= mean) nibble |= (1 << (3 - j));
+  let bits = 0;
+  let bitCount = 0;
+  for (let y = 0; y < DHASH_HEIGHT; y++) {
+    for (let x = 0; x < DHASH_WIDTH - 1; x++) {
+      const idx = y * DHASH_WIDTH + x;
+      bits = (bits << 1) | (pixels[idx] > pixels[idx + 1] ? 1 : 0);
+      bitCount++;
+      if (bitCount === 4) {
+        hash += bits.toString(16);
+        bits = 0;
+        bitCount = 0;
+      }
     }
-    hash += nibble.toString(16);
   }
   return hash;
 }
@@ -85,30 +95,38 @@ function loadImage(uri: string): Promise<HTMLImageElement> {
 }
 
 /**
- * Node.js-compatible aHash computation (for enrichment scripts).
- * Takes a raw image buffer and uses a simple averaging approach.
+ * Node.js-compatible dHash computation (for enrichment scripts).
+ * Takes grayscale pixels and source dimensions, downscales to 9×8,
+ * then compares each pixel to its right neighbor.
  */
-export function computeAHashFromPixels(
+export function computeDHashFromPixels(
   grayPixels: number[], width: number, height: number,
 ): string {
-  // Simple nearest-neighbor downscale to 8×8
+  // Simple nearest-neighbor downscale to 9×8
   const scaled: number[] = [];
-  for (let y = 0; y < HASH_SIZE; y++) {
-    for (let x = 0; x < HASH_SIZE; x++) {
-      const srcX = Math.floor(x * width / HASH_SIZE);
-      const srcY = Math.floor(y * height / HASH_SIZE);
+  for (let y = 0; y < DHASH_HEIGHT; y++) {
+    for (let x = 0; x < DHASH_WIDTH; x++) {
+      const srcX = Math.floor(x * width / DHASH_WIDTH);
+      const srcY = Math.floor(y * height / DHASH_HEIGHT);
       scaled.push(grayPixels[srcY * width + srcX]);
     }
   }
 
-  const mean = scaled.reduce((a, b) => a + b, 0) / scaled.length;
+  // Compare each pixel to its right neighbor
   let hash = "";
-  for (let i = 0; i < scaled.length; i += 4) {
-    let nibble = 0;
-    for (let j = 0; j < 4 && i + j < scaled.length; j++) {
-      if (scaled[i + j] >= mean) nibble |= (1 << (3 - j));
+  let bits = 0;
+  let bitCount = 0;
+  for (let y = 0; y < DHASH_HEIGHT; y++) {
+    for (let x = 0; x < DHASH_WIDTH - 1; x++) {
+      const idx = y * DHASH_WIDTH + x;
+      bits = (bits << 1) | (scaled[idx] > scaled[idx + 1] ? 1 : 0);
+      bitCount++;
+      if (bitCount === 4) {
+        hash += bits.toString(16);
+        bits = 0;
+        bitCount = 0;
+      }
     }
-    hash += nibble.toString(16);
   }
   return hash;
 }

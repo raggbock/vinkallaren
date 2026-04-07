@@ -3,22 +3,29 @@ import { supabase } from "./lib/supabase-client.mjs";
 
 const BATCH_SIZE = 200;
 const DELAY_MS = 50;
-const HASH_SIZE = 8;
+const DHASH_WIDTH = 9;
+const DHASH_HEIGHT = 8;
 
 function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-/** Compute aHash: resize to 8×8, grayscale, compare to mean → 64-bit hex */
-function computeAHash(grayPixels) {
-  const mean = grayPixels.reduce((a, b) => a + b, 0) / grayPixels.length;
+/** Compute dHash: resize to 9×8, grayscale, compare pixel to right neighbor → 64-bit hex */
+function computeDHash(grayPixels) {
   let hash = "";
-  for (let i = 0; i < grayPixels.length; i += 4) {
-    let nibble = 0;
-    for (let j = 0; j < 4 && i + j < grayPixels.length; j++) {
-      if (grayPixels[i + j] >= mean) nibble |= (1 << (3 - j));
+  let bits = 0;
+  let bitCount = 0;
+  for (let y = 0; y < DHASH_HEIGHT; y++) {
+    for (let x = 0; x < DHASH_WIDTH - 1; x++) {
+      const idx = y * DHASH_WIDTH + x;
+      bits = (bits << 1) | (grayPixels[idx] > grayPixels[idx + 1] ? 1 : 0);
+      bitCount++;
+      if (bitCount === 4) {
+        hash += bits.toString(16);
+        bits = 0;
+        bitCount = 0;
+      }
     }
-    hash += nibble.toString(16);
   }
   return hash;
 }
@@ -50,14 +57,14 @@ while (true) {
 
       const buffer = Buffer.from(await res.arrayBuffer());
 
-      // Resize to 8×8 grayscale using sharp
+      // Resize to 9×8 grayscale using sharp
       const { data: pixels } = await sharp(buffer)
-        .resize(HASH_SIZE, HASH_SIZE, { fit: "fill" })
+        .resize(DHASH_WIDTH, DHASH_HEIGHT, { fit: "fill" })
         .grayscale()
         .raw()
         .toBuffer({ resolveWithObject: true });
 
-      const hash = computeAHash([...pixels]);
+      const hash = computeDHash([...pixels]);
 
       const { error: updateError } = await supabase.rpc("set_image_phash", {
         wine_id: wine.id,

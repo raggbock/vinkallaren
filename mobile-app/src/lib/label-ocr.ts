@@ -261,6 +261,20 @@ function cleanOcrLine(line: string): string {
     .trim();
 }
 
+// Regex patterns matching non-wine-name text common on labels
+const NOISE_PATTERNS: RegExp[] = [
+  /DENOMINAZ/i, /CONTROLLAT[AE]/i, /GARANTIT[AE]/i,
+  /PRODUCT\s+OF/i, /IMBOTTIGLIATO/i, /BOTTLED\s+BY/i,
+  /\bORIGIN[E]?\b/i, /APPELLATION.*CONTR[OÔ]L[ÉE]+/i,
+  /CONTAINS\s+SUL[PF][HI]ITES/i, /MISE\s+EN\s+BOUTEILLE/i,
+];
+
+const WINE_TERMS = /CABERNET|MERLOT|PINOT|CHARDONNAY|SAUVIGNON|SANGIOVESE|NEBBIOLO|RIESLING|SYRAH|SHIRAZ|TEMPRANILLO|BAROLO|BARBERA|BRUNELLO|CHIANTI|PROSECCO|CHAMPAGNE|CREMANT|GRUNER/i;
+
+function isNoiseLine(line: string): boolean {
+  return NOISE_PATTERNS.some((p) => p.test(line));
+}
+
 export function lineQuality(line: string): number {
   const wordChars = (line.match(/[a-zA-ZÀ-ÿ]{3,}/g) ?? [])
     .reduce((sum, w) => sum + w.length, 0);
@@ -304,9 +318,11 @@ export function parseWineLabel(blocks: TextBlock[]): LabelParseResult {
     .filter((l) => !/^\d{4}$/.test(l.trim()))
     .map((l) => {
       const cleaned = cleanOcrLine(l);
-      return { text: cleaned, quality: lineQuality(cleaned) };
+      let quality = lineQuality(cleaned);
+      if (WINE_TERMS.test(cleaned)) quality = Math.min(1.0, quality * 1.5);
+      return { text: cleaned, quality };
     })
-    .filter((l) => l.quality >= 0.4 && l.text.length >= 3);
+    .filter((l) => l.quality >= 0.4 && l.text.length >= 3 && !isNoiseLine(l.text));
 
   // Sort by quality × sqrt(length) — balances quality and size
   scored.sort((a, b) =>
