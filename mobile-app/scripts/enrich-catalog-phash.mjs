@@ -26,17 +26,13 @@ function computeAHash(grayPixels) {
 let totalProcessed = 0;
 let totalUpdated = 0;
 let totalFailed = 0;
-let offset = 0;
 
 console.log("Starting pHash enrichment...\n");
 
 while (true) {
-  const { data: wines, error } = await supabase
-    .from("product_catalog_wines")
-    .select("id, name, image_url")
-    .not("image_url", "is", null)
-    .is("image_phash", null)
-    .range(offset, offset + BATCH_SIZE - 1);
+  const { data: wines, error } = await supabase.rpc("get_wines_needing_phash", {
+    batch_size: BATCH_SIZE,
+  });
 
   if (error) {
     console.error("Failed to fetch wines:", error.message);
@@ -81,7 +77,6 @@ while (true) {
   }
 
   if (wines.length < BATCH_SIZE) break;
-  offset += wines.length;
 }
 
 console.log(`\nDone!`);
