@@ -11,6 +11,8 @@ import {
   scoreCatalogCompleteness,
 } from "../lib/wine-helpers";
 import { recognizeLabel, parseWineLabel, normalizeOcrText } from "../lib/label-ocr";
+import { computeImageHashes } from "../lib/image-hash";
+import { matchCatalogByImage, mergeHybridMatches } from "../lib/catalog-search";
 import { defaultImportSelection, type ImportFieldSelection, type ImportMode, type WineDraft } from "../types/cellar-drafts";
 import type { CatalogTextMatch, ProductCatalogWineRow } from "../types/product-catalog";
 import type { WineRecord } from "../types/wine";
@@ -237,6 +239,26 @@ export function useCatalogWorkflow(deps: CatalogWorkflowDeps) {
       if (blocks.length === 0) { showLabelError(); return; }
 
       const parsed = parseWineLabel(blocks);
+
+      // Even if OCR text parsing failed, try image matching
+      if (!parsed.searchQuery && Platform.OS === "web") {
+        setLookupMessage("Ingen text hittad, provar bildmatchning...");
+        try {
+          const hashes = await computeImageHashes(uri);
+          const imageMatches = await matchCatalogByImage(hashes, 5);
+          if (imageMatches.length > 0) {
+            const asTextMatches = imageMatches.map((m) => ({
+              ...m, similarity: 1 - m.hash_distance / 64,
+            }));
+            setLabelMatches(asTextMatches);
+            setLabelPickerVisible(true);
+            setLookupMessage("");
+            return;
+          }
+        } catch { /* fall through */ }
+        showLabelError();
+        return;
+      }
       if (!parsed.searchQuery) { showLabelError(); return; }
 
       setLabelOcrText(parsed.name);
@@ -248,7 +270,17 @@ export function useCatalogWorkflow(deps: CatalogWorkflowDeps) {
       setLookupMessage("Söker i katalogen...");
       const normalizedQuery = normalizeOcrText(parsed.searchQuery);
       const parsedVintage = parsed.vintage ? parseInt(parsed.vintage, 10) : null;
-      const matches = await matchCatalogByText(normalizedQuery, 5, parsed.rawSearchQuery, parsedVintage);
+
+      // Run text search + image hash search in parallel
+      const imageHashPromise = Platform.OS === "web"
+        ? computeImageHashes(uri).then((h) => matchCatalogByImage(h, 5)).catch(() => [])
+        : Promise.resolve([]);
+      const [textMatches, imageMatches] = await Promise.all([
+        matchCatalogByText(normalizedQuery, 5, parsed.rawSearchQuery, parsedVintage),
+        imageHashPromise,
+      ]);
+      const matches = mergeHybridMatches(textMatches, imageMatches, 5);
+
       if (matches.length > 0) {
         setLabelMatches(matches);
         setLabelPickerVisible(true);

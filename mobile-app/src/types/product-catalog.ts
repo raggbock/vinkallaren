@@ -27,6 +27,15 @@ export type CatalogTextMatch = {
   similarity: number;
 };
 
+export type CatalogImageMatch = {
+  id: string;
+  name: string;
+  producer: string | null;
+  vintage: number | null;
+  image_url: string | null;
+  hash_distance: number;
+};
+
 export type ProductCatalogEntry = {
   barcode?: string;
   systembolagetProductId?: string;

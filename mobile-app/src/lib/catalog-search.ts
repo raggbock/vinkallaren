@@ -1,7 +1,7 @@
 import { supabase } from "./supabase";
 import { normalizeLookupValue } from "./cellar-helpers";
 import type { Suggestion } from "../components/form-controls";
-import type { CatalogTextMatch, ProductCatalogWineRow } from "../types/product-catalog";
+import type { CatalogTextMatch, CatalogImageMatch, ProductCatalogWineRow } from "../types/product-catalog";
 
 const BATCH_SIZE = 50;
 
@@ -77,4 +77,71 @@ export async function matchCatalogByText(query: string, maxResults = 5, rawOcrQu
 
   // Re-sort by similarity descending and cap
   return primary.sort((a, b) => b.similarity - a.similarity).slice(0, maxResults);
+}
+
+/** Match catalog wines by perceptual image hash. Tries multiple crop hashes. */
+export async function matchCatalogByImage(
+  hashes: { label: string; hash: string }[],
+  maxResults = 5,
+): Promise<CatalogImageMatch[]> {
+  // Query all crop variants in parallel
+  const results = await Promise.all(
+    hashes.map((h) => supabase.rpc("match_catalog_by_image", {
+      query_hash: h.hash,
+      max_results: maxResults,
+    }))
+  );
+
+  // Merge: keep best (lowest) distance per wine across all crops
+  const best = new Map<string, CatalogImageMatch>();
+  for (const res of results) {
+    for (const match of (res.data ?? []) as CatalogImageMatch[]) {
+      const existing = best.get(match.id);
+      if (!existing || match.hash_distance < existing.hash_distance) {
+        best.set(match.id, match);
+      }
+    }
+  }
+
+  return [...best.values()]
+    .sort((a, b) => a.hash_distance - b.hash_distance)
+    .slice(0, maxResults);
+}
+
+/** Combine text and image matches into a single ranked list */
+export function mergeHybridMatches(
+  textMatches: CatalogTextMatch[],
+  imageMatches: CatalogImageMatch[],
+  maxResults = 5,
+): CatalogTextMatch[] {
+  const merged = new Map<string, CatalogTextMatch>();
+
+  // Text matches: similarity is already 0-1
+  for (const m of textMatches) {
+    merged.set(m.id, { ...m });
+  }
+
+  // Image matches: convert distance (0-64) to similarity (0-1), blend in
+  for (const m of imageMatches) {
+    const imgSim = 1 - m.hash_distance / 64;
+    const existing = merged.get(m.id);
+    if (existing) {
+      // Hybrid score: boost text similarity with image similarity
+      existing.similarity = 0.6 * existing.similarity + 0.4 * imgSim;
+    } else {
+      // Image-only match (OCR didn't find it)
+      merged.set(m.id, {
+        id: m.id,
+        name: m.name,
+        producer: m.producer,
+        vintage: m.vintage,
+        image_url: m.image_url,
+        similarity: 0.4 * imgSim,
+      });
+    }
+  }
+
+  return [...merged.values()]
+    .sort((a, b) => b.similarity - a.similarity)
+    .slice(0, maxResults);
 }
