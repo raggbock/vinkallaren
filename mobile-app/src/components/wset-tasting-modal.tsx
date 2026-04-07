@@ -22,6 +22,42 @@ import {
 
 const STEP_TITLES = ["Appearance", "Nose", "Palate", "Conclusions"];
 
+function StepHeader({ step, onClose }: { step: number; onClose: () => void }) {
+  return (
+    <View style={styles.header}>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.eyebrow}>WSET Level 2</Text>
+        <Text style={styles.title}>{STEP_TITLES[step]}</Text>
+      </View>
+      <Text style={styles.stepIndicator}>{step + 1} / {STEP_TITLES.length}</Text>
+      <Pressable onPress={onClose}>
+        <Text style={styles.closeText}>Close</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+function StepNav({ step, onBack, onNext, onSave }: { step: number; onBack: () => void; onNext: () => void; onSave: () => void }) {
+  return (
+    <View style={styles.nav}>
+      {step > 0 ? (
+        <Pressable style={styles.navButtonSecondary} onPress={onBack}>
+          <Text style={styles.navButtonSecondaryText}>Back</Text>
+        </Pressable>
+      ) : <View style={{ flex: 1 }} />}
+      {step < STEP_TITLES.length - 1 ? (
+        <Pressable style={styles.navButtonPrimary} onPress={onNext}>
+          <Text style={styles.navButtonPrimaryText}>Next</Text>
+        </Pressable>
+      ) : (
+        <Pressable style={styles.navButtonPrimary} onPress={onSave}>
+          <Text style={styles.navButtonPrimaryText}>Save</Text>
+        </Pressable>
+      )}
+    </View>
+  );
+}
+
 export function WsetTastingModal({
   visible,
   wineType,
@@ -44,51 +80,22 @@ export function WsetTastingModal({
     setStep(0);
   }, [visible]);
 
-  function handleSave() {
-    onSave(data);
-    onClose();
-  }
-
   function toggleTag(list: string[], tag: string): string[] {
     return list.includes(tag) ? list.filter((t) => t !== tag) : [...list, tag];
   }
 
+  function handleSave() { onSave(data); onClose(); }
+
   return (
     <AnimatedModal visible={visible} onClose={onClose} mode="centered" cardStyle={styles.card}>
-        <View style={styles.header}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.eyebrow}>WSET Level 2</Text>
-            <Text style={styles.title}>{STEP_TITLES[step]}</Text>
-          </View>
-          <Text style={styles.stepIndicator}>{step + 1} / {STEP_TITLES.length}</Text>
-          <Pressable onPress={onClose}>
-            <Text style={styles.closeText}>Close</Text>
-          </Pressable>
-        </View>
-
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          {step === 0 ? <AppearanceStep data={data} setData={setData} wineType={wineType} />
-           : step === 1 ? <NoseStep data={data} setData={setData} toggleTag={toggleTag} />
-           : step === 2 ? <PalateStep data={data} setData={setData} wineType={wineType} toggleTag={toggleTag} />
-           : <OptionRow label="Quality" options={[...QUALITY_OPTIONS]} selected={data.conclusions.quality} onSelect={(v) => setData({ ...data, conclusions: { quality: v as any } })} />}
-        </ScrollView>
-
-        <View style={styles.nav}>
-          {step > 0 ? (
-            <Pressable style={styles.navButtonSecondary} onPress={() => setStep(step - 1)}>
-              <Text style={styles.navButtonSecondaryText}>Back</Text>
-            </Pressable>
-          ) : <View style={{ flex: 1 }} />}
-          {step < STEP_TITLES.length - 1 ? (
-            <Pressable style={styles.navButtonPrimary} onPress={() => setStep(step + 1)}>
-              <Text style={styles.navButtonPrimaryText}>Next</Text>
-            </Pressable>
-          ) : (
-            <Pressable style={styles.navButtonPrimary} onPress={handleSave}>
-              <Text style={styles.navButtonPrimaryText}>Save</Text>
-            </Pressable>
-          )}
-        </View>
+      <StepHeader step={step} onClose={onClose} />
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        {step === 0 ? <AppearanceStep data={data} setData={setData} wineType={wineType} />
+         : step === 1 ? <NoseStep data={data} setData={setData} toggleTag={toggleTag} />
+         : step === 2 ? <PalateStep data={data} setData={setData} wineType={wineType} toggleTag={toggleTag} />
+         : <OptionRow label="Quality" options={[...QUALITY_OPTIONS]} selected={data.conclusions.quality} onSelect={(v) => setData({ ...data, conclusions: { quality: v as any } })} />}
+      </ScrollView>
+      <StepNav step={step} onBack={() => setStep(step - 1)} onNext={() => setStep(step + 1)} onSave={handleSave} />
     </AnimatedModal>
   );
 }
