@@ -122,24 +122,26 @@ async function runOcr(worker, buffer) {
   ];
 
   let bestScore = -1;
-  let bestResult = { name: null, producer: null, vintage: null, searchQuery: "", confidence: 0, rawText: "" };
+  let bestResult = { name: null, producer: null, vintage: null, searchQuery: "", confidence: 0, rawText: "", variant: "" };
 
-  for (const crop of crops) {
-    const variants = [
-      crop.clone().grayscale().normalise().sharpen({ sigma: 1.5 }),
-      crop.clone().grayscale().normalise(),
-    ];
-    for (const v of variants) {
-      const buf = await v.toBuffer();
-      const { data } = await worker.recognize(buf);
-      const wineHits = (data.text.match(WINE_TERMS) ?? []).length;
-      const parsed = parseOcrText(data.text);
-      const hasName = parsed.name && parsed.name.length > 3 ? 10 : 0;
-      const score = data.confidence + wineHits * 8 + hasName;
-      if (score > bestScore) {
-        bestScore = score;
-        bestResult = { ...parsed, confidence: Math.round(data.confidence), rawText: data.text };
-      }
+  const runs = [
+    { crop: "full",   preprocess: (p) => p.clone().grayscale().normalise() },
+    { crop: "center", preprocess: (p) => p.clone().grayscale().normalise() },
+    { crop: "full",   preprocess: (p) => p.clone().grayscale().normalise().threshold(128), label: "threshold" },
+  ];
+
+  for (const run of runs) {
+    const src = run.crop === "center" ? crops[1] : crops[0];
+    const buf = await run.preprocess(src).toBuffer();
+    const { data } = await worker.recognize(buf);
+    const wineHits = (data.text.match(WINE_TERMS) ?? []).length;
+    const parsed = parseOcrText(data.text);
+    const hasName = parsed.name && parsed.name.length > 3 ? 10 : 0;
+    const score = data.confidence + wineHits * 8 + hasName;
+    if (score > bestScore) {
+      bestScore = score;
+      const variant = run.label || `${run.crop}+normal`;
+      bestResult = { ...parsed, confidence: Math.round(data.confidence), rawText: data.text, variant };
     }
   }
   return bestResult;
@@ -173,7 +175,7 @@ for (const file of files) {
   const topText = textMatches[0] ? `${textMatches[0].name} (${Math.round(textMatches[0].similarity * 100)}%)` : "-";
   const shortName = file.length > 25 ? file.slice(0, 22) + "..." : file.padEnd(25);
 
-  console.log(`${shortName} | conf: ${String(ocr.confidence).padStart(3)}% | ${ms}ms`);
+  console.log(`${shortName} | conf: ${String(ocr.confidence).padStart(3)}% | ${ocr.variant || "?"} | ${ms}ms`);
   console.log(`  OCR:      ${ocr.searchQuery || "(tom)"}`);
   console.log(`  Träff:    ${topText}`);
   console.log("─".repeat(100));
