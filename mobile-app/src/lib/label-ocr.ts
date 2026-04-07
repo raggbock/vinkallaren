@@ -93,6 +93,83 @@ export type PreprocessOptions = {
  * - "global": grayscale → contrast → fixed threshold (good for clean labels)
  * - "adaptive": grayscale → sharpen → local mean threshold (good for uneven lighting/curved surfaces)
  */
+function setupCanvas(img: HTMLImageElement, crop?: "center"): { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D; sx: number; sy: number; sw: number; sh: number } | null {
+  let sx = 0, sy = 0, sw = img.width, sh = img.height;
+  if (crop === "center") {
+    sx = Math.round(img.width * 0.15);
+    sy = Math.round(img.height * 0.1);
+    sw = Math.round(img.width * 0.7);
+    sh = Math.round(img.height * 0.8);
+  }
+  const canvas = document.createElement("canvas");
+  const maxDim = 1500;
+  if (sw > maxDim || sh > maxDim) {
+    const scale = maxDim / Math.max(sw, sh);
+    canvas.width = Math.round(sw * scale);
+    canvas.height = Math.round(sh * scale);
+  } else {
+    canvas.width = sw;
+    canvas.height = sh;
+  }
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+  return { canvas, ctx, sx, sy, sw, sh };
+}
+
+function convertToGrayscale(d: Uint8ClampedArray, w: number, h: number): Float32Array {
+  const gray = new Float32Array(w * h);
+  for (let i = 0; i < gray.length; i++) {
+    const p = i * 4;
+    gray[i] = 0.299 * d[p] + 0.587 * d[p + 1] + 0.114 * d[p + 2];
+  }
+  return gray;
+}
+
+function normalizeColumns(gray: Float32Array, w: number, h: number): Float32Array {
+  const colAvg = new Float32Array(w);
+  for (let x = 0; x < w; x++) {
+    let sum = 0;
+    for (let y = 0; y < h; y++) sum += gray[y * w + x];
+    colAvg[x] = sum / h;
+  }
+  let globalAvg = 0;
+  for (let x = 0; x < w; x++) globalAvg += colAvg[x];
+  globalAvg /= w;
+  if (globalAvg > 10) {
+    for (let x = 0; x < w; x++) {
+      const correction = globalAvg - colAvg[x];
+      for (let y = 0; y < h; y++) {
+        const idx = y * w + x;
+        gray[idx] = Math.max(0, Math.min(255, gray[idx] + correction));
+      }
+    }
+  }
+  return gray;
+}
+
+function applyBinarization(
+  sharpened: Float32Array, d: Uint8ClampedArray,
+  mode: string, w: number, h: number,
+  contrast: number, threshold: number, blockSize: number,
+): void {
+  if (mode === "grayscale") {
+    for (let i = 0; i < sharpened.length; i++) {
+      const p = i * 4;
+      const v = Math.max(0, Math.min(255, Math.round(sharpened[i])));
+      d[p] = d[p + 1] = d[p + 2] = v;
+    }
+  } else {
+    const binary = mode === "adaptive"
+      ? adaptiveThreshold(sharpened, w, h, blockSize, -8)
+      : globalThreshold(sharpened, w, h, contrast, threshold);
+    for (let i = 0; i < binary.length; i++) {
+      const p = i * 4;
+      d[p] = d[p + 1] = d[p + 2] = binary[i];
+    }
+  }
+}
+
 export async function preprocessImageForOcr(
   imageUri: string,
   options?: PreprocessOptions,
@@ -107,88 +184,16 @@ export async function preprocessImageForOcr(
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.onload = () => {
-      const canvas = document.createElement("canvas");
-      // Apply center crop if requested
-      let sx = 0, sy = 0, sw = img.width, sh = img.height;
-      if (options?.crop === "center") {
-        sx = Math.round(img.width * 0.15);
-        sy = Math.round(img.height * 0.1);
-        sw = Math.round(img.width * 0.7);
-        sh = Math.round(img.height * 0.8);
-      }
-      canvas.width = sw;
-      canvas.height = sh;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) { resolve(imageUri); return; }
-
-      // Downscale large images — Tesseract doesn't benefit from >1500px
-      const maxDim = 1500;
-      if (sw > maxDim || sh > maxDim) {
-        const scale = maxDim / Math.max(sw, sh);
-        canvas.width = Math.round(sw * scale);
-        canvas.height = Math.round(sh * scale);
-      }
-      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+      const setup = setupCanvas(img, options?.crop);
+      if (!setup) { resolve(imageUri); return; }
+      const { canvas, ctx } = setup;
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const d = imageData.data;
       const w = canvas.width;
       const h = canvas.height;
-
-      // Step 1: Convert to grayscale + compensate for horizontal shadow gradient
-      // Wine bottles typically have a shadow on one side — normalize by
-      // computing the average brightness per column and leveling it out
-      const gray = new Float32Array(w * h);
-      for (let i = 0; i < gray.length; i++) {
-        const p = i * 4;
-        gray[i] = 0.299 * d[p] + 0.587 * d[p + 1] + 0.114 * d[p + 2];
-      }
-      // Column-wise brightness normalization
-      const colAvg = new Float32Array(w);
-      for (let x = 0; x < w; x++) {
-        let sum = 0;
-        for (let y = 0; y < h; y++) sum += gray[y * w + x];
-        colAvg[x] = sum / h;
-      }
-      let globalAvg = 0;
-      for (let x = 0; x < w; x++) globalAvg += colAvg[x];
-      globalAvg /= w;
-      // Apply correction: shift each column to match the global average
-      if (globalAvg > 10) {
-        for (let x = 0; x < w; x++) {
-          const correction = globalAvg - colAvg[x];
-          for (let y = 0; y < h; y++) {
-            const idx = y * w + x;
-            gray[idx] = Math.max(0, Math.min(255, gray[idx] + correction));
-          }
-        }
-      }
-
-      // Step 2: Optional sharpening (unsharp mask)
-      let sharpened = gray;
-      if (doSharpen) {
-        sharpened = unsharpMask(gray, w, h, 1.5);
-      }
-
-      // Step 3: Binarize (or keep grayscale for LSTM engine)
-      if (mode === "grayscale") {
-        // No binarization — Tesseract's LSTM works better with grayscale
-        for (let i = 0; i < sharpened.length; i++) {
-          const p = i * 4;
-          const v = Math.max(0, Math.min(255, Math.round(sharpened[i])));
-          d[p] = d[p + 1] = d[p + 2] = v;
-        }
-      } else {
-        let binary: Uint8Array;
-        if (mode === "adaptive") {
-          binary = adaptiveThreshold(sharpened, w, h, blockSize, -8);
-        } else {
-          binary = globalThreshold(sharpened, w, h, contrast, threshold);
-        }
-        for (let i = 0; i < binary.length; i++) {
-          const p = i * 4;
-          d[p] = d[p + 1] = d[p + 2] = binary[i];
-        }
-      }
+      const gray = normalizeColumns(convertToGrayscale(d, w, h), w, h);
+      const sharpened = doSharpen ? unsharpMask(gray, w, h, 1.5) : gray;
+      applyBinarization(sharpened, d, mode, w, h, contrast, threshold, blockSize);
       ctx.putImageData(imageData, 0, 0);
       resolve(canvas.toDataURL("image/png"));
     };
@@ -247,7 +252,7 @@ function adaptiveThreshold(
 }
 
 /** Simple 3x3 unsharp mask for edge enhancement */
-function unsharpMask(gray: Float32Array<ArrayBuffer>, w: number, h: number, amount: number): Float32Array<ArrayBuffer> {
+function unsharpMask(gray: Float32Array, w: number, h: number, amount: number): Float32Array {
   const blurred = new Float32Array(w * h);
   // 3x3 box blur
   for (let y = 1; y < h - 1; y++) {
