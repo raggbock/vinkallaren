@@ -29,11 +29,18 @@ export const WineCard = React.memo(function WineCard({
       <WineCardTags wine={wine} styles={styles} />
       <WineCardPairings wine={wine} styles={styles} />
       <WineCardSystembolaget wine={wine} styles={styles} onOpenSystembolaget={onOpenSystembolaget} />
-      <Text style={styles.notesText}>{wine.notes || "Ingen anteckning ännu."}</Text>
+      {wine.notes ? <Text style={styles.notesText}>{wine.notes}</Text> : null}
       <View style={styles.actionRow}>
-        <Pressable onPress={() => onEditWine(wine)}><Text style={styles.linkText}>Redigera</Text></Pressable>
-        <Pressable onPress={() => onDrinkWine(wine)}><Text style={styles.linkText}>Drick</Text></Pressable>
-        <Pressable onPress={() => onDeleteWine(wine.id, wine.image_path)}><Text style={styles.dangerText}>Ta bort</Text></Pressable>
+        <Pressable onPress={() => onEditWine(wine)} style={({ pressed }) => pressed && { opacity: 0.5 }}>
+          <Text style={styles.linkText}>Redigera</Text>
+        </Pressable>
+        <Pressable onPress={() => onDrinkWine(wine)} style={({ pressed }) => [styles.drinkAction, pressed && { opacity: 0.5 }]}>
+          <Text style={styles.drinkActionText}>Drick</Text>
+        </Pressable>
+        <View style={styles.actionSpacer} />
+        <Pressable onPress={() => onDeleteWine(wine.id, wine.image_path)} style={({ pressed }) => pressed && { opacity: 0.5 }}>
+          <Text style={styles.dangerText}>Ta bort</Text>
+        </Pressable>
       </View>
     </View>
   );
@@ -74,13 +81,20 @@ function WineCardTags({ wine, styles }: { wine: WineRecord; styles: SharedStyles
   );
 }
 
+const MAX_VISIBLE_PAIRINGS = 3;
+
 function WineCardPairings({ wine, styles }: { wine: WineRecord; styles: SharedStyles }) {
   if (wine.food_pairings.length === 0) return null;
+  const visible = wine.food_pairings.slice(0, MAX_VISIBLE_PAIRINGS);
+  const overflow = wine.food_pairings.length - MAX_VISIBLE_PAIRINGS;
   return (
     <View style={styles.foodSection}>
-      <Text style={styles.inputLabel}>Passar till</Text>
-      <View style={styles.tagRow}>
-        {wine.food_pairings.map((pairing) => (<View key={`${wine.id}-food-${pairing}`} style={styles.foodPill}><Text style={styles.foodText}>{pairing}</Text></View>))}
+      <View style={styles.foodPairingRow}>
+        <Text style={styles.foodPairingLabel}>Passar till</Text>
+        <View style={styles.foodPairingTags}>
+          {visible.map((p) => (<Text key={`${wine.id}-food-${p}`} style={styles.foodPairingText}>{p}</Text>))}
+          {overflow > 0 && <Text style={styles.foodPairingOverflow}>+{overflow}</Text>}
+        </View>
       </View>
     </View>
   );
@@ -91,12 +105,8 @@ function WineCardSystembolaget({ wine, styles, onOpenSystembolaget }: {
 }) {
   if (!wine.systembolaget_product_id) return null;
   return (
-    <View style={styles.foodSection}>
-      <Text style={styles.inputLabel}>Importkoppling</Text>
-      <Text style={styles.notesText}>Systembolaget #{wine.systembolaget_product_id}</Text>
-      <Pressable onPress={() => onOpenSystembolaget(wine.systembolaget_product_id!)} style={styles.inlineLinkButton}>
-        <Text style={styles.linkText}>Öppna produktsida</Text>
-      </Pressable>
-    </View>
+    <Pressable onPress={() => onOpenSystembolaget(wine.systembolaget_product_id!)} style={({ pressed }) => pressed && { opacity: 0.6 }}>
+      <Text style={styles.notesText}>Systembolaget #{wine.systembolaget_product_id} ›</Text>
+    </Pressable>
   );
 }

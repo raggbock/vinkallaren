@@ -32,8 +32,6 @@ export function CellarFields({ styles, draft, storageSpaces, selectedStorageSpac
         onStorageSpaceChange={onStorageSpaceChange} onStorageRowChange={onStorageRowChange} onStorageSlotChange={onStorageSlotChange}
       />
       <LabeledInput label="Fri platsnotering" value={draft.location} onChangeText={(value) => onDraftChange({ location: value })} placeholder="t.ex. längst bak, överst i kylen" />
-      <LabeledInput label="Etiketter" value={draft.tags} onChangeText={(value) => onDraftChange({ tags: value })} placeholder="middag, present, lagring" />
-      <LabeledInput label="Anteckningar" value={draft.notes} onChangeText={(value) => onDraftChange({ notes: value })} multiline />
     </>
   );
 }

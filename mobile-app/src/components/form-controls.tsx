@@ -45,37 +45,57 @@ export function LabeledInput({ label, multiline, ...props }: ComponentProps<type
   );
 }
 
+function todayString() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 export function DateInput({ label, value, onChangeText }: { label: string; value: string; onChangeText: (value: string) => void }) {
-  if (Platform.OS === "web") {
-    return (
-      <View style={theme.inputGroup}>
-        <Text style={theme.inputLabel}>{label}</Text>
-        <TextInput
-          value={value}
-          onChangeText={onChangeText}
-          placeholder="ÅÅÅÅ-MM-DD"
-          placeholderTextColor="#8f8178"
-          style={theme.input}
-          // @ts-expect-error -- react-native-web supports type="date" but it's not in RN types
-          type="date"
-        />
-      </View>
-    );
-  }
+  const isToday = value === todayString();
 
   return (
     <View style={theme.inputGroup}>
       <Text style={theme.inputLabel}>{label}</Text>
-      <TextInput
-        value={value}
-        onChangeText={onChangeText}
-        placeholder="ÅÅÅÅ-MM-DD"
-        placeholderTextColor="#8f8178"
-        style={theme.input}
-      />
+      <View style={dateStyles.row}>
+        <View style={dateStyles.inputWrap}>
+          <TextInput
+            value={value}
+            onChangeText={onChangeText}
+            placeholder="ÅÅÅÅ-MM-DD"
+            placeholderTextColor="#8f8178"
+            style={theme.input}
+            {...(Platform.OS === "web"
+              ? { type: "date" } // react-native-web supports type="date"
+              : { keyboardType: "number-pad" as const, maxLength: 10 })}
+          />
+        </View>
+        <Pressable
+          onPress={() => onChangeText(todayString())}
+          style={[dateStyles.todayBtn, isToday && dateStyles.todayBtnActive]}
+        >
+          <Text style={[dateStyles.todayText, isToday && dateStyles.todayTextActive]}>Idag</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
+
+const dateStyles = StyleSheet.create({
+  row: { flexDirection: "row", gap: 8, alignItems: "stretch" },
+  inputWrap: { flex: 1 },
+  todayBtn: {
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    justifyContent: "center",
+    backgroundColor: "#f0e5d9",
+  },
+  todayBtnActive: { backgroundColor: "#6f1d1b" },
+  todayText: { color: "#564a40", fontWeight: "700", fontSize: 13 },
+  todayTextActive: { color: "#fff6ee" },
+});
 
 
 export function DoubleRow({ children }: { children: ReactNode }) {
@@ -127,7 +147,7 @@ export function SuggestionRow({
               key={`${title}-${option}`}
               onPress={() => onSelect(option)}
               disabled={disabled || isOccupied}
-              style={[styles.suggestionPill, isSelected && styles.suggestionPillActive, isOccupied && { opacity: 0.35 }]}
+              style={({ pressed }) => [styles.suggestionPill, isSelected && styles.suggestionPillActive, isOccupied && { opacity: 0.35 }, pressed && { opacity: 0.6 }]}
             >
               <Text style={[styles.suggestionText, isSelected && styles.suggestionTextActive]}>{option}</Text>
             </Pressable>
@@ -165,7 +185,7 @@ export function GroupedSuggestionRow({
                 <Pressable
                   key={`${group.label}-${item}`}
                   onPress={() => onSelect(item)}
-                  style={[styles.suggestionPill, isSelected && styles.suggestionPillActive]}
+                  style={({ pressed }) => [styles.suggestionPill, isSelected && styles.suggestionPillActive, pressed && { opacity: 0.6 }]}
                 >
                   <Text style={[styles.suggestionText, isSelected && styles.suggestionTextActive]}>{item}</Text>
                 </Pressable>
@@ -311,16 +331,16 @@ export function ImportSelectionRow({
 
 const logoBanner = require("../../assets/logo-banner.png");
 
-export function PanelHeader({ title, rightLabel, onRightPress }: { title: string; rightLabel?: string; onRightPress?: () => void }) {
+export function PanelHeader({ rightLabel, onRightPress }: { title?: string; rightLabel?: string; onRightPress?: () => void }) {
   return (
     <View style={styles.panelHero}>
       <Image source={logoBanner} style={styles.panelHeroLogo} resizeMode="contain" />
-      <View style={styles.panelHeroRow}>
-        <Text style={styles.panelHeroTitle}>{title}</Text>
-        {rightLabel ? (
+      {rightLabel ? (
+        <View style={styles.panelTitleRow}>
+          <View />
           <Pressable onPress={onRightPress}><Text style={styles.panelHeroLink}>{rightLabel}</Text></Pressable>
-        ) : null}
-      </View>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -436,8 +456,8 @@ const styles = StyleSheet.create({
   },
   panelHero: {
     backgroundColor: "#2b1714",
-    marginTop: -16,
-    marginHorizontal: -16,
+    marginTop: -18,
+    marginHorizontal: -18,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingHorizontal: 20,
@@ -456,15 +476,22 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: "100%",
   },
+  panelTitleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "100%",
+  },
   panelHeroTitle: {
-    color: "#f4c38c",
+    color: "#ead8ca",
     fontSize: 20,
-    fontWeight: "700",
+    fontWeight: "400",
+    letterSpacing: 0.5,
   },
   panelHeroLink: {
-    color: "#c4a882",
+    color: "#8a7566",
     fontWeight: "600",
-    fontSize: 13,
+    fontSize: 12,
   },
   storageSpaceForm: {
     backgroundColor: "#fffaf5",

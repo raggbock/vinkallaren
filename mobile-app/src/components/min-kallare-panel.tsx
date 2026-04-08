@@ -116,8 +116,8 @@ export function MinKallarePanel(props: MinKallarePanelProps) {
           onToggleStats={() => setStatsExpanded((v) => !v)} summaryText={summaryText}
           hasSections={sections.length > 0} />
       }
-      style={{ backgroundColor: "#f8f1e8" }}
-      contentContainerStyle={[styles.scrollContent, { flexGrow: 1 }]}
+      style={{ backgroundColor: "#2b1714" }}
+      contentContainerStyle={[styles.scrollContent, { flexGrow: 1, backgroundColor: "#f8f1e8", borderRadius: 24 }]}
       keyboardShouldPersistTaps="handled"
       refreshControl={
         props.onRefresh ? <RefreshControl refreshing={props.refreshing ?? false} onRefresh={props.onRefresh} tintColor="#6f1d1b" colors={["#6f1d1b"]} /> : undefined
@@ -151,7 +151,7 @@ function SectionHeader({ section, styles, expandedSpaceIds, toggleSpace, onUpdat
             <View style={[styles.quantityBadge, section.isUnplaced && { backgroundColor: "#f4c38c" }]}>
               <Text style={styles.quantityBadgeText}>{section.bottleCount} st</Text>
             </View>
-            <Text style={styles.statsSummaryToggle}>{expandedSpaceIds.has(section.key) ? "▲" : "▼"}</Text>
+            <Text style={styles.sectionChevron}>{expandedSpaceIds.has(section.key) ? "▾" : "›"}</Text>
           </View>
         </View>
       </Pressable>

@@ -9,7 +9,7 @@ export function ImagePickerSection({ styles, imageUri, isDesktopWeb, onChooseIma
   onChooseImage: () => void; onTakePhoto: () => void;
 }) {
   return (
-    <>
+    <View style={{ gap: 12 }}>
       <View style={styles.imageButtonRow}>
         {isDesktopWeb ? (
           <Pressable onPress={onChooseImage} style={styles.secondaryButton}>
@@ -27,6 +27,6 @@ export function ImagePickerSection({ styles, imageUri, isDesktopWeb, onChooseIma
         )}
       </View>
       {imageUri ? <Image source={{ uri: imageUri }} style={styles.wineImage} resizeMode="contain" /> : null}
-    </>
+    </View>
   );
 }

@@ -216,7 +216,6 @@ export const styles = StyleSheet.create({
   },
   inputGroup: {
     gap: 6,
-    flex: 1,
   },
   inputLabel: {
     color: "#564a40",
@@ -528,15 +527,62 @@ export const styles = StyleSheet.create({
   foodTextActive: {
     color: "#fffaf5",
   },
+  foodPairingRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: 6,
+    flexWrap: "wrap",
+  },
+  foodPairingLabel: {
+    color: "#8a7e74",
+    fontSize: 12,
+    fontWeight: "500",
+  },
+  foodPairingTags: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: 4,
+    flexWrap: "wrap",
+  },
+  foodPairingText: {
+    color: "#6f5b4e",
+    fontSize: 12,
+    fontWeight: "500",
+    backgroundColor: "#f0e6db",
+    borderRadius: 6,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    overflow: "hidden",
+  },
+  foodPairingOverflow: {
+    color: "#a8998c",
+    fontSize: 11,
+    fontWeight: "600",
+    paddingHorizontal: 4,
+  },
   foodCategoryGroup: {
     gap: 6,
   },
+  foodCategoryHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 6,
+    paddingHorizontal: 2,
+  },
   foodCategoryLabel: {
     color: "#564a40",
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 0.6,
+  },
+  foodCategoryLabelActive: {
+    color: "#6f1d1b",
+  },
+  foodCategoryChevron: {
+    color: "#a8998c",
+    fontSize: 14,
   },
   mealSelectedLabel: {
     color: "#6f1d1b",
@@ -574,12 +620,43 @@ export const styles = StyleSheet.create({
   },
   actionRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
+    gap: 16,
+    paddingTop: 12,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: "#e6d7c8",
+  },
+  drinkAction: {
+    backgroundColor: "#6f1d1b",
+    borderRadius: 999,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  drinkActionText: {
+    color: "#fffaf5",
+    fontWeight: "700",
+    fontSize: 13,
+  },
+  actionSpacer: {
+    flex: 1,
   },
   dangerText: {
-    color: "#9c3d31",
+    color: "#b0756d",
+    fontSize: 13,
+  },
+  filterToggle: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#ead8ca",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  filterToggleText: {
+    color: "#6f1d1b",
     fontWeight: "700",
+    fontSize: 13,
   },
   emptyStateCard: {
     alignItems: "center" as const,
@@ -709,7 +786,12 @@ export const styles = StyleSheet.create({
   wineThumbnail: {
     width: 64,
     height: 86,
-    borderRadius: 10,
+    borderRadius: 12,
     backgroundColor: "#ead8ca",
+  },
+  sectionChevron: {
+    color: "#8a7e74",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });

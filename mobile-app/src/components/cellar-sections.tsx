@@ -68,6 +68,7 @@ export function MealPlannerPanel({
   mealRecommendations,
   onSelectMeal,
   onWinePress,
+  onOpenProfile,
 }: {
   styles: SharedStyles;
   wines: WineRecord[];
@@ -75,52 +76,65 @@ export function MealPlannerPanel({
   mealRecommendations: WineRecord[];
   onSelectMeal: (value: string) => void;
   onWinePress?: (wine: WineRecord) => void;
+  onOpenProfile?: () => void;
 }) {
   const customPairings = useMemo(() => buildCustomPairings(wines), [wines]);
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+
+  const toggleCategory = useCallback((label: string) => {
+    setExpandedCategory((prev) => (prev === label ? null : label));
+  }, []);
+
+  const allCategories = useMemo(() => {
+    const cats = [...FOOD_CATEGORIES];
+    if (customPairings.length > 0) cats.push({ label: "Övriga", items: customPairings });
+    return cats;
+  }, [customPairings]);
 
   return (
     <View style={styles.panel}>
-      <PanelHeader title="Vad ska vi äta?" rightLabel={selectedMeal || undefined} />
+      <PanelHeader title="Vad ska vi äta?" rightLabel="Profil" onRightPress={onOpenProfile} />
 
-      {FOOD_CATEGORIES.map((category) => (
-        <View key={category.label} style={styles.foodCategoryGroup}>
-          <Text style={styles.foodCategoryLabel}>{category.label}</Text>
-          <View style={styles.tagRow}>
-            {category.items.map((item) => {
-              const isSelected = selectedMeal === item;
-              return (
-                <Pressable
-                  key={`food-${item}`}
-                  onPress={() => onSelectMeal(isSelected ? "" : item)}
-                  style={[styles.foodPill, isSelected && styles.foodPillActive]}
-                >
-                  <Text style={[styles.foodText, isSelected && styles.foodTextActive]}>{item}</Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </View>
-      ))}
+      {selectedMeal ? (
+        <Pressable onPress={() => onSelectMeal("")} style={({ pressed }) => [mealStyles.selectedChip, pressed && { opacity: 0.7 }]}>
+          <Text style={mealStyles.selectedChipText}>{selectedMeal}</Text>
+          <Text style={mealStyles.selectedChipClear}>✕</Text>
+        </Pressable>
+      ) : null}
 
-      {customPairings.length > 0 && (
-        <View style={styles.foodCategoryGroup}>
-          <Text style={styles.foodCategoryLabel}>Övriga</Text>
-          <View style={styles.tagRow}>
-            {customPairings.map((item) => {
-              const isSelected = selectedMeal === item;
-              return (
-                <Pressable
-                  key={`food-custom-${item}`}
-                  onPress={() => onSelectMeal(isSelected ? "" : item)}
-                  style={[styles.foodPill, isSelected && styles.foodPillActive]}
-                >
-                  <Text style={[styles.foodText, isSelected && styles.foodTextActive]}>{item}</Text>
-                </Pressable>
-              );
-            })}
+      {allCategories.map((category) => {
+        const isExpanded = expandedCategory === category.label;
+        const hasSelection = category.items.includes(selectedMeal);
+        return (
+          <View key={category.label} style={styles.foodCategoryGroup}>
+            <Pressable
+              onPress={() => toggleCategory(category.label)}
+              style={({ pressed }) => [mealStyles.categoryRow, isExpanded && mealStyles.categoryRowExpanded, pressed && { opacity: 0.7 }]}
+            >
+              <Text style={[styles.foodCategoryLabel, hasSelection && styles.foodCategoryLabelActive]}>
+                {category.label}
+              </Text>
+              <Text style={styles.foodCategoryChevron}>{isExpanded ? "▾" : "›"}</Text>
+            </Pressable>
+            {isExpanded && (
+              <View style={styles.tagRow}>
+                {category.items.map((item) => {
+                  const isSelected = selectedMeal === item;
+                  return (
+                    <Pressable
+                      key={`food-${item}`}
+                      onPress={() => onSelectMeal(isSelected ? "" : item)}
+                      style={[styles.foodPill, isSelected && styles.foodPillActive]}
+                    >
+                      <Text style={[styles.foodText, isSelected && styles.foodTextActive]}>{item}</Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            )}
           </View>
-        </View>
-      )}
+        );
+      })}
 
       {selectedMeal && mealRecommendations.length === 0 ? (
         <Text style={styles.emptyState}>Inga viner matchar "{selectedMeal}" ännu.</Text>
@@ -157,6 +171,7 @@ export function HistoryPanel({
   endedSessions,
   refreshing, onRefresh, hasMore, onLoadMore,
   onEditEntry,
+  onOpenProfile,
 }: {
   styles: SharedStyles;
   historyEntries: WineHistoryRecord[];
@@ -168,6 +183,7 @@ export function HistoryPanel({
   hasMore?: boolean;
   onLoadMore?: () => void;
   onEditEntry?: (entry: WineHistoryRecord) => void;
+  onOpenProfile?: () => void;
 }) {
   const [tab, setTab] = useState<"viner" | "provningar">("viner");
   const [searchQuery, setSearchQuery] = useState("");
@@ -188,8 +204,8 @@ export function HistoryPanel({
   const sessionCount = endedSessions?.length ?? 0;
 
   const listHeader = useMemo(() => (
-    <>
-      <PanelHeader title="Historik" />
+    <View style={{ gap: 14 }}>
+      <PanelHeader title="Historik" rightLabel="Profil" onRightPress={onOpenProfile} />
 
       {/* Sub-tabs */}
       <View style={historyStyles.tabRow}>
@@ -213,7 +229,7 @@ export function HistoryPanel({
       ) : null}
 
       {tab === "provningar" ? (
-        <View style={{ gap: 10 }}>
+        <View style={historyStyles.sessionList}>
           {sessionCount === 0 ? (
             <Text style={styles.emptyState}>Inga avslutade provningar ännu.</Text>
           ) : (
@@ -233,8 +249,8 @@ export function HistoryPanel({
       {tab === "viner" && !loadingHistory && historyEntries.length > 0 && filteredEntries.length === 0 ? (
         <Text style={styles.emptyState}>Inga träffar för "{searchQuery}"</Text>
       ) : null}
-    </>
-  ), [styles, tab, sessionCount, filteredEntries.length, historyEntries.length, searchQuery, endedSessions, loadingHistory]);
+    </View>
+  ), [styles, tab, sessionCount, filteredEntries.length, historyEntries.length, searchQuery, endedSessions, loadingHistory, onOpenProfile]);
 
   return (
     <FlatList
@@ -284,15 +300,18 @@ function ExpandableSessionCard({ session, styles }: { session: TastingSessionRow
 
   return (
     <View style={styles.wineCard}>
-      <Pressable onPress={handleToggle} style={{ gap: 4 }}>
-        <Text style={styles.wineName}>{session.title}</Text>
-        <Text style={styles.wineMeta}>
-          {session.mode === "blind" ? "Blind" : "Öppen"} · {session.format.toUpperCase()} · {dateStr}
-        </Text>
+      <Pressable onPress={handleToggle} style={historyStyles.sessionHeader}>
+        <View style={historyStyles.sessionInfo}>
+          <Text style={styles.wineName}>{session.title}</Text>
+          <Text style={styles.wineMeta}>
+            {session.mode === "blind" ? "Blind" : "Öppen"} · {session.format.toUpperCase()} · {dateStr}
+          </Text>
+        </View>
+        <Text style={styles.sectionChevron}>{expanded ? "▾" : "›"}</Text>
       </Pressable>
       <Expandable expanded={expanded}>
         {loaded && wines.length > 0 ? (
-          <View style={{ marginTop: 12 }}>
+          <View style={historyStyles.sessionResults}>
             <ResultsDashboard
               results={buildSessionResults(wines, tastings, session.format, session.created_at)}
               participants={participants}
@@ -331,24 +350,54 @@ const HistoryRow = React.memo(function HistoryRow({ entry, styles, onEdit }: {
           </View>
         ) : null}
       </View>
-      <Text style={styles.notesText}>
-        Dracks {formatDateISO(entry.consumed_at)} • {entry.quantity_consumed} flaska
+      <Text style={historyStyles.consumedText}>
+        Dracks {formatDateISO(entry.consumed_at)} · {entry.quantity_consumed} flaska
         {entry.quantity_consumed > 1 ? "r" : ""}
       </Text>
       {entry.tasting_notes ? <Text style={styles.notesText}>{entry.tasting_notes}</Text> : null}
       {entry.tasting_data ? (
-        <View style={{ marginTop: 6, paddingTop: 6, borderTopWidth: 1, borderTopColor: "#3d2220" }}>
-          <Text style={[styles.notesText, { color: "#f4c38c", fontWeight: "600", marginBottom: 2 }]}>WSET Tasting</Text>
+        <View style={historyStyles.wsetSection}>
+          <Text style={historyStyles.wsetLabel}>WSET Tasting</Text>
           <Text style={styles.notesText}>{buildWsetSummary(entry.tasting_data as WsetTastingData)}</Text>
         </View>
       ) : null}
       {onEdit ? (
-        <Pressable onPress={() => onEdit(entry)} style={historyStyles.editButton}>
-          <Text style={historyStyles.editButtonText}>✏️ Redigera</Text>
+        <Pressable onPress={() => onEdit(entry)} style={({ pressed }) => [historyStyles.editButton, pressed && { opacity: 0.6 }]}>
+          <Text style={historyStyles.editButtonText}>Redigera</Text>
         </Pressable>
       ) : null}
     </View>
   );
+});
+
+const mealStyles = StyleSheet.create({
+  selectedChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    gap: 8,
+    backgroundColor: "#6f1d1b",
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  selectedChipText: { color: "#fffaf5", fontWeight: "700", fontSize: 14 },
+  selectedChipClear: { color: "#ead8ca", fontSize: 12 },
+  categoryRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    backgroundColor: "#fffaf5",
+    borderWidth: 1,
+    borderColor: "#ead8ca",
+  },
+  categoryRowExpanded: {
+    backgroundColor: "#f0e5d9",
+    borderColor: "#d4c4b4",
+  },
 });
 
 const historyStyles = StyleSheet.create({
@@ -357,6 +406,13 @@ const historyStyles = StyleSheet.create({
   tabActive: { backgroundColor: "#6f1d1b" },
   tabText: { color: "#6f1d1b", fontSize: 13, fontWeight: "700" },
   tabTextActive: { color: "#fffaf5" },
-  editButton: { marginTop: 8, alignSelf: "flex-start" },
-  editButtonText: { color: "#6f1d1b", fontSize: 13, fontWeight: "600" },
+  editButton: { marginTop: 8, alignSelf: "flex-start", backgroundColor: "#f0e5d9", borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
+  editButtonText: { color: "#6f1d1b", fontSize: 12, fontWeight: "700" },
+  sessionHeader: { flexDirection: "row", alignItems: "center", gap: 8 },
+  sessionInfo: { flex: 1, gap: 4 },
+  sessionResults: { marginTop: 12 },
+  sessionList: { gap: 10 },
+  consumedText: { color: "#8a7e74", fontSize: 13, fontWeight: "500" },
+  wsetSection: { marginTop: 6, paddingTop: 6, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: "#e6d7c8" },
+  wsetLabel: { color: "#8a7e74", fontWeight: "700", fontSize: 11, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 2 },
 });

@@ -324,13 +324,14 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
     activePanel = <HistoryPanel styles={styles} historyEntries={data.historyEntries} loadingHistory={data.loadingHistory} storageSpaceById={data.storageSpaceById}
       endedSessions={tastingSessions.sessions.filter((ses) => ses.status === "ended")}
       refreshing={refreshing} onRefresh={onRefresh} hasMore={data.hasMoreHistory} onLoadMore={data.fetchMoreHistory}
-      onEditEntry={setEditingHistory}
+      onEditEntry={setEditingHistory} onOpenProfile={() => setProfileVisible(true)}
     />;
   } else if (activeSection === "meal") {
     activePanel = (
       <MealPlannerPanel styles={styles} wines={data.wines} selectedMeal={selectedMeal} mealRecommendations={mealRecommendations}
         onSelectMeal={setSelectedMeal}
         onWinePress={(wine) => { setHighlightedWineId(wine.id); setActiveSection("cellar"); }}
+        onOpenProfile={() => setProfileVisible(true)}
       />
     );
   } else if (activeSection === "add") {
@@ -384,6 +385,7 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
         onChooseImage={async () => { const uri = await images.pickImageFromLibrary(); if (uri) setDraft((c) => ({ ...c, imageUri: uri })); }}
         onTakePhoto={async () => { const uri = await images.takePhoto(); if (uri) setDraft((c) => ({ ...c, imageUri: uri })); }}
         onSaveWine={handleSaveWine}
+        onOpenProfile={() => setProfileVisible(true)}
         {...tasting.panelProps}
       />
     );
