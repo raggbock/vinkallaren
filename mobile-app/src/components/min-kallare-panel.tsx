@@ -67,7 +67,8 @@ export function MinKallarePanel(props: MinKallarePanelProps) {
 
   const renderSectionHeader = useCallback(({ section }: { section: WineSection }) => (
     <SectionHeader section={section} styles={styles} expandedSpaceIds={expandedSpaceIds}
-      toggleSpace={toggleSpace} onUpdateStorageSpace={storage.onUpdateStorageSpace} onDeleteStorageSpace={storage.onDeleteStorageSpace} wines={filteredWines} />
+      toggleSpace={toggleSpace} onUpdateStorageSpace={storage.onUpdateStorageSpace} onDeleteStorageSpace={storage.onDeleteStorageSpace} wines={filteredWines}
+      onGoToWine={(wine) => { const spaceId = wine.storage_space_id || "__unplaced__"; setExpandedSpaceIds((prev) => { const next = new Set(prev); next.add(spaceId); return next; }); }} />
   ), [styles, expandedSpaceIds, toggleSpace, storage.onUpdateStorageSpace, storage.onDeleteStorageSpace, filteredWines]);
 
   const renderItem = useCallback(({ item }: { item: WineRecord }) => (
@@ -109,12 +110,13 @@ export function MinKallarePanel(props: MinKallarePanelProps) {
   );
 }
 
-function SectionHeader({ section, styles, expandedSpaceIds, toggleSpace, onUpdateStorageSpace, onDeleteStorageSpace, wines }: {
+function SectionHeader({ section, styles, expandedSpaceIds, toggleSpace, onUpdateStorageSpace, onDeleteStorageSpace, wines, onGoToWine }: {
   section: WineSection; styles: SharedStyles; expandedSpaceIds: Set<string>;
   toggleSpace: (id: string) => void;
   onUpdateStorageSpace: (id: string, patch: { name?: string; space_type?: string; row_count?: number; slots_per_row?: number }) => void;
   onDeleteStorageSpace: (id: string) => void;
   wines: WineRecord[];
+  onGoToWine?: (wine: WineRecord) => void;
 }) {
   const isExpanded = expandedSpaceIds.has(section.key);
   const hasGrid = !section.isUnplaced && section.space && section.space.row_count > 0 && section.space.slots_per_row > 0;
@@ -137,7 +139,7 @@ function SectionHeader({ section, styles, expandedSpaceIds, toggleSpace, onUpdat
       {!section.isUnplaced && section.space && isExpanded ? (
         <StorageSpaceActions space={section.space} styles={styles} onUpdate={onUpdateStorageSpace} onDelete={onDeleteStorageSpace} />
       ) : null}
-      {hasGrid && isExpanded ? <ShelfGrid space={section.space!} wines={wines} /> : null}
+      {hasGrid && isExpanded ? <ShelfGrid space={section.space!} wines={wines} onGoToWine={onGoToWine} /> : null}
     </View>
   );
 }

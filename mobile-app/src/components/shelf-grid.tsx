@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Modal, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { colors } from "../styles/tokens";
 import type { StorageSpaceRow } from "../types/storage-space";
 import type { WineRecord } from "../types/wine";
@@ -20,9 +20,10 @@ function slotColor(type: string): string {
 type ShelfGridProps = {
   space: StorageSpaceRow;
   wines: WineRecord[];
+  onGoToWine?: (wine: WineRecord) => void;
 };
 
-export function ShelfGrid({ space, wines }: ShelfGridProps) {
+export function ShelfGrid({ space, wines, onGoToWine }: ShelfGridProps) {
   const [selected, setSelected] = useState<WineRecord | null>(null);
 
   const wineByPos = new Map<string, WineRecord>();
@@ -39,16 +40,25 @@ export function ShelfGrid({ space, wines }: ShelfGridProps) {
   return (
     <View style={s.container}>
       {Array.from({ length: rows }, (_, r) => (
-        <View key={r} style={s.row}>
+        <View key={r} style={s.shelfRow}>
           <Text style={s.rowLabel}>{r + 1}</Text>
-          {Array.from({ length: slots }, (_, sl) => {
-            const wine = wineByPos.get(`${r + 1}-${sl + 1}`);
-            return (
-              <Pressable key={sl} onPress={wine ? () => setSelected(wine) : undefined} style={[s.slot, wine ? { backgroundColor: slotColor(wine.type) } : s.emptySlot]}>
-                {wine ? <View style={s.shine} /> : null}
-              </Pressable>
-            );
-          })}
+          <View style={s.shelf}>
+            {Array.from({ length: slots }, (_, sl) => {
+              const wine = wineByPos.get(`${r + 1}-${sl + 1}`);
+              return (
+                <Pressable key={sl} onPress={wine ? () => setSelected(wine) : undefined} style={s.slotWrapper}>
+                  {/* Bottle circle sitting in the cradle */}
+                  {wine ? (
+                    <View style={[s.bottle, { backgroundColor: slotColor(wine.type) }]}>
+                      <View style={s.bottleShine} />
+                    </View>
+                  ) : null}
+                  {/* Half-circle cradle (bottom half) */}
+                  <View style={[s.cradle, !wine && s.cradleEmpty]} />
+                </Pressable>
+              );
+            })}
+          </View>
         </View>
       ))}
       <View style={s.legendRow}>
@@ -62,7 +72,8 @@ export function ShelfGrid({ space, wines }: ShelfGridProps) {
       {selected ? (
         <Modal transparent animationType="fade" onRequestClose={() => setSelected(null)}>
           <Pressable style={s.overlay} onPress={() => setSelected(null)}>
-            <View style={s.popup}>
+            <Pressable style={s.popup} onPress={(e) => e.stopPropagation()}>
+              <View style={[s.popupDot, { backgroundColor: slotColor(selected.type) }]} />
               <Text style={s.popupName}>{selected.name}</Text>
               {selected.producer ? <Text style={s.popupDetail}>{selected.producer}</Text> : null}
               <View style={s.popupRow}>
@@ -72,10 +83,17 @@ export function ShelfGrid({ space, wines }: ShelfGridProps) {
               </View>
               {selected.grape ? <Text style={s.popupDetail}>{selected.grape}</Text> : null}
               <Text style={s.popupPos}>Rad {selected.storage_row}, plats {selected.storage_slot}</Text>
-              <Pressable onPress={() => setSelected(null)} style={s.closeBtn}>
-                <Text style={s.closeBtnText}>Stäng</Text>
-              </Pressable>
-            </View>
+              <View style={s.popupButtons}>
+                {onGoToWine ? (
+                  <Pressable onPress={() => { const w = selected; setSelected(null); onGoToWine(w); }} style={s.goToBtn}>
+                    <Text style={s.goToBtnText}>Gå till vin</Text>
+                  </Pressable>
+                ) : null}
+                <Pressable onPress={() => setSelected(null)} style={s.closeBtn}>
+                  <Text style={s.closeBtnText}>Stäng</Text>
+                </Pressable>
+              </View>
+            </Pressable>
           </Pressable>
         </Modal>
       ) : null}
@@ -83,35 +101,55 @@ export function ShelfGrid({ space, wines }: ShelfGridProps) {
   );
 }
 
+const SLOT_SIZE = 28;
+
 const s = StyleSheet.create({
   container: { gap: 6, paddingVertical: 8 },
-  row: { flexDirection: "row", alignItems: "center", gap: 4 },
-  rowLabel: { width: 18, fontSize: 10, color: colors.textSecondary, textAlign: "right", marginRight: 4 },
-  slot: {
-    width: 28, height: 28, borderRadius: 14,
-    justifyContent: "center", alignItems: "center",
+  shelfRow: { flexDirection: "row", alignItems: "flex-end" },
+  rowLabel: { width: 18, fontSize: 10, color: colors.textSecondary, textAlign: "right", marginRight: 4, marginBottom: 2 },
+  shelf: { flexDirection: "row", gap: 5 },
+  slotWrapper: {
+    width: SLOT_SIZE, height: SLOT_SIZE + 4,
+    alignItems: "center", justifyContent: "flex-end",
   },
-  emptySlot: {
-    borderWidth: 1.5, borderColor: colors.border, borderStyle: "dashed",
+  cradle: {
+    width: SLOT_SIZE, height: SLOT_SIZE / 2,
+    borderBottomLeftRadius: SLOT_SIZE / 2,
+    borderBottomRightRadius: SLOT_SIZE / 2,
+    backgroundColor: colors.border,
+    opacity: 0.5,
   },
-  shine: {
-    position: "absolute", top: 4, left: 8,
-    width: 6, height: 6, borderRadius: 3,
-    backgroundColor: "rgba(255,255,255,0.35)",
+  cradleEmpty: {
+    backgroundColor: "transparent",
+    borderWidth: 1.5, borderTopWidth: 0, borderColor: colors.border, borderStyle: "dashed",
+    opacity: 0.4,
   },
-  legendRow: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: 8, paddingLeft: 22 },
+  bottle: {
+    width: SLOT_SIZE - 4, height: SLOT_SIZE - 4,
+    borderRadius: (SLOT_SIZE - 4) / 2,
+    marginBottom: -6,
+    zIndex: 1,
+  },
+  bottleShine: {
+    position: "absolute", top: 5, left: 6,
+    width: 10, height: 5, borderRadius: 3,
+    backgroundColor: "rgba(255,255,255,0.3)",
+  },
+  legendRow: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: 10, paddingLeft: 22 },
   legendItem: { flexDirection: "row", alignItems: "center", gap: 4 },
   legendDot: { width: 10, height: 10, borderRadius: 5 },
   legendText: { fontSize: 10, color: colors.textSecondary },
   overlay: {
     flex: 1, justifyContent: "center", alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.4)",
+    backgroundColor: "rgba(0,0,0,0.55)",
   },
   popup: {
     backgroundColor: colors.surface, borderRadius: 20, padding: 24,
     maxWidth: 300, width: "85%", alignItems: "center", gap: 8,
-    borderWidth: 1, borderColor: colors.border,
+    borderWidth: 1.5, borderColor: colors.border,
+    ...Platform.select({ web: { boxShadow: "0 8px 30px rgba(0,0,0,0.18)" } as any, default: {} }),
   },
+  popupDot: { width: 28, height: 28, borderRadius: 14, marginBottom: 4 },
   popupName: { fontSize: 18, fontWeight: "700", color: colors.text, textAlign: "center" },
   popupDetail: { fontSize: 13, color: colors.textSecondary, textAlign: "center" },
   popupRow: { flexDirection: "row", gap: 8, flexWrap: "wrap", justifyContent: "center" },
@@ -121,9 +159,15 @@ const s = StyleSheet.create({
     borderRadius: 12,
   },
   popupPos: { fontSize: 11, color: colors.textSecondary, marginTop: 4 },
-  closeBtn: {
-    marginTop: 8, backgroundColor: colors.accent, borderRadius: 999,
-    paddingHorizontal: 24, paddingVertical: 10,
+  popupButtons: { flexDirection: "row", gap: 10, marginTop: 8 },
+  goToBtn: {
+    backgroundColor: colors.accent, borderRadius: 999,
+    paddingHorizontal: 20, paddingVertical: 10,
   },
-  closeBtnText: { color: colors.textLight, fontWeight: "600", fontSize: 13 },
+  goToBtnText: { color: colors.textLight, fontWeight: "600", fontSize: 13 },
+  closeBtn: {
+    backgroundColor: colors.surfaceAlt, borderRadius: 999,
+    paddingHorizontal: 20, paddingVertical: 10,
+  },
+  closeBtnText: { color: colors.text, fontWeight: "600", fontSize: 13 },
 });
