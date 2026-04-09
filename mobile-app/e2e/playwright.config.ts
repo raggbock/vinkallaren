@@ -11,6 +11,7 @@ export default defineConfig({
   },
   webServer: {
     command: "npx expo start --web --port 8081",
+    cwd: "..",
     port: 8081,
     reuseExistingServer: true,
     timeout: 120000,
