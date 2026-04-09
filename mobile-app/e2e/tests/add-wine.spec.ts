@@ -8,17 +8,19 @@ test.describe("Add wine flow", () => {
     test.skip(!TEST_EMAIL, "Skipping — no test credentials set");
     await page.goto("/");
     await page.getByPlaceholder("namn@exempel.se").fill(TEST_EMAIL);
-    await page.getByLabel("Lösenord").fill(TEST_PASSWORD);
-    await page.getByRole("button", { name: "Logga in" }).click();
+    const passwordInput = page.locator('input[type="password"], input').nth(1);
+    await passwordInput.fill(TEST_PASSWORD);
+    await page.getByText("Logga in", { exact: true }).first().click();
     await expect(page.getByText("Min källare")).toBeVisible({ timeout: 15000 });
   });
 
   test("add a wine and see it in cellar", async ({ page }) => {
     const wineName = `E2E Test Wine ${Date.now()}`;
     await page.getByText("Lägg till").click();
-    await page.getByLabel("Namn").fill(wineName);
-    await page.getByLabel("Producent").fill("E2E Producer");
-    await page.getByRole("button", { name: "Spara i källaren" }).click();
+    await expect(page.getByText("Om vinet")).toBeVisible({ timeout: 5000 });
+    await page.getByText("Namn").locator("..").locator("input").fill(wineName);
+    await page.getByText("Producent").locator("..").locator("input").fill("E2E Producer");
+    await page.getByText("Spara i källaren").click();
     await page.getByText("Min källare").click();
     await expect(page.getByText(wineName)).toBeVisible({ timeout: 10000 });
   });
