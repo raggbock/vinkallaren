@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { showError } from "../lib/show-error";
 import { supabase } from "../lib/supabase";
 import { emptyToNull } from "../lib/cellar-helpers";
@@ -18,6 +18,8 @@ export function useStorageSpaces(userId: string) {
     setStorageSpaces((data ?? []) as StorageSpaceRow[]);
     setLoadingStorageSpaces(false);
   }
+
+  useEffect(() => { void fetchStorageSpaces(); }, []);
 
   async function saveStorageSpace(): Promise<string | null> {
     if (!storageSpaceDraft.name.trim()) {
