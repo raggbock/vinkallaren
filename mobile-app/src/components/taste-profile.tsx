@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { fetchTasteProfile, type TasteProfileData, type SessionSummary } from "../lib/taste-profile";
 import { formatDateLong, formatDateShort } from "../lib/format-date";
-import { styles as theme } from "../styles/theme";
+import { styles as theme, colors } from "../styles/theme";
 
 type Props = {
   userId: string;
@@ -124,22 +124,22 @@ function SessionHistoryCard({ session, onPress }: { session: SessionSummary; onP
 
 const s = StyleSheet.create({
   container: { gap: 16 },
-  hint: { color: "#8f8178", fontSize: 13, lineHeight: 20 },
+  hint: { color: colors.textSecondary, fontSize: 13, lineHeight: 20 },
   statsRow: { flexDirection: "row", gap: 8 },
-  lastSession: { color: "#564a40", fontSize: 12 },
+  lastSession: { color: colors.textSecondary, fontSize: 12 },
   section: { gap: 8 },
-  sectionTitle: { color: "#564a40", fontSize: 12, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.6 },
-  sectionSub: { color: "#8f8178", fontSize: 11 },
+  sectionTitle: { color: colors.textSecondary, fontSize: 12, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.6 },
+  sectionSub: { color: colors.textSecondary, fontSize: 11 },
   prefRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  prefLabel: { color: "#564a40", fontSize: 12, fontWeight: "700", width: 70 },
+  prefLabel: { color: colors.textSecondary, fontSize: 12, fontWeight: "700", width: 70 },
   barContainer: { flex: 1, flexDirection: "row", gap: 2, height: 26, borderRadius: 6, overflow: "hidden" },
-  barSegment: { backgroundColor: "#ead8ca", justifyContent: "center", alignItems: "center", paddingHorizontal: 4 },
-  barText: { color: "#6f1d1b", fontSize: 10, fontWeight: "700" },
+  barSegment: { backgroundColor: colors.surfaceAlt, justifyContent: "center", alignItems: "center", paddingHorizontal: 4 },
+  barText: { color: colors.accent, fontSize: 10, fontWeight: "700" },
   tagRow: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
-  tag: { backgroundColor: "#ead8ca", borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4 },
-  tagText: { color: "#6f1d1b", fontSize: 12, fontWeight: "600" },
-  historyCard: { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: "#fffaf5", borderRadius: 14, padding: 12, borderWidth: 1, borderColor: "#ead8ca" },
-  historyTitle: { color: "#231815", fontSize: 14, fontWeight: "600" },
-  historyMeta: { color: "#564a40", fontSize: 12 },
-  historyArrow: { color: "#6f1d1b", fontSize: 16, fontWeight: "700" },
+  tag: { backgroundColor: colors.surfaceAlt, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4 },
+  tagText: { color: colors.accent, fontSize: 12, fontWeight: "600" },
+  historyCard: { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: colors.textLight, borderRadius: 14, padding: 12, borderWidth: 1, borderColor: colors.surfaceAlt },
+  historyTitle: { color: colors.text, fontSize: 14, fontWeight: "600" },
+  historyMeta: { color: colors.textSecondary, fontSize: 12 },
+  historyArrow: { color: colors.accent, fontSize: 16, fontWeight: "700" },
 });

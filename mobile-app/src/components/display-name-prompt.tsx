@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { colors } from "../styles/theme";
 
 type DisplayNamePromptProps = {
   visible: boolean;
@@ -27,7 +28,7 @@ export function DisplayNamePrompt({ visible, saving, onSave, onSkip }: DisplayNa
           value={name}
           onChangeText={setName}
           placeholder="Minst 2 tecken"
-          placeholderTextColor="#8f8178"
+          placeholderTextColor={colors.textSecondary}
           autoFocus
           maxLength={30}
           returnKeyType="done"
@@ -62,46 +63,46 @@ const s = StyleSheet.create({
     padding: 24,
   },
   card: {
-    backgroundColor: "#2b1714",
+    backgroundColor: colors.surface,
     borderRadius: 24,
     padding: 28,
     width: "100%",
     maxWidth: 380,
     gap: 14,
     borderWidth: 1,
-    borderColor: "rgba(244, 195, 140, 0.15)",
+    borderColor: colors.border,
   },
   title: {
-    color: "#f4c38c",
+    color: colors.text,
     fontSize: 18,
     fontWeight: "700",
     textAlign: "center",
   },
   subtitle: {
-    color: "#c4a882",
+    color: colors.textSecondary,
     fontSize: 13,
     lineHeight: 20,
     textAlign: "center",
   },
   input: {
-    backgroundColor: "#1a0f0e",
+    backgroundColor: colors.surfaceAlt,
     borderWidth: 1,
-    borderColor: "rgba(90, 58, 56, 0.6)",
+    borderColor: colors.border,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    color: "#fffaf5",
+    color: colors.text,
     fontSize: 16,
     textAlign: "center",
   },
   primaryBtn: {
-    backgroundColor: "#f4c38c",
+    backgroundColor: colors.warm,
     paddingVertical: 13,
     borderRadius: 12,
     alignItems: "center",
   },
   primaryBtnText: {
-    color: "#2b1714",
+    color: "#fff",
     fontWeight: "700",
     fontSize: 15,
   },
@@ -109,7 +110,7 @@ const s = StyleSheet.create({
     opacity: 0.4,
   },
   skipText: {
-    color: "#8f8178",
+    color: colors.textSecondary,
     fontSize: 13,
     textAlign: "center",
   },

@@ -21,7 +21,7 @@ import { SuccessOverlay, useSuccessOverlay } from "./src/components/success-over
 import { CELLAR_SECTIONS, type CellarSection } from "./src/types/cellar";
 import type { WineHistoryRecord } from "./src/types/wine-history";
 import { defaultDraft, type WineDraft } from "./src/types/cellar-drafts";
-import { styles } from "./src/styles/theme";
+import { colors, styles } from "./src/styles/theme";
 import { BUILD_VERSION } from "./src/lib/build-version";
 import { LoadingScreen, SetupScreen } from "./src/screens/auth";
 import { LandingScreen } from "./src/screens/landing";
@@ -47,36 +47,20 @@ function useWebStyles() {
   useEffect(() => {
     if (Platform.OS !== "web") return;
 
-    // Load Cormorant Garamond for wine-label headings
+    // Load Cormorant Garamond + Caveat for hand-drawn accents
     const link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&display=swap";
+    link.href = "https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&display=swap";
     document.head.appendChild(link);
 
     const style = document.createElement("style");
     style.textContent = [
-      'div[tabindex="0"] { transition: opacity 0.15s, filter 0.15s; }',
-      'div[tabindex="0"]:hover { filter: brightness(0.92); }',
-      'div[tabindex="0"]:active { opacity: 0.7 !important; filter: brightness(0.85); transition: opacity 0.05s; }',
+      "body { background-color: #FDFAF6; }",
+      'div[tabindex="0"] { transition: opacity 0.15s; }',
+      'div[tabindex="0"]:hover { opacity: 0.85; }',
+      'div[tabindex="0"]:active { opacity: 0.65 !important; transition: opacity 0.05s; }',
     ].join("\n");
     document.head.appendChild(style);
-
-    // Paper grain texture — must use DOM since RN web strips backgroundImage from styles
-    const noise = "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E\")";
-    function applyGrain() {
-      document.querySelectorAll("div").forEach((el) => {
-        if (el.dataset.grain) return;
-        if (getComputedStyle(el).backgroundColor === "rgb(248, 241, 232)") {
-          el.dataset.grain = "1";
-          el.style.backgroundImage = noise;
-          el.style.backgroundSize = "200px 200px";
-        }
-      });
-    }
-    const observer = new MutationObserver(applyGrain);
-    observer.observe(document.body, { childList: true, subtree: true });
-    setTimeout(applyGrain, 500);
-    return () => observer.disconnect();
   }, []);
 }
 
@@ -378,17 +362,9 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
         grapeReferenceRows={data.grapeReferenceRows}
         lookupBusy={catalog.lookupBusy}
         lookupMessage={catalog.lookupMessage}
-        catalogSuggestion={catalog.catalogSuggestion}
-        importMode={catalog.importMode}
-        importSelection={catalog.importSelection}
         saving={saving}
-        selectedCatalogNameEntry={catalog.selectedCatalogNameEntry}
         onDraftChange={(patch) => setDraft((c) => catalog.updateDraft(c, patch))}
         onNameSelected={(name, producer) => catalog.handleWineNameSelected(name, producer, setDraft)}
-        onBarcodeChange={(value) => {
-          setDraft((current) => catalog.updateDraft(current, { barcode: value }));
-          void catalog.maybeSuggestCatalogMatch({ ...draft, barcode: value });
-        }}
         onArticleNumberChange={(value) => {
           setDraft((current) => catalog.updateDraft(current, { systembolagetProductId: value }));
           void catalog.maybeSuggestCatalogMatch({ ...draft, systembolagetProductId: value });
@@ -401,12 +377,8 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
         savingStorageSpace={data.savingStorageSpace}
         onStorageSpaceDraftChange={(patch) => data.setStorageSpaceDraft((c) => ({ ...c, ...patch }))}
         onSaveStorageSpace={async () => { const newId = await data.saveStorageSpace(); if (newId) { storage.setSelectedStorageSpaceId(newId); storage.setSelectedStorageRow("1"); storage.setSelectedStorageSlot("1"); } success.show("storage_saved"); }}
-        onStartBarcodeScanner={catalog.startBarcodeScanner}
         onScanLabel={() => catalog.handleLabelPhoto(setDraft)}
         onOpenSystembolaget={handleOpenSystembolaget}
-        onSetImportMode={catalog.setImportMode}
-        onApplyCatalogSuggestion={() => catalog.applyCatalogSuggestion(draft, setDraft)}
-        onToggleImportField={catalog.toggleImportField}
         onChooseImage={async () => { const uri = await images.pickImageFromLibrary(); if (uri) setDraft((c) => ({ ...c, imageUri: uri })); }}
         onTakePhoto={async () => { const uri = await images.takePhoto(); if (uri) setDraft((c) => ({ ...c, imageUri: uri })); }}
         onSaveWine={handleSaveWine}
@@ -469,11 +441,11 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
         onStorageSpaceDraftChange={(patch) => data.setStorageSpaceDraft((c) => ({ ...c, ...patch }))}
       />
       {activeSection === "history" || (activeSection === "cellar" && !tastingSessionsVisible) ? (
-        <RNView style={styles.scrollFlex}>
+        <RNView style={[styles.scrollFlex, { backgroundColor: colors.bg }]}>
           {activePanel}
         </RNView>
       ) : (
-        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" style={styles.scrollFlex} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6f1d1b" colors={["#6f1d1b"]} />}>
+        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" style={[styles.scrollFlex, { backgroundColor: colors.bg }]} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} colors={[colors.accent]} />}>
           {activePanel}
           <RNView style={styles.footerRow}>
             <Pressable onPress={handleVersionTap}><RNText style={styles.footerVersion}>{BUILD_VERSION}</RNText></Pressable>

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { styles as theme } from "../styles/theme";
+import { styles as theme, colors } from "../styles/theme";
 import { LabeledInput, SuggestionRow } from "./form-controls";
 import type { SessionWineRow } from "../types/tasting-session";
 import { buildWsetSummary, type WsetTastingData } from "../lib/wset-data";
@@ -87,14 +87,14 @@ export function SessionTastingView({
 const localStyles = StyleSheet.create({
   container: { flex: 1 },
   header: { flexDirection: "row", alignItems: "flex-start", gap: 12, marginBottom: 12 },
-  position: { color: "#6f1d1b", fontSize: 11, fontWeight: "700", letterSpacing: 2, textTransform: "uppercase" },
-  wineName: { color: "#231815", fontSize: 20, fontWeight: "700" },
-  wineMeta: { color: "#564a40", fontSize: 13, marginTop: 2 },
-  backText: { color: "#6f1d1b", fontSize: 15, fontWeight: "600" },
+  position: { color: colors.accent, fontSize: 11, fontWeight: "700", letterSpacing: 2, textTransform: "uppercase" },
+  wineName: { color: colors.text, fontSize: 20, fontWeight: "700" },
+  wineMeta: { color: colors.textSecondary, fontSize: 13, marginTop: 2 },
+  backText: { color: colors.accent, fontSize: 15, fontWeight: "600" },
   form: { gap: 14, paddingBottom: 24 },
-  wsetCard: { backgroundColor: "#ead8ca", borderRadius: 12, padding: 12, gap: 4 },
-  wsetLabel: { color: "#6f1d1b", fontSize: 12, fontWeight: "700", textTransform: "uppercase", letterSpacing: 1 },
-  wsetSummary: { color: "#564a40", fontSize: 13, lineHeight: 18 },
-  wsetButton: { backgroundColor: "#ead8ca", borderRadius: 999, paddingVertical: 12, alignItems: "center" },
-  wsetButtonText: { color: "#6f1d1b", fontWeight: "700" },
+  wsetCard: { backgroundColor: colors.surfaceAlt, borderRadius: 12, padding: 12, gap: 4 },
+  wsetLabel: { color: colors.accent, fontSize: 12, fontWeight: "700", textTransform: "uppercase", letterSpacing: 1 },
+  wsetSummary: { color: colors.textSecondary, fontSize: 13, lineHeight: 18 },
+  wsetButton: { backgroundColor: colors.surfaceAlt, borderRadius: 999, paddingVertical: 12, alignItems: "center" },
+  wsetButtonText: { color: colors.accent, fontWeight: "700" },
 });

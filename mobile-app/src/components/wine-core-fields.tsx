@@ -4,16 +4,15 @@ import { AutocompleteInput, DoubleRow, LabeledInput, SuggestionRow, type Suggest
 
 const WINE_TYPE_OPTIONS = ["Rött", "Vitt", "Mousserande", "Sött"];
 
-export function WineCoreFields({ draft, tastingMode, effectiveCountryOptions, effectiveRegionOptions, effectiveGrapeOptions, countryReferenceRows, regionReferenceRows, grapeReferenceRows, searchWineNames, onDraftChange, onNameSelected }: {
+export function WineCoreFields({ draft, tastingMode, effectiveCountryOptions, effectiveRegionOptions, effectiveGrapeOptions, countryReferenceRows, regionReferenceRows, grapeReferenceRows, onDraftChange }: {
   draft: WineDraft; tastingMode: boolean;
   effectiveCountryOptions: string[]; effectiveRegionOptions: string[]; effectiveGrapeOptions: string[];
   countryReferenceRows: ReferenceOptionRow[]; regionReferenceRows: ReferenceOptionRow[]; grapeReferenceRows: ReferenceOptionRow[];
-  searchWineNames: (query: string, offset?: number) => Promise<{ suggestions: Suggestion[]; hasMore: boolean; nextOffset: number }>;
-  onDraftChange: (patch: Partial<WineDraft>) => void; onNameSelected: (value: string, producer?: string | null) => void;
+  onDraftChange: (patch: Partial<WineDraft>) => void;
 }) {
   return (
     <>
-      <AutocompleteInput label="Namn" value={draft.name} onChangeText={(value) => onDraftChange({ name: value })} onOptionSelected={onNameSelected} options={[]} searchAsync={searchWineNames} placeholder="Skriv minst 4 bokstäver" minimumQueryLength={4} />
+      <LabeledInput label="Namn" value={draft.name} onChangeText={(value) => onDraftChange({ name: value })} />
       <LabeledInput label="Producent" value={draft.producer} onChangeText={(value) => onDraftChange({ producer: value })} />
       <DoubleRow>
         <AutocompleteInput label="Land" value={draft.country} onChangeText={(value) => onDraftChange({ country: value })} options={effectiveCountryOptions} optionRows={countryReferenceRows} placeholder="Skriv t.ex. fr eller it" />

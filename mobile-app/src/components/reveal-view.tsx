@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
+import { colors } from "../styles/theme";
 import { Avatar } from "./avatar";
 import type { SessionParticipant, SessionTastingRow, SessionWineRow, TastingSessionRow } from "../types/tasting-session";
 import { averageRating, consensusLevel, stddev } from "../lib/session-results";
@@ -157,19 +158,19 @@ function RatingRow({ participant, rating, notes, delay }: {
 const s = StyleSheet.create({
   container: { gap: 12 },
   topRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  backText: { color: "#6f1d1b", fontWeight: "600", fontSize: 14 },
-  progress: { color: "#564a40", fontSize: 13, fontWeight: "700" },
-  card: { backgroundColor: "#fffaf5", borderRadius: 22, padding: 20, gap: 8, borderWidth: 1, borderColor: "#ead8ca" },
-  winePosition: { color: "#564a40", fontSize: 12, fontWeight: "700", textTransform: "uppercase", letterSpacing: 1 },
-  wineName: { color: "#231815", fontSize: 22, fontWeight: "800" },
-  wineMeta: { color: "#564a40", fontSize: 14 },
+  backText: { color: colors.accent, fontWeight: "600", fontSize: 14 },
+  progress: { color: colors.textSecondary, fontSize: 13, fontWeight: "700" },
+  card: { backgroundColor: colors.textLight, borderRadius: 22, padding: 20, gap: 8, borderWidth: 1, borderColor: colors.surfaceAlt },
+  winePosition: { color: colors.textSecondary, fontSize: 12, fontWeight: "700", textTransform: "uppercase", letterSpacing: 1 },
+  wineName: { color: colors.text, fontSize: 22, fontWeight: "800" },
+  wineMeta: { color: colors.textSecondary, fontSize: 14 },
   ratingsSection: { marginTop: 12, gap: 10 },
   ratingRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  ratingName: { color: "#231815", fontSize: 14, fontWeight: "600", flex: 1 },
-  ratingValue: { color: "#6f1d1b", fontSize: 16, fontWeight: "800" },
-  ratingNotes: { color: "#564a40", fontSize: 12, flex: 1 },
-  summaryRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 8, paddingTop: 10, borderTopWidth: 1, borderTopColor: "#ead8ca" },
-  avgLabel: { color: "#6f1d1b", fontSize: 16, fontWeight: "800" },
+  ratingName: { color: colors.text, fontSize: 14, fontWeight: "600", flex: 1 },
+  ratingValue: { color: colors.accent, fontSize: 16, fontWeight: "800" },
+  ratingNotes: { color: colors.textSecondary, fontSize: 12, flex: 1 },
+  summaryRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 8, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.surfaceAlt },
+  avgLabel: { color: colors.accent, fontSize: 16, fontWeight: "800" },
   consensusBadge: { borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4 },
   consensusHigh: { backgroundColor: "rgba(120,180,100,0.15)" },
   consensusLow: { backgroundColor: "rgba(200,120,80,0.15)" },
@@ -177,11 +178,11 @@ const s = StyleSheet.create({
   consensusTextHigh: { color: "#5a8a4a" },
   consensusTextLow: { color: "#c87850" },
   controls: { marginTop: 4 },
-  primaryBtn: { backgroundColor: "#6f1d1b", borderRadius: 999, paddingVertical: 16, alignItems: "center" },
-  primaryBtnText: { color: "#fffaf5", fontWeight: "700", fontSize: 16 },
-  waitText: { color: "#564a40", fontSize: 14, textAlign: "center", fontStyle: "italic" },
-  prevWine: { flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: "#ead8ca", borderRadius: 12, padding: 10 },
-  prevPosition: { color: "#6f1d1b", fontSize: 14, fontWeight: "700", width: 24 },
-  prevName: { color: "#231815", fontSize: 14, fontWeight: "600", flex: 1 },
-  prevRating: { color: "#6f1d1b", fontSize: 14, fontWeight: "700" },
+  primaryBtn: { backgroundColor: colors.accent, borderRadius: 999, paddingVertical: 16, alignItems: "center" },
+  primaryBtnText: { color: colors.textLight, fontWeight: "700", fontSize: 16 },
+  waitText: { color: colors.textSecondary, fontSize: 14, textAlign: "center", fontStyle: "italic" },
+  prevWine: { flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: colors.surfaceAlt, borderRadius: 12, padding: 10 },
+  prevPosition: { color: colors.accent, fontSize: 14, fontWeight: "700", width: 24 },
+  prevName: { color: colors.text, fontSize: 14, fontWeight: "600", flex: 1 },
+  prevRating: { color: colors.accent, fontSize: 14, fontWeight: "700" },
 });

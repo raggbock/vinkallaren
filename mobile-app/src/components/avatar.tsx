@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
+import { colors } from "../styles/theme";
 import { generateAvatarColor, getAvatarLetter } from "../lib/profile-actions";
 
 type AvatarProps = {
@@ -49,10 +50,10 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,
-    borderColor: "#fffaf5",
+    borderColor: colors.textLight,
   },
   letter: {
-    color: "#fffaf5",
+    color: colors.textLight,
     fontWeight: "700",
   },
   row: {
@@ -63,11 +64,11 @@ const s = StyleSheet.create({
     zIndex: 1,
   },
   overflow: {
-    backgroundColor: "#564a40",
+    backgroundColor: colors.textSecondary,
     zIndex: 0,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,
-    borderColor: "#fffaf5",
+    borderColor: colors.textLight,
   },
 });

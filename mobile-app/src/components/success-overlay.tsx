@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
+import { colors } from "../styles/theme";
 
 type SuccessConfig = { icon: string; title: string; subtitle?: string };
 
@@ -74,7 +75,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(43, 23, 20, 0.55)",
   },
   card: {
-    backgroundColor: "#2b1714",
+    backgroundColor: colors.surface,
     borderRadius: 24,
     paddingVertical: 32,
     paddingHorizontal: 40,
@@ -82,23 +83,23 @@ const styles = StyleSheet.create({
     gap: 8,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.35,
+    shadowOpacity: 0.15,
     shadowRadius: 24,
     elevation: 12,
     borderWidth: 1,
-    borderColor: "rgba(244, 195, 140, 0.25)",
+    borderColor: colors.border,
   },
   icon: {
     fontSize: 48,
     marginBottom: 4,
   },
   title: {
-    color: "#fff6ee",
+    color: colors.text,
     fontSize: 22,
     fontWeight: "700",
   },
   subtitle: {
-    color: "#d4bfaa",
+    color: colors.textSecondary,
     fontSize: 14,
   },
 });

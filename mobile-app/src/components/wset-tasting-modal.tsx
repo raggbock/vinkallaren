@@ -1,4 +1,5 @@
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { colors } from "../styles/theme";
 import { AnimatedModal } from "./animated-modal";
 import { useEffect, useState } from "react";
 import {
@@ -123,7 +124,7 @@ function NoseStep({ data, setData, toggleTag }: StepProps & { toggleTag: (list: 
       <Text style={styles.sectionLabel}>Aromas</Text>
       <TagSelector sections={AROMA_LEXICON} selected={data.nose.aromas}
         onToggle={(tag) => setData({ ...data, nose: { ...data.nose, aromas: toggleTag(data.nose.aromas, tag) } })} />
-      <TextInput style={styles.textInput} placeholder="Additional aroma notes..." placeholderTextColor="#8f8178"
+      <TextInput style={styles.textInput} placeholder="Additional aroma notes..." placeholderTextColor={colors.textSecondary}
         value={data.nose.aromaNote ?? ""} onChangeText={(v) => setData({ ...data, nose: { ...data.nose, aromaNote: v || null } })} multiline />
     </>
   );
@@ -143,7 +144,7 @@ function PalateStep({ data, setData, wineType, toggleTag }: StepProps & { wineTy
       <Text style={styles.sectionLabel}>Flavours</Text>
       <TagSelector sections={AROMA_LEXICON} selected={data.palate.flavours}
         onToggle={(tag) => setData({ ...data, palate: { ...data.palate, flavours: toggleTag(data.palate.flavours, tag) } })} />
-      <TextInput style={styles.textInput} placeholder="Additional flavour notes..." placeholderTextColor="#8f8178"
+      <TextInput style={styles.textInput} placeholder="Additional flavour notes..." placeholderTextColor={colors.textSecondary}
         value={data.palate.flavourNote ?? ""} onChangeText={(v) => setData({ ...data, palate: { ...data.palate, flavourNote: v || null } })} multiline />
       <OptionRow label="Finish" options={[...PALATE_FINISH]} selected={data.palate.finish} onSelect={(v) => setData({ ...data, palate: { ...data.palate, finish: v as any } })} />
     </>
@@ -225,7 +226,7 @@ function TagSelector({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#f8f1e8",
+    backgroundColor: colors.surface,
     borderRadius: 20,
     padding: 18,
     width: "90%",
@@ -241,7 +242,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   eyebrow: {
-    color: "#6f1d1b",
+    color: colors.accent,
     letterSpacing: 2,
     fontSize: 11,
     fontWeight: "700",
@@ -249,7 +250,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   title: {
-    color: "#2b1714",
+    color: colors.text,
     fontSize: 22,
     fontWeight: "700",
   },
@@ -259,7 +260,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   closeText: {
-    color: "#6f1d1b",
+    color: colors.accent,
     fontSize: 15,
     fontWeight: "600",
     marginTop: 6,
@@ -269,7 +270,7 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   sectionLabel: {
-    color: "#6f1d1b",
+    color: colors.accent,
     fontSize: 13,
     fontWeight: "700",
     letterSpacing: 1,
@@ -280,7 +281,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   optionLabel: {
-    color: "#2b1714",
+    color: colors.text,
     fontSize: 14,
     fontWeight: "600",
   },
@@ -293,20 +294,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 18,
-    backgroundColor: "#ead8ca",
+    backgroundColor: colors.surfaceAlt,
     borderWidth: 1,
     borderColor: "#d4bfaa",
   },
   chipSelected: {
-    backgroundColor: "#6f1d1b",
-    borderColor: "#6f1d1b",
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
   },
   chipText: {
-    color: "#564a40",
+    color: colors.textSecondary,
     fontSize: 13,
   },
   chipTextSelected: {
-    color: "#fff6ee",
+    color: colors.textLight,
     fontWeight: "600",
   },
   tagSelector: {
@@ -339,25 +340,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 9,
     paddingVertical: 4,
     borderRadius: 12,
-    backgroundColor: "#ead8ca",
+    backgroundColor: colors.surfaceAlt,
     borderWidth: 1,
     borderColor: "#d4bfaa",
   },
   tagSelected: {
-    backgroundColor: "#6f1d1b",
-    borderColor: "#6f1d1b",
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
   },
   tagText: {
-    color: "#564a40",
+    color: colors.textSecondary,
     fontSize: 12,
   },
   tagTextSelected: {
-    color: "#f4c38c",
+    color: colors.warm,
     fontWeight: "600",
   },
   textInput: {
-    backgroundColor: "#ead8ca",
-    color: "#2b1714",
+    backgroundColor: colors.surfaceAlt,
+    color: colors.text,
     borderRadius: 10,
     padding: 12,
     fontSize: 14,
@@ -371,29 +372,29 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     gap: 10,
     borderTopWidth: 1,
-    borderTopColor: "#ead8ca",
+    borderTopColor: colors.surfaceAlt,
   },
   navButtonPrimary: {
     flex: 1,
-    backgroundColor: "#6f1d1b",
+    backgroundColor: colors.accent,
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: "center",
   },
   navButtonPrimaryText: {
-    color: "#fff6ee",
+    color: colors.textLight,
     fontSize: 15,
     fontWeight: "700",
   },
   navButtonSecondary: {
     flex: 1,
-    backgroundColor: "#ead8ca",
+    backgroundColor: colors.surfaceAlt,
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: "center",
   },
   navButtonSecondaryText: {
-    color: "#564a40",
+    color: colors.textSecondary,
     fontSize: 15,
     fontWeight: "600",
   },

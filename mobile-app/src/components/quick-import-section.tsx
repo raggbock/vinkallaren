@@ -3,6 +3,7 @@ import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import type { WineDraft } from "../types/cellar-drafts";
 import { LabeledInput } from "./form-controls";
 import type { ProductCatalogWineRow } from "../types/product-catalog";
+import { colors } from "../styles/theme";
 import type { styles as themeStyles } from "../styles/theme";
 
 type SharedStyles = typeof themeStyles;
@@ -94,7 +95,7 @@ function LookupStatus({ styles, lookupBusy, lookupMessage }: {
     <>
       {lookupBusy ? (
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginVertical: 4 }}>
-          <ActivityIndicator size="small" color="#6f1d1b" />
+          <ActivityIndicator size="small" color={colors.accent} />
           <Text style={styles.notesText}>{lookupMessage || "Söker efter produktdata..."}</Text>
         </View>
       ) : null}

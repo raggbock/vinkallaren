@@ -2,7 +2,7 @@ import { type ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { AvatarRow } from "./avatar";
 import { getPersonalProgress, getWineProgress, isAllDone } from "../lib/session-progress";
-import { styles as theme } from "../styles/theme";
+import { styles as theme, colors } from "../styles/theme";
 import type { SessionParticipant, SessionTastingRow, SessionToast, SessionWineRow, TastingSessionRow } from "../types/tasting-session";
 
 export { isAllDone } from "../lib/session-progress";
@@ -126,25 +126,25 @@ export function ActiveSessionView({
 const s = StyleSheet.create({
   headerRow: { flexDirection: "row", alignItems: "flex-start", gap: 12, zIndex: 999 },
   badgeRow: { flexDirection: "row", gap: 6, marginBottom: 4 },
-  title: { color: "#231815", fontSize: 20, fontWeight: "800" },
-  meta: { color: "#564a40", fontSize: 13, marginTop: 2 },
+  title: { color: colors.text, fontSize: 20, fontWeight: "800" },
+  meta: { color: colors.textSecondary, fontSize: 13, marginTop: 2 },
   participantRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 4 },
-  linkText: { color: "#6f1d1b", fontWeight: "600", fontSize: 14 },
-  progressTrack: { marginTop: 8, height: 20, backgroundColor: "#ead8ca", borderRadius: 10, overflow: "hidden", justifyContent: "center" },
-  progressFill: { position: "absolute", left: 0, top: 0, bottom: 0, backgroundColor: "#6f1d1b", borderRadius: 10 },
-  progressLabel: { fontSize: 11, fontWeight: "700", color: "#231815", textAlign: "center", zIndex: 1 },
-  toast: { backgroundColor: "#6f1d1b", borderRadius: 12, paddingVertical: 8, paddingHorizontal: 14 },
-  toastText: { color: "#fffaf5", fontSize: 13, fontWeight: "600", textAlign: "center" as const },
-  wineCard: { backgroundColor: "#fffaf5", borderRadius: 18, padding: 14, gap: 8, borderWidth: 1, borderColor: "#ead8ca" },
+  linkText: { color: colors.accent, fontWeight: "600", fontSize: 14 },
+  progressTrack: { marginTop: 8, height: 20, backgroundColor: colors.surfaceAlt, borderRadius: 10, overflow: "hidden", justifyContent: "center" },
+  progressFill: { position: "absolute", left: 0, top: 0, bottom: 0, backgroundColor: colors.accent, borderRadius: 10 },
+  progressLabel: { fontSize: 11, fontWeight: "700", color: colors.text, textAlign: "center", zIndex: 1 },
+  toast: { backgroundColor: colors.accent, borderRadius: 12, paddingVertical: 8, paddingHorizontal: 14 },
+  toastText: { color: colors.textLight, fontSize: 13, fontWeight: "600", textAlign: "center" as const },
+  wineCard: { backgroundColor: colors.textLight, borderRadius: 18, padding: 14, gap: 8, borderWidth: 1, borderColor: colors.surfaceAlt },
   wineCardUntasted: { opacity: 0.65 },
   wineCardHeader: { flexDirection: "row", alignItems: "center", gap: 12 },
-  winePosition: { color: "#6f1d1b", fontSize: 20, fontWeight: "700", width: 28 },
-  wineCardName: { color: "#231815", fontSize: 15, fontWeight: "600" },
-  wineCardMeta: { color: "#564a40", fontSize: 13 },
+  winePosition: { color: colors.accent, fontSize: 20, fontWeight: "700", width: 28 },
+  wineCardName: { color: colors.text, fontSize: 15, fontWeight: "600" },
+  wineCardMeta: { color: colors.textSecondary, fontSize: 13 },
   progressDots: { flexDirection: "row", gap: 4, alignItems: "center" },
-  dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: "#ead8ca" },
-  dotFilled: { backgroundColor: "#6f1d1b" },
-  avgRating: { color: "#6f1d1b", fontSize: 13, fontWeight: "700", paddingLeft: 40 },
+  dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.surfaceAlt },
+  dotFilled: { backgroundColor: colors.accent },
+  avgRating: { color: colors.accent, fontSize: 13, fontWeight: "700", paddingLeft: 40 },
   otherTastings: { gap: 4, paddingLeft: 40 },
-  otherTasting: { color: "#564a40", fontSize: 13 },
+  otherTasting: { color: colors.textSecondary, fontSize: 13 },
 });

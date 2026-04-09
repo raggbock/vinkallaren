@@ -1,6 +1,6 @@
-import { ActivityIndicator, Animated, Image, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Animated, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { Children, useEffect, useRef, useState, type ComponentProps, type ReactNode } from "react";
-import { styles as theme } from "../styles/theme";
+import { styles as theme, colors } from "../styles/theme";
 
 import type { ReferenceOptionRow } from "../types/reference-data";
 import type { StorageSpaceRow } from "../types/storage-space";
@@ -36,7 +36,7 @@ export function LabeledInput({ label, multiline, ...props }: ComponentProps<type
     <View style={theme.inputGroup}>
       <Text style={theme.inputLabel}>{label}</Text>
       <TextInput
-        placeholderTextColor="#8f8178"
+        placeholderTextColor={colors.textSecondary}
         style={[theme.input, multiline && styles.textarea]}
         multiline={multiline}
         {...props}
@@ -55,21 +55,28 @@ function todayString() {
 
 export function DateInput({ label, value, onChangeText }: { label: string; value: string; onChangeText: (value: string) => void }) {
   const isToday = value === todayString();
+  const inputRef = useRef<TextInput>(null);
+
+  // RN Web ignores the type prop — patch DOM directly
+  useEffect(() => {
+    if (Platform.OS !== "web" || !inputRef.current) return;
+    const el = inputRef.current as unknown as HTMLElement;
+    const input = el.querySelector ? el.querySelector("input") : el;
+    if (input && "type" in input) (input as HTMLInputElement).type = "date";
+  }, []);
 
   return (
     <View style={theme.inputGroup}>
       <Text style={theme.inputLabel}>{label}</Text>
       <View style={dateStyles.row}>
-        <View style={dateStyles.inputWrap}>
+        <View style={dateStyles.inputWrap} ref={inputRef as any}>
           <TextInput
             value={value}
             onChangeText={onChangeText}
             placeholder="ÅÅÅÅ-MM-DD"
-            placeholderTextColor="#8f8178"
+            placeholderTextColor={colors.textSecondary}
             style={theme.input}
-            {...(Platform.OS === "web"
-              ? { type: "date" } // react-native-web supports type="date"
-              : { keyboardType: "number-pad" as const, maxLength: 10 })}
+            {...(Platform.OS !== "web" ? { keyboardType: "number-pad" as const, maxLength: 10 } : {})}
           />
         </View>
         <Pressable
@@ -92,9 +99,9 @@ const dateStyles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "#f0e5d9",
   },
-  todayBtnActive: { backgroundColor: "#6f1d1b" },
-  todayText: { color: "#564a40", fontWeight: "700", fontSize: 13 },
-  todayTextActive: { color: "#fff6ee" },
+  todayBtnActive: { backgroundColor: colors.accent },
+  todayText: { color: colors.textSecondary, fontWeight: "700", fontSize: 13 },
+  todayTextActive: { color: colors.textLight },
 });
 
 
@@ -326,31 +333,68 @@ export function StorageSpaceForm({
   );
 }
 
-export function ImportSelectionRow({
-  label,
-  selected,
-  onToggle,
-}: {
-  label: string;
-  selected: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <Pressable onPress={onToggle} style={[styles.importOptionRow, selected && styles.importOptionRowActive]}>
-      <Text style={[styles.importOptionText, selected && styles.importOptionTextActive]}>{label}</Text>
-      <Text style={[styles.importOptionState, selected && styles.importOptionTextActive]}>
-        {selected ? "Ja" : "Nej"}
-      </Text>
-    </Pressable>
-  );
-}
 
-const logoBanner = require("../../assets/logo-banner.png");
+function SvgLogo() {
+  const logoRef = useRef<View>(null);
+  useEffect(() => {
+    if (Platform.OS !== "web" || !logoRef.current) return;
+    const el = logoRef.current as unknown as HTMLDivElement;
+    el.innerHTML = `<svg viewBox="0 0 360 150" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
+      <!-- Oval crest — outer border -->
+      <ellipse cx="180" cy="72" rx="155" ry="65" fill="none" stroke="#2A2A2A" stroke-width="1.8" opacity="0.14"/>
+      <!-- Inner accent border -->
+      <ellipse cx="180" cy="72" rx="146" ry="58" fill="none" stroke="#C83C2D" stroke-width="0.6" opacity="0.13"/>
+
+      <!-- Grape cluster ornament top -->
+      <circle cx="162" cy="8" r="4" fill="#C83C2D" opacity="0.16"/>
+      <circle cx="172" cy="5" r="3.5" fill="#C83C2D" opacity="0.14"/>
+      <circle cx="180" cy="7" r="4.2" fill="#C83C2D" opacity="0.17"/>
+      <circle cx="189" cy="4.5" r="3.5" fill="#C83C2D" opacity="0.14"/>
+      <circle cx="198" cy="8" r="4" fill="#C83C2D" opacity="0.16"/>
+      <circle cx="167" cy="13" r="3" fill="#C83C2D" opacity="0.11"/>
+      <circle cx="175" cy="12" r="3.2" fill="#C83C2D" opacity="0.1"/>
+      <circle cx="185" cy="12" r="3.2" fill="#C83C2D" opacity="0.1"/>
+      <circle cx="193" cy="13" r="3" fill="#C83C2D" opacity="0.11"/>
+      <!-- Vine leaves hint -->
+      <path d="M152 10 Q148 4, 142 6 Q145 2, 150 5" stroke="#2A2A2A" stroke-width="0.7" fill="none" opacity="0.1" stroke-linecap="round"/>
+      <path d="M208 10 Q212 4, 218 6 Q215 2, 210 5" stroke="#2A2A2A" stroke-width="0.7" fill="none" opacity="0.1" stroke-linecap="round"/>
+      <!-- Tendril -->
+      <path d="M142 8 Q136 12, 138 18" stroke="#2A2A2A" stroke-width="0.5" fill="none" opacity="0.08" stroke-linecap="round"/>
+      <path d="M218 8 Q224 12, 222 18" stroke="#2A2A2A" stroke-width="0.5" fill="none" opacity="0.08" stroke-linecap="round"/>
+
+      <!-- SEDAN 2026 -->
+      <text x="180" y="48" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, serif" font-size="10" fill="#C83C2D" letter-spacing="4.5" font-weight="600">SEDAN 2026</text>
+
+      <!-- Thin decorative rule -->
+      <line x1="105" y1="53" x2="255" y2="53" stroke="#C83C2D" stroke-width="0.35" opacity="0.15"/>
+
+      <!-- Vinkällaren -->
+      <text x="180" y="84" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, serif" font-size="42" fill="#2A2A2A" font-weight="700" letter-spacing="1.5">Vinkällaren</text>
+
+      <!-- Thin decorative rule -->
+      <line x1="110" y1="91" x2="250" y2="91" stroke="#C83C2D" stroke-width="0.35" opacity="0.15"/>
+
+      <!-- SAMLA · SMAKA · UPPTÄCK -->
+      <text x="180" y="106" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, serif" font-size="8.5" fill="#6B6B6B" letter-spacing="4.5" font-weight="400">SAMLA · SMAKA · UPPTÄCK</text>
+
+      <!-- Small grape ornament bottom -->
+      <circle cx="170" cy="133" r="3.2" fill="#C83C2D" opacity="0.12"/>
+      <circle cx="180" cy="135" r="3.8" fill="#C83C2D" opacity="0.14"/>
+      <circle cx="190" cy="133" r="3.2" fill="#C83C2D" opacity="0.12"/>
+      <circle cx="175" cy="138" r="2.5" fill="#C83C2D" opacity="0.09"/>
+      <circle cx="185" cy="138" r="2.5" fill="#C83C2D" opacity="0.09"/>
+    </svg>`;
+  }, []);
+  if (Platform.OS !== "web") {
+    return <Text style={{ fontFamily: "Georgia", fontSize: 28, fontWeight: "700", color: "#2A2A2A" }}>Vinkällaren</Text>;
+  }
+  return <View ref={logoRef} style={{ width: "100%", height: 150 }} />;
+}
 
 export function PanelHeader({ rightLabel, onRightPress }: { title?: string; rightLabel?: string; onRightPress?: () => void }) {
   return (
     <View style={styles.panelHero}>
-      <Image source={logoBanner} style={styles.panelHeroLogo} resizeMode="contain" />
+      <SvgLogo />
       {rightLabel ? (
         <View style={styles.panelTitleRow}>
           <View />
@@ -364,7 +408,7 @@ export function PanelHeader({ rightLabel, onRightPress }: { title?: string; righ
 export function LoadingInline({ label = "Laddar viner..." }: { label?: string }) {
   return (
     <View style={styles.loadingInline}>
-      <ActivityIndicator color="#6f1d1b" />
+      <ActivityIndicator color={colors.accent} />
       <Text style={styles.notesText}>{label}</Text>
     </View>
   );
@@ -379,13 +423,13 @@ const styles = StyleSheet.create({
   doubleRow: { flexDirection: "row", gap: 12 },
   doubleRowItem: { flex: 1 },
   insightCard: {
-    backgroundColor: "#fffaf5",
+    backgroundColor: colors.textLight,
     borderRadius: 18,
     padding: 14,
     gap: 6,
   },
   insightValue: {
-    color: "#231815",
+    color: colors.text,
     fontSize: 18,
     fontWeight: "700",
   },
@@ -402,14 +446,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#f0e5d9",
   },
   suggestionPillActive: {
-    backgroundColor: "#6f1d1b",
+    backgroundColor: colors.accent,
   },
   suggestionText: {
-    color: "#564a40",
+    color: colors.textSecondary,
     fontWeight: "600",
   },
   suggestionTextActive: {
-    color: "#fff6ee",
+    color: colors.textLight,
   },
   sectionToggle: {
     flexDirection: "row",
@@ -423,39 +467,13 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderRadius: 12,
-    backgroundColor: "#fffaf5",
+    backgroundColor: colors.textLight,
     borderWidth: 1,
-    borderColor: "#ead8ca",
+    borderColor: colors.surfaceAlt,
   },
   categoryRowExpanded: {
     backgroundColor: "#f0e5d9",
     borderColor: "#d4c4b4",
-  },
-  importOptionRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#ead8ca",
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    backgroundColor: "#fffaf5",
-  },
-  importOptionRowActive: {
-    borderColor: "#6f1d1b",
-    backgroundColor: "#f7ece8",
-  },
-  importOptionText: {
-    color: "#231815",
-    fontWeight: "600",
-  },
-  importOptionState: {
-    color: "#564a40",
-    fontWeight: "700",
-  },
-  importOptionTextActive: {
-    color: "#6f1d1b",
   },
   loadingInline: {
     flexDirection: "row",
@@ -464,35 +482,35 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   notesText: {
-    color: "#564a40",
+    color: colors.textSecondary,
     lineHeight: 21,
   },
   secondaryButton: {
-    backgroundColor: "#ead8ca",
+    backgroundColor: colors.surfaceAlt,
     borderRadius: 999,
     paddingVertical: 12,
     paddingHorizontal: 16,
     alignItems: "center",
   },
   secondaryButtonText: {
-    color: "#6f1d1b",
+    color: colors.accent,
     fontWeight: "700",
   },
   panelHero: {
-    backgroundColor: "#2b1714",
-    marginTop: -18,
-    marginHorizontal: -18,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 14,
+    backgroundColor: "transparent",
+    marginTop: -8,
+    marginHorizontal: -8,
+    paddingHorizontal: 12,
+    paddingTop: 8,
+    paddingBottom: 4,
     alignItems: "center",
-    gap: 10,
+    gap: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
   panelHeroLogo: {
     width: "100%",
-    height: 160,
+    height: 140,
   },
   panelHeroRow: {
     flexDirection: "row",
@@ -507,22 +525,22 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   panelHeroTitle: {
-    color: "#ead8ca",
+    color: colors.surfaceAlt,
     fontSize: 20,
     fontWeight: "400",
     letterSpacing: 0.5,
   },
   panelHeroLink: {
-    color: "#8a7566",
+    color: colors.accent,
     fontWeight: "600",
     fontSize: 12,
   },
   storageSpaceForm: {
-    backgroundColor: "#fffaf5",
+    backgroundColor: colors.textLight,
     borderRadius: 18,
     padding: 14,
     gap: 10,
     borderWidth: 1,
-    borderColor: "#ead8ca",
+    borderColor: colors.surfaceAlt,
   },
 });

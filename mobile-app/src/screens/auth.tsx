@@ -2,7 +2,7 @@ import { Image, Text, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { ActivityIndicator } from "react-native";
 
-import { styles } from "../styles/theme";
+import { styles, colors } from "../styles/theme";
 
 export function SetupScreen() {
   return (
@@ -33,7 +33,7 @@ export function LoadingScreen({ label }: { label: string }) {
     <View style={styles.screenCentered}>
       <StatusBar style="light" />
       <Image source={logoSquare} style={{ width: 120, height: 120, marginBottom: 16 }} resizeMode="contain" />
-      <ActivityIndicator size="large" color="#f4c38c" />
+      <ActivityIndicator size="large" color={colors.warm} />
       <Text style={styles.loadingText}>{label}</Text>
     </View>
   );

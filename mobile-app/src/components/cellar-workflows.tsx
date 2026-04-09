@@ -11,6 +11,7 @@ import type { WineHistoryRecord } from "../types/wine-history";
 import { buildWsetSummary, type WsetTastingData } from "../lib/wset-data";
 import { AutocompleteInput, DateInput, DoubleRow, LabeledInput, SuggestionRow, type Suggestion } from "./form-controls";
 
+import { colors } from "../styles/theme";
 import type { styles as themeStyles } from "../styles/theme";
 type SharedStyles = typeof themeStyles;
 const WINE_TYPE_OPTIONS = ["Rött", "Vitt", "Mousserande", "Sött"];
@@ -207,10 +208,10 @@ const vintageLoadingStyles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: "#6f1d1b",
+    backgroundColor: colors.accent,
   },
   text: {
-    color: "#8a7e74",
+    color: colors.textSecondary,
     fontSize: 14,
     fontWeight: "500",
     letterSpacing: 0.3,
@@ -274,7 +275,7 @@ export function DrinkWineModal({
                 <Text style={styles.secondaryButtonText}>Välj bild</Text>
               </Pressable>
             </View>
-            {imageUri ? <Image source={{ uri: imageUri }} style={{ width: "100%", height: 160, borderRadius: 12, backgroundColor: "#ead8ca" }} resizeMode="contain" /> : null}
+            {imageUri ? <Image source={{ uri: imageUri }} style={{ width: "100%", height: 160, borderRadius: 12, backgroundColor: colors.surfaceAlt }} resizeMode="contain" /> : null}
           </ScrollView>
 
           <View style={styles.modalActionRow}>
@@ -346,7 +347,7 @@ export function EditHistoryModal({
 
 const drinkStyles = StyleSheet.create({
   card: {
-    backgroundColor: "#f8f1e8",
+    backgroundColor: colors.surface,
     borderRadius: 20,
     padding: 18,
     width: "90%",

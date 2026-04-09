@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { ActivityIndicator, Image, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { colors } from "../styles/theme";
 import { preprocessImageForOcr, parseWineLabel, normalizeOcrText, lineQuality } from "../lib/label-ocr";
 import { computeImageHashes, hashSimilarity } from "../lib/image-hash";
 import { matchCatalogByText, matchCatalogByImage, mergeHybridMatches } from "../lib/catalog-search";
@@ -132,7 +133,7 @@ function SingleImageTest() {
           <Pressable onPress={runAllPasses} style={[s.pickBtn, busy && s.disabled]} disabled={busy}>
             {busy ? (
               <View style={s.busyRow}>
-                <ActivityIndicator color="#2b1714" />
+                <ActivityIndicator color={colors.logoPanel} />
                 <Text style={s.pickBtnText}>{progress}</Text>
               </View>
             ) : (
@@ -261,7 +262,7 @@ function BatchTest() {
       <Pressable onPress={handleBatchPick} style={[s.pickBtn, busy && s.disabled]} disabled={busy}>
         {busy ? (
           <View style={s.busyRow}>
-            <ActivityIndicator color="#2b1714" />
+            <ActivityIndicator color={colors.logoPanel} />
             <Text style={s.pickBtnText}>{progress}</Text>
           </View>
         ) : (
@@ -328,30 +329,30 @@ const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#1a0f0d" },
   content: { padding: 18, gap: 14 },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  title: { color: "#ead8ca", fontSize: 24, fontWeight: "700" },
+  title: { color: colors.surfaceAlt, fontSize: 24, fontWeight: "700" },
   closeBtn: { backgroundColor: "#3d2420", paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 },
-  closeBtnText: { color: "#ead8ca", fontSize: 14, fontWeight: "600" },
+  closeBtnText: { color: colors.surfaceAlt, fontSize: 14, fontWeight: "600" },
   tabRow: { flexDirection: "row", gap: 8 },
   tab: { flex: 1, paddingVertical: 10, borderRadius: 8, alignItems: "center", backgroundColor: "#3d2420" },
-  tabActive: { backgroundColor: "#ead8ca" },
-  tabText: { color: "#ead8ca", fontSize: 14, fontWeight: "600" },
-  tabTextActive: { color: "#2b1714" },
-  pickBtn: { backgroundColor: "#ead8ca", paddingVertical: 14, borderRadius: 10, alignItems: "center" },
-  pickBtnText: { color: "#2b1714", fontSize: 16, fontWeight: "700" },
+  tabActive: { backgroundColor: colors.surfaceAlt },
+  tabText: { color: colors.surfaceAlt, fontSize: 14, fontWeight: "600" },
+  tabTextActive: { color: colors.logoPanel },
+  pickBtn: { backgroundColor: colors.surfaceAlt, paddingVertical: 14, borderRadius: 10, alignItems: "center" },
+  pickBtnText: { color: colors.logoPanel, fontSize: 16, fontWeight: "700" },
   disabled: { opacity: 0.6 },
   busyRow: { flexDirection: "row", alignItems: "center", gap: 10 },
-  sectionTitle: { color: "#ead8ca", fontSize: 14, fontWeight: "700", marginTop: 6 },
-  preview: { width: "100%", height: 300, borderRadius: 10, backgroundColor: "#120907" },
-  previewSmall: { width: "100%", height: 200, borderRadius: 8, backgroundColor: "#120907" },
-  runCard: { backgroundColor: "#2b1714", borderRadius: 12, padding: 14, gap: 8, borderWidth: 1, borderColor: "#3d2420" },
+  sectionTitle: { color: colors.surfaceAlt, fontSize: 14, fontWeight: "700", marginTop: 6 },
+  preview: { width: "100%", height: 300, borderRadius: 10, backgroundColor: colors.black },
+  previewSmall: { width: "100%", height: 200, borderRadius: 8, backgroundColor: colors.black },
+  runCard: { backgroundColor: colors.logoPanel, borderRadius: 12, padding: 14, gap: 8, borderWidth: 1, borderColor: "#3d2420" },
   bestCard: { borderColor: "#7a9a4a", borderWidth: 2 },
   bestBadge: { color: "#7a9a4a", fontSize: 11, fontWeight: "800", letterSpacing: 1 },
-  runTitle: { color: "#ead8ca", fontSize: 15, fontWeight: "700" },
-  codeBlock: { backgroundColor: "#120907", borderRadius: 8, padding: 10 },
+  runTitle: { color: colors.surfaceAlt, fontSize: 15, fontWeight: "700" },
+  codeBlock: { backgroundColor: colors.black, borderRadius: 8, padding: 10 },
   codeLine: { color: "#c4a882", fontSize: 12, fontFamily: Platform.OS === "web" ? "monospace" : undefined, lineHeight: 18 },
   keptLine: { color: "#7a9a4a" },
   droppedLine: { color: "#6b5045", textDecorationLine: "line-through" as const },
   batchRow: { flexDirection: "row", gap: 12 },
-  batchThumb: { width: 80, height: 120, borderRadius: 8, backgroundColor: "#120907" },
+  batchThumb: { width: 80, height: 120, borderRadius: 8, backgroundColor: colors.black },
   batchInfo: { flex: 1, gap: 4 },
 });

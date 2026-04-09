@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Animated, Modal, Pressable, StyleSheet, View, type ViewStyle } from "react-native";
+import { colors } from "../styles/theme";
 
 type Props = {
   visible: boolean;
@@ -62,7 +63,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
   },
   centeredCard: {
-    backgroundColor: "#f8f1e8",
+    backgroundColor: colors.surface,
     borderRadius: 20,
     padding: 18,
     width: "90%",
@@ -72,6 +73,6 @@ const styles = StyleSheet.create({
   },
   fullscreen: {
     flex: 1,
-    backgroundColor: "#2b1714",
+    backgroundColor: colors.surface,
   },
 });

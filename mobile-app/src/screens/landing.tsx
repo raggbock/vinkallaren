@@ -16,6 +16,7 @@ import { StatusBar } from "expo-status-bar";
 
 import { supabase } from "../lib/supabase";
 import { showError } from "../lib/show-error";
+import { WineGlassDoodle } from "../components/doodles";
 
 // Expo Web supports dataSet prop for data-* attributes, but RN types don't include it.
 const web = (props: Record<string, unknown>) => props as Record<string, never>;
@@ -35,19 +36,18 @@ function useIsWide() {
   return wide;
 }
 
-/** Injects a radial gradient background on web (RN doesn't support gradients natively) */
+/** Injects web-only styles for the landing page */
 function useWebGradient() {
   useEffect(() => {
     if (Platform.OS !== "web") return;
     const style = document.createElement("style");
     style.textContent = [
-      "[data-landing-root] { background: radial-gradient(ellipse at 30% 20%, #3d2220 0%, #2b1714 55%, #1a0f0e 100%) !important; }",
-      "[data-landing-glow] { box-shadow: 0 0 40px rgba(244,195,140,0.12), 0 0 80px rgba(244,195,140,0.06); }",
-      "[data-landing-icon] { box-shadow: 0 4px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05); transition: transform 0.2s; }",
+      "[data-landing-root] { background: #FDFAF6 !important; }",
+      "[data-landing-icon] { transition: transform 0.2s; }",
       "[data-landing-icon]:hover { transform: scale(1.08); }",
-      "[data-landing-cta] { transition: filter 0.15s, transform 0.15s; }",
-      "[data-landing-cta]:hover { filter: brightness(1.1); transform: translateY(-1px); }",
-      "[data-landing-cta]:active { transform: translateY(0); filter: brightness(0.95); }",
+      "[data-landing-cta] { transition: opacity 0.15s, transform 0.15s; }",
+      "[data-landing-cta]:hover { opacity: 0.85; transform: translateY(-1px); }",
+      "[data-landing-cta]:active { transform: translateY(0); opacity: 0.7; }",
     ].join("\n");
     document.head.appendChild(style);
     return () => { document.head.removeChild(style); };
@@ -125,11 +125,34 @@ const FEATURES = [
 ] as const;
 
 function Divider() {
+  if (Platform.OS === "web") {
+    return (
+      <View style={s.divider}>
+        <View
+          style={s.dividerLine}
+          {...web({
+            dangerouslySetInnerHTML: {
+              __html: `<svg viewBox="0 0 300 12" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:12px"><path d="M0 6 Q25 2, 50 6 T100 6 T150 6 T200 6 T250 6 T300 6" stroke="#C83C2D" stroke-width="1.5" fill="none" opacity="0.4"/></svg>`,
+            },
+          })}
+        />
+        <Text style={s.dividerDot}>~</Text>
+        <View
+          style={s.dividerLine}
+          {...web({
+            dangerouslySetInnerHTML: {
+              __html: `<svg viewBox="0 0 300 12" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:12px"><path d="M0 6 Q25 10, 50 6 T100 6 T150 6 T200 6 T250 6 T300 6" stroke="#C83C2D" stroke-width="1.5" fill="none" opacity="0.4"/></svg>`,
+            },
+          })}
+        />
+      </View>
+    );
+  }
   return (
     <View style={s.divider}>
-      <View style={s.dividerLine} />
-      <Text style={s.dividerDot}>✦</Text>
-      <View style={s.dividerLine} />
+      <View style={[s.dividerLine, { height: 1, backgroundColor: "#E0D8CE" }]} />
+      <Text style={s.dividerDot}>~</Text>
+      <View style={[s.dividerLine, { height: 1, backgroundColor: "#E0D8CE" }]} />
     </View>
   );
 }
@@ -199,6 +222,9 @@ function AuthForm() {
 
   return (
     <View style={s.formCard} {...web({ dataSet: { landingGlow: true } })}>
+      <View style={{ alignItems: "center", marginBottom: -4 }}>
+        <WineGlassDoodle size={48} color="#C83C2D" />
+      </View>
       <Text style={s.formWelcome}>Välkommen in</Text>
       <View style={s.segment}>
         <Pressable onPress={() => auth.setMode("signin")} style={[s.segmentTab, auth.mode === "signin" && s.segmentTabActive]}>
@@ -233,7 +259,7 @@ export function LandingScreen({ pendingJoinCode }: { pendingJoinCode?: string | 
 
   return (
     <View style={s.root} {...web({ dataSet: { landingRoot: true } })}>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={s.flex}>
         <ScrollView contentContainerStyle={[s.container, isWide && s.containerWide]} keyboardShouldPersistTaps="handled">
           <MarketingContent isWide={isWide} />
@@ -253,7 +279,7 @@ export function LandingScreen({ pendingJoinCode }: { pendingJoinCode?: string | 
 }
 
 const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "#2b1714" },
+  root: { flex: 1, backgroundColor: "#FDFAF6" },
   flex: { flex: 1 },
   container: { flexGrow: 1, padding: 24 },
   containerWide: {
@@ -269,7 +295,7 @@ const s = StyleSheet.create({
   heroBanner: { width: "110%", height: 300, marginLeft: "-5%", marginBottom: 16 },
   heroBannerWide: { height: 380 },
   subheadline: {
-    color: "#c4a882",
+    color: "#6B6B6B",
     fontSize: 14,
     lineHeight: 22,
     marginBottom: 24,
@@ -277,49 +303,50 @@ const s = StyleSheet.create({
 
   // Decorative divider
   divider: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 24 },
-  dividerLine: { flex: 1, height: 1, backgroundColor: "rgba(244,195,140,0.2)" },
-  dividerDot: { fontSize: 14 },
+  dividerLine: { flex: 1, overflow: "hidden" as const },
+  dividerDot: { fontFamily: Platform.select({ web: '"Caveat", cursive', default: "serif" }), fontSize: 20, color: "#C83C2D" },
 
   // Feature list
   featureList: { gap: 20 },
   featureRow: { flexDirection: "row", alignItems: "flex-start", gap: 14 },
   iconBox: {
-    backgroundColor: "#3d2220",
+    backgroundColor: "#FFFFFF",
     borderRadius: 12,
     width: 44,
     height: 44,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "rgba(244,195,140,0.15)",
+    borderWidth: 1.5,
+    borderColor: "#E0D8CE",
   },
   iconText: { fontSize: 20 },
   featureText: { flex: 1 },
-  featureTitle: { color: "#fffaf5", fontSize: 14, fontWeight: "700" },
-  featureDesc: { color: "#c4a882", fontSize: 12, lineHeight: 18, marginTop: 3 },
+  featureTitle: { fontFamily: Platform.select({ web: '"Caveat", cursive', default: "serif" }), color: "#2A2A2A", fontSize: 18, fontWeight: "700" },
+  featureDesc: { color: "#6B6B6B", fontSize: 12, lineHeight: 18, marginTop: 3 },
 
   // Auth column
-  authColumn: { width: "100%", backgroundColor: "rgba(61,34,32,0.7)", borderRadius: 24, padding: 24 },
+  authColumn: { width: "100%", backgroundColor: "transparent", borderRadius: 24, padding: 0 },
   authColumnWide: {
     flexBasis: 390,
     flexShrink: 0,
     flexGrow: 0,
     width: 390,
-    backgroundColor: "rgba(61,34,32,0.7)",
+    backgroundColor: "transparent",
     borderRadius: 24,
-    padding: 32,
+    padding: 0,
   },
   formCard: {
-    backgroundColor: "rgba(43,23,20,0.9)",
+    backgroundColor: "#FFFFFF",
     borderRadius: 18,
     padding: 28,
     gap: 14,
-    borderWidth: 1,
-    borderColor: "rgba(244,195,140,0.08)",
+    borderWidth: 1.5,
+    borderColor: "#E0D8CE",
   },
   formWelcome: {
-    color: "#f4c38c",
-    fontSize: 16,
+    fontFamily: Platform.select({ web: '"Cormorant Garamond", Georgia, serif', default: "serif" }),
+    color: "#C83C2D",
+    fontSize: 20,
     fontWeight: "700",
     textAlign: "center",
     marginBottom: 4,
@@ -328,7 +355,7 @@ const s = StyleSheet.create({
   // Segment control
   segment: {
     flexDirection: "row",
-    backgroundColor: "#1a0f0e",
+    backgroundColor: "#F0EBE3",
     borderRadius: 10,
     padding: 3,
     marginBottom: 6,
@@ -339,67 +366,67 @@ const s = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 8,
   },
-  segmentTabActive: { backgroundColor: "#3d2220" },
-  segmentLabel: { color: "#8f8178", fontSize: 12, fontWeight: "600" },
-  segmentLabelActive: { color: "#fffaf5" },
+  segmentTabActive: { backgroundColor: "#FFFFFF" },
+  segmentLabel: { color: "#6B6B6B", fontSize: 12, fontWeight: "600" },
+  segmentLabelActive: { color: "#C83C2D" },
 
   // Form fields
   fieldGroup: { gap: 4 },
-  fieldLabel: { color: "#c4a882", fontSize: 11, fontWeight: "600" },
+  fieldLabel: { color: "#6B6B6B", fontSize: 11, fontWeight: "600" },
   fieldInput: {
-    backgroundColor: "#1a0f0e",
+    backgroundColor: "#FDFAF6",
     borderWidth: 1,
-    borderColor: "rgba(90,58,56,0.6)",
+    borderColor: "#E0D8CE",
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    color: "#fffaf5",
+    color: "#2A2A2A",
     fontSize: 14,
   },
 
   // CTAs
   primaryCta: {
-    backgroundColor: "#f4c38c",
+    backgroundColor: "#C83C2D",
     paddingVertical: 13,
-    borderRadius: 12,
+    borderRadius: 14,
     alignItems: "center",
     marginTop: 6,
   },
-  primaryCtaText: { color: "#2b1714", fontWeight: "700", fontSize: 14 },
+  primaryCtaText: { color: "#FFFFFF", fontWeight: "700", fontSize: 14 },
   guestCta: {
     borderWidth: 1.5,
-    borderColor: "rgba(244,195,140,0.5)",
+    borderColor: "#E0D8CE",
     paddingVertical: 11,
     borderRadius: 12,
     alignItems: "center",
   },
-  guestCtaText: { color: "#f4c38c", fontWeight: "600", fontSize: 13 },
+  guestCtaText: { color: "#6B6B6B", fontWeight: "600", fontSize: 13 },
 
   // Join banner
   joinBanner: {
-    backgroundColor: "rgba(244,195,140,0.12)",
+    backgroundColor: "#FFF8F0",
     borderRadius: 14,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: "rgba(244,195,140,0.2)",
+    borderColor: "#E8A87C",
   },
   joinBannerText: {
-    color: "#fffaf5",
+    color: "#2A2A2A",
     fontSize: 14,
     fontWeight: "700",
     textAlign: "center",
   },
   joinBannerSub: {
-    color: "#c4a882",
+    color: "#6B6B6B",
     fontSize: 12,
     textAlign: "center",
     marginTop: 4,
   },
 
   // Notices
-  notice: { color: "#c4a882", fontSize: 11, lineHeight: 16 },
-  verifyTitle: { color: "#fffaf5", fontSize: 16, fontWeight: "700" },
-  verifyText: { color: "#c4a882", fontSize: 12, lineHeight: 18 },
-  verifyHint: { color: "#8f8178", fontSize: 11, lineHeight: 16 },
+  notice: { color: "#6B6B6B", fontSize: 11, lineHeight: 16 },
+  verifyTitle: { color: "#2A2A2A", fontSize: 16, fontWeight: "700" },
+  verifyText: { color: "#6B6B6B", fontSize: 12, lineHeight: 18 },
+  verifyHint: { color: "#999", fontSize: 11, lineHeight: 16 },
 });

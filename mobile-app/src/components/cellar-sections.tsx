@@ -15,7 +15,9 @@ import { buildSessionResults } from "../lib/session-results";
 import { ResultsDashboard } from "./results-dashboard";
 import type { SessionWineRow, SessionTastingRow } from "../types/tasting-session";
 
+import { colors } from "../styles/theme";
 import type { styles as themeStyles } from "../styles/theme";
+import { WineGlassDoodle, SquigglyLine, TabIconCellar, TabIconAdd, TabIconFood, TabIconHistory } from "./doodles";
 type SharedStyles = typeof themeStyles;
 
 export function BottomTabBar({
@@ -29,17 +31,19 @@ export function BottomTabBar({
   styles: SharedStyles;
   onSelect: (section: CellarSection) => void;
 }) {
-  const TAB_ICONS: Record<string, string> = {
-    cellar: "🍷",
-    add: "＋",
-    meal: "🍽",
-    history: "📖",
+  const TAB_ICON_COMPONENTS: Record<string, React.FC<{ size?: number; color?: string }>> = {
+    cellar: TabIconCellar,
+    add: TabIconAdd,
+    meal: TabIconFood,
+    history: TabIconHistory,
   };
 
   return (
     <View style={styles.bottomTabBar}>
       {sections.map((section) => {
         const isActive = activeSection === section.key;
+        const IconComponent = TAB_ICON_COMPONENTS[section.key];
+        const iconColor = isActive ? colors.accent : colors.textSecondary;
 
         return (
           <Pressable
@@ -47,9 +51,7 @@ export function BottomTabBar({
             onPress={() => onSelect(section.key)}
             style={styles.bottomTab}
           >
-            <Text style={[styles.bottomTabIcon, isActive && styles.bottomTabIconActive]}>
-              {TAB_ICONS[section.key] || "•"}
-            </Text>
+            {IconComponent ? <IconComponent size={22} color={iconColor} /> : <Text style={[styles.bottomTabIcon, isActive && styles.bottomTabIconActive]}>{"•"}</Text>}
             <Text style={[styles.bottomTabLabel, isActive && styles.bottomTabLabelActive]}>
               {section.label}
             </Text>
@@ -136,8 +138,13 @@ export function MealPlannerPanel({
         );
       })}
 
+      {selectedMeal ? <SquigglyLine /> : null}
+
       {selectedMeal && mealRecommendations.length === 0 ? (
-        <Text style={styles.emptyState}>Inga viner matchar "{selectedMeal}" ännu.</Text>
+        <View style={{ alignItems: "center", gap: 8, paddingVertical: 12 }}>
+          <WineGlassDoodle size={44} />
+          <Text style={styles.emptyState}>Inga viner matchar "{selectedMeal}" ännu.</Text>
+        </View>
       ) : null}
 
       {mealRecommendations.map((wine) => (
@@ -221,7 +228,7 @@ export function HistoryPanel({
         <TextInput
           style={styles.input}
           placeholder="Sök namn, producent, årgång..."
-          placeholderTextColor="#8f8178"
+          placeholderTextColor={colors.textSecondary}
           value={searchQuery}
           onChangeText={setSearchQuery}
           autoCorrect={false}
@@ -231,7 +238,10 @@ export function HistoryPanel({
       {tab === "provningar" ? (
         <View style={historyStyles.sessionList}>
           {sessionCount === 0 ? (
-            <Text style={styles.emptyState}>Inga avslutade provningar ännu.</Text>
+            <View style={{ alignItems: "center", gap: 8, paddingVertical: 12 }}>
+              <WineGlassDoodle size={50} />
+              <Text style={styles.emptyState}>Inga avslutade provningar ännu.</Text>
+            </View>
           ) : (
             endedSessions!.map((ses) => (
               <ExpandableSessionCard key={ses.id} session={ses} styles={styles} />
@@ -243,7 +253,10 @@ export function HistoryPanel({
       {tab === "viner" && loadingHistory ? <LoadingInline label="Laddar historik..." /> : null}
 
       {tab === "viner" && !loadingHistory && historyEntries.length === 0 ? (
-        <Text style={styles.emptyState}>Ingen historik ännu. När du markerar att du druckit en flaska kan du sätta betyg här.</Text>
+        <View style={{ alignItems: "center", gap: 8, paddingVertical: 12 }}>
+          <WineGlassDoodle size={50} />
+          <Text style={styles.emptyState}>Ingen historik ännu. När du markerar att du druckit en flaska kan du sätta betyg här.</Text>
+        </View>
       ) : null}
 
       {tab === "viner" && !loadingHistory && historyEntries.length > 0 && filteredEntries.length === 0 ? (
@@ -258,14 +271,15 @@ export function HistoryPanel({
       keyExtractor={(item) => item.id}
       renderItem={renderItem}
       ListHeaderComponent={listHeader}
-      contentContainerStyle={[styles.scrollContent, styles.panel]}
+      style={{ backgroundColor: colors.bg }}
+      contentContainerStyle={[styles.panel, { flexGrow: 1, marginHorizontal: 20, marginTop: 20, maxWidth: 520, width: "100%", alignSelf: "center" as const }]}
       keyboardShouldPersistTaps="handled"
       refreshControl={
-        onRefresh ? <RefreshControl refreshing={refreshing ?? false} onRefresh={onRefresh} tintColor="#6f1d1b" colors={["#6f1d1b"]} /> : undefined
+        onRefresh ? <RefreshControl refreshing={refreshing ?? false} onRefresh={onRefresh} tintColor={colors.accent} colors={[colors.accent]} /> : undefined
       }
       onEndReached={tab === "viner" && hasMore ? onLoadMore : undefined}
       onEndReachedThreshold={0.5}
-      ListFooterComponent={tab === "viner" && hasMore ? <ActivityIndicator style={{ padding: 16 }} color="#6f1d1b" /> : null}
+      ListFooterComponent={tab === "viner" && hasMore ? <ActivityIndicator style={{ padding: 16 }} color={colors.accent} /> : null}
       initialNumToRender={20}
       maxToRenderPerBatch={10}
       windowSize={5}
@@ -376,13 +390,13 @@ const mealStyles = StyleSheet.create({
     alignItems: "center",
     alignSelf: "flex-start",
     gap: 8,
-    backgroundColor: "#6f1d1b",
+    backgroundColor: colors.accent,
     borderRadius: 999,
     paddingHorizontal: 14,
     paddingVertical: 8,
   },
-  selectedChipText: { color: "#fffaf5", fontWeight: "700", fontSize: 14 },
-  selectedChipClear: { color: "#ead8ca", fontSize: 12 },
+  selectedChipText: { color: colors.textLight, fontWeight: "700", fontSize: 14 },
+  selectedChipClear: { color: colors.surfaceAlt, fontSize: 12 },
   categoryRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -390,9 +404,9 @@ const mealStyles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderRadius: 12,
-    backgroundColor: "#fffaf5",
+    backgroundColor: colors.textLight,
     borderWidth: 1,
-    borderColor: "#ead8ca",
+    borderColor: colors.surfaceAlt,
   },
   categoryRowExpanded: {
     backgroundColor: "#f0e5d9",
@@ -401,18 +415,18 @@ const mealStyles = StyleSheet.create({
 });
 
 const historyStyles = StyleSheet.create({
-  tabRow: { flexDirection: "row", gap: 0, backgroundColor: "#ead8ca", borderRadius: 12, padding: 3 },
+  tabRow: { flexDirection: "row", gap: 0, backgroundColor: colors.surfaceAlt, borderRadius: 12, padding: 3 },
   tab: { flex: 1, paddingVertical: 8, alignItems: "center", borderRadius: 10 },
-  tabActive: { backgroundColor: "#6f1d1b" },
-  tabText: { color: "#6f1d1b", fontSize: 13, fontWeight: "700" },
-  tabTextActive: { color: "#fffaf5" },
+  tabActive: { backgroundColor: colors.accent },
+  tabText: { color: colors.accent, fontSize: 13, fontWeight: "700" },
+  tabTextActive: { color: colors.textLight },
   editButton: { marginTop: 8, alignSelf: "flex-start", backgroundColor: "#f0e5d9", borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
-  editButtonText: { color: "#6f1d1b", fontSize: 12, fontWeight: "700" },
+  editButtonText: { color: colors.accent, fontSize: 12, fontWeight: "700" },
   sessionHeader: { flexDirection: "row", alignItems: "center", gap: 8 },
   sessionInfo: { flex: 1, gap: 4 },
   sessionResults: { marginTop: 12 },
   sessionList: { gap: 10 },
-  consumedText: { color: "#8a7e74", fontSize: 13, fontWeight: "500" },
-  wsetSection: { marginTop: 6, paddingTop: 6, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: "#e6d7c8" },
-  wsetLabel: { color: "#8a7e74", fontWeight: "700", fontSize: 11, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 2 },
+  consumedText: { color: colors.textSecondary, fontSize: 13, fontWeight: "500" },
+  wsetSection: { marginTop: 6, paddingTop: 6, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
+  wsetLabel: { color: colors.textSecondary, fontWeight: "700", fontSize: 11, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 2 },
 });

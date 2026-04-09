@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { colors } from "../styles/theme";
 import { Avatar } from "./avatar";
 import { PanelHeader } from "./form-controls";
+import { SquigglyLine } from "./doodles";
 import { TasteProfile } from "./taste-profile";
 import type { ProfileRow } from "../lib/profile-actions";
 
@@ -65,6 +67,8 @@ export function ProfilePage({ profile, onUpdateName, onSignOut, onBack, onOpenSe
         </View>
       </View>
 
+      <SquigglyLine />
+
       <View style={s.section}>
         <Text style={s.sectionTitle}>Smakprofil</Text>
         <TasteProfile userId={profile.id} onOpenSession={onOpenSession ?? (() => {})} />
@@ -84,7 +88,7 @@ const s = StyleSheet.create({
     gap: 12,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#ead8ca",
+    borderBottomColor: colors.surfaceAlt,
   },
   avatarRow: {
     flexDirection: "row",
@@ -96,12 +100,12 @@ const s = StyleSheet.create({
     gap: 2,
   },
   displayName: {
-    color: "#231815",
+    color: colors.text,
     fontSize: 18,
     fontWeight: "700",
   },
   editLink: {
-    color: "#6f1d1b",
+    color: colors.accent,
     fontSize: 13,
     fontWeight: "600",
   },
@@ -115,30 +119,30 @@ const s = StyleSheet.create({
     flex: 1,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#ead8ca",
+    borderColor: colors.surfaceAlt,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    color: "#231815",
+    color: colors.text,
     fontSize: 16,
-    backgroundColor: "#fffaf5",
+    backgroundColor: colors.textLight,
   },
   saveBtn: {
-    backgroundColor: "#6f1d1b",
+    backgroundColor: colors.accent,
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 8,
   },
   saveBtnText: {
-    color: "#fffaf5",
+    color: colors.textLight,
     fontWeight: "700",
     fontSize: 13,
   },
   cancelText: {
-    color: "#564a40",
+    color: colors.textSecondary,
     fontSize: 13,
   },
   sectionTitle: {
-    color: "#564a40",
+    color: colors.textSecondary,
     fontSize: 12,
     fontWeight: "700",
     textTransform: "uppercase",
@@ -146,13 +150,13 @@ const s = StyleSheet.create({
   },
   signOutBtn: {
     borderWidth: 1.5,
-    borderColor: "#6f1d1b",
+    borderColor: colors.accent,
     borderRadius: 12,
     paddingVertical: 12,
     alignItems: "center",
   },
   signOutText: {
-    color: "#6f1d1b",
+    color: colors.accent,
     fontWeight: "700",
     fontSize: 14,
   },

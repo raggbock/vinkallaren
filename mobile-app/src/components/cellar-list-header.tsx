@@ -5,8 +5,9 @@ import type { StorageSpaceRow } from "../types/storage-space";
 import type { StorageSpaceDraft } from "../types/cellar-drafts";
 import type { WineRecord } from "../types/wine";
 import { Expandable, InsightCard, LabeledInput, LoadingInline, PanelHeader, StorageSpaceForm, SuggestionRow } from "./form-controls";
+import { BottleDoodle, SquigglyLine } from "./doodles";
 
-import type { styles as themeStyles } from "../styles/theme";
+import { colors, type styles as themeStyles } from "../styles/theme";
 type SharedStyles = typeof themeStyles;
 
 export type CellarListHeaderProps = {
@@ -148,10 +149,15 @@ function CellarFilters({
   );
 }
 
-function TastingsButton({ styles, onPress }: { styles: SharedStyles; onPress: () => void }) {
+function TastingsButton({ onPress }: { styles: SharedStyles; onPress: () => void }) {
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.primaryButton, { paddingVertical: 18 }, pressed && { opacity: 0.8 }]}>
-      <Text style={styles.primaryButtonText}>Provningar</Text>
+    <Pressable onPress={onPress} style={({ pressed }) => [
+      { flexDirection: "row" as const, alignItems: "center" as const, backgroundColor: colors.surfaceAlt, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 14, gap: 10 },
+      pressed && { opacity: 0.8 },
+    ]}>
+      <Text style={{ fontSize: 18 }}>🥂</Text>
+      <Text style={{ flex: 1, color: colors.accent, fontWeight: "700", fontSize: 15 }}>Provningar</Text>
+      <Text style={{ color: colors.textSecondary, fontSize: 14 }}>›</Text>
     </Pressable>
   );
 }
@@ -159,6 +165,8 @@ function TastingsButton({ styles, onPress }: { styles: SharedStyles; onPress: ()
 function EmptyState({ styles, onNavigateToAdd }: { styles: SharedStyles; onNavigateToAdd: () => void }) {
   return (
     <View style={styles.emptyStateCard}>
+      <BottleDoodle size={100} />
+      <SquigglyLine />
       <Text style={styles.emptyStateTitle}>Din källare är tom</Text>
       <Text style={styles.emptyState}>Kom igång genom att lägga till ditt första vin — skanna en streckkod eller fyll i för hand.</Text>
       <Pressable onPress={onNavigateToAdd} style={styles.primaryButton}>

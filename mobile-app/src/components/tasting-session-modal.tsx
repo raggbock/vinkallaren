@@ -13,6 +13,7 @@ import { ResultsDashboard } from "./results-dashboard";
 import { buildSessionResults } from "../lib/session-results";
 import { RevealView } from "./reveal-view";
 
+import { colors } from "../styles/theme";
 import type { styles as themeStyles } from "../styles/theme";
 type SharedStyles = typeof themeStyles;
 
@@ -263,8 +264,8 @@ function statusLabel(status: TastingSessionRow["status"]): string {
 /* ── Local styles (only what theme doesn't cover) ── */
 
 const local = StyleSheet.create({
-  meta: { color: "#564a40", fontSize: 13, marginTop: 2 },
-  sessionCard: { backgroundColor: "#fffaf5", borderRadius: 18, padding: 14, gap: 4, borderWidth: 1, borderColor: "#ead8ca" },
-  sessionTitle: { color: "#231815", fontSize: 16, fontWeight: "700" },
-  sessionMeta: { color: "#564a40", fontSize: 13 },
+  meta: { color: colors.textSecondary, fontSize: 13, marginTop: 2 },
+  sessionCard: { backgroundColor: colors.textLight, borderRadius: 18, padding: 14, gap: 4, borderWidth: 1, borderColor: colors.surfaceAlt },
+  sessionTitle: { color: colors.text, fontSize: 16, fontWeight: "700" },
+  sessionMeta: { color: colors.textSecondary, fontSize: 13 },
 });

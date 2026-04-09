@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { colors } from "../styles/theme";
 import { AutocompleteInput, Expandable, LabeledInput, SuggestionRow, type Suggestion } from "./form-controls";
 import { isAllDone } from "./session-active-view";
 import { addWineToSession, endSession, revealSession, shareSession } from "../lib/session-actions";
@@ -70,12 +71,12 @@ export function HostControls({ session, onSetSession, onEnd, activeTastings, act
           {session.status === "active" && session.mode === "blind" ? (
             <Pressable onPress={() => { setError(null); setPending("reveal"); }}
               style={[s.hostButton, allDone && s.hostButtonHighlight]}>
-              <Text style={[s.hostButtonText, allDone && { color: "#6f1d1b" }]}>{allDone ? "Alla klara \u2014 Avsl\u00F6ja!" : "Avsl\u00F6ja"}</Text>
+              <Text style={[s.hostButtonText, allDone && { color: colors.accent }]}>{allDone ? "Alla klara \u2014 Avsl\u00F6ja!" : "Avsl\u00F6ja"}</Text>
             </Pressable>
           ) : null}
           {session.status !== "ended" ? (
-            <Pressable onPress={() => { setError(null); setPending("end"); }} style={[s.hostButton, { backgroundColor: "#ead8ca" }]}>
-              <Text style={[s.hostButtonText, { color: "#6f1d1b" }]}>Avsluta</Text>
+            <Pressable onPress={() => { setError(null); setPending("end"); }} style={[s.hostButton, { backgroundColor: colors.surfaceAlt }]}>
+              <Text style={[s.hostButtonText, { color: colors.accent }]}>Avsluta</Text>
             </Pressable>
           ) : null}
         </View>
@@ -228,25 +229,25 @@ export function AddWineForm({ sessionId, wineCount, wines, searchWineNames }: {
 
 export const s = StyleSheet.create({
   actionRow: { flexDirection: "row", gap: 10 },
-  primaryBtn: { flex: 1, backgroundColor: "#6f1d1b", borderRadius: 999, paddingVertical: 14, alignItems: "center" },
-  primaryBtnText: { color: "#fffaf5", fontWeight: "700", fontSize: 15 },
-  secondaryBtn: { flex: 1, backgroundColor: "#ead8ca", borderRadius: 999, paddingVertical: 12, alignItems: "center" },
-  secondaryBtnText: { color: "#6f1d1b", fontWeight: "700" },
+  primaryBtn: { flex: 1, backgroundColor: colors.accent, borderRadius: 999, paddingVertical: 14, alignItems: "center" },
+  primaryBtnText: { color: colors.textLight, fontWeight: "700", fontSize: 15 },
+  secondaryBtn: { flex: 1, backgroundColor: colors.surfaceAlt, borderRadius: 999, paddingVertical: 12, alignItems: "center" },
+  secondaryBtnText: { color: colors.accent, fontWeight: "700" },
   formSection: { gap: 12 },
   hostControls: { flexDirection: "row", gap: 8, flexWrap: "wrap" },
-  hostButton: { backgroundColor: "#6f1d1b", borderRadius: 999, paddingVertical: 10, paddingHorizontal: 16 },
-  hostButtonText: { color: "#fffaf5", fontWeight: "700", fontSize: 13 },
-  hostButtonHighlight: { backgroundColor: "#f4c38c", borderWidth: 2, borderColor: "#6f1d1b" },
-  cellarPick: { backgroundColor: "#fffaf5", borderRadius: 12, padding: 10, borderWidth: 1, borderColor: "#ead8ca" },
-  cellarPickName: { color: "#231815", fontSize: 14, fontWeight: "600" },
-  cellarPickMeta: { color: "#564a40", fontSize: 12 },
+  hostButton: { backgroundColor: colors.accent, borderRadius: 999, paddingVertical: 10, paddingHorizontal: 16 },
+  hostButtonText: { color: colors.textLight, fontWeight: "700", fontSize: 13 },
+  hostButtonHighlight: { backgroundColor: colors.warm, borderWidth: 2, borderColor: colors.accent },
+  cellarPick: { backgroundColor: colors.textLight, borderRadius: 12, padding: 10, borderWidth: 1, borderColor: colors.surfaceAlt },
+  cellarPickName: { color: colors.text, fontSize: 14, fontWeight: "600" },
+  cellarPickMeta: { color: colors.textSecondary, fontSize: 12 },
   inlineError: { color: "#c0392b", fontSize: 13, fontWeight: "600" },
-  confirmCard: { backgroundColor: "#fffaf5", borderRadius: 14, padding: 14, gap: 8, borderWidth: 1, borderColor: "#ead8ca" },
-  confirmTitle: { color: "#231815", fontSize: 15, fontWeight: "700" },
-  confirmMessage: { color: "#564a40", fontSize: 13 },
+  confirmCard: { backgroundColor: colors.textLight, borderRadius: 14, padding: 14, gap: 8, borderWidth: 1, borderColor: colors.surfaceAlt },
+  confirmTitle: { color: colors.text, fontSize: 15, fontWeight: "700" },
+  confirmMessage: { color: colors.textSecondary, fontSize: 13 },
   confirmActions: { flexDirection: "row", gap: 8, marginTop: 4 },
-  confirmYes: { backgroundColor: "#6f1d1b", borderRadius: 999, paddingVertical: 10, paddingHorizontal: 20 },
-  confirmYesText: { color: "#fffaf5", fontWeight: "700", fontSize: 14 },
-  confirmNo: { backgroundColor: "#ead8ca", borderRadius: 999, paddingVertical: 10, paddingHorizontal: 20 },
-  confirmNoText: { color: "#6f1d1b", fontWeight: "700", fontSize: 14 },
+  confirmYes: { backgroundColor: colors.accent, borderRadius: 999, paddingVertical: 10, paddingHorizontal: 20 },
+  confirmYesText: { color: colors.textLight, fontWeight: "700", fontSize: 14 },
+  confirmNo: { backgroundColor: colors.surfaceAlt, borderRadius: 999, paddingVertical: 10, paddingHorizontal: 20 },
+  confirmNoText: { color: colors.accent, fontWeight: "700", fontSize: 14 },
 });

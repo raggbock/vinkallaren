@@ -2,7 +2,7 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, 
 import { useEffect, useRef, useState } from "react";
 
 import { normalizeLookupValue } from "../lib/cellar-helpers";
-import { styles as theme } from "../styles/theme";
+import { styles as theme, colors } from "../styles/theme";
 import type { ReferenceOptionRow } from "../types/reference-data";
 import type { Suggestion } from "./form-controls";
 import { useAutocompleteSearch } from "../hooks/useAutocompleteSearch";
@@ -52,7 +52,7 @@ export function AutocompleteInput({
       <View style={styles.autocompleteWrapper}>
         <TextInput
           placeholder={placeholder}
-          placeholderTextColor="#8f8178"
+          placeholderTextColor={colors.textSecondary}
           style={theme.input}
           value={value}
           editable={editable}
@@ -75,7 +75,7 @@ export function AutocompleteInput({
               </Pressable>
             ))}
             {loadingMore ? (
-              <ActivityIndicator size="small" color="#8f8178" style={{ paddingVertical: 8 }} />
+              <ActivityIndicator size="small" color={colors.textSecondary} style={{ paddingVertical: 8 }} />
             ) : visibleSuggestions.length < suggestions.length || asyncHasMore ? (
               <Text style={styles.autocompleteMoreHint}>
                 {visibleSuggestions.length < suggestions.length ? `${suggestions.length - visibleSuggestions.length} till \u2193` : "Scrolla f\u00f6r fler \u2193"}
@@ -90,10 +90,10 @@ export function AutocompleteInput({
 
 const styles = StyleSheet.create({
   autocompleteWrapper: { gap: 6 },
-  autocompleteListInline: { borderRadius: 16, backgroundColor: "#fffaf5", borderWidth: 1, borderColor: "#e6d7c8", overflow: "hidden", maxHeight: 280, marginBottom: 8 },
-  autocompleteItem: { paddingHorizontal: 14, paddingVertical: 12, backgroundColor: "#fffaf5", cursor: "pointer" as unknown as undefined },
+  autocompleteListInline: { borderRadius: 16, backgroundColor: colors.textLight, borderWidth: 1, borderColor: colors.border, overflow: "hidden", maxHeight: 280, marginBottom: 8 },
+  autocompleteItem: { paddingHorizontal: 14, paddingVertical: 12, backgroundColor: colors.textLight, cursor: "pointer" as unknown as undefined },
   autocompleteItemHover: { backgroundColor: "#f2e7db" },
-  autocompleteText: { color: "#231815", fontSize: 15 },
+  autocompleteText: { color: colors.text, fontSize: 15 },
   autocompleteParent: { color: "#756861", fontSize: 13 },
-  autocompleteMoreHint: { textAlign: "center", color: "#8f8178", fontSize: 12, paddingVertical: 8 },
+  autocompleteMoreHint: { textAlign: "center", color: colors.textSecondary, fontSize: 12, paddingVertical: 8 },
 });

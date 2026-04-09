@@ -1,5 +1,6 @@
 import { Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
 import { AnimatedModal } from "./animated-modal";
+import { colors } from "../styles/theme";
 import type { styles as themeStyles } from "../styles/theme";
 
 type SharedStyles = typeof themeStyles;
@@ -58,7 +59,7 @@ export function PrivacyPolicyModal({ visible, styles, onClose }: { visible: bool
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <View style={{ gap: 6 }}>
-      <Text style={{ color: "#f4c38c", fontSize: 15, fontWeight: "700" }}>{title}</Text>
+      <Text style={{ color: colors.warm, fontSize: 15, fontWeight: "700" }}>{title}</Text>
       {children}
     </View>
   );

@@ -1,15 +1,13 @@
-import { Dimensions, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Dimensions, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
 
-import type { ProductCatalogEntry } from "../lib/product-catalog";
 import type { WsetTastingData } from "../lib/wset-data";
-import type { ProductCatalogWineRow } from "../types/product-catalog";
 import type { ReferenceOptionRow } from "../types/reference-data";
 import type { StorageSpaceRow } from "../types/storage-space";
-import type { ImportFieldSelection, ImportMode, StorageSpaceDraft, WineDraft } from "../types/cellar-drafts";
-import { LabeledInput, PanelHeader, SuggestionRow, type Suggestion } from "./form-controls";
+import type { StorageSpaceDraft, WineDraft } from "../types/cellar-drafts";
+import { AutocompleteInput, Expandable, LabeledInput, PanelHeader, SuggestionRow, type Suggestion } from "./form-controls";
+import { colors } from "../styles/theme";
 import type { styles as themeStyles } from "../styles/theme";
-import { QuickImportSection } from "./quick-import-section";
-import { CatalogImportCard } from "./catalog-import-card";
 import { WineCoreFields } from "./wine-core-fields";
 import { TastingFields } from "./tasting-fields";
 import { CellarFields } from "./cellar-fields";
@@ -20,6 +18,7 @@ type SharedStyles = typeof themeStyles;
 export function AddWinePanel(props: AddWinePanelProps) {
   const { styles, draft, tastingMode, saving, savingTasting, onTastingModeChange, onSaveWine, onSaveTasting } = props;
   const isDesktopWeb = Platform.OS === "web" && Dimensions.get("window").width > 768;
+  const [searchQuery, setSearchQuery] = useState("");
 
   return (
     <View style={styles.panel}>
@@ -27,16 +26,13 @@ export function AddWinePanel(props: AddWinePanelProps) {
       <SuggestionRow title="Läge" options={["Källare", "Vinprovning"]} selected={tastingMode ? "Vinprovning" : "Källare"} onSelect={(value) => onTastingModeChange(value === "Vinprovning")} />
       {tastingMode ? <Text style={styles.notesText}>Vinet sparas direkt i din historik — det läggs inte till i källaren.</Text> : null}
 
-      <SectionLabel label="Snabbimport" />
-      <QuickImportSection styles={styles} draft={draft} isDesktopWeb={isDesktopWeb} lookupBusy={props.lookupBusy} lookupMessage={props.lookupMessage} selectedCatalogNameEntry={props.selectedCatalogNameEntry} onBarcodeChange={props.onBarcodeChange} onArticleNumberChange={props.onArticleNumberChange} onStartBarcodeScanner={props.onStartBarcodeScanner} onScanLabel={props.onScanLabel} onOpenSystembolaget={props.onOpenSystembolaget} />
-
-      {props.catalogSuggestion ? (
-        <CatalogImportCard styles={styles} catalogSuggestion={props.catalogSuggestion} importMode={props.importMode} importSelection={props.importSelection} onSetImportMode={props.onSetImportMode} onApplyCatalogSuggestion={props.onApplyCatalogSuggestion} onToggleImportField={props.onToggleImportField} />
-      ) : null}
-      <NoMatchFallback styles={styles} draft={draft} catalogSuggestion={props.catalogSuggestion} />
+      <View style={{ backgroundColor: colors.surface, borderRadius: 20, borderWidth: 1.5, borderColor: colors.accent, padding: 4, ...Platform.select({ web: { boxShadow: "1px 2px 0px rgba(200, 60, 45, 0.08)" } as any, default: {} }) }}>
+        <AutocompleteInput label="" value={searchQuery} onChangeText={setSearchQuery} onOptionSelected={(name, producer) => { setSearchQuery(""); props.onNameSelected(name, producer); }} options={[]} searchAsync={props.searchWineNames} placeholder="Sök vin eller producent..." minimumQueryLength={4} />
+      </View>
+      <FlerAlternativ styles={styles} draft={draft} isDesktopWeb={isDesktopWeb} onArticleNumberChange={props.onArticleNumberChange} onScanLabel={props.onScanLabel} lookupBusy={props.lookupBusy} lookupMessage={props.lookupMessage} />
 
       <SectionLabel label="Om vinet" />
-      <WineCoreFields draft={draft} tastingMode={tastingMode} effectiveCountryOptions={props.effectiveCountryOptions} effectiveRegionOptions={props.effectiveRegionOptions} effectiveGrapeOptions={props.effectiveGrapeOptions} countryReferenceRows={props.countryReferenceRows} regionReferenceRows={props.regionReferenceRows} grapeReferenceRows={props.grapeReferenceRows} searchWineNames={props.searchWineNames} onDraftChange={props.onDraftChange} onNameSelected={props.onNameSelected} />
+      <WineCoreFields draft={draft} tastingMode={tastingMode} effectiveCountryOptions={props.effectiveCountryOptions} effectiveRegionOptions={props.effectiveRegionOptions} effectiveGrapeOptions={props.effectiveGrapeOptions} countryReferenceRows={props.countryReferenceRows} regionReferenceRows={props.regionReferenceRows} grapeReferenceRows={props.grapeReferenceRows} onDraftChange={props.onDraftChange} />
 
       <SectionLabel label={tastingMode ? "Provning" : "Förvaring"} />
       {tastingMode ? (
@@ -63,9 +59,7 @@ function SectionLabel({ label }: { label: string }) {
   return (
     <View style={sectionStyles.divider}>
       <View style={sectionStyles.line} />
-      <Text style={sectionStyles.ornament}>✦</Text>
       <Text style={sectionStyles.label}>{label}</Text>
-      <Text style={sectionStyles.ornament}>✦</Text>
       <View style={sectionStyles.line} />
     </View>
   );
@@ -80,20 +74,16 @@ const sectionStyles = StyleSheet.create({
     marginBottom: 4,
     position: "relative",
     zIndex: 1,
-    backgroundColor: "#f8f1e8",
+    backgroundColor: colors.surface,
     paddingVertical: 4,
   },
   line: {
     flex: 1,
     height: StyleSheet.hairlineWidth,
-    backgroundColor: "#c9b8a8",
-  },
-  ornament: {
-    color: "#c4a882",
-    fontSize: 8,
+    backgroundColor: "rgba(200, 60, 45, 0.2)",
   },
   label: {
-    color: "#8a7e74",
+    color: colors.accent,
     fontSize: 11,
     fontWeight: "600",
     textTransform: "uppercase",
@@ -101,13 +91,35 @@ const sectionStyles = StyleSheet.create({
   },
 });
 
-function NoMatchFallback({ styles, draft, catalogSuggestion }: { styles: SharedStyles; draft: WineDraft; catalogSuggestion: ProductCatalogEntry | null }) {
-  if (catalogSuggestion || (!draft.barcode.trim() && !draft.systembolagetProductId.trim())) return null;
+function FlerAlternativ({ styles, draft, isDesktopWeb, onArticleNumberChange, onScanLabel, lookupBusy, lookupMessage }: {
+  styles: SharedStyles; draft: WineDraft; isDesktopWeb: boolean;
+  onArticleNumberChange: (value: string) => void; onScanLabel: () => void;
+  lookupBusy: boolean; lookupMessage: string;
+}) {
+  const [open, setOpen] = useState(false);
   return (
-    <View style={styles.importSuggestionCard}>
-      <Text style={styles.inputLabel}>Ingen träff ännu?</Text>
-      <Text style={styles.notesText}>Fyll i resten av uppgifterna och spara som vanligt.</Text>
-    </View>
+    <>
+      <Pressable onPress={() => setOpen(!open)} style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 8 }}>
+        <Text style={{ color: colors.textSecondary, fontSize: 13 }}>{open ? "▾" : "▸"}</Text>
+        <Text style={{ color: colors.textSecondary, fontSize: 13, fontWeight: "600" }}>Fler alternativ</Text>
+      </Pressable>
+      <Expandable expanded={open}>
+        <View style={{ gap: 10 }}>
+          <LabeledInput label="Systembolaget artikelnummer" value={draft.systembolagetProductId} onChangeText={onArticleNumberChange} placeholder="t.ex. 12345" />
+          {!isDesktopWeb ? (
+            <Pressable onPress={onScanLabel} style={styles.secondaryButton}>
+              <Text style={styles.secondaryButtonText}>Skanna etikett</Text>
+            </Pressable>
+          ) : null}
+          {lookupBusy ? (
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <ActivityIndicator size="small" color={colors.accent} />
+              <Text style={styles.notesText}>{lookupMessage || "Söker..."}</Text>
+            </View>
+          ) : lookupMessage ? <Text style={styles.notesText}>{lookupMessage}</Text> : null}
+        </View>
+      </Expandable>
+    </>
   );
 }
 
@@ -134,24 +146,15 @@ export interface AddWinePanelProps {
   grapeReferenceRows: ReferenceOptionRow[];
   lookupBusy: boolean;
   lookupMessage: string;
-  catalogSuggestion: ProductCatalogEntry | null;
-  selectedCatalogNameEntry: ProductCatalogWineRow | null;
-  importMode: ImportMode;
-  importSelection: ImportFieldSelection;
   saving: boolean;
   onDraftChange: (patch: Partial<WineDraft>) => void;
   onNameSelected: (value: string, producer?: string | null) => void;
-  onBarcodeChange: (value: string) => void;
   onArticleNumberChange: (value: string) => void;
   onStorageSpaceChange: (spaceId: string) => void;
   onStorageRowChange: (value: string) => void;
   onStorageSlotChange: (value: string) => void;
-  onStartBarcodeScanner: () => void;
   onScanLabel: () => void;
   onOpenSystembolaget: (productId: string) => void;
-  onSetImportMode: (mode: ImportMode) => void;
-  onApplyCatalogSuggestion: (mode: ImportMode) => void;
-  onToggleImportField: (field: keyof ImportFieldSelection) => void;
   onChooseImage: () => void;
   onTakePhoto: () => void;
   onSaveWine: () => void;

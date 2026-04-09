@@ -9,6 +9,7 @@ import { CellarListHeader } from "./cellar-list-header";
 import { StorageSpaceActions } from "./storage-space-actions";
 import { WineCard } from "./wine-card";
 
+import { colors } from "../styles/theme";
 import type { styles as themeStyles } from "../styles/theme";
 type SharedStyles = typeof themeStyles;
 
@@ -116,15 +117,15 @@ export function MinKallarePanel(props: MinKallarePanelProps) {
           onToggleStats={() => setStatsExpanded((v) => !v)} summaryText={summaryText}
           hasSections={sections.length > 0} />
       }
-      style={{ backgroundColor: "#2b1714" }}
-      contentContainerStyle={[styles.scrollContent, { flexGrow: 1, backgroundColor: "#f8f1e8", borderRadius: 24 }]}
+      style={{ backgroundColor: colors.bg }}
+      contentContainerStyle={[styles.panel, { flexGrow: 1, marginHorizontal: 20, marginTop: 20, maxWidth: 520, width: "100%", alignSelf: "center" as const }]}
       keyboardShouldPersistTaps="handled"
       refreshControl={
-        props.onRefresh ? <RefreshControl refreshing={props.refreshing ?? false} onRefresh={props.onRefresh} tintColor="#6f1d1b" colors={["#6f1d1b"]} /> : undefined
+        props.onRefresh ? <RefreshControl refreshing={props.refreshing ?? false} onRefresh={props.onRefresh} tintColor={colors.accent} colors={[colors.accent]} /> : undefined
       }
       onEndReached={props.hasMoreWines ? props.onLoadMoreWines : undefined}
       onEndReachedThreshold={0.5}
-      ListFooterComponent={props.hasMoreWines ? <ActivityIndicator style={{ padding: 16 }} color="#6f1d1b" /> : null}
+      ListFooterComponent={props.hasMoreWines ? <ActivityIndicator style={{ padding: 16 }} color={colors.accent} /> : null}
       initialNumToRender={15}
       maxToRenderPerBatch={10}
       windowSize={5}
@@ -141,14 +142,14 @@ function SectionHeader({ section, styles, expandedSpaceIds, toggleSpace, onUpdat
 }) {
   return (
     <View>
-      <Pressable onPress={() => toggleSpace(section.key)} style={[styles.storageCard, section.isUnplaced && { borderWidth: 2, borderColor: "#f4c38c" }]}>
+      <Pressable onPress={() => toggleSpace(section.key)} style={[styles.storageCard, section.isUnplaced && { borderWidth: 2, borderColor: colors.warm }]}>
         <View style={styles.storageCardHeader}>
           <View style={styles.flex}>
             <Text style={styles.wineType}>{section.spaceType}</Text>
             <Text style={styles.wineName}>{section.title}</Text>
           </View>
           <View style={styles.storageCardRight}>
-            <View style={[styles.quantityBadge, section.isUnplaced && { backgroundColor: "#f4c38c" }]}>
+            <View style={[styles.quantityBadge, section.isUnplaced && { backgroundColor: colors.warm }]}>
               <Text style={styles.quantityBadgeText}>{section.bottleCount} st</Text>
             </View>
             <Text style={styles.sectionChevron}>{expandedSpaceIds.has(section.key) ? "▾" : "›"}</Text>

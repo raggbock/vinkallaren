@@ -1,4 +1,5 @@
 import { Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
+import { colors } from "../styles/theme";
 import { AnimatedModal } from "./animated-modal";
 import type { CatalogTextMatch } from "../types/product-catalog";
 
@@ -56,7 +57,7 @@ export function LabelMatchPickerModal({
 
 const pickerStyles = StyleSheet.create({
   sheet: {
-    backgroundColor: "#2b1714",
+    backgroundColor: colors.surface,
     borderRadius: 20,
     padding: 20,
     paddingBottom: 32,
@@ -65,13 +66,13 @@ const pickerStyles = StyleSheet.create({
     maxWidth: 420,
   },
   title: {
-    color: "#fff6ee",
+    color: colors.text,
     fontSize: 20,
     fontWeight: "700",
     marginBottom: 4,
   },
   subtitle: {
-    color: "#c9a87c",
+    color: colors.textSecondary,
     fontSize: 13,
     marginBottom: 16,
     lineHeight: 18,
@@ -83,12 +84,12 @@ const pickerStyles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#3d2220",
+    backgroundColor: colors.surfaceAlt,
     borderRadius: 10,
     padding: 14,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: "#5a3a36",
+    borderColor: colors.border,
   },
   matchThumb: {
     width: 36,
@@ -98,37 +99,37 @@ const pickerStyles = StyleSheet.create({
     resizeMode: "contain",
   } as any,
   matchThumbPlaceholder: {
-    backgroundColor: "#5a3a36",
+    backgroundColor: colors.border,
   },
   matchInfo: {
     flex: 1,
     marginRight: 12,
   },
   matchName: {
-    color: "#fff6ee",
+    color: colors.text,
     fontSize: 15,
     fontWeight: "600",
   },
   matchMeta: {
-    color: "#c9a87c",
+    color: colors.textSecondary,
     fontSize: 13,
     marginTop: 2,
   },
   matchScore: {
-    color: "#f4c38c",
+    color: colors.warm,
     fontSize: 14,
     fontWeight: "700",
   },
   dismissButton: {
-    backgroundColor: "#3d2220",
+    backgroundColor: colors.surfaceAlt,
     paddingVertical: 14,
     borderRadius: 10,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#5a3a36",
+    borderColor: colors.border,
   },
   dismissText: {
-    color: "#c9a87c",
+    color: colors.textSecondary,
     fontSize: 16,
     fontWeight: "600",
   },
