@@ -9,6 +9,9 @@ on:
 jobs:
   lighthouse:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile-app
     steps:
       - uses: actions/checkout@v4
 
@@ -19,13 +22,13 @@ jobs:
           cache-dependency-path: mobile-app/package-lock.json
 
       - name: Install dependencies
-        run: cd mobile-app && npm ci
+        run: npm ci
 
       - name: Build web app
-        run: cd mobile-app && npm run web:build
+        run: npm run web:build
 
       - name: Run Lighthouse CI
-        run: cd mobile-app && npx lhci autorun --config=../.lighthouserc.json
+        run: npx lhci autorun
 
       - name: Upload Lighthouse report
         if: always()

@@ -1,8 +1,7 @@
 {
   "ci": {
     "collect": {
-      "staticDistDir": "./mobile-app/dist",
-      "url": ["http://localhost/"],
+      "staticDistDir": "./dist",
       "numberOfRuns": 3,
       "settings": {
         "chromeFlags": ["--headless", "--no-sandbox"],
