@@ -54,18 +54,29 @@ function useWebStyles() {
     document.head.appendChild(link);
 
     const style = document.createElement("style");
+    const noiseSvg = "data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E";
     style.textContent = [
       'div[tabindex="0"] { transition: opacity 0.15s, filter 0.15s; }',
       'div[tabindex="0"]:hover { filter: brightness(0.92); }',
       'div[tabindex="0"]:active { opacity: 0.7 !important; filter: brightness(0.85); transition: opacity 0.05s; }',
-      // Paper grain texture on panels
-      '[data-testid="panel"]::before, [style*="backgroundColor: rgb(248, 241, 232)"]::after {',
-      '  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.03; border-radius: inherit;',
-      '  background-image: url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\'/%3E%3C/svg%3E");',
-      '  background-size: 200px 200px;',
-      '}',
+      `.paper-grain { position: relative; }`,
+      `.paper-grain::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.04; border-radius: inherit; background-image: url("${noiseSvg}"); background-size: 200px 200px; mix-blend-mode: multiply; }`,
     ].join("\n");
     document.head.appendChild(style);
+
+    // Apply paper-grain class to panel elements (bg #f8f1e8)
+    function tagPanels() {
+      document.querySelectorAll("div").forEach((el) => {
+        const bg = el.style.backgroundColor;
+        if (bg === "rgb(248, 241, 232)" || bg === "#f8f1e8") {
+          el.classList.add("paper-grain");
+        }
+      });
+    }
+    const observer = new MutationObserver(tagPanels);
+    observer.observe(document.body, { childList: true, subtree: true });
+    tagPanels();
+    return () => observer.disconnect();
   }, []);
 }
 
