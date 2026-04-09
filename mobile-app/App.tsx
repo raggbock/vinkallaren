@@ -25,7 +25,11 @@ import { colors, styles } from "./src/styles/theme";
 import { BUILD_VERSION } from "./src/lib/build-version";
 import { LoadingScreen, SetupScreen } from "./src/screens/auth";
 import { LandingScreen } from "./src/screens/landing";
-import { useCellarData } from "./src/hooks/useCellarData";
+import { useWines } from "./src/hooks/useWines";
+import { useHistory } from "./src/hooks/useHistory";
+import { useCatalog } from "./src/hooks/useCatalog";
+import { useReferenceOptions } from "./src/hooks/useReferenceOptions";
+import { useStorageSpaces } from "./src/hooks/useStorageSpaces";
 import { useCellarFilters } from "./src/hooks/useCellarFilters";
 import { useImagePicker } from "./src/hooks/useImagePicker";
 import { useStorageSelection } from "./src/hooks/useStorageSelection";
@@ -90,16 +94,21 @@ export default function App() {
 }
 
 function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { session: Session; pendingJoinCode: string | null; onJoinCodeConsumed: () => void }) {
-  const data = useCellarData(session.user.id);
-  const filters = useCellarFilters(data.wines, data.storageSpaceById);
+  const wineData = useWines();
+  const historyData = useHistory();
+  const storageData = useStorageSpaces(session.user.id);
+  const catalogData = useCatalog(session.user.id, wineData.wines, wineData.loading);
+  const refOptions = useReferenceOptions();
+  const storageSpaceById = useMemo(() => new Map(storageData.storageSpaces.map((s) => [s.id, s])), [storageData.storageSpaces]);
+  const filters = useCellarFilters(wineData.wines, storageSpaceById);
   const images = useImagePicker();
-  const storage = useStorageSelection(data.storageSpaces, data.wines);
+  const storage = useStorageSelection(storageData.storageSpaces, wineData.wines);
   const success = useSuccessOverlay();
   const catalog = useCatalogWorkflow({
     sessionUserId: session.user.id,
-    wines: data.wines,
-    fetchCatalogEntriesByName: data.fetchCatalogEntriesByName,
-    matchCatalogByText: data.matchCatalogByText,
+    wines: wineData.wines,
+    fetchCatalogEntriesByName: catalogData.fetchCatalogEntriesByName,
+    matchCatalogByText: catalogData.matchCatalogByText,
     takePhoto: images.takePhoto,
   });
   const tastingSessions = useTastingSessions(session.user.id);
@@ -129,27 +138,32 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
     tastingSessions.joinSession(pendingJoinCode);
   }, [pendingJoinCode]);
 
+  const deleteStorageSpace = useCallback(async (id: string): Promise<boolean> => {
+    const ok = await storageData.deleteStorageSpace(id);
+    if (ok) await wineData.fetchWines();
+    return ok;
+  }, [storageData, wineData]);
   const drink = useDrinkWineModal({
     userId: session.user.id,
-    setHistoryEntries: data.setHistoryEntries,
-    setWines: data.setWines,
+    setHistoryEntries: historyData.setHistoryEntries,
+    setWines: wineData.setWines,
     showSuccess: success.show,
     pickImageFromLibrary: images.pickImageFromLibrary,
     takePhoto: images.takePhoto,
   });
   const edit = useEditWineModal({
     userId: session.user.id,
-    setWines: data.setWines,
-    fetchCatalogEntries: data.fetchCatalogEntries,
+    setWines: wineData.setWines,
+    fetchCatalogEntries: catalogData.fetchCatalogEntries,
     showSuccess: success.show,
-    storageSpaces: data.storageSpaces,
-    saveStorageSpace: data.saveStorageSpace,
+    storageSpaces: storageData.storageSpaces,
+    saveStorageSpace: storageData.saveStorageSpace,
     getOccupiedPositions: storage.getOccupiedPositions,
     pickImageFromLibrary: images.pickImageFromLibrary,
     takePhoto: images.takePhoto,
   });
   const catalogEditor = useCatalogEditorModal({
-    fetchCatalogEntries: data.fetchCatalogEntries,
+    fetchCatalogEntries: catalogData.fetchCatalogEntries,
   });
   const privacy = useModalToggle();
   const sessionWset = useSessionWset();
@@ -168,10 +182,10 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
     });
     setEditHistorySaving(false);
     if (result.error) { showError("Kunde inte spara ändringen", result.error); return; }
-    data.setHistoryEntries((prev) => prev.map((e) => (e.id === editingHistory.id ? { ...e, ...result.data! } : e)));
+    historyData.setHistoryEntries((prev) => prev.map((e) => (e.id === editingHistory.id ? { ...e, ...result.data! } : e)));
     setEditingHistory(null);
     success.show("history_edited");
-  }, [editingHistory, data, success]);
+  }, [editingHistory, historyData, success]);
 
   const [draft, setDraft] = useState<WineDraft>(defaultDraft);
   const [activeSection, setActiveSection] = useState<CellarSection>("cellar");
@@ -180,9 +194,9 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
   const [refreshing, setRefreshing] = useState(false);
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([data.fetchWines(), data.fetchStorageSpaces(), data.fetchHistoryEntries(), data.fetchCatalogEntries(), data.fetchReferenceOptions()]);
+    await Promise.all([wineData.fetchWines(), storageData.fetchStorageSpaces(), historyData.fetchHistoryEntries(), catalogData.fetchCatalogEntries(), refOptions.fetchReferenceOptions()]);
     setRefreshing(false);
-  }, [data.fetchWines, data.fetchStorageSpaces, data.fetchHistoryEntries, data.fetchCatalogEntries, data.fetchReferenceOptions]);
+  }, [wineData.fetchWines, storageData.fetchStorageSpaces, historyData.fetchHistoryEntries, catalogData.fetchCatalogEntries, refOptions.fetchReferenceOptions]);
   const [tastingSessionsVisible, setTastingSessionsVisible] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -190,11 +204,11 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
     userId: session.user.id,
     draft,
     resetDraft: useCallback(() => setDraft(defaultDraft), []),
-    setHistoryEntries: data.setHistoryEntries,
+    setHistoryEntries: historyData.setHistoryEntries,
     showSuccess: success.show,
   });
 
-  const mealRecommendations = useMemo(() => buildMealRecommendations(data.wines, selectedMeal), [selectedMeal, data.wines]);
+  const mealRecommendations = useMemo(() => buildMealRecommendations(wineData.wines, selectedMeal), [selectedMeal, wineData.wines]);
 
   async function handleSaveWine() {
     setSaving(true);
@@ -212,8 +226,8 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
     storage.setSelectedStorageRow("1"); storage.setSelectedStorageSlot("1");
     const savedRow = result.data!;
     const [hydrated] = await hydrateWineRecords([savedRow]);
-    data.setWines(prev => [hydrated, ...prev]);
-    data.mergeReferenceOptions(savedRow);
+    wineData.setWines(prev => [hydrated, ...prev]);
+    refOptions.mergeReferenceOptions(savedRow);
     success.show("wine_added");
     if (Platform.OS === "web") {
       if (window.confirm("Vinet är sparat! Vill du gå till din källare?")) setActiveSection("cellar");
@@ -265,7 +279,7 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
 
   let activePanel = (
     <MinKallarePanel
-      styles={styles} stats={data.stats}
+      styles={styles} stats={wineData.stats}
       searchQuery={filters.searchQuery}
       selectedPairingFilter={filters.selectedPairingFilter}
       selectedCountryFilter={filters.selectedCountryFilter}
@@ -273,14 +287,14 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
       selectedTypeFilter={filters.selectedTypeFilter}
       selectedVintageFilter={filters.selectedVintageFilter}
       selectedGrapeFilter={filters.selectedGrapeFilter}
-      pairingOptions={data.pairingOptions} countryOptions={data.countryOptions}
-      regionOptions={data.regionOptions} typeOptions={data.typeOptions}
-      vintageOptions={data.vintageOptions} grapeOptions={data.cellarGrapeOptions}
-      storageSpaces={data.storageSpaces}
-      storageSpaceBottleCounts={data.storageSpaceBottleCounts}
-      filteredWines={filters.filteredWines} loading={data.loading}
-      storageSpaceById={data.storageSpaceById}
-      onRefreshStats={data.fetchWines}
+      pairingOptions={wineData.pairingOptions} countryOptions={wineData.countryOptions}
+      regionOptions={wineData.regionOptions} typeOptions={wineData.typeOptions}
+      vintageOptions={wineData.vintageOptions} grapeOptions={wineData.cellarGrapeOptions}
+      storageSpaces={storageData.storageSpaces}
+      storageSpaceBottleCounts={wineData.storageSpaceBottleCounts}
+      filteredWines={filters.filteredWines} loading={wineData.loading}
+      storageSpaceById={storageSpaceById}
+      onRefreshStats={wineData.fetchWines}
       onSearchChange={filters.setSearchQuery}
       onPairingChange={filters.setSelectedPairingFilter}
       onCountryChange={filters.setSelectedCountryFilter}
@@ -292,19 +306,19 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
       onOpenSystembolaget={handleOpenSystembolaget}
       onEditWine={edit.actions.open}
       onDrinkWine={drink.actions.open}
-      onDeleteWine={(id, imagePath) => confirmAction("Ta bort vin", "Är du säker på att du vill ta bort det här vinet?", () => data.deleteWine(id, imagePath))}
-      storageSpaceDraft={data.storageSpaceDraft}
-      savingStorageSpace={data.savingStorageSpace}
-      onStorageSpaceDraftChange={(patch) => data.setStorageSpaceDraft((c) => ({ ...c, ...patch }))}
-      onSaveStorageSpace={async () => { const newId = await data.saveStorageSpace(); if (newId) { storage.setSelectedStorageSpaceId(newId); storage.setSelectedStorageRow("1"); storage.setSelectedStorageSlot("1"); } success.show("storage_saved"); }}
-      onUpdateStorageSpace={data.updateStorageSpace}
-      onDeleteStorageSpace={async (id) => { const ok = await data.deleteStorageSpace(id); if (ok) { if (storage.selectedStorageSpaceId === id) { storage.setSelectedStorageSpaceId(""); storage.setSelectedStorageRow("1"); storage.setSelectedStorageSlot("1"); } if (filters.selectedStorageSpaceFilterId === id) { filters.setSelectedStorageSpaceFilterId(""); } } }}
+      onDeleteWine={(id, imagePath) => confirmAction("Ta bort vin", "Är du säker på att du vill ta bort det här vinet?", () => wineData.deleteWine(id, imagePath))}
+      storageSpaceDraft={storageData.storageSpaceDraft}
+      savingStorageSpace={storageData.savingStorageSpace}
+      onStorageSpaceDraftChange={(patch) => storageData.setStorageSpaceDraft((c) => ({ ...c, ...patch }))}
+      onSaveStorageSpace={async () => { const newId = await storageData.saveStorageSpace(); if (newId) { storage.setSelectedStorageSpaceId(newId); storage.setSelectedStorageRow("1"); storage.setSelectedStorageSlot("1"); } success.show("storage_saved"); }}
+      onUpdateStorageSpace={storageData.updateStorageSpace}
+      onDeleteStorageSpace={async (id) => { const ok = await deleteStorageSpace(id); if (ok) { if (storage.selectedStorageSpaceId === id) { storage.setSelectedStorageSpaceId(""); storage.setSelectedStorageRow("1"); storage.setSelectedStorageSlot("1"); } if (filters.selectedStorageSpaceFilterId === id) { filters.setSelectedStorageSpaceFilterId(""); } } }}
       onNavigateToAdd={() => setActiveSection("add")}
       onOpenTastingSessions={() => { setTastingSessionsVisible(true); tastingSessions.fetchSessions(); }}
       selectedStorageSpaceFilterId={filters.selectedStorageSpaceFilterId}
       onStorageSpaceFilterChange={filters.setSelectedStorageSpaceFilterId}
-      hasMoreWines={data.hasMoreWines}
-      onLoadMoreWines={data.fetchMoreWines}
+      hasMoreWines={wineData.hasMoreWines}
+      onLoadMoreWines={wineData.fetchMoreWines}
       highlightedWineId={highlightedWineId}
       onClearHighlight={() => setHighlightedWineId(null)}
       refreshing={refreshing}
@@ -317,8 +331,8 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
         styles={styles} userId={session.user.id}
         sessions={tastingSessions.sessions} loading={tastingSessions.loading} toasts={tastingSessions.toasts}
         activeSession={tastingSessions.activeSession} activeWines={tastingSessions.activeWines}
-        activeTastings={tastingSessions.activeTastings} wines={data.wines}
-        searchWineNames={data.searchCatalogWineNames}
+        activeTastings={tastingSessions.activeTastings} wines={wineData.wines}
+        searchWineNames={catalogData.searchCatalogWineNames}
         onBack={() => { setTastingSessionsVisible(false); tastingSessions.closeSession(); }}
         onFetchSessions={tastingSessions.fetchSessions} onCreateSession={tastingSessions.createSession}
         onJoinSession={tastingSessions.joinSession} onOpenSession={tastingSessions.openSession}
@@ -330,14 +344,14 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
       />
     );
   } else if (activeSection === "history") {
-    activePanel = <HistoryPanel styles={styles} historyEntries={data.historyEntries} loadingHistory={data.loadingHistory} storageSpaceById={data.storageSpaceById}
+    activePanel = <HistoryPanel styles={styles} historyEntries={historyData.historyEntries} loadingHistory={historyData.loadingHistory} storageSpaceById={storageSpaceById}
       endedSessions={tastingSessions.sessions.filter((ses) => ses.status === "ended")}
-      refreshing={refreshing} onRefresh={onRefresh} hasMore={data.hasMoreHistory} onLoadMore={data.fetchMoreHistory}
+      refreshing={refreshing} onRefresh={onRefresh} hasMore={historyData.hasMoreHistory} onLoadMore={historyData.fetchMoreHistory}
       onEditEntry={setEditingHistory} onOpenProfile={() => setProfileVisible(true)}
     />;
   } else if (activeSection === "meal") {
     activePanel = (
-      <MealPlannerPanel styles={styles} wines={data.wines} selectedMeal={selectedMeal} mealRecommendations={mealRecommendations}
+      <MealPlannerPanel styles={styles} wines={wineData.wines} selectedMeal={selectedMeal} mealRecommendations={mealRecommendations}
         onSelectMeal={setSelectedMeal}
         onWinePress={(wine) => { setHighlightedWineId(wine.id); setActiveSection("cellar"); }}
         onOpenProfile={() => setProfileVisible(true)}
@@ -347,19 +361,19 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
     activePanel = (
       <AddWinePanel
         styles={styles} draft={draft}
-        storageSpaces={data.storageSpaces}
+        storageSpaces={storageData.storageSpaces}
         selectedStorageSpace={storage.selectedStorageSpace}
         selectedStorageSpaceId={storage.selectedStorageSpaceId}
         selectedStorageRow={storage.selectedStorageRow}
         selectedStorageSlot={storage.selectedStorageSlot}
-        storageSpaceById={data.storageSpaceById}
-        searchWineNames={data.searchCatalogWineNames}
-        effectiveCountryOptions={data.effectiveCountryOptions}
-        effectiveRegionOptions={data.effectiveRegionOptions}
-        effectiveGrapeOptions={data.effectiveGrapeOptions}
-        countryReferenceRows={data.countryReferenceRows}
-        regionReferenceRows={data.regionReferenceRows}
-        grapeReferenceRows={data.grapeReferenceRows}
+        storageSpaceById={storageSpaceById}
+        searchWineNames={catalogData.searchCatalogWineNames}
+        effectiveCountryOptions={refOptions.effectiveCountryOptions}
+        effectiveRegionOptions={refOptions.effectiveRegionOptions}
+        effectiveGrapeOptions={refOptions.effectiveGrapeOptions}
+        countryReferenceRows={refOptions.countryReferenceRows}
+        regionReferenceRows={refOptions.regionReferenceRows}
+        grapeReferenceRows={refOptions.grapeReferenceRows}
         lookupBusy={catalog.lookupBusy}
         lookupMessage={catalog.lookupMessage}
         saving={saving}
@@ -373,10 +387,10 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
         onStorageSpaceChange={storage.changeStorageSpace}
         onStorageRowChange={storage.changeStorageRow}
         onStorageSlotChange={storage.setSelectedStorageSlot}
-        storageSpaceDraft={data.storageSpaceDraft}
-        savingStorageSpace={data.savingStorageSpace}
-        onStorageSpaceDraftChange={(patch) => data.setStorageSpaceDraft((c) => ({ ...c, ...patch }))}
-        onSaveStorageSpace={async () => { const newId = await data.saveStorageSpace(); if (newId) { storage.setSelectedStorageSpaceId(newId); storage.setSelectedStorageRow("1"); storage.setSelectedStorageSlot("1"); } success.show("storage_saved"); }}
+        storageSpaceDraft={storageData.storageSpaceDraft}
+        savingStorageSpace={storageData.savingStorageSpace}
+        onStorageSpaceDraftChange={(patch) => storageData.setStorageSpaceDraft((c) => ({ ...c, ...patch }))}
+        onSaveStorageSpace={async () => { const newId = await storageData.saveStorageSpace(); if (newId) { storage.setSelectedStorageSpaceId(newId); storage.setSelectedStorageRow("1"); storage.setSelectedStorageSlot("1"); } success.show("storage_saved"); }}
         onScanLabel={() => catalog.handleLabelPhoto(setDraft)}
         onOpenSystembolaget={handleOpenSystembolaget}
         onChooseImage={async () => { const uri = await images.pickImageFromLibrary(); if (uri) setDraft((c) => ({ ...c, imageUri: uri })); }}
@@ -416,11 +430,11 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
       <VintagePickerModal visible={catalog.vintagePickerVisible} wineName={catalog.vintagePickerWineName} vintages={catalog.vintagePickerOptions} loading={catalog.vintagePickerLoading} onSelectVintage={(e) => catalog.handleVintageSelected(e, setDraft)} onAddNew={() => catalog.handleVintageAddNew(setDraft)} onClose={() => catalog.setVintagePickerVisible(false)} styles={styles} />
       <CatalogEditorModal
         {...catalogEditor.modalProps} styles={styles}
-        searchWineNames={data.searchCatalogWineNames}
-        effectiveCountryOptions={data.effectiveCountryOptions} effectiveRegionOptions={data.effectiveRegionOptions}
-        effectiveGrapeOptions={data.effectiveGrapeOptions}
-        countryReferenceRows={data.countryReferenceRows} regionReferenceRows={data.regionReferenceRows}
-        grapeReferenceRows={data.grapeReferenceRows}
+        searchWineNames={catalogData.searchCatalogWineNames}
+        effectiveCountryOptions={refOptions.effectiveCountryOptions} effectiveRegionOptions={refOptions.effectiveRegionOptions}
+        effectiveGrapeOptions={refOptions.effectiveGrapeOptions}
+        countryReferenceRows={refOptions.countryReferenceRows} regionReferenceRows={refOptions.regionReferenceRows}
+        grapeReferenceRows={refOptions.grapeReferenceRows}
       />
       <WsetTastingModal {...drink.wsetProps} />
       <DrinkWineModal {...drink.modalProps} styles={styles} />
@@ -430,15 +444,15 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
       <WsetTastingModal {...sessionWset.wsetProps} />
       <EditWineModal
         {...edit.modalProps} styles={styles}
-        storageSpaces={data.storageSpaces}
-        storageSpaceById={data.storageSpaceById}
-        searchWineNames={data.searchCatalogWineNames}
-        effectiveCountryOptions={data.effectiveCountryOptions} effectiveRegionOptions={data.effectiveRegionOptions}
-        effectiveGrapeOptions={data.effectiveGrapeOptions}
-        countryReferenceRows={data.countryReferenceRows} regionReferenceRows={data.regionReferenceRows}
-        grapeReferenceRows={data.grapeReferenceRows}
-        storageSpaceDraft={data.storageSpaceDraft} savingStorageSpace={data.savingStorageSpace}
-        onStorageSpaceDraftChange={(patch) => data.setStorageSpaceDraft((c) => ({ ...c, ...patch }))}
+        storageSpaces={storageData.storageSpaces}
+        storageSpaceById={storageSpaceById}
+        searchWineNames={catalogData.searchCatalogWineNames}
+        effectiveCountryOptions={refOptions.effectiveCountryOptions} effectiveRegionOptions={refOptions.effectiveRegionOptions}
+        effectiveGrapeOptions={refOptions.effectiveGrapeOptions}
+        countryReferenceRows={refOptions.countryReferenceRows} regionReferenceRows={refOptions.regionReferenceRows}
+        grapeReferenceRows={refOptions.grapeReferenceRows}
+        storageSpaceDraft={storageData.storageSpaceDraft} savingStorageSpace={storageData.savingStorageSpace}
+        onStorageSpaceDraftChange={(patch) => storageData.setStorageSpaceDraft((c) => ({ ...c, ...patch }))}
       />
       {activeSection === "history" || (activeSection === "cellar" && !tastingSessionsVisible) ? (
         <RNView style={[styles.scrollFlex, { backgroundColor: colors.bg }]}>
