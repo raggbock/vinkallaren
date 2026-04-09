@@ -53,6 +53,7 @@ export function useCatalogWorkflow(deps: CatalogWorkflowDeps) {
   const [vintagePickerVisible, setVintagePickerVisible] = useState(false);
   const [vintagePickerWineName, setVintagePickerWineName] = useState("");
   const [vintagePickerOptions, setVintagePickerOptions] = useState<{ year: string; entry: ProductCatalogWineRow }[]>([]);
+  const [vintagePickerLoading, setVintagePickerLoading] = useState(false);
 
   // --- Draft helpers ---
 
@@ -80,8 +81,16 @@ export function useCatalogWorkflow(deps: CatalogWorkflowDeps) {
   }
 
   async function handleWineNameSelected(name: string, producer: string | null | undefined, setDraft: React.Dispatch<React.SetStateAction<WineDraft>>) {
+    setVintagePickerWineName(name);
+    setVintagePickerOptions([]);
+    setVintagePickerLoading(true);
+    setVintagePickerVisible(true);
+
     const entries = await fetchCatalogEntriesByName(name, producer);
+    setVintagePickerLoading(false);
+
     if (entries.length === 0) {
+      setVintagePickerVisible(false);
       setSelectedCatalogNameEntry(null);
       setDraft((current) => ({ ...current, name }));
       return;
@@ -98,13 +107,13 @@ export function useCatalogWorkflow(deps: CatalogWorkflowDeps) {
       .map(([year, entry]) => ({ year, entry }))
       .sort((a, b) => b.year.localeCompare(a.year));
     if (uniqueVintages.length <= 1) {
+      setVintagePickerVisible(false);
       const bestEntry = entries.reduce((best, e) => scoreCatalogCompleteness(e) > scoreCatalogCompleteness(best) ? e : best);
       applySelectedCatalogEntry(bestEntry, setDraft, entries);
       return;
     }
     setVintagePickerWineName(entries[0].name);
     setVintagePickerOptions(uniqueVintages);
-    setVintagePickerVisible(true);
     setDraft((current) => ({ ...current, name: entries[0].name }));
   }
 
@@ -360,7 +369,7 @@ export function useCatalogWorkflow(deps: CatalogWorkflowDeps) {
     applyCatalogSuggestion, toggleImportField,
     // Name/vintage selection
     handleWineNameSelected, handleVintageSelected, handleVintageAddNew,
-    vintagePickerVisible, setVintagePickerVisible, vintagePickerWineName, vintagePickerOptions,
+    vintagePickerVisible, setVintagePickerVisible, vintagePickerWineName, vintagePickerOptions, vintagePickerLoading,
     // Barcode scanner
     scannerVisible, setScannerVisible, startBarcodeScanner, handleBarcodeScanned,
     // Label scanner

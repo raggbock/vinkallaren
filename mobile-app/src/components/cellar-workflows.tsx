@@ -1,6 +1,6 @@
 import React from "react";
 import { CameraView } from "expo-camera";
-import { Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Animated, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
 import { AnimatedModal } from "./animated-modal";
 
 import type { ProductCatalogWineRow } from "../types/product-catalog";
@@ -130,11 +130,12 @@ export function CatalogEditorModal({
 }
 
 export function VintagePickerModal({
-  visible, wineName, vintages, onSelectVintage, onAddNew, onClose, styles,
+  visible, wineName, vintages, loading, onSelectVintage, onAddNew, onClose, styles,
 }: {
   visible: boolean;
   wineName: string;
   vintages: { year: string; entry: ProductCatalogWineRow }[];
+  loading?: boolean;
   onSelectVintage: (entry: ProductCatalogWineRow) => void;
   onAddNew: () => void;
   onClose: () => void;
@@ -143,20 +144,78 @@ export function VintagePickerModal({
   return (
     <AnimatedModal visible={visible} onClose={onClose} mode="centered" cardStyle={styles.vintagePickerCard}>
       <Text style={styles.vintagePickerTitle}>{wineName}</Text>
-      <Text style={styles.vintagePickerSubtitle}>Välj årtal:</Text>
-      <ScrollView>
-        {vintages.map(({ year, entry }) => (
-          <Pressable key={entry.id} onPress={() => onSelectVintage(entry)} style={styles.vintagePickerItem}>
-            <Text style={styles.vintagePickerItemText}>{year}</Text>
+      {loading ? (
+        <VintageLoadingDots />
+      ) : (
+        <>
+          <Text style={styles.vintagePickerSubtitle}>Välj årtal:</Text>
+          <ScrollView>
+            {vintages.map(({ year, entry }) => (
+              <Pressable key={entry.id} onPress={() => onSelectVintage(entry)} style={styles.vintagePickerItem}>
+                <Text style={styles.vintagePickerItemText}>{year}</Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+          <Pressable onPress={onAddNew} style={styles.vintagePickerAddButton}>
+            <Text style={styles.vintagePickerAddText}>Lägg till nytt</Text>
           </Pressable>
-        ))}
-      </ScrollView>
-      <Pressable onPress={onAddNew} style={styles.vintagePickerAddButton}>
-        <Text style={styles.vintagePickerAddText}>Lägg till nytt</Text>
-      </Pressable>
+        </>
+      )}
     </AnimatedModal>
   );
 }
+
+function VintageLoadingDots() {
+  const anims = [new Animated.Value(0.3), new Animated.Value(0.3), new Animated.Value(0.3)].map((anim, i) => {
+    const ref = React.useRef(anim).current;
+    React.useEffect(() => {
+      const pulse = Animated.loop(
+        Animated.sequence([
+          Animated.timing(ref, { toValue: 1, duration: 400, delay: i * 150, useNativeDriver: true }),
+          Animated.timing(ref, { toValue: 0.3, duration: 400, useNativeDriver: true }),
+        ])
+      );
+      pulse.start();
+      return () => pulse.stop();
+    }, []);
+    return ref;
+  });
+
+  return (
+    <View style={vintageLoadingStyles.container}>
+      <View style={vintageLoadingStyles.dotRow}>
+        {anims.map((anim, i) => (
+          <Animated.View key={i} style={[vintageLoadingStyles.dot, { opacity: anim }]} />
+        ))}
+      </View>
+      <Text style={vintageLoadingStyles.text}>Hämtar årgångar…</Text>
+    </View>
+  );
+}
+
+const vintageLoadingStyles = StyleSheet.create({
+  container: {
+    alignItems: "center",
+    paddingVertical: 32,
+    gap: 16,
+  },
+  dotRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  dot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: "#6f1d1b",
+  },
+  text: {
+    color: "#8a7e74",
+    fontSize: 14,
+    fontWeight: "500",
+    letterSpacing: 0.3,
+  },
+});
 
 export function DrinkWineModal({
   visible, styles, wine, rating, notes, consumedDate, imageUri, saving,

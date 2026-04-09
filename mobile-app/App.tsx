@@ -318,6 +318,7 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
         onSetActiveTastings={tastingSessions.setActiveTastings} onSetActiveSession={tastingSessions.setActiveSession}
         onOpenWset={sessionWset.open} wsetData={sessionWset.data}
         onSessionEnded={() => { setTastingSessionsVisible(false); setActiveSection("history"); }}
+        onUpdateParticipantNames={tastingSessions.updateParticipantNames}
       />
     );
   } else if (activeSection === "history") {
@@ -416,7 +417,7 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
       <BarcodeScannerModal visible={catalog.scannerVisible} styles={styles} onClose={() => catalog.setScannerVisible(false)} onBarcodeScanned={({ data: d }) => catalog.handleBarcodeScanned(d, draft, setDraft)} onLabelPhoto={() => catalog.handleLabelPhoto(setDraft)} />
       <LabelMatchPickerModal visible={catalog.labelPickerVisible} matches={catalog.labelMatches} onSelect={(m) => catalog.handleLabelMatchSelected(m, setDraft)} onDismiss={() => catalog.handleLabelMatchDismissed(setDraft)} />
       <WsetTastingModal {...tasting.wsetProps} wineType={draft.type} />
-      <VintagePickerModal visible={catalog.vintagePickerVisible} wineName={catalog.vintagePickerWineName} vintages={catalog.vintagePickerOptions} onSelectVintage={(e) => catalog.handleVintageSelected(e, setDraft)} onAddNew={() => catalog.handleVintageAddNew(setDraft)} onClose={() => catalog.setVintagePickerVisible(false)} styles={styles} />
+      <VintagePickerModal visible={catalog.vintagePickerVisible} wineName={catalog.vintagePickerWineName} vintages={catalog.vintagePickerOptions} loading={catalog.vintagePickerLoading} onSelectVintage={(e) => catalog.handleVintageSelected(e, setDraft)} onAddNew={() => catalog.handleVintageAddNew(setDraft)} onClose={() => catalog.setVintagePickerVisible(false)} styles={styles} />
       <CatalogEditorModal
         {...catalogEditor.modalProps} styles={styles}
         searchWineNames={data.searchCatalogWineNames}
