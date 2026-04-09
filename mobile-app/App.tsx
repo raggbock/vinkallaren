@@ -58,11 +58,6 @@ function useWebStyles() {
       'div[tabindex="0"] { transition: opacity 0.15s, filter 0.15s; }',
       'div[tabindex="0"]:hover { filter: brightness(0.92); }',
       'div[tabindex="0"]:active { opacity: 0.7 !important; filter: brightness(0.85); transition: opacity 0.05s; }',
-      // Paper grain on panels — matches React Native web inline background-color
-      `[style*="background-color: rgb(248, 241, 232)"] {`,
-      `  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E") !important;`,
-      `  background-size: 200px 200px !important;`,
-      `}`,
     ].join("\n");
   }, []);
 }
