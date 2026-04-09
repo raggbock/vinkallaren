@@ -6,7 +6,7 @@ import type { Suggestion } from "../components/form-controls";
 
 const PAGE_SIZE = 10;
 const MAX_SUGGESTIONS = 50;
-const SEARCH_DEBOUNCE_MS = 0;
+const SEARCH_DEBOUNCE_MS = 150;
 const SCROLL_THRESHOLD = 40;
 
 type SearchAsyncFn = (query: string, offset?: number) => Promise<{ suggestions: Suggestion[]; hasMore: boolean; nextOffset: number }>;
