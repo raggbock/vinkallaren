@@ -25,7 +25,7 @@ export function SetupScreen() {
   );
 }
 
-const logoSquare = require("../../assets/logo-square.png");
+const logoSquare = require("../../assets/logo-square.webp");
 
 export function LoadingScreen({ label }: { label: string }) {
   return (

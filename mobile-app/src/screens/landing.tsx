@@ -158,7 +158,7 @@ function Divider() {
   );
 }
 
-const logoBanner = require("../../assets/logo-banner.png");
+const logoBanner = require("../../assets/logo-banner.webp");
 
 function MarketingContent({ isWide }: { isWide: boolean }) {
   return (

@@ -1,7 +1,7 @@
 import "react-native-url-polyfill/auto";
 import { StatusBar } from "expo-status-bar";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Alert, Platform, Pressable, RefreshControl, SafeAreaView, ScrollView, Text as RNText, View as RNView } from "react-native";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ActivityIndicator, Alert, Platform, Pressable, RefreshControl, SafeAreaView, ScrollView, Text as RNText, View as RNView } from "react-native";
 import type { Session } from "@supabase/supabase-js";
 import { supabase, supabaseConfigured } from "./src/lib/supabase";
 import { buildMealRecommendations } from "./src/lib/cellar-helpers";
@@ -10,14 +10,20 @@ import { hydrateWineRecords } from "./src/lib/wine-helpers";
 import { confirmAction, showError } from "./src/lib/show-error";
 import { BottomTabBar, HistoryPanel, MealPlannerPanel } from "./src/components/cellar-sections";
 import { MinKallarePanel } from "./src/components/min-kallare-panel";
-import { BarcodeScannerModal, CatalogEditorModal, DrinkWineModal, EditHistoryModal, VintagePickerModal } from "./src/components/cellar-workflows";
 import { AddWinePanel } from "./src/components/add-wine-panel";
-import { EditWineModal } from "./src/components/edit-wine-modal";
-import { WsetTastingModal } from "./src/components/wset-tasting-modal";
-import { TastingSessionPanel } from "./src/components/tasting-session-modal";
-import { LabelMatchPickerModal } from "./src/components/label-match-picker";
-import { PrivacyPolicyModal } from "./src/components/privacy-policy-modal";
 import { SuccessOverlay, useSuccessOverlay } from "./src/components/success-overlay";
+
+// Lazy-load heavy modals (only loaded when opened)
+const BarcodeScannerModal = lazy(() => import("./src/components/cellar-workflows").then(m => ({ default: m.BarcodeScannerModal })));
+const CatalogEditorModal = lazy(() => import("./src/components/cellar-workflows").then(m => ({ default: m.CatalogEditorModal })));
+const DrinkWineModal = lazy(() => import("./src/components/cellar-workflows").then(m => ({ default: m.DrinkWineModal })));
+const EditHistoryModal = lazy(() => import("./src/components/cellar-workflows").then(m => ({ default: m.EditHistoryModal })));
+const VintagePickerModal = lazy(() => import("./src/components/cellar-workflows").then(m => ({ default: m.VintagePickerModal })));
+const EditWineModal = lazy(() => import("./src/components/edit-wine-modal").then(m => ({ default: m.EditWineModal })));
+const WsetTastingModal = lazy(() => import("./src/components/wset-tasting-modal").then(m => ({ default: m.WsetTastingModal })));
+const TastingSessionPanel = lazy(() => import("./src/components/tasting-session-modal").then(m => ({ default: m.TastingSessionPanel })));
+const LabelMatchPickerModal = lazy(() => import("./src/components/label-match-picker").then(m => ({ default: m.LabelMatchPickerModal })));
+const PrivacyPolicyModal = lazy(() => import("./src/components/privacy-policy-modal").then(m => ({ default: m.PrivacyPolicyModal })));
 import { CELLAR_SECTIONS, type CellarSection } from "./src/types/cellar";
 import type { FilterProps, StorageProps, WineActionsProps, CatalogProps, TastingProps } from "./src/types/panel-prop-groups";
 import type { WineHistoryRecord } from "./src/types/wine-history";
@@ -355,6 +361,7 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
   );
   if (activeSection === "cellar" && tastingSessionsVisible) {
     activePanel = (
+      <Suspense fallback={<ActivityIndicator style={{ flex: 1, justifyContent: "center" }} color={colors.accent} />}>
       <TastingSessionPanel
         styles={styles} userId={session.user.id}
         sessions={tastingSessions.sessions} loading={tastingSessions.loading} toasts={tastingSessions.toasts}
@@ -370,6 +377,7 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
         onSessionEnded={() => { setTastingSessionsVisible(false); setActiveSection("history"); }}
         onUpdateParticipantNames={tastingSessions.updateParticipantNames}
       />
+      </Suspense>
     );
   } else if (activeSection === "history") {
     activePanel = <HistoryPanel styles={styles} historyEntries={historyData.historyEntries} loadingHistory={historyData.loadingHistory} storageSpaceById={storageSpaceById}
@@ -435,6 +443,7 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
         }}
       />
       <SuccessOverlay config={success.config} onDone={success.clear} />
+      <Suspense fallback={null}>
       <PrivacyPolicyModal visible={privacy.visible} styles={styles} onClose={privacy.close} />
       <BarcodeScannerModal visible={barcode.scannerVisible} styles={styles} onClose={() => barcode.setScannerVisible(false)} onBarcodeScanned={({ data: d }) => barcode.handleBarcodeScanned(d, draft, setDraft)} onLabelPhoto={() => label.handleLabelPhoto(setDraft)} />
       <LabelMatchPickerModal visible={label.labelPickerVisible} matches={label.labelMatches} onSelect={(m) => label.handleLabelMatchSelected(m, setDraft)} onDismiss={() => label.handleLabelMatchDismissed(setDraft)} />
@@ -466,6 +475,7 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
         storageSpaceDraft={storageData.storageSpaceDraft} savingStorageSpace={storageData.savingStorageSpace}
         onStorageSpaceDraftChange={(patch) => storageData.setStorageSpaceDraft((c) => ({ ...c, ...patch }))}
       />
+      </Suspense>
       {activeSection === "history" || (activeSection === "cellar" && !tastingSessionsVisible) ? (
         <RNView style={[styles.scrollFlex, { backgroundColor: colors.bg }]}>
           {activePanel}
