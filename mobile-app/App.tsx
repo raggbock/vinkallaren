@@ -29,7 +29,10 @@ import { useCellarData } from "./src/hooks/useCellarData";
 import { useCellarFilters } from "./src/hooks/useCellarFilters";
 import { useImagePicker } from "./src/hooks/useImagePicker";
 import { useStorageSelection } from "./src/hooks/useStorageSelection";
-import { useCatalogWorkflow } from "./src/hooks/useCatalogWorkflow";
+import { useCatalogLookup } from "./src/hooks/useCatalogLookup";
+import { useBarcodeScanner } from "./src/hooks/useBarcodeScanner";
+import { useVintagePicker } from "./src/hooks/useVintagePicker";
+import { useLabelScanner } from "./src/hooks/useLabelScanner";
 import { useTastingSessions } from "./src/hooks/useTastingSessions";
 import { useDrinkWineModal } from "./src/hooks/useDrinkWineModal";
 import { useEditWineModal } from "./src/hooks/useEditWineModal";
@@ -95,12 +98,25 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
   const images = useImagePicker();
   const storage = useStorageSelection(data.storageSpaces, data.wines);
   const success = useSuccessOverlay();
-  const catalog = useCatalogWorkflow({
+  const [selectedCatalogNameEntry, setSelectedCatalogNameEntry] = useState<import("./src/types/product-catalog").ProductCatalogWineRow | null>(null);
+  const catalogLookup = useCatalogLookup({ selectedCatalogNameEntry });
+  const vintage = useVintagePicker({
+    fetchCatalogEntriesByName: data.fetchCatalogEntriesByName,
+    setSelectedCatalogNameEntry,
+  });
+  const barcode = useBarcodeScanner({
     sessionUserId: session.user.id,
     wines: data.wines,
-    fetchCatalogEntriesByName: data.fetchCatalogEntriesByName,
-    matchCatalogByText: data.matchCatalogByText,
+    maybeSuggestCatalogMatch: catalogLookup.maybeSuggestCatalogMatch,
+  });
+  const label = useLabelScanner({
     takePhoto: images.takePhoto,
+    matchCatalogByText: data.matchCatalogByText,
+    fetchCatalogEntriesByName: data.fetchCatalogEntriesByName,
+    setScannerVisible: barcode.setScannerVisible,
+    setLookupBusy: catalogLookup.setLookupBusy,
+    setLookupMessage: catalogLookup.setLookupMessage,
+    setSelectedCatalogNameEntry,
   });
   const tastingSessions = useTastingSessions(session.user.id);
   const userProfile = useProfile(session.user.id);
@@ -204,11 +220,11 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
       storageSpaceId: storage.selectedStorageSpaceId,
       storageRow: storage.selectedStorageRow,
       storageSlot: storage.selectedStorageSlot,
-      selectedCatalogNameEntry: catalog.selectedCatalogNameEntry,
+      selectedCatalogNameEntry,
     });
     setSaving(false);
     if (result.error) { showError("Kunde inte spara", result.error); return; }
-    setDraft(defaultDraft); catalog.setSelectedCatalogNameEntry(null);
+    setDraft(defaultDraft); setSelectedCatalogNameEntry(null);
     storage.setSelectedStorageRow("1"); storage.setSelectedStorageSlot("1");
     const savedRow = result.data!;
     const [hydrated] = await hydrateWineRecords([savedRow]);
@@ -360,14 +376,14 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
         countryReferenceRows={data.countryReferenceRows}
         regionReferenceRows={data.regionReferenceRows}
         grapeReferenceRows={data.grapeReferenceRows}
-        lookupBusy={catalog.lookupBusy}
-        lookupMessage={catalog.lookupMessage}
+        lookupBusy={catalogLookup.lookupBusy}
+        lookupMessage={catalogLookup.lookupMessage}
         saving={saving}
-        onDraftChange={(patch) => setDraft((c) => catalog.updateDraft(c, patch))}
-        onNameSelected={(name, producer) => catalog.handleWineNameSelected(name, producer, setDraft)}
+        onDraftChange={(patch) => setDraft((c) => catalogLookup.updateDraft(c, patch))}
+        onNameSelected={(name, producer) => vintage.handleWineNameSelected(name, producer, setDraft)}
         onArticleNumberChange={(value) => {
-          setDraft((current) => catalog.updateDraft(current, { systembolagetProductId: value }));
-          void catalog.maybeSuggestCatalogMatch({ ...draft, systembolagetProductId: value });
+          setDraft((current) => catalogLookup.updateDraft(current, { systembolagetProductId: value }));
+          void catalogLookup.maybeSuggestCatalogMatch({ ...draft, systembolagetProductId: value });
         }}
         occupiedPositions={storage.getOccupiedPositions(storage.selectedStorageSpaceId, storage.selectedStorageRow)}
         onStorageSpaceChange={storage.changeStorageSpace}
@@ -377,7 +393,7 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
         savingStorageSpace={data.savingStorageSpace}
         onStorageSpaceDraftChange={(patch) => data.setStorageSpaceDraft((c) => ({ ...c, ...patch }))}
         onSaveStorageSpace={async () => { const newId = await data.saveStorageSpace(); if (newId) { storage.setSelectedStorageSpaceId(newId); storage.setSelectedStorageRow("1"); storage.setSelectedStorageSlot("1"); } success.show("storage_saved"); }}
-        onScanLabel={() => catalog.handleLabelPhoto(setDraft)}
+        onScanLabel={() => label.handleLabelPhoto(setDraft)}
         onOpenSystembolaget={handleOpenSystembolaget}
         onChooseImage={async () => { const uri = await images.pickImageFromLibrary(); if (uri) setDraft((c) => ({ ...c, imageUri: uri })); }}
         onTakePhoto={async () => { const uri = await images.takePhoto(); if (uri) setDraft((c) => ({ ...c, imageUri: uri })); }}
@@ -410,10 +426,10 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
       />
       <SuccessOverlay config={success.config} onDone={success.clear} />
       <PrivacyPolicyModal visible={privacy.visible} styles={styles} onClose={privacy.close} />
-      <BarcodeScannerModal visible={catalog.scannerVisible} styles={styles} onClose={() => catalog.setScannerVisible(false)} onBarcodeScanned={({ data: d }) => catalog.handleBarcodeScanned(d, draft, setDraft)} onLabelPhoto={() => catalog.handleLabelPhoto(setDraft)} />
-      <LabelMatchPickerModal visible={catalog.labelPickerVisible} matches={catalog.labelMatches} onSelect={(m) => catalog.handleLabelMatchSelected(m, setDraft)} onDismiss={() => catalog.handleLabelMatchDismissed(setDraft)} />
+      <BarcodeScannerModal visible={barcode.scannerVisible} styles={styles} onClose={() => barcode.setScannerVisible(false)} onBarcodeScanned={({ data: d }) => barcode.handleBarcodeScanned(d, draft, setDraft)} onLabelPhoto={() => label.handleLabelPhoto(setDraft)} />
+      <LabelMatchPickerModal visible={label.labelPickerVisible} matches={label.labelMatches} onSelect={(m) => label.handleLabelMatchSelected(m, setDraft)} onDismiss={() => label.handleLabelMatchDismissed(setDraft)} />
       <WsetTastingModal {...tasting.wsetProps} wineType={draft.type} />
-      <VintagePickerModal visible={catalog.vintagePickerVisible} wineName={catalog.vintagePickerWineName} vintages={catalog.vintagePickerOptions} loading={catalog.vintagePickerLoading} onSelectVintage={(e) => catalog.handleVintageSelected(e, setDraft)} onAddNew={() => catalog.handleVintageAddNew(setDraft)} onClose={() => catalog.setVintagePickerVisible(false)} styles={styles} />
+      <VintagePickerModal visible={vintage.vintagePickerVisible} wineName={vintage.vintagePickerWineName} vintages={vintage.vintagePickerOptions} loading={vintage.vintagePickerLoading} onSelectVintage={(e) => vintage.handleVintageSelected(e, setDraft)} onAddNew={() => vintage.handleVintageAddNew(setDraft)} onClose={() => vintage.setVintagePickerVisible(false)} styles={styles} />
       <CatalogEditorModal
         {...catalogEditor.modalProps} styles={styles}
         searchWineNames={data.searchCatalogWineNames}
