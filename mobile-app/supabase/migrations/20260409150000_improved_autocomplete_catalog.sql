@@ -1,7 +1,8 @@
--- Improved autocomplete: fast prefix + substring with tiered ranking
--- 3-char queries: prefix-only, no dedup (~44ms vs 1381ms)
--- 4+ char queries: substring match with ranked scoring (~55ms vs 116ms)
--- No similarity() calls — pure ILIKE with GIN trigram indexes
+-- Improved autocomplete: multi-word search, fast prefix, tiered ranking
+-- Supports "barolo fontanafredda" → matches name AND producer separately
+-- 3-char queries: prefix-only (~44ms)
+-- 4+ char single word: substring match with ranking (~55ms)
+-- Multi-word: BitmapAnd intersection (~5-19ms)
 
 drop function if exists autocomplete_catalog(text, int);
 
@@ -14,11 +15,52 @@ returns table(id uuid, name text, producer text, vintage int, image_url text, sc
 as $$
 declare
   q text := immutable_unaccent(lower(trim(query)));
+  words text[];
+  w1 text;
+  w2 text;
+  w3 text;
 begin
   if length(q) < 3 then return; end if;
 
-  if length(q) = 3 then
-    -- 3-char query: fast prefix, no dedup, no ranking
+  words := string_to_array(q, ' ');
+  w1 := words[1];
+  w2 := case when array_length(words, 1) >= 2 then words[2] else null end;
+  w3 := case when array_length(words, 1) >= 3 then words[3] else null end;
+
+  if array_length(words, 1) >= 2 and length(w2) >= 2 then
+    -- Multi-word: each word must match in name or producer (BitmapAnd, ~5-19ms)
+    return query
+    with matches as (
+      select w.id, w.name, w.producer, w.vintage, w.image_url,
+        ((case when immutable_unaccent(lower(w.name)) ilike '%' || w1 || '%' then 1 else 0 end
+       + case when immutable_unaccent(lower(w.producer)) ilike '%' || w1 || '%' then 1 else 0 end
+       + case when immutable_unaccent(lower(w.name)) ilike '%' || w2 || '%' then 1 else 0 end
+       + case when immutable_unaccent(lower(w.producer)) ilike '%' || w2 || '%' then 1 else 0 end
+       + case when w3 is not null and immutable_unaccent(lower(w.name)) ilike '%' || w3 || '%' then 1 else 0 end
+       + case when w3 is not null and immutable_unaccent(lower(w.producer)) ilike '%' || w3 || '%' then 1 else 0 end
+        ) * 15)::real as score
+      from product_catalog_wines w
+      where (immutable_unaccent(lower(w.name)) ilike '%' || w1 || '%'
+         or (w.producer is not null and immutable_unaccent(lower(w.producer)) ilike '%' || w1 || '%'))
+        and (immutable_unaccent(lower(w.name)) ilike '%' || w2 || '%'
+         or (w.producer is not null and immutable_unaccent(lower(w.producer)) ilike '%' || w2 || '%'))
+        and (w3 is null or immutable_unaccent(lower(w.name)) ilike '%' || w3 || '%'
+         or (w.producer is not null and immutable_unaccent(lower(w.producer)) ilike '%' || w3 || '%'))
+    ),
+    ranked as (
+      select m.*,
+        case when distinct_names then
+          row_number() over (partition by lower(m.name), lower(m.producer) order by m.vintage desc nulls last)
+        else 1 end as rn
+      from matches m
+    )
+    select r.id, r.name, r.producer, r.vintage, r.image_url, r.score
+    from ranked r where r.rn = 1
+    order by r.score desc, r.vintage desc nulls last
+    limit max_results;
+
+  elsif length(q) = 3 then
+    -- 3-char single word: fast prefix, no dedup (~44ms)
     return query
     select w.id, w.name, w.producer, w.vintage, w.image_url, 90::real as score
     from product_catalog_wines w
@@ -26,7 +68,7 @@ begin
     limit max_results;
 
   else
-    -- 4+ chars: substring match with tiered ranking + dedup
+    -- 4+ char single word: substring match with tiered ranking + dedup (~55ms)
     return query
     with scored as (
       select w.id, w.name, w.producer, w.vintage, w.image_url,
