@@ -1,0 +1,36 @@
+name: Lighthouse CI
+
+on:
+  pull_request:
+    branches: [main, codex/initial-setup]
+  push:
+    branches: [codex/initial-setup]
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: mobile-app/package-lock.json
+
+      - name: Install dependencies
+        run: cd mobile-app && npm ci
+
+      - name: Build web app
+        run: cd mobile-app && npm run web:build
+
+      - name: Run Lighthouse CI
+        run: cd mobile-app && npx lhci autorun --config=../.lighthouserc.json
+
+      - name: Upload Lighthouse report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report
+          path: mobile-app/.lighthouseci/
+          retention-days: 14
