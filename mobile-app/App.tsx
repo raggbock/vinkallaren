@@ -355,6 +355,7 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
       onLoadMoreWines={wineData.fetchMoreWines}
       highlightedWineId={highlightedWineId}
       onClearHighlight={() => setHighlightedWineId(null)}
+      onHighlightWine={setHighlightedWineId}
       refreshing={refreshing}
       onRefresh={onRefresh}
     />

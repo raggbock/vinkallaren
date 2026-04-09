@@ -10,7 +10,6 @@ const WINE_TYPE_COLORS: Record<string, string> = {
   Rosé: "#F4A6B0",
   Mousserande: "#F5E6CA",
   Sött: "#D4A017",
-  Orange: "#E8943A",
 };
 
 function slotColor(type: string): string {
@@ -116,13 +115,10 @@ const s = StyleSheet.create({
     width: SLOT_SIZE, height: SLOT_SIZE / 2,
     borderBottomLeftRadius: SLOT_SIZE / 2,
     borderBottomRightRadius: SLOT_SIZE / 2,
-    backgroundColor: colors.border,
-    opacity: 0.5,
+    backgroundColor: "#C4B8A8",
   },
   cradleEmpty: {
-    backgroundColor: "transparent",
-    borderWidth: 1.5, borderTopWidth: 0, borderColor: colors.border, borderStyle: "dashed",
-    opacity: 0.4,
+    backgroundColor: "#D8CFBF",
   },
   bottle: {
     width: SLOT_SIZE - 4, height: SLOT_SIZE - 4,
@@ -144,10 +140,10 @@ const s = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.55)",
   },
   popup: {
-    backgroundColor: colors.surface, borderRadius: 20, padding: 24,
+    backgroundColor: "#FFFFFF", borderRadius: 20, padding: 24,
     maxWidth: 300, width: "85%", alignItems: "center", gap: 8,
     borderWidth: 1.5, borderColor: colors.border,
-    ...Platform.select({ web: { boxShadow: "0 8px 30px rgba(0,0,0,0.18)" } as any, default: {} }),
+    ...Platform.select({ web: { boxShadow: "0 8px 30px rgba(0,0,0,0.25)" } as any, default: { elevation: 10 } }),
   },
   popupDot: { width: 28, height: 28, borderRadius: 14, marginBottom: 4 },
   popupName: { fontSize: 18, fontWeight: "700", color: colors.text, textAlign: "center" },

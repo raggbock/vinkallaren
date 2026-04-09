@@ -40,6 +40,7 @@ type MinKallarePanelProps = {
   onLoadMoreWines: () => void;
   highlightedWineId?: string | null;
   onClearHighlight?: () => void;
+  onHighlightWine?: (wineId: string) => void;
   refreshing?: boolean;
   onRefresh?: () => void;
 };
@@ -68,7 +69,7 @@ export function MinKallarePanel(props: MinKallarePanelProps) {
   const renderSectionHeader = useCallback(({ section }: { section: WineSection }) => (
     <SectionHeader section={section} styles={styles} expandedSpaceIds={expandedSpaceIds}
       toggleSpace={toggleSpace} onUpdateStorageSpace={storage.onUpdateStorageSpace} onDeleteStorageSpace={storage.onDeleteStorageSpace} wines={filteredWines}
-      onGoToWine={(wine) => { const spaceId = wine.storage_space_id || "__unplaced__"; setExpandedSpaceIds((prev) => { const next = new Set(prev); next.add(spaceId); return next; }); }} />
+      onGoToWine={(wine) => { const spaceId = wine.storage_space_id || "__unplaced__"; setExpandedSpaceIds((prev) => { const next = new Set(prev); next.add(spaceId); return next; }); props.onHighlightWine?.(wine.id); }} />
   ), [styles, expandedSpaceIds, toggleSpace, storage.onUpdateStorageSpace, storage.onDeleteStorageSpace, filteredWines]);
 
   const renderItem = useCallback(({ item }: { item: WineRecord }) => (
