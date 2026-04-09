@@ -59,6 +59,24 @@ function useWebStyles() {
       'div[tabindex="0"]:hover { filter: brightness(0.92); }',
       'div[tabindex="0"]:active { opacity: 0.7 !important; filter: brightness(0.85); transition: opacity 0.05s; }',
     ].join("\n");
+    document.head.appendChild(style);
+
+    // Paper grain texture — must use DOM since RN web strips backgroundImage from styles
+    const noise = "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E\")";
+    function applyGrain() {
+      document.querySelectorAll("div").forEach((el) => {
+        if (el.dataset.grain) return;
+        if (getComputedStyle(el).backgroundColor === "rgb(248, 241, 232)") {
+          el.dataset.grain = "1";
+          el.style.backgroundImage = noise;
+          el.style.backgroundSize = "200px 200px";
+        }
+      });
+    }
+    const observer = new MutationObserver(applyGrain);
+    observer.observe(document.body, { childList: true, subtree: true });
+    setTimeout(applyGrain, 500);
+    return () => observer.disconnect();
   }, []);
 }
 
