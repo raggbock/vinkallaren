@@ -25,12 +25,13 @@ export async function searchCatalogWineNames(
   return { suggestions: results, hasMore, nextOffset: offset + results.length };
 }
 
-export async function fetchCatalogEntriesByName(name: string): Promise<ProductCatalogWineRow[]> {
-  const { data, error } = await supabase
+export async function fetchCatalogEntriesByName(name: string, producer?: string | null): Promise<ProductCatalogWineRow[]> {
+  let query = supabase
     .from("product_catalog_wines")
     .select("*")
-    .ilike("name", name)
-    .order("updated_at", { ascending: false });
+    .ilike("name", name);
+  if (producer) query = query.ilike("producer", producer);
+  const { data, error } = await query.order("vintage", { ascending: false, nullsFirst: false });
   if (error) return [];
   return (data ?? []) as ProductCatalogWineRow[];
 }

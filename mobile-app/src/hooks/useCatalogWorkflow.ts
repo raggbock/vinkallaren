@@ -20,7 +20,7 @@ import type { WineRecord } from "../types/wine";
 type CatalogWorkflowDeps = {
   sessionUserId: string;
   wines: WineRecord[];
-  fetchCatalogEntriesByName: (name: string) => Promise<ProductCatalogWineRow[]>;
+  fetchCatalogEntriesByName: (name: string, producer?: string | null) => Promise<ProductCatalogWineRow[]>;
   matchCatalogByText: (query: string, maxResults?: number, rawOcrQuery?: string, vintage?: number | null) => Promise<CatalogTextMatch[]>;
   takePhoto: () => Promise<string | null>;
 };
@@ -80,11 +80,7 @@ export function useCatalogWorkflow(deps: CatalogWorkflowDeps) {
   }
 
   async function handleWineNameSelected(name: string, producer: string | null | undefined, setDraft: React.Dispatch<React.SetStateAction<WineDraft>>) {
-    let entries = await fetchCatalogEntriesByName(name);
-    if (producer) {
-      const filtered = entries.filter((e) => normalizeLookupValue(e.producer ?? "") === normalizeLookupValue(producer));
-      if (filtered.length > 0) entries = filtered;
-    }
+    const entries = await fetchCatalogEntriesByName(name, producer);
     if (entries.length === 0) {
       setSelectedCatalogNameEntry(null);
       setDraft((current) => ({ ...current, name }));
