@@ -204,8 +204,8 @@ describe("mergeTagText", () => {
     expect(mergeTagText("organiskt", "naturvin")).toBe("organiskt, naturvin");
   });
 
-  it("does not duplicate an existing tag", () => {
-    expect(mergeTagText("organiskt, naturvin", "organiskt")).toBe("organiskt, naturvin");
+  it("removes an existing tag (toggle off)", () => {
+    expect(mergeTagText("organiskt, naturvin", "organiskt")).toBe("naturvin");
   });
 
   it("handles multiple existing tags and appends a new one", () => {
@@ -213,8 +213,8 @@ describe("mergeTagText", () => {
     expect(result).toBe("a, b, c, d");
   });
 
-  it("returns unchanged value when tag already present among many", () => {
-    expect(mergeTagText("a, b, c", "b")).toBe("a, b, c");
+  it("removes tag from middle of list", () => {
+    expect(mergeTagText("a, b, c", "b")).toBe("a, c");
   });
 });
 

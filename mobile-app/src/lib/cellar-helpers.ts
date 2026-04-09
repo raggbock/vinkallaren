@@ -215,7 +215,7 @@ export function mergeTagText(currentValue: string, nextValue: string) {
   const parts = parseTags(currentValue);
 
   if (parts.includes(nextValue)) {
-    return currentValue;
+    return parts.filter((p) => p !== nextValue).join(", ");
   }
 
   return [...parts, nextValue].join(", ");
