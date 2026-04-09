@@ -56,6 +56,7 @@ export function AutocompleteInput({
           style={theme.input}
           value={value}
           editable={editable}
+          accessibilityLabel={label || placeholder}
           onChangeText={(nextValue) => { onChangeText(nextValue); resetVisibleCount(); setFocused(true); }}
           onFocus={() => { cancelBlur(); setFocused(true); }}
           onBlur={() => { blurTimeoutRef.current = setTimeout(() => setFocused(false), BLUR_DELAY_MS); }}

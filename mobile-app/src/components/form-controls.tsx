@@ -39,6 +39,7 @@ export function LabeledInput({ label, multiline, ...props }: ComponentProps<type
         placeholderTextColor={colors.textSecondary}
         style={[theme.input, multiline && styles.textarea]}
         multiline={multiline}
+        accessibilityLabel={label}
         {...props}
       />
     </View>
@@ -74,6 +75,7 @@ export function DateInput({ label, value, onChangeText }: { label: string; value
             value={value}
             onChangeText={onChangeText}
             placeholder="ÅÅÅÅ-MM-DD"
+            accessibilityLabel={label}
             placeholderTextColor={colors.textSecondary}
             style={theme.input}
             {...(Platform.OS !== "web" ? { keyboardType: "number-pad" as const, maxLength: 10 } : {})}

@@ -22,7 +22,7 @@ export const colors = {
   accentDark: "#A62E22",
   warm: "#E8A87C",
   text: "#2A2A2A",
-  textSecondary: "#6B6B6B",
+  textSecondary: "#666666",
   textLight: "#FDFAF6",
   border: "#E0D8CE",
   borderLight: "#F0EBE3",
