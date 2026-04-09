@@ -5,6 +5,7 @@ import type { WsetTastingData } from "../lib/wset-data";
 import type { ReferenceOptionRow } from "../types/reference-data";
 import type { StorageSpaceRow } from "../types/storage-space";
 import type { StorageSpaceDraft, WineDraft } from "../types/cellar-drafts";
+import type { WineRecord } from "../types/wine";
 import { AutocompleteInput, Expandable, LabeledInput, PanelHeader, SuggestionRow, type Suggestion } from "./form-controls";
 import { colors } from "../styles/theme";
 import type { styles as themeStyles } from "../styles/theme";
@@ -38,7 +39,7 @@ export function AddWinePanel(props: AddWinePanelProps) {
       {tastingMode ? (
         <TastingFields styles={styles} draft={draft} tastingDate={props.tastingDate} tastingRating={props.tastingRating} wsetData={props.wsetData} onDraftChange={props.onDraftChange} onTastingDateChange={props.onTastingDateChange} onTastingRatingChange={props.onTastingRatingChange} onOpenWset={props.onOpenWset} />
       ) : (
-        <CellarFields styles={styles} draft={draft} storageSpaces={props.storageSpaces} selectedStorageSpace={props.selectedStorageSpace} selectedStorageSpaceId={props.selectedStorageSpaceId} selectedStorageRow={props.selectedStorageRow} selectedStorageSlot={props.selectedStorageSlot} storageSpaceById={props.storageSpaceById} occupiedPositions={props.occupiedPositions} storageSpaceDraft={props.storageSpaceDraft} savingStorageSpace={props.savingStorageSpace} onStorageSpaceDraftChange={props.onStorageSpaceDraftChange} onSaveStorageSpace={props.onSaveStorageSpace} onDraftChange={props.onDraftChange} onStorageSpaceChange={props.onStorageSpaceChange} onStorageRowChange={props.onStorageRowChange} onStorageSlotChange={props.onStorageSlotChange} />
+        <CellarFields styles={styles} draft={draft} storageSpaces={props.storageSpaces} wines={props.wines} storageSpaceDraft={props.storageSpaceDraft} savingStorageSpace={props.savingStorageSpace} onStorageSpaceDraftChange={props.onStorageSpaceDraftChange} onSaveStorageSpace={props.onSaveStorageSpace} onDraftChange={props.onDraftChange} onPositionChange={props.onPositionChange} />
       )}
 
       <SectionLabel label="Övrigt" />
@@ -127,16 +128,12 @@ export interface AddWinePanelProps {
   styles: SharedStyles;
   draft: WineDraft;
   storageSpaces: StorageSpaceRow[];
-  selectedStorageSpace?: StorageSpaceRow | null;
-  selectedStorageSpaceId: string;
-  selectedStorageRow: string;
-  selectedStorageSlot: string;
-  storageSpaceById: Map<string, StorageSpaceRow>;
-  occupiedPositions: { occupiedRows: Set<string>; occupiedSlots: Set<string> };
+  wines: WineRecord[];
   storageSpaceDraft: StorageSpaceDraft;
   savingStorageSpace: boolean;
   onStorageSpaceDraftChange: (patch: Partial<StorageSpaceDraft>) => void;
   onSaveStorageSpace: () => void;
+  onPositionChange: (spaceId: string, row: string, slot: string) => void;
   searchWineNames: (query: string, offset?: number) => Promise<{ suggestions: Suggestion[]; hasMore: boolean; nextOffset: number }>;
   effectiveCountryOptions: string[];
   effectiveRegionOptions: string[];
@@ -150,9 +147,6 @@ export interface AddWinePanelProps {
   onDraftChange: (patch: Partial<WineDraft>) => void;
   onNameSelected: (value: string, producer?: string | null) => void;
   onArticleNumberChange: (value: string) => void;
-  onStorageSpaceChange: (spaceId: string) => void;
-  onStorageRowChange: (value: string) => void;
-  onStorageSlotChange: (value: string) => void;
   onScanLabel: () => void;
   onOpenSystembolaget: (productId: string) => void;
   onChooseImage: () => void;

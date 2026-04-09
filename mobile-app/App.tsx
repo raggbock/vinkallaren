@@ -348,11 +348,7 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
       <AddWinePanel
         styles={styles} draft={draft}
         storageSpaces={data.storageSpaces}
-        selectedStorageSpace={storage.selectedStorageSpace}
-        selectedStorageSpaceId={storage.selectedStorageSpaceId}
-        selectedStorageRow={storage.selectedStorageRow}
-        selectedStorageSlot={storage.selectedStorageSlot}
-        storageSpaceById={data.storageSpaceById}
+        wines={data.wines}
         searchWineNames={data.searchCatalogWineNames}
         effectiveCountryOptions={data.effectiveCountryOptions}
         effectiveRegionOptions={data.effectiveRegionOptions}
@@ -369,14 +365,11 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
           setDraft((current) => catalog.updateDraft(current, { systembolagetProductId: value }));
           void catalog.maybeSuggestCatalogMatch({ ...draft, systembolagetProductId: value });
         }}
-        occupiedPositions={storage.getOccupiedPositions(storage.selectedStorageSpaceId, storage.selectedStorageRow)}
-        onStorageSpaceChange={storage.changeStorageSpace}
-        onStorageRowChange={storage.changeStorageRow}
-        onStorageSlotChange={storage.setSelectedStorageSlot}
         storageSpaceDraft={data.storageSpaceDraft}
         savingStorageSpace={data.savingStorageSpace}
         onStorageSpaceDraftChange={(patch) => data.setStorageSpaceDraft((c) => ({ ...c, ...patch }))}
         onSaveStorageSpace={async () => { const newId = await data.saveStorageSpace(); if (newId) { storage.setSelectedStorageSpaceId(newId); storage.setSelectedStorageRow("1"); storage.setSelectedStorageSlot("1"); } success.show("storage_saved"); }}
+        onPositionChange={(spaceId, row, slot) => { storage.setSelectedStorageSpaceId(spaceId); storage.setSelectedStorageRow(row); storage.setSelectedStorageSlot(slot); }}
         onScanLabel={() => catalog.handleLabelPhoto(setDraft)}
         onOpenSystembolaget={handleOpenSystembolaget}
         onChooseImage={async () => { const uri = await images.pickImageFromLibrary(); if (uri) setDraft((c) => ({ ...c, imageUri: uri })); }}
