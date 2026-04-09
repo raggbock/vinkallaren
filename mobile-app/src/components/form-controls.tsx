@@ -185,9 +185,9 @@ export function GroupedSuggestionRow({
                 <Pressable
                   key={`${group.label}-${item}`}
                   onPress={() => onSelect(item)}
-                  style={({ pressed }) => [styles.suggestionPill, isSelected && styles.suggestionPillActive, pressed && { opacity: 0.6 }]}
+                  style={({ pressed }) => [theme.foodPill, isSelected && theme.foodPillActive, pressed && { opacity: 0.6 }]}
                 >
-                  <Text style={[styles.suggestionText, isSelected && styles.suggestionTextActive]}>{item}</Text>
+                  <Text style={[theme.foodText, isSelected && theme.foodTextActive]}>{item}</Text>
                 </Pressable>
               );
             })}
