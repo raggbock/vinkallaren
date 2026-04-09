@@ -1,0 +1,86 @@
+- generic [ref=e3]:
+  - generic [ref=e380]:
+    - generic [ref=e381]:
+      - generic [ref=e385]:
+        - generic [ref=e386]: Vad ska vi äta?
+        - generic [ref=e388] [cursor=pointer]: lamm
+      - generic [ref=e390] [cursor=pointer]:
+        - generic [ref=e391]: Kött
+        - generic [ref=e392]: ›
+      - generic [ref=e394] [cursor=pointer]:
+        - generic [ref=e395]: Fisk & skaldjur
+        - generic [ref=e396]: ›
+      - generic [ref=e398] [cursor=pointer]:
+        - generic [ref=e399]: Ost
+        - generic [ref=e400]: ›
+      - generic [ref=e402] [cursor=pointer]:
+        - generic [ref=e403]: Grönt & övrigt
+        - generic [ref=e404]: ›
+      - generic [ref=e406] [cursor=pointer]:
+        - generic [ref=e407]: Asiatiskt
+        - generic [ref=e408]: ›
+      - generic [ref=e410] [cursor=pointer]:
+        - generic [ref=e411]: Tilltugg
+        - generic [ref=e412]: ›
+      - generic [ref=e414] [cursor=pointer]:
+        - generic [ref=e415]: Sött
+        - generic [ref=e416]: ›
+      - generic [ref=e418] [cursor=pointer]:
+        - generic [ref=e419]: Övriga
+        - generic [ref=e420]: ›
+      - generic [ref=e421] [cursor=pointer]:
+        - generic [ref=e422]:
+          - generic [ref=e423]:
+            - generic [ref=e424]: Vitt
+            - generic [ref=e425]: Alba Rhino Vinho Verde
+            - generic [ref=e426]: Quinta das Arcas – Soc. Agr. Lda • Alvarinho • Portugal
+          - generic [ref=e428]: 1 st
+        - generic [ref=e429]:
+          - generic [ref=e431]: lamm
+          - generic [ref=e433]: fisk
+      - generic [ref=e434] [cursor=pointer]:
+        - generic [ref=e435]:
+          - generic [ref=e436]:
+            - generic [ref=e437]: Rött
+            - generic [ref=e438]: Opus One
+            - generic [ref=e439]: Opus One Winery • Cabernet Sauvignon, Merlot • USA
+          - generic [ref=e441]: 1 st
+        - generic [ref=e442]:
+          - generic [ref=e444]: nötkött
+          - generic [ref=e446]: lamm
+      - generic [ref=e447] [cursor=pointer]:
+        - generic [ref=e448]:
+          - generic [ref=e449]:
+            - generic [ref=e450]: Rött
+            - generic [ref=e451]: Rioja Reserva
+            - generic [ref=e452]: López de Heredia • Tempranillo, Garnacha • Spanien
+          - generic [ref=e454]: 1 st
+        - generic [ref=e455]:
+          - generic [ref=e457]: lamm
+          - generic [ref=e459]: tapas
+      - generic [ref=e460] [cursor=pointer]:
+        - generic [ref=e461]:
+          - generic [ref=e462]:
+            - generic [ref=e463]: Rött
+            - generic [ref=e464]: Châteauneuf-du-Pape
+            - generic [ref=e465]: Château Rayas • Grenache • Frankrike
+          - generic [ref=e467]: 1 st
+        - generic [ref=e468]:
+          - generic [ref=e470]: lamm
+          - generic [ref=e472]: gryta
+    - generic [ref=e473]:
+      - generic [ref=e475] [cursor=pointer]: 2026-03-30-574b771
+      - generic [ref=e477] [cursor=pointer]: Integritetspolicy
+  - generic [ref=e129]:
+    - generic [ref=e130] [cursor=pointer]:
+      - generic [ref=e131]: 🍷
+      - generic [ref=e132]: Min källare
+    - generic [ref=e133] [cursor=pointer]:
+      - generic [ref=e134]: ＋
+      - generic [ref=e135]: Lägg till
+    - generic [active] [ref=e136] [cursor=pointer]:
+      - generic [ref=e137]: 🍽
+      - generic [ref=e138]: Mat
+    - generic [ref=e139] [cursor=pointer]:
+      - generic [ref=e140]: 📖
+      - generic [ref=e141]: Historik

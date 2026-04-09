@@ -1,0 +1,140 @@
+<h2>Loggokoncept — Vinkällaren</h2>
+<p class="subtitle">Klicka på den stil ni gillar bäst. Denna blir grunden för en AI-genererad logga.</p>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=Cinzel:wght@400;700;900&family=Great+Vibes&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap');
+
+.logo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 16px; }
+@media (max-width: 700px) { .logo-grid { grid-template-columns: 1fr; } }
+
+.logo-card {
+  background: #1a0f0e;
+  border-radius: 20px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.logo-card:hover { border-color: rgba(244,195,140,0.3); transform: translateY(-2px); }
+.logo-card.selected { border-color: #f4c38c !important; }
+
+.logo-display {
+  padding: 40px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+  position: relative;
+}
+
+.logo-info {
+  padding: 16px 20px;
+  background: rgba(61,34,32,0.5);
+  border-top: 1px solid rgba(244,195,140,0.1);
+}
+.logo-info h3 { color: #fffaf5; font-size: 14px; margin: 0 0 4px; }
+.logo-info p { color: #c4a882; font-size: 12px; margin: 0; line-height: 1.5; }
+
+.logo-tag {
+  display: inline-block;
+  background: rgba(244,195,140,0.15);
+  color: #f4c38c;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  margin-top: 8px;
+  font-weight: 600;
+}
+</style>
+
+<div class="logo-grid">
+
+  <!-- Concept A: Elegant Serif -->
+  <div class="logo-card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="logo-display" style="background: radial-gradient(ellipse at 50% 40%, #3d2220, #1a0f0e);">
+      <div style="text-align:center;">
+        <div style="font-family:'Cinzel',serif; font-size:11px; color:#f4c38c; letter-spacing:6px; text-transform:uppercase; margin-bottom:4px;">— Est. 2026 —</div>
+        <div style="font-family:'Playfair Display',serif; font-size:48px; font-weight:900; color:#fffaf5; line-height:1; letter-spacing:2px;">Vin</div>
+        <div style="font-family:'Playfair Display',serif; font-size:48px; font-weight:900; color:#fffaf5; line-height:1; letter-spacing:2px; margin-top:-4px;">källaren</div>
+        <div style="width:60px; height:2px; background:linear-gradient(90deg, transparent, #f4c38c, transparent); margin:10px auto 8px;"></div>
+        <div style="font-family:'Cormorant Garamond',serif; font-size:12px; color:#c4a882; letter-spacing:3px; text-transform:uppercase; font-style:italic;">Din personliga vinsamling</div>
+      </div>
+    </div>
+    <div class="logo-info">
+      <h3>A: Klassisk elegans</h3>
+      <p>Serif-typografi (Playfair Display) med guldaccenter. Känns som en fin vinetikett — tidlöst och sofistikerat.</p>
+      <div class="logo-tag">Inspiration: klassiska vinproducenter</div>
+    </div>
+  </div>
+
+  <!-- Concept B: Handskrivet / Script -->
+  <div class="logo-card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="logo-display" style="background: radial-gradient(ellipse at 50% 40%, #3d2220, #1a0f0e);">
+      <div style="text-align:center;">
+        <div style="font-size:28px; margin-bottom:-8px;">&#127863;</div>
+        <div style="font-family:'Great Vibes',cursive; font-size:52px; color:#fffaf5; line-height:1.1;">Vinkällaren</div>
+        <div style="width:80px; height:1px; background:#f4c38c; margin:6px auto;"></div>
+        <div style="font-family:'Cormorant Garamond',serif; font-size:11px; color:#c4a882; letter-spacing:4px; text-transform:uppercase;">Samla &bull; Smaka &bull; Upptäck</div>
+      </div>
+    </div>
+    <div class="logo-info">
+      <h3>B: Personlig handskrift</h3>
+      <p>Skriptfont (som Vegokäk) med ett vinglas. Personligt, varmt och inbjudande — som en handskriven etikett.</p>
+      <div class="logo-tag">Inspiration: vegokak.se</div>
+    </div>
+  </div>
+
+  <!-- Concept C: Monogram + Modern Serif -->
+  <div class="logo-card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="logo-display" style="background: radial-gradient(ellipse at 50% 40%, #3d2220, #1a0f0e);">
+      <div style="text-align:center;">
+        <!-- Monogram circle -->
+        <div style="width:72px; height:72px; border:2px solid #f4c38c; border-radius:50%; margin:0 auto 14px; display:flex; align-items:center; justify-content:center; position:relative;">
+          <div style="font-family:'Playfair Display',serif; font-size:34px; font-weight:900; color:#f4c38c; font-style:italic;">Vk</div>
+        </div>
+        <div style="font-family:'Libre Baskerville',serif; font-size:28px; font-weight:700; color:#fffaf5; letter-spacing:1px;">VINKÄLLAREN</div>
+        <div style="font-family:'Cormorant Garamond',serif; font-size:11px; color:#c4a882; letter-spacing:5px; text-transform:uppercase; margin-top:6px;">Din digitala vinsamling</div>
+      </div>
+    </div>
+    <div class="logo-info">
+      <h3>C: Monogram med serif</h3>
+      <p>"Vk"-monogram i guldcirkel + versaler. Modernt men med tradition — som en vinbar eller vinklubb.</p>
+      <div class="logo-tag">Inspiration: vinbarer & klubbar</div>
+    </div>
+  </div>
+
+  <!-- Concept D: Rustic / Vintage Label -->
+  <div class="logo-card" data-choice="d" onclick="toggleSelect(this)">
+    <div class="logo-display" style="background: radial-gradient(ellipse at 50% 40%, #3d2220, #1a0f0e);">
+      <div style="text-align:center;">
+        <div style="border:1px solid rgba(244,195,140,0.3); border-radius:16px; padding:20px 32px; display:inline-block; position:relative;">
+          <!-- Decorative corners -->
+          <div style="position:absolute; top:6px; left:6px; width:12px; height:12px; border-top:1.5px solid #f4c38c; border-left:1.5px solid #f4c38c; border-radius:2px 0 0 0;"></div>
+          <div style="position:absolute; top:6px; right:6px; width:12px; height:12px; border-top:1.5px solid #f4c38c; border-right:1.5px solid #f4c38c; border-radius:0 2px 0 0;"></div>
+          <div style="position:absolute; bottom:6px; left:6px; width:12px; height:12px; border-bottom:1.5px solid #f4c38c; border-left:1.5px solid #f4c38c; border-radius:0 0 0 2px;"></div>
+          <div style="position:absolute; bottom:6px; right:6px; width:12px; height:12px; border-bottom:1.5px solid #f4c38c; border-right:1.5px solid #f4c38c; border-radius:0 0 2px 0;"></div>
+
+          <div style="font-family:'Cinzel',serif; font-size:9px; color:#f4c38c; letter-spacing:5px; text-transform:uppercase;">&#9733; Sedan 2026 &#9733;</div>
+          <div style="font-family:'Playfair Display',serif; font-size:36px; font-weight:900; color:#fffaf5; line-height:1.1; margin:6px 0;">Vinkällaren</div>
+          <div style="width:40px; height:1px; background:#f4c38c; margin:6px auto;"></div>
+          <div style="font-family:'Cormorant Garamond',serif; font-size:10px; color:#c4a882; letter-spacing:3px; text-transform:uppercase;">Samla &bull; Smaka &bull; Upptäck</div>
+        </div>
+      </div>
+    </div>
+    <div class="logo-info">
+      <h3>D: Vintage vinetikett</h3>
+      <p>Ram med dekorativa hörn, som en riktig vinetikett eller stämpel. Klassiskt och igenkännbart.</p>
+      <div class="logo-tag">Inspiration: franska vinetiketter</div>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:24px; padding:16px 20px; background:rgba(61,34,32,0.4); border-radius:12px; border:1px solid rgba(244,195,140,0.08);">
+  <p style="color:#c4a882; font-size:12px; margin:0; line-height:1.6;">
+    <strong style="color:#fffaf5;">Nästa steg:</strong> Välj en stil, sen skriver jag en AI-prompt (t.ex. för Midjourney, DALL-E eller Ideogram) som genererar en riktig logga baserad på den riktningen. Loggan kan sedan användas som SVG/PNG genomgående i hela appen.
+  </p>
+</div>

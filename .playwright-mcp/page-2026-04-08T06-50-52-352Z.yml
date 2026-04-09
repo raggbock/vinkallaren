@@ -1,0 +1,173 @@
+- generic [ref=e3]:
+  - generic [ref=e379]:
+    - generic [ref=e380]:
+      - generic [ref=e386] [cursor=pointer]: Profil
+      - generic [ref=e387]:
+        - generic [ref=e388]: Läge
+        - generic [ref=e389]:
+          - generic [ref=e391] [cursor=pointer]: Källare
+          - generic [ref=e393] [cursor=pointer]: Vinprovning
+      - generic [ref=e396]: Snabbimport
+      - generic [ref=e398]:
+        - generic [ref=e399]: Snabbimport
+        - generic [ref=e400]: Fyll i streckkod eller artikelnummer för att hämta vindata automatiskt.
+        - generic [ref=e401]:
+          - generic [ref=e402]: Streckkod
+          - textbox [ref=e403]
+        - generic [ref=e404]:
+          - generic [ref=e405]: Systembolaget artikelnummer
+          - textbox "t.ex. 12345" [ref=e406]
+      - generic [ref=e409]: Om vinet
+      - generic [ref=e411]:
+        - generic [ref=e412]: Namn
+        - textbox "Skriv minst 4 bokstäver" [ref=e414]
+      - generic [ref=e415]:
+        - generic [ref=e416]: Producent
+        - textbox [ref=e417]
+      - generic [ref=e418]:
+        - generic [ref=e420]:
+          - generic [ref=e421]: Land
+          - textbox "Skriv t.ex. fr eller it" [ref=e423]
+        - generic [ref=e425]:
+          - generic [ref=e426]: Region
+          - textbox "Skriv t.ex. bor, rio, nap..." [ref=e428]
+      - generic [ref=e429]:
+        - generic [ref=e430]: Druva
+        - textbox "Nebbiolo, Chardonnay..." [ref=e432]
+      - generic [ref=e433]:
+        - generic [ref=e435]:
+          - generic [ref=e436]: Årgång
+          - textbox [ref=e437]
+        - generic [ref=e439]:
+          - generic [ref=e440]: Antal
+          - textbox [ref=e441]: "1"
+      - generic [ref=e442]:
+        - generic [ref=e443]: Vintyp
+        - generic [ref=e444]:
+          - generic [ref=e446] [cursor=pointer]: Rött
+          - generic [ref=e448] [cursor=pointer]: Vitt
+          - generic [ref=e450] [cursor=pointer]: Mousserande
+          - generic [ref=e452] [cursor=pointer]: Sött
+      - generic [ref=e455]: Förvaring
+      - generic [ref=e457]:
+        - generic [ref=e459]:
+          - generic [ref=e460]: Drick senast (år)
+          - textbox "t.ex. 2028" [ref=e461]
+        - generic [ref=e463]:
+          - generic [ref=e464]: Inköpt
+          - generic [ref=e465]:
+            - textbox "ÅÅÅÅ-MM-DD" [ref=e467]
+            - generic [ref=e469] [cursor=pointer]: Idag
+      - generic [ref=e470]:
+        - generic [ref=e471]: Matförslag
+        - generic [ref=e472]:
+          - generic [ref=e473]: Kött
+          - generic [ref=e474]:
+            - generic [ref=e476] [cursor=pointer]: lamm
+            - generic [ref=e478] [cursor=pointer]: nöt
+            - generic [ref=e480] [cursor=pointer]: fläsk
+            - generic [ref=e482] [cursor=pointer]: vilt
+            - generic [ref=e484] [cursor=pointer]: kyckling
+            - generic [ref=e486] [cursor=pointer]: grillat
+        - generic [ref=e487]:
+          - generic [ref=e488]: Fisk & skaldjur
+          - generic [ref=e489]:
+            - generic [ref=e491] [cursor=pointer]: fisk
+            - generic [ref=e493] [cursor=pointer]: skaldjur
+            - generic [ref=e495] [cursor=pointer]: lax
+            - generic [ref=e497] [cursor=pointer]: tonfisk
+        - generic [ref=e498]:
+          - generic [ref=e499]: Ost
+          - generic [ref=e500]:
+            - generic [ref=e502] [cursor=pointer]: ost
+            - generic [ref=e504] [cursor=pointer]: lagrad ost
+            - generic [ref=e506] [cursor=pointer]: getost
+            - generic [ref=e508] [cursor=pointer]: blåmögelost
+        - generic [ref=e510] [cursor=pointer]: Visa fler kategorier (4 till)
+      - generic [ref=e511]:
+        - generic [ref=e512]: Passar till
+        - textbox "lamm, ost, svamp, fisk" [ref=e513]
+      - generic [ref=e514]:
+        - generic [ref=e515]: Förvaringsplats
+        - generic [ref=e517]:
+          - generic [ref=e519] [cursor=pointer]: Ingen plats
+          - generic [ref=e521] [cursor=pointer]: Vinkyl kök
+          - generic [ref=e523] [cursor=pointer]: Vinkällare
+          - generic [ref=e525] [cursor=pointer]: Vinställ vardagsrum
+          - generic [ref=e527] [cursor=pointer]: Test
+          - generic [ref=e529] [cursor=pointer]: test2
+        - generic [ref=e530]:
+          - generic [ref=e531]: Rad
+          - generic [ref=e532]:
+            - generic [ref=e534] [cursor=pointer]: "1"
+            - generic [ref=e536] [cursor=pointer]: "2"
+            - generic [ref=e538] [cursor=pointer]: "3"
+            - generic [ref=e540] [cursor=pointer]: "4"
+            - generic [ref=e542] [cursor=pointer]: "5"
+            - generic [ref=e544] [cursor=pointer]: "6"
+        - generic [ref=e545]:
+          - generic [ref=e546]: Plats
+          - generic [ref=e547]:
+            - generic [ref=e549] [cursor=pointer]: "1"
+            - generic [ref=e550]: "2"
+            - generic [ref=e552] [cursor=pointer]: "3"
+            - generic [ref=e554] [cursor=pointer]: "4"
+            - generic [ref=e555]: "5"
+        - generic [ref=e556]: "Vald placering: Vinkyl kök • Rad 1 • Plats 1"
+        - generic [ref=e557]:
+          - generic [ref=e559] [cursor=pointer]: ＋ Ny förvaringsplats
+          - generic [ref=e561]:
+            - generic [ref=e562]: Ny förvaringsplats
+            - generic [ref=e563]:
+              - generic [ref=e564]: Namn
+              - textbox "t.ex. Vinkyl köket" [ref=e565]
+            - generic [ref=e566]:
+              - generic [ref=e567]: Typ
+              - generic [ref=e568]:
+                - generic [ref=e570] [cursor=pointer]: Vinkyl
+                - generic [ref=e572] [cursor=pointer]: Vinställ
+                - generic [ref=e574] [cursor=pointer]: Källare
+                - generic [ref=e576] [cursor=pointer]: Övrigt
+            - generic [ref=e577]:
+              - generic [ref=e578]: Platser
+              - generic [ref=e579]:
+                - generic [ref=e581] [cursor=pointer]: Med platser
+                - generic [ref=e583] [cursor=pointer]: Utan platser
+            - generic [ref=e584]:
+              - generic [ref=e586]:
+                - generic [ref=e587]: Antal rader
+                - textbox [ref=e588]: "6"
+              - generic [ref=e590]:
+                - generic [ref=e591]: Platser per rad
+                - textbox [ref=e592]: "6"
+            - generic [ref=e593]:
+              - generic [ref=e595] [cursor=pointer]: Spara plats
+              - generic [ref=e597] [cursor=pointer]: Avbryt
+      - generic [ref=e598]:
+        - generic [ref=e599]: Fri platsnotering
+        - textbox "t.ex. längst bak, överst i kylen" [ref=e600]
+      - generic [ref=e603]: Övrigt
+      - generic [ref=e605]:
+        - generic [ref=e606]: Etiketter
+        - textbox "middag, present, lagring" [ref=e607]
+      - generic [ref=e608]:
+        - generic [ref=e609]: Anteckningar
+        - textbox [ref=e610]
+      - generic [ref=e613] [cursor=pointer]: Ladda upp bild av etiketten
+      - generic [ref=e615] [cursor=pointer]: Spara i källaren
+    - generic [ref=e616]:
+      - generic [ref=e618] [cursor=pointer]: 2026-03-30-574b771
+      - generic [ref=e620] [cursor=pointer]: Integritetspolicy
+  - generic [ref=e128]:
+    - generic [ref=e129] [cursor=pointer]:
+      - generic [ref=e130]: 🍷
+      - generic [ref=e131]: Min källare
+    - generic [active] [ref=e132] [cursor=pointer]:
+      - generic [ref=e133]: ＋
+      - generic [ref=e134]: Lägg till
+    - generic [ref=e135] [cursor=pointer]:
+      - generic [ref=e136]: 🍽
+      - generic [ref=e137]: Mat
+    - generic [ref=e138] [cursor=pointer]:
+      - generic [ref=e139]: 📖
+      - generic [ref=e140]: Historik

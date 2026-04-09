@@ -1,0 +1,210 @@
+<h2>Resultatvy — efter avslöjning</h2>
+<p class="subtitle">Hur ska resultaten presenteras när provningen är klar? Klicka på den stil ni gillar bäst.</p>
+
+<style>
+.result-mock {
+  background: #1a0f0e;
+  border-radius: 16px;
+  padding: 20px;
+  color: #fffaf5;
+  font-family: system-ui, sans-serif;
+}
+.result-mock h4 { color: #f4c38c; margin: 0 0 12px; font-size: 14px; letter-spacing: 1px; text-transform: uppercase; }
+.wine-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(244,195,140,0.1); }
+.wine-row:last-child { border-bottom: none; }
+.wine-pos { background: rgba(244,195,140,0.15); color: #f4c38c; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+.wine-name { font-weight: 600; font-size: 14px; }
+.wine-meta { color: #c4a882; font-size: 12px; }
+.rating-bar { display: flex; gap: 3px; margin-top: 4px; }
+.rating-dot { width: 8px; height: 8px; border-radius: 50%; }
+.rating-dot.filled { background: #f4c38c; }
+.rating-dot.empty { background: rgba(244,195,140,0.2); }
+.consensus-badge { font-size: 11px; padding: 2px 8px; border-radius: 99px; font-weight: 600; }
+.consensus-high { background: rgba(120,180,100,0.2); color: #8fc77a; }
+.consensus-low { background: rgba(244,150,100,0.15); color: #e8a87c; }
+.avatar-row { display: flex; gap: -4px; margin-top: 6px; }
+.avatar { width: 22px; height: 22px; border-radius: 50%; font-size: 10px; display: flex; align-items: center; justify-content: center; font-weight: 700; margin-left: -4px; border: 2px solid #1a0f0e; }
+.avatar:first-child { margin-left: 0; }
+.taste-tag { display: inline-block; background: rgba(244,195,140,0.12); color: #c4a882; font-size: 10px; padding: 2px 7px; border-radius: 4px; margin: 2px 2px 0 0; }
+.summary-stat { text-align: center; padding: 12px; }
+.summary-stat .num { font-size: 28px; font-weight: 800; color: #f4c38c; }
+.summary-stat .lbl { font-size: 11px; color: #c4a882; margin-top: 2px; }
+.profile-bar { height: 6px; border-radius: 3px; background: rgba(244,195,140,0.15); margin-top: 4px; }
+.profile-fill { height: 100%; border-radius: 3px; background: #f4c38c; }
+.profile-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #c4a882; padding: 6px 0; }
+</style>
+
+<div class="cards">
+
+  <!-- Option A: Wine-by-wine with group consensus -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="result-mock">
+        <h4>Kvällens viner</h4>
+        <div class="wine-row">
+          <div class="wine-pos">1</div>
+          <div style="flex:1">
+            <div class="wine-name">Barolo Riserva 2018</div>
+            <div class="wine-meta">Fontanafredda · Piemonte</div>
+            <div style="display:flex; align-items:center; gap:8px; margin-top:4px;">
+              <div class="rating-bar">
+                <div class="rating-dot filled"></div><div class="rating-dot filled"></div><div class="rating-dot filled"></div><div class="rating-dot filled"></div><div class="rating-dot empty"></div>
+              </div>
+              <span style="color:#c4a882; font-size:12px;">4.2 snitt</span>
+              <span class="consensus-badge consensus-high">Eniga</span>
+            </div>
+            <div class="avatar-row">
+              <div class="avatar" style="background:#6f1d1b;color:#f4c38c">S</div>
+              <div class="avatar" style="background:#3d2220;color:#f4c38c">L</div>
+              <div class="avatar" style="background:#564a40;color:#f4c38c">M</div>
+              <div class="avatar" style="background:#8f8178;color:#fffaf5">J</div>
+            </div>
+          </div>
+        </div>
+        <div class="wine-row">
+          <div class="wine-pos">2</div>
+          <div style="flex:1">
+            <div class="wine-name">Chablis Premier Cru 2020</div>
+            <div class="wine-meta">William Fèvre · Bourgogne</div>
+            <div style="display:flex; align-items:center; gap:8px; margin-top:4px;">
+              <div class="rating-bar">
+                <div class="rating-dot filled"></div><div class="rating-dot filled"></div><div class="rating-dot filled"></div><div class="rating-dot empty"></div><div class="rating-dot empty"></div>
+              </div>
+              <span style="color:#c4a882; font-size:12px;">3.0 snitt</span>
+              <span class="consensus-badge consensus-low">Delade</span>
+            </div>
+            <div style="margin-top:4px;">
+              <span class="taste-tag">citrus</span><span class="taste-tag">mineral</span><span class="taste-tag">hög syra</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A: Vin-för-vin med konsensus</h3>
+      <p>Lista varje vin med snittbetyg, deltagaravatarer och konsensus-badge ("Eniga" / "Delade"). Expandera för detaljer.</p>
+    </div>
+  </div>
+
+  <!-- Option B: Summary dashboard -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="result-mock">
+        <div style="display:flex; gap:8px; margin-bottom:16px;">
+          <div class="summary-stat" style="flex:1; background:rgba(244,195,140,0.08); border-radius:12px;">
+            <div class="num">5</div>
+            <div class="lbl">Viner</div>
+          </div>
+          <div class="summary-stat" style="flex:1; background:rgba(244,195,140,0.08); border-radius:12px;">
+            <div class="num">4</div>
+            <div class="lbl">Deltagare</div>
+          </div>
+          <div class="summary-stat" style="flex:1; background:rgba(244,195,140,0.08); border-radius:12px;">
+            <div class="num">3.8</div>
+            <div class="lbl">Snittbetyg</div>
+          </div>
+        </div>
+        <h4>Gruppens favorit</h4>
+        <div class="wine-row">
+          <div style="font-size:24px">🏅</div>
+          <div>
+            <div class="wine-name">Barolo Riserva 2018</div>
+            <div class="wine-meta">4.2 snitt · Alla gav minst 4</div>
+          </div>
+        </div>
+        <h4 style="margin-top:12px;">Mest diskuterade</h4>
+        <div class="wine-row">
+          <div style="font-size:24px">💬</div>
+          <div>
+            <div class="wine-name">Chablis Premier Cru 2020</div>
+            <div class="wine-meta">Störst spridning: 2–5 i betyg</div>
+          </div>
+        </div>
+        <h4 style="margin-top:12px;">Vanligaste smakerna</h4>
+        <div>
+          <span class="taste-tag">körsbär</span><span class="taste-tag">vanilj</span><span class="taste-tag">citrus</span><span class="taste-tag">kryddig</span><span class="taste-tag">mineral</span>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B: Dashboard med höjdpunkter</h3>
+      <p>Sammanfattning med nyckeltal, gruppens favorit, mest diskuterade vin, och vanligaste smakerna. Kvällen i ett ögonkast.</p>
+    </div>
+  </div>
+
+  <!-- Option C: Combined -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="result-mock">
+        <div style="display:flex; gap:8px; margin-bottom:14px;">
+          <div class="summary-stat" style="flex:1; background:rgba(244,195,140,0.08); border-radius:12px;">
+            <div class="num">5</div>
+            <div class="lbl">Viner</div>
+          </div>
+          <div class="summary-stat" style="flex:1; background:rgba(244,195,140,0.08); border-radius:12px;">
+            <div class="num">4</div>
+            <div class="lbl">Deltagare</div>
+          </div>
+          <div class="summary-stat" style="flex:1; background:rgba(244,195,140,0.08); border-radius:12px;">
+            <div class="num">🏅</div>
+            <div class="lbl">Barolo</div>
+          </div>
+        </div>
+        <h4>Din smakprofil (denna kväll)</h4>
+        <div class="profile-row">
+          <span>Syra</span>
+          <div style="width:60%"><div class="profile-bar"><div class="profile-fill" style="width:80%"></div></div></div>
+          <span>Hög</span>
+        </div>
+        <div class="profile-row">
+          <span>Kropp</span>
+          <div style="width:60%"><div class="profile-bar"><div class="profile-fill" style="width:50%"></div></div></div>
+          <span>Medium</span>
+        </div>
+        <div class="profile-row">
+          <span>Sötma</span>
+          <div style="width:60%"><div class="profile-bar"><div class="profile-fill" style="width:20%"></div></div></div>
+          <span>Torrt</span>
+        </div>
+        <h4 style="margin-top:12px;">Vinlista</h4>
+        <div class="wine-row">
+          <div class="wine-pos">1</div>
+          <div style="flex:1">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div class="wine-name">Barolo Riserva 2018</div>
+              <span style="color:#f4c38c; font-size:13px; font-weight:700;">4.2</span>
+            </div>
+            <div style="display:flex;gap:4px;align-items:center;">
+              <span class="consensus-badge consensus-high">Eniga</span>
+              <span class="taste-tag">körsbär</span><span class="taste-tag">vanilj</span>
+            </div>
+          </div>
+        </div>
+        <div class="wine-row">
+          <div class="wine-pos">2</div>
+          <div style="flex:1">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div class="wine-name">Chablis Premier Cru</div>
+              <span style="color:#f4c38c; font-size:13px; font-weight:700;">3.0</span>
+            </div>
+            <div style="display:flex;gap:4px;align-items:center;">
+              <span class="consensus-badge consensus-low">Delade</span>
+              <span class="taste-tag">citrus</span><span class="taste-tag">mineral</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C: Kombination — dashboard + smakprofil + vinlista</h3>
+      <p>Nyckeltal överst, din personliga smakprofil för kvällen, sedan kompakt vinlista med snittbetyg och konsensus. Allt på en vy.</p>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:16px; padding:14px 18px; background:rgba(244,195,140,0.08); border-radius:12px; border:1px solid rgba(244,195,140,0.1);">
+  <p style="color:#c4a882; font-size:12px; margin:0; line-height:1.6;">
+    <strong style="color:#fffaf5;">Tips:</strong> Alla tre stilarna kan expanderas med detaljer per vin. Frågan är vad man ser <em>först</em> när provningen avslutas.
+  </p>
+</div>

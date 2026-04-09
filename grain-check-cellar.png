@@ -1,0 +1,17 @@
+{
+  "total": 2,
+  "panels": [
+    {
+      "hasGrain": true,
+      "bgImage": "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter ...",
+      "className": "css-view-g5y9jx r-alignSelf-1kihuf0 r-gap-1pnwn9g r-maxWidth",
+      "textContent": "Profil0 flaskor · 0 länder · snitt -›Mes"
+    },
+    {
+      "hasGrain": true,
+      "bgImage": "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter ...",
+      "className": "css-view-g5y9jx r-backgroundColor-1gyh978 r-borderTopColor-g",
+      "textContent": "🍷Min källare＋Lägg till🍽Mat📖Historik"
+    }
+  ]
+}

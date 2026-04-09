@@ -1,0 +1,46 @@
+- generic [ref=e3]:
+  - generic [ref=e662]:
+    - generic [ref=e663]:
+      - generic [ref=e668]: Historik
+      - generic [ref=e669]:
+        - generic [ref=e671] [cursor=pointer]: Viner
+        - generic [ref=e673] [cursor=pointer]: Provningar (4)
+      - textbox "Sök namn, producent, årgång..." [ref=e674]
+    - generic [ref=e676]:
+      - generic [ref=e677]:
+        - generic [ref=e678]:
+          - generic [ref=e679]: Mousserande
+          - generic [ref=e680]: Asti
+          - generic [ref=e681]: Marcalberto • 2021 • Moscato • Italien, Asti Spumante
+        - generic [ref=e683]: ★★★★★
+      - generic [ref=e684]: Dracks 2026-04-01 • 1 flaska
+      - generic [ref=e686] [cursor=pointer]: Redigera
+    - generic [ref=e688]:
+      - generic [ref=e690]:
+        - generic [ref=e691]: Vitt
+        - generic [ref=e692]: Gewürztraminer
+        - generic [ref=e693]: Zind-Humbrecht • 2022 • Gewürztraminer • Frankrike, Alsace
+      - generic [ref=e694]: Dracks 2026-04-01 • 1 flaska
+      - generic [ref=e696] [cursor=pointer]: Redigera
+    - generic [ref=e698]:
+      - generic [ref=e699]:
+        - generic [ref=e700]:
+          - generic [ref=e701]: Rött
+          - generic [ref=e702]: Tignanello
+          - generic [ref=e703]: Antinori • 2020 • Sangiovese, Cabernet Sauvignon • Italien, Tuscany
+        - generic [ref=e705]: ★★★★★
+      - generic [ref=e706]: Dracks 2026-03-29 • 1 flaska
+      - generic [ref=e708] [cursor=pointer]: Redigera
+  - generic [ref=e126]:
+    - generic [ref=e127] [cursor=pointer]:
+      - generic [ref=e128]: 🍷
+      - generic [ref=e129]: Min källare
+    - generic [ref=e130] [cursor=pointer]:
+      - generic [ref=e131]: ＋
+      - generic [ref=e132]: Lägg till
+    - generic [ref=e133] [cursor=pointer]:
+      - generic [ref=e134]: 🍽
+      - generic [ref=e135]: Mat
+    - generic [active] [ref=e136] [cursor=pointer]:
+      - generic [ref=e137]: 📖
+      - generic [ref=e138]: Historik

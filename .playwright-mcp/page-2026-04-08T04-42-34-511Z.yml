@@ -1,0 +1,20 @@
+- generic [ref=e3]:
+  - generic [ref=e375]:
+    - generic [ref=e380]: Historik
+    - generic [ref=e381]:
+      - generic [ref=e383] [cursor=pointer]: Viner
+      - generic [ref=e385] [cursor=pointer]: Provningar
+    - generic [ref=e386]: Ingen historik ännu. När du markerar att du druckit en flaska kan du sätta betyg här.
+  - generic [ref=e129]:
+    - generic [ref=e130] [cursor=pointer]:
+      - generic [ref=e131]: 🍷
+      - generic [ref=e132]: Min källare
+    - generic [ref=e133] [cursor=pointer]:
+      - generic [ref=e134]: ＋
+      - generic [ref=e135]: Lägg till
+    - generic [ref=e136] [cursor=pointer]:
+      - generic [ref=e137]: 🍽
+      - generic [ref=e138]: Mat
+    - generic [active] [ref=e139] [cursor=pointer]:
+      - generic [ref=e140]: 📖
+      - generic [ref=e141]: Historik

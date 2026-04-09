@@ -1,0 +1,99 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - generic [ref=e9]:
+      - generic [ref=e13]:
+        - generic [ref=e14]: Min källare
+        - generic [ref=e16] [cursor=pointer]: Profil
+      - generic [ref=e17] [cursor=pointer]:
+        - generic [ref=e18]: 0 flaskor · 0 länder · snitt -
+        - generic [ref=e19]: ›
+      - generic [ref=e21]:
+        - generic [ref=e22]:
+          - generic [ref=e23]:
+            - generic [ref=e24]: Mest flaskor från
+            - generic [ref=e25]: Ingen data
+          - generic [ref=e26]:
+            - generic [ref=e27]: Vanligaste typ
+            - generic [ref=e28]: Ingen data
+        - generic [ref=e29]:
+          - generic [ref=e30]:
+            - generic [ref=e31]: Vanligaste matmatch
+            - generic [ref=e32]: Ingen data
+          - generic [ref=e33]:
+            - generic [ref=e34]: Snittårgång
+            - generic [ref=e35]: "-"
+        - generic [ref=e37] [cursor=pointer]: Uppdatera statistik
+      - generic [ref=e38]:
+        - generic [ref=e39]: Sök
+        - textbox "namn, druva, region, mat..." [ref=e40]
+      - generic [ref=e41] [cursor=pointer]:
+        - generic [ref=e42]: Filter
+        - generic [ref=e43]: ›
+      - generic [ref=e45]:
+        - generic [ref=e46]:
+          - generic [ref=e47]: Mat
+          - generic [ref=e50] [cursor=pointer]: Alla
+        - generic [ref=e51]:
+          - generic [ref=e52]: Land
+          - generic [ref=e55] [cursor=pointer]: Alla
+        - generic [ref=e56]:
+          - generic [ref=e57]: Region
+          - generic [ref=e60] [cursor=pointer]: Alla
+        - generic [ref=e61]:
+          - generic [ref=e62]: Druva
+          - generic [ref=e65] [cursor=pointer]: Alla
+        - generic [ref=e66]:
+          - generic [ref=e67]: Typ
+          - generic [ref=e70] [cursor=pointer]: Alla
+        - generic [ref=e71]:
+          - generic [ref=e72]: Årgång
+          - generic [ref=e75] [cursor=pointer]: Alla
+      - generic [ref=e76]:
+        - progressbar [ref=e77]:
+          - img [ref=e79]
+        - generic [ref=e82]: Laddar viner...
+      - generic [ref=e84] [cursor=pointer]: Provningar
+      - generic [ref=e85]:
+        - generic [ref=e87] [cursor=pointer]: ＋ Ny förvaringsplats
+        - generic [ref=e89]:
+          - generic [ref=e90]: Ny förvaringsplats
+          - generic [ref=e91]:
+            - generic [ref=e92]: Namn
+            - textbox "t.ex. Vinkyl köket" [ref=e93]
+          - generic [ref=e94]:
+            - generic [ref=e95]: Typ
+            - generic [ref=e96]:
+              - generic [ref=e98] [cursor=pointer]: Vinkyl
+              - generic [ref=e100] [cursor=pointer]: Vinställ
+              - generic [ref=e102] [cursor=pointer]: Källare
+              - generic [ref=e104] [cursor=pointer]: Övrigt
+          - generic [ref=e105]:
+            - generic [ref=e106]: Platser
+            - generic [ref=e107]:
+              - generic [ref=e109] [cursor=pointer]: Med platser
+              - generic [ref=e111] [cursor=pointer]: Utan platser
+          - generic [ref=e112]:
+            - generic [ref=e114]:
+              - generic [ref=e115]: Antal rader
+              - textbox [ref=e116]: "6"
+            - generic [ref=e118]:
+              - generic [ref=e119]: Platser per rad
+              - textbox [ref=e120]: "6"
+          - generic [ref=e121]:
+            - generic [ref=e123] [cursor=pointer]: Spara plats
+            - generic [ref=e125] [cursor=pointer]: Avbryt
+    - generic [ref=e126]:
+      - generic [ref=e127] [cursor=pointer]:
+        - generic [ref=e128]: 🍷
+        - generic [ref=e129]: Min källare
+      - generic [ref=e130] [cursor=pointer]:
+        - generic [ref=e131]: ＋
+        - generic [ref=e132]: Lägg till
+      - generic [ref=e133] [cursor=pointer]:
+        - generic [ref=e134]: 🍽
+        - generic [ref=e135]: Mat
+      - generic [ref=e136] [cursor=pointer]:
+        - generic [ref=e137]: 📖
+        - generic [ref=e138]: Historik
+  - generic:
+    - img

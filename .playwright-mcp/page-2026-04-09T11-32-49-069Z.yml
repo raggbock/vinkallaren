@@ -1,0 +1,53 @@
+- generic [ref=e3]:
+  - generic [ref=e193]:
+    - generic [ref=e389]:
+      - generic [ref=e390]:
+        - img [ref=e392]:
+          - generic [ref=e408]: SEDAN 2026
+          - generic [ref=e409]: Vinkällaren
+          - generic [ref=e410]: SAMLA · SMAKA · UPPTÄCK
+        - generic [ref=e418] [cursor=pointer]: Profil
+      - generic [ref=e419] [cursor=pointer]:
+        - generic [ref=e420]: lamm
+        - generic [ref=e421]: ✕
+      - generic [ref=e423] [cursor=pointer]:
+        - generic [ref=e424]: Kött
+        - generic [ref=e425]: ›
+      - generic [ref=e427] [cursor=pointer]:
+        - generic [ref=e428]: Fisk & skaldjur
+        - generic [ref=e429]: ›
+      - generic [ref=e431] [cursor=pointer]:
+        - generic [ref=e432]: Ost
+        - generic [ref=e433]: ›
+      - generic [ref=e435] [cursor=pointer]:
+        - generic [ref=e436]: Grönt & övrigt
+        - generic [ref=e437]: ›
+      - generic [ref=e439] [cursor=pointer]:
+        - generic [ref=e440]: Asiatiskt
+        - generic [ref=e441]: ›
+      - generic [ref=e443] [cursor=pointer]:
+        - generic [ref=e444]: Tilltugg
+        - generic [ref=e445]: ›
+      - generic [ref=e447] [cursor=pointer]:
+        - generic [ref=e448]: Sött
+        - generic [ref=e449]: ›
+      - img [ref=e451]
+      - generic [ref=e453]:
+        - img [ref=e455]
+        - generic [ref=e460]: Inga viner matchar "lamm" ännu.
+    - generic [ref=e379]:
+      - generic [ref=e381] [cursor=pointer]: 2026-03-30-574b771
+      - generic [ref=e383] [cursor=pointer]: Integritetspolicy
+  - generic [ref=e129]:
+    - generic [ref=e130] [cursor=pointer]:
+      - img [ref=e384]
+      - generic [ref=e132]: Min källare
+    - generic [ref=e133] [cursor=pointer]:
+      - img [ref=e461]
+      - generic [ref=e135]: Lägg till
+    - generic [active] [ref=e136] [cursor=pointer]:
+      - img [ref=e463]
+      - generic [ref=e138]: Mat
+    - generic [ref=e139] [cursor=pointer]:
+      - img [ref=e188]
+      - generic [ref=e141]: Historik

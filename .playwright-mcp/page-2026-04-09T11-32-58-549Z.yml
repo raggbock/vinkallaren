@@ -1,0 +1,27 @@
+- generic [ref=e3]:
+  - generic [ref=e472]:
+    - generic [ref=e473]:
+      - img [ref=e475]:
+        - generic [ref=e491]: SEDAN 2026
+        - generic [ref=e492]: Vinkällaren
+        - generic [ref=e493]: SAMLA · SMAKA · UPPTÄCK
+      - generic [ref=e501] [cursor=pointer]: Profil
+    - generic [ref=e502]:
+      - generic [ref=e504] [cursor=pointer]: Viner
+      - generic [ref=e506] [cursor=pointer]: Provningar
+    - generic [ref=e507]:
+      - img [ref=e509]
+      - generic [ref=e514]: Ingen historik ännu. När du markerar att du druckit en flaska kan du sätta betyg här.
+  - generic [ref=e129]:
+    - generic [ref=e130] [cursor=pointer]:
+      - img [ref=e384]
+      - generic [ref=e132]: Min källare
+    - generic [ref=e133] [cursor=pointer]:
+      - img [ref=e461]
+      - generic [ref=e135]: Lägg till
+    - generic [ref=e136] [cursor=pointer]:
+      - img [ref=e515]
+      - generic [ref=e138]: Mat
+    - generic [active] [ref=e139] [cursor=pointer]:
+      - img [ref=e519]
+      - generic [ref=e141]: Historik

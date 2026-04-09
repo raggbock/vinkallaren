@@ -1,0 +1,117 @@
+<h2>Landing page layout</h2>
+<p class="subtitle">Which structure feels right for Vinkällaren?</p>
+
+<div class="cards">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding: 24px; background: #1a0f0e;">
+      <div style="background:#2b1714; border-radius:12px; padding:20px; margin-bottom:12px;">
+        <div style="color:#f4c38c; font-size:12px; text-transform:uppercase; letter-spacing:2px;">Vinkällaren</div>
+        <div style="color:#fffaf5; font-size:20px; font-weight:700; margin:8px 0;">Din digitala vinsamling</div>
+        <div style="color:#c4a882; font-size:11px;">Tagline text here</div>
+      </div>
+      <div style="display:flex; gap:8px; margin-bottom:12px;">
+        <div style="flex:1; background:#3d2220; border-radius:8px; padding:12px; text-align:center;">
+          <div style="color:#f4c38c; font-size:16px;">&#127863;</div>
+          <div style="color:#fffaf5; font-size:9px; margin-top:4px;">Feature 1</div>
+        </div>
+        <div style="flex:1; background:#3d2220; border-radius:8px; padding:12px; text-align:center;">
+          <div style="color:#f4c38c; font-size:16px;">&#127869;</div>
+          <div style="color:#fffaf5; font-size:9px; margin-top:4px;">Feature 2</div>
+        </div>
+        <div style="flex:1; background:#3d2220; border-radius:8px; padding:12px; text-align:center;">
+          <div style="color:#f4c38c; font-size:16px;">&#9733;</div>
+          <div style="color:#fffaf5; font-size:9px; margin-top:4px;">Feature 3</div>
+        </div>
+      </div>
+      <div style="background:#3d2220; border-radius:8px; padding:10px; text-align:center;">
+        <div style="color:#c4a882; font-size:9px;">[Login form]</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A: Single scroll</h3>
+      <p>Hero &rarr; Features &rarr; Login form, all on one continuous page. Simple, mobile-friendly. The login form is always visible at the bottom.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding: 24px; background: #1a0f0e;">
+      <div style="background:#2b1714; border-radius:12px; padding:20px; margin-bottom:12px; min-height:80px;">
+        <div style="color:#f4c38c; font-size:12px; text-transform:uppercase; letter-spacing:2px;">Vinkällaren</div>
+        <div style="color:#fffaf5; font-size:20px; font-weight:700; margin:8px 0;">Din digitala vinsamling</div>
+        <div style="color:#c4a882; font-size:11px;">Tagline + two CTA buttons</div>
+        <div style="display:flex; gap:8px; margin-top:12px;">
+          <div style="background:#f4c38c; color:#2b1714; padding:6px 14px; border-radius:6px; font-size:10px; font-weight:600;">Skapa konto</div>
+          <div style="border:1px solid #f4c38c; color:#f4c38c; padding:6px 14px; border-radius:6px; font-size:10px;">Testa som gäst</div>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
+        <div style="background:#3d2220; border-radius:8px; padding:10px;">
+          <div style="color:#f4c38c; font-size:14px;">&#127863;</div>
+          <div style="color:#fffaf5; font-size:9px; margin-top:4px;">Feature</div>
+        </div>
+        <div style="background:#3d2220; border-radius:8px; padding:10px;">
+          <div style="color:#f4c38c; font-size:14px;">&#127869;</div>
+          <div style="color:#fffaf5; font-size:9px; margin-top:4px;">Feature</div>
+        </div>
+        <div style="background:#3d2220; border-radius:8px; padding:10px;">
+          <div style="color:#f4c38c; font-size:14px;">&#9733;</div>
+          <div style="color:#fffaf5; font-size:9px; margin-top:4px;">Feature</div>
+        </div>
+        <div style="background:#3d2220; border-radius:8px; padding:10px;">
+          <div style="color:#f4c38c; font-size:14px;">&#128274;</div>
+          <div style="color:#fffaf5; font-size:9px; margin-top:4px;">Feature</div>
+        </div>
+      </div>
+      <div style="text-align:center; color:#c4a882; font-size:9px; padding:6px;">&#8595; scroll to login form</div>
+    </div>
+    <div class="card-body">
+      <h3>B: Hero with CTA buttons</h3>
+      <p>Big hero with dual CTAs up top (Skapa konto + Testa som gäst). Feature grid below. Scroll down reveals the actual login/signup form. Feels more like a product page.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding: 24px; background: #1a0f0e;">
+      <div style="display:flex; gap:12px;">
+        <div style="flex:1;">
+          <div style="background:#2b1714; border-radius:12px; padding:16px; height:100%;">
+            <div style="color:#f4c38c; font-size:12px; text-transform:uppercase; letter-spacing:2px;">Vinkällaren</div>
+            <div style="color:#fffaf5; font-size:16px; font-weight:700; margin:8px 0;">Din digitala vinsamling</div>
+            <div style="color:#c4a882; font-size:10px; margin-bottom:12px;">Tagline text</div>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span style="color:#f4c38c; font-size:12px;">&#10003;</span>
+                <span style="color:#fffaf5; font-size:9px;">Feature 1</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span style="color:#f4c38c; font-size:12px;">&#10003;</span>
+                <span style="color:#fffaf5; font-size:9px;">Feature 2</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span style="color:#f4c38c; font-size:12px;">&#10003;</span>
+                <span style="color:#fffaf5; font-size:9px;">Feature 3</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="flex:1;">
+          <div style="background:#3d2220; border-radius:12px; padding:16px; height:100%;">
+            <div style="color:#fffaf5; font-size:11px; font-weight:600; margin-bottom:8px;">Logga in</div>
+            <div style="background:#2b1714; border-radius:6px; padding:6px; margin-bottom:6px;">
+              <div style="color:#8f8178; font-size:8px;">E-post</div>
+            </div>
+            <div style="background:#2b1714; border-radius:6px; padding:6px; margin-bottom:8px;">
+              <div style="color:#8f8178; font-size:8px;">Lösenord</div>
+            </div>
+            <div style="background:#f4c38c; color:#2b1714; padding:6px; border-radius:6px; font-size:9px; font-weight:600; text-align:center;">Logga in</div>
+            <div style="color:#c4a882; font-size:8px; text-align:center; margin-top:6px;">eller testa som gäst</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C: Split — info left, login right</h3>
+      <p>Desktop: features on left, login form on right (side by side). Mobile: stacks vertically (features first, then form). Immediate access to both content and action.</p>
+    </div>
+  </div>
+</div>

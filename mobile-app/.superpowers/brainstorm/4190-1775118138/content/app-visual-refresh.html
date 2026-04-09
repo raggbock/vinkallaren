@@ -1,0 +1,314 @@
+<h2>Visuell profil — hela appen</h2>
+<p class="subtitle">Så här skulle den nya grafiska profilen se ut i de viktigaste vyerna</p>
+
+<style>
+  .app-screens { display: flex; flex-direction: column; gap: 32px; margin-top: 16px; }
+  .screen-pair { display: flex; gap: 24px; }
+  .screen-pair > div { flex: 1; }
+  @media (max-width: 800px) { .screen-pair { flex-direction: column; } }
+  .phone { background: #1a0f0e; border-radius: 24px; overflow: hidden; max-width: 380px; margin: 0 auto; border: 2px solid #3d2220; }
+  .phone-status { background: #2b1714; padding: 6px 16px; display: flex; justify-content: space-between; font-size: 10px; color: #8f8178; }
+  .phone-content { padding: 0; }
+  .screen-label { color: #f4c38c; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; font-weight: 700; margin-bottom: 8px; text-align: center; }
+
+  /* Shared new design tokens */
+  .gradient-bg { background: radial-gradient(ellipse at 30% 20%, #3d2220 0%, #2b1714 55%, #1a0f0e 100%); }
+  .card-glow { box-shadow: 0 0 30px rgba(244,195,140,0.08), 0 2px 12px rgba(0,0,0,0.3); border: 1px solid rgba(244,195,140,0.08); }
+  .icon-glow { box-shadow: 0 4px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05); border: 1px solid rgba(244,195,140,0.12); }
+  .btn-primary { background: #f4c38c; color: #2b1714; padding: 10px 20px; border-radius: 12px; font-weight: 700; font-size: 12px; text-align: center; }
+  .btn-ghost { border: 1.5px solid rgba(244,195,140,0.4); color: #f4c38c; padding: 8px 16px; border-radius: 12px; font-weight: 600; font-size: 11px; text-align: center; }
+  .section-title { color: #fffaf5; font-size: 20px; font-weight: 700; }
+  .warm-divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(244,195,140,0.25), transparent); margin: 12px 0; }
+</style>
+
+<div class="app-screens">
+
+  <!-- ===== MIN KÄLLARE ===== -->
+  <div>
+    <div class="screen-label">Min Källare</div>
+    <div class="screen-pair">
+      <!-- Before -->
+      <div>
+        <div class="mockup">
+          <div class="mockup-header">Nuvarande</div>
+          <div class="mockup-body" style="padding:0;">
+            <div class="phone">
+              <div style="background:#2b1714; padding:16px;">
+                <!-- Stats bar -->
+                <div style="background:#5c1d1b; border-radius:18px; padding:14px; margin-bottom:12px;">
+                  <div style="color:#f4c38c; font-size:10px; text-transform:uppercase; letter-spacing:2px;">Vinkällaren</div>
+                  <div style="color:#fffaf5; font-size:22px; font-weight:700; margin:6px 0;">Din samling</div>
+                  <div style="display:flex; gap:8px; margin-top:8px;">
+                    <div style="flex:1; background:rgba(255,255,255,0.12); border-radius:12px; padding:8px;">
+                      <div style="color:#fffaf5; font-size:16px; font-weight:700;">12</div>
+                      <div style="color:#ead8ca; font-size:10px;">Flaskor</div>
+                    </div>
+                    <div style="flex:1; background:rgba(255,255,255,0.12); border-radius:12px; padding:8px;">
+                      <div style="color:#fffaf5; font-size:16px; font-weight:700;">3</div>
+                      <div style="color:#ead8ca; font-size:10px;">Platser</div>
+                    </div>
+                  </div>
+                </div>
+                <!-- Wine card -->
+                <div style="background:#f8f1e8; border-radius:18px; padding:12px; margin-bottom:8px;">
+                  <div style="display:flex; gap:10px;">
+                    <div style="width:32px; height:32px; background:#ead8ca; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px;">&#127863;</div>
+                    <div style="flex:1;">
+                      <div style="color:#231815; font-size:13px; font-weight:700;">Château Margaux 2015</div>
+                      <div style="color:#564a40; font-size:11px;">Bordeaux, Frankrike</div>
+                    </div>
+                  </div>
+                </div>
+                <div style="background:#f8f1e8; border-radius:18px; padding:12px;">
+                  <div style="display:flex; gap:10px;">
+                    <div style="width:32px; height:32px; background:#ead8ca; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px;">&#127863;</div>
+                    <div style="flex:1;">
+                      <div style="color:#231815; font-size:13px; font-weight:700;">Barolo Riserva 2018</div>
+                      <div style="color:#564a40; font-size:11px;">Piemonte, Italien</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- Tab bar -->
+              <div style="background:#f8f1e8; padding:8px 0; display:flex; border-top:1px solid #e6d7c8;">
+                <div style="flex:1; text-align:center;"><span style="color:#6f1d1b; font-size:10px; font-weight:600;">&#127863; Källare</span></div>
+                <div style="flex:1; text-align:center;"><span style="color:#7a6d65; font-size:10px;">&#10133; Lägg till</span></div>
+                <div style="flex:1; text-align:center;"><span style="color:#7a6d65; font-size:10px;">&#128218; Historik</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- After -->
+      <div>
+        <div class="mockup">
+          <div class="mockup-header">Ny visuell profil</div>
+          <div class="mockup-body" style="padding:0;">
+            <div class="phone">
+              <div class="gradient-bg" style="padding:16px; min-height:400px;">
+                <!-- Stats bar with glow -->
+                <div class="card-glow" style="background:rgba(61,34,32,0.7); border-radius:20px; padding:16px; margin-bottom:14px;">
+                  <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                    <span style="font-size:20px;">&#127863;</span>
+                    <div>
+                      <div style="color:#f4c38c; font-size:10px; text-transform:uppercase; letter-spacing:2px; font-weight:700;">Vinkällaren</div>
+                      <div style="color:#fffaf5; font-size:18px; font-weight:700;">Din samling</div>
+                    </div>
+                  </div>
+                  <div class="warm-divider"></div>
+                  <div style="display:flex; gap:8px;">
+                    <div style="flex:1; background:rgba(244,195,140,0.08); border:1px solid rgba(244,195,140,0.1); border-radius:14px; padding:10px;">
+                      <div style="color:#f4c38c; font-size:18px; font-weight:700;">12</div>
+                      <div style="color:#c4a882; font-size:10px;">Flaskor</div>
+                    </div>
+                    <div style="flex:1; background:rgba(244,195,140,0.08); border:1px solid rgba(244,195,140,0.1); border-radius:14px; padding:10px;">
+                      <div style="color:#f4c38c; font-size:18px; font-weight:700;">3</div>
+                      <div style="color:#c4a882; font-size:10px;">Platser</div>
+                    </div>
+                  </div>
+                </div>
+                <!-- Wine cards with glow -->
+                <div class="card-glow" style="background:rgba(43,23,20,0.85); border-radius:16px; padding:14px; margin-bottom:10px;">
+                  <div style="display:flex; gap:12px; align-items:center;">
+                    <div class="icon-glow" style="width:36px; height:36px; background:#3d2220; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:16px;">&#127863;</div>
+                    <div style="flex:1;">
+                      <div style="color:#fffaf5; font-size:13px; font-weight:700;">Château Margaux 2015</div>
+                      <div style="color:#c4a882; font-size:11px;">Bordeaux, Frankrike</div>
+                    </div>
+                    <div style="color:rgba(244,195,140,0.4); font-size:12px;">&#10095;</div>
+                  </div>
+                </div>
+                <div class="card-glow" style="background:rgba(43,23,20,0.85); border-radius:16px; padding:14px;">
+                  <div style="display:flex; gap:12px; align-items:center;">
+                    <div class="icon-glow" style="width:36px; height:36px; background:#3d2220; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:16px;">&#127863;</div>
+                    <div style="flex:1;">
+                      <div style="color:#fffaf5; font-size:13px; font-weight:700;">Barolo Riserva 2018</div>
+                      <div style="color:#c4a882; font-size:11px;">Piemonte, Italien</div>
+                    </div>
+                    <div style="color:rgba(244,195,140,0.4); font-size:12px;">&#10095;</div>
+                  </div>
+                </div>
+              </div>
+              <!-- Refined tab bar -->
+              <div style="background:rgba(43,23,20,0.95); padding:10px 0; display:flex; border-top:1px solid rgba(244,195,140,0.1);">
+                <div style="flex:1; text-align:center;"><span style="color:#f4c38c; font-size:10px; font-weight:600;">&#127863; Källare</span></div>
+                <div style="flex:1; text-align:center;"><span style="color:#8f8178; font-size:10px;">&#10133; Lägg till</span></div>
+                <div style="flex:1; text-align:center;"><span style="color:#8f8178; font-size:10px;">&#128218; Historik</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PROVNINGAR ===== -->
+  <div>
+    <div class="screen-label">Provningar</div>
+    <div class="screen-pair">
+      <!-- Before -->
+      <div>
+        <div class="mockup">
+          <div class="mockup-header">Nuvarande</div>
+          <div class="mockup-body" style="padding:0;">
+            <div class="phone">
+              <div style="background:#2b1714; padding:16px;">
+                <div style="background:#f8f1e8; border-radius:18px; padding:16px;">
+                  <div style="color:#231815; font-size:20px; font-weight:700; margin-bottom:12px;">Provningar</div>
+                  <!-- Session card -->
+                  <div style="background:#fffaf5; border:1px solid #ead8ca; border-radius:14px; padding:12px; margin-bottom:8px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                      <div>
+                        <div style="color:#231815; font-size:14px; font-weight:700;">Fredagsprovning</div>
+                        <div style="color:#564a40; font-size:11px;">Blindprovning &bull; 4 deltagare</div>
+                      </div>
+                      <div style="background:#6f1d1b; color:#fffaf5; padding:4px 10px; border-radius:8px; font-size:10px; font-weight:600;">Aktiv</div>
+                    </div>
+                  </div>
+                  <div style="background:#fffaf5; border:1px solid #ead8ca; border-radius:14px; padding:12px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                      <div>
+                        <div style="color:#231815; font-size:14px; font-weight:700;">Italiensk kväll</div>
+                        <div style="color:#564a40; font-size:11px;">Öppen &bull; 3 deltagare</div>
+                      </div>
+                      <div style="background:#ead8ca; color:#564a40; padding:4px 10px; border-radius:8px; font-size:10px; font-weight:600;">Klar</div>
+                    </div>
+                  </div>
+                  <!-- Create button -->
+                  <div style="margin-top:12px; background:#6f1d1b; color:#fffaf5; padding:12px; border-radius:999px; text-align:center; font-weight:700; font-size:13px;">Starta ny provning</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- After -->
+      <div>
+        <div class="mockup">
+          <div class="mockup-header">Ny visuell profil</div>
+          <div class="mockup-body" style="padding:0;">
+            <div class="phone">
+              <div class="gradient-bg" style="padding:16px; min-height:400px;">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
+                  <span style="font-size:22px;">&#129346;</span>
+                  <div class="section-title">Provningar</div>
+                </div>
+                <!-- Session card with glow -->
+                <div class="card-glow" style="background:rgba(61,34,32,0.7); border-radius:16px; padding:14px; margin-bottom:10px;">
+                  <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                      <div style="color:#fffaf5; font-size:14px; font-weight:700;">Fredagsprovning</div>
+                      <div style="color:#c4a882; font-size:11px; margin-top:2px;">Blindprovning &bull; 4 deltagare</div>
+                    </div>
+                    <div style="background:rgba(244,195,140,0.2); color:#f4c38c; padding:4px 12px; border-radius:10px; font-size:10px; font-weight:700; border:1px solid rgba(244,195,140,0.3);">Aktiv</div>
+                  </div>
+                  <div class="warm-divider"></div>
+                  <div style="display:flex; gap:6px;">
+                    <div style="width:24px; height:24px; background:#3d2220; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; color:#c4a882; border:1px solid rgba(244,195,140,0.1);">SL</div>
+                    <div style="width:24px; height:24px; background:#3d2220; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; color:#c4a882; border:1px solid rgba(244,195,140,0.1);">AK</div>
+                    <div style="width:24px; height:24px; background:#3d2220; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; color:#c4a882; border:1px solid rgba(244,195,140,0.1);">MJ</div>
+                    <div style="width:24px; height:24px; background:#3d2220; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; color:#c4a882; border:1px solid rgba(244,195,140,0.1);">+1</div>
+                  </div>
+                </div>
+                <div class="card-glow" style="background:rgba(43,23,20,0.85); border-radius:16px; padding:14px; margin-bottom:16px;">
+                  <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                      <div style="color:#fffaf5; font-size:14px; font-weight:700;">Italiensk kväll</div>
+                      <div style="color:#c4a882; font-size:11px; margin-top:2px;">Öppen &bull; 3 deltagare</div>
+                    </div>
+                    <div style="color:#8f8178; padding:4px 12px; border-radius:10px; font-size:10px; font-weight:600; border:1px solid rgba(255,255,255,0.08);">Klar</div>
+                  </div>
+                </div>
+                <!-- CTA -->
+                <div class="btn-primary" style="padding:14px; font-size:14px;">&#129346; Starta ny provning</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== LÄGG TILL VIN ===== -->
+  <div>
+    <div class="screen-label">Lägg till vin</div>
+    <div class="screen-pair">
+      <!-- Before -->
+      <div>
+        <div class="mockup">
+          <div class="mockup-header">Nuvarande</div>
+          <div class="mockup-body" style="padding:0;">
+            <div class="phone">
+              <div style="background:#2b1714; padding:16px;">
+                <div style="background:#f8f1e8; border-radius:18px; padding:16px;">
+                  <div style="color:#231815; font-size:20px; font-weight:700; margin-bottom:12px;">Lägg till vin</div>
+                  <div style="margin-bottom:10px;">
+                    <div style="color:#564a40; font-size:10px; text-transform:uppercase; font-weight:700; margin-bottom:4px;">Namn</div>
+                    <div style="background:#fffaf5; border:1px solid #e6d7c8; border-radius:12px; padding:10px; color:#231815; font-size:13px;">Château Margaux</div>
+                  </div>
+                  <div style="margin-bottom:10px;">
+                    <div style="color:#564a40; font-size:10px; text-transform:uppercase; font-weight:700; margin-bottom:4px;">Årgång</div>
+                    <div style="background:#fffaf5; border:1px solid #e6d7c8; border-radius:12px; padding:10px; color:#231815; font-size:13px;">2015</div>
+                  </div>
+                  <div style="margin-bottom:14px;">
+                    <div style="color:#564a40; font-size:10px; text-transform:uppercase; font-weight:700; margin-bottom:4px;">Förvaringsplats</div>
+                    <div style="background:#fffaf5; border:1px solid #e6d7c8; border-radius:12px; padding:10px; color:#231815; font-size:13px;">Vinkylskåp</div>
+                  </div>
+                  <div style="background:#6f1d1b; color:#fffaf5; padding:12px; border-radius:999px; text-align:center; font-weight:700; font-size:13px;">Spara vin</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- After -->
+      <div>
+        <div class="mockup">
+          <div class="mockup-header">Ny visuell profil</div>
+          <div class="mockup-body" style="padding:0;">
+            <div class="phone">
+              <div class="gradient-bg" style="padding:16px; min-height:400px;">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
+                  <span style="font-size:22px;">&#10133;</span>
+                  <div class="section-title">Lägg till vin</div>
+                </div>
+                <div class="card-glow" style="background:rgba(61,34,32,0.7); border-radius:18px; padding:18px;">
+                  <div style="margin-bottom:14px;">
+                    <div style="color:#c4a882; font-size:11px; font-weight:600; margin-bottom:5px;">Namn</div>
+                    <div style="background:rgba(26,15,14,0.8); border:1px solid rgba(90,58,56,0.5); border-radius:10px; padding:12px; color:#fffaf5; font-size:13px;">Château Margaux</div>
+                  </div>
+                  <div style="margin-bottom:14px;">
+                    <div style="color:#c4a882; font-size:11px; font-weight:600; margin-bottom:5px;">Årgång</div>
+                    <div style="background:rgba(26,15,14,0.8); border:1px solid rgba(90,58,56,0.5); border-radius:10px; padding:12px; color:#fffaf5; font-size:13px;">2015</div>
+                  </div>
+                  <div style="margin-bottom:16px;">
+                    <div style="color:#c4a882; font-size:11px; font-weight:600; margin-bottom:5px;">Förvaringsplats</div>
+                    <div style="background:rgba(26,15,14,0.8); border:1px solid rgba(90,58,56,0.5); border-radius:10px; padding:12px; color:#fffaf5; font-size:13px;">Vinkylskåp</div>
+                  </div>
+                  <div class="warm-divider"></div>
+                  <div class="btn-primary" style="padding:14px; font-size:14px; margin-top:8px;">&#127863; Spara vin</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:32px; padding:20px; background:rgba(61,34,32,0.5); border-radius:16px; border:1px solid rgba(244,195,140,0.1);">
+  <h3 style="color:#f4c38c; margin:0 0 8px;">Designprinciper</h3>
+  <div style="color:#c4a882; font-size:13px; line-height:1.6;">
+    <strong style="color:#fffaf5;">Radiell gradient</strong> ersätter platt bakgrund — ger djup och värme<br>
+    <strong style="color:#fffaf5;">Glow-effekter</strong> på kort och ikoner — subtila skuggor och kantlinjer i guld<br>
+    <strong style="color:#fffaf5;">Semi-transparenta ytor</strong> istället för ogenomskinliga — bakgrunden skiner igenom<br>
+    <strong style="color:#fffaf5;">Guldaccenter</strong> i dividers, badges och knappar — mer sammanhållet färgtema<br>
+    <strong style="color:#fffaf5;">Mjukare formspråk</strong> — rundare hörn, hover-animationer, subtila övergångar<br>
+    <strong style="color:#fffaf5;">Mörkt genomgående</strong> — beige paneler ersätts av mörka ytor med guldtext
+  </div>
+</div>

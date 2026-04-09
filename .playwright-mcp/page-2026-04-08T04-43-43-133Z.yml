@@ -1,0 +1,401 @@
+- generic [ref=e3]:
+  - generic [ref=e7]:
+    - generic [ref=e9]:
+      - generic [ref=e13]:
+        - generic [ref=e14]: Min källare
+        - generic [ref=e16] [cursor=pointer]: Profil
+      - generic [ref=e17] [cursor=pointer]:
+        - generic [ref=e18]: 36 flaskor · 8 länder · snitt 2020
+        - generic [ref=e19]: ›
+      - generic [ref=e21]:
+        - generic [ref=e22]:
+          - generic [ref=e23]:
+            - generic [ref=e24]: Mest flaskor från
+            - generic [ref=e25]: Italien (14)
+          - generic [ref=e26]:
+            - generic [ref=e27]: Vanligaste typ
+            - generic [ref=e28]: Rött (18)
+        - generic [ref=e29]:
+          - generic [ref=e30]:
+            - generic [ref=e31]: Vanligaste matmatch
+            - generic [ref=e32]: fisk (8)
+          - generic [ref=e33]:
+            - generic [ref=e34]: Snittårgång
+            - generic [ref=e35]: "2020"
+        - generic [ref=e37] [cursor=pointer]: Uppdatera statistik
+      - generic [ref=e38]:
+        - generic [ref=e39]: Sök
+        - textbox "namn, druva, region, mat..." [ref=e40]
+      - generic [ref=e41] [cursor=pointer]:
+        - generic [ref=e42]: Filter
+        - generic [ref=e43]: ›
+      - generic [ref=e45]:
+        - generic [ref=e46]:
+          - generic [ref=e47]: Mat
+          - generic [ref=e48]:
+            - generic [ref=e50] [cursor=pointer]: Alla
+            - generic [ref=e140] [cursor=pointer]: kyckling
+            - generic [ref=e142] [cursor=pointer]: tonfisk
+            - generic [ref=e144] [cursor=pointer]: skaldjur
+            - generic [ref=e146] [cursor=pointer]: lax
+            - generic [ref=e148] [cursor=pointer]: vilt
+            - generic [ref=e150] [cursor=pointer]: getost
+            - generic [ref=e152] [cursor=pointer]: lamm
+            - generic [ref=e154] [cursor=pointer]: fisk
+            - generic [ref=e156] [cursor=pointer]: nötkött
+            - generic [ref=e158] [cursor=pointer]: ost
+            - generic [ref=e160] [cursor=pointer]: choklad
+            - generic [ref=e162] [cursor=pointer]: hummer
+            - generic [ref=e164] [cursor=pointer]: kräftor
+            - generic [ref=e166] [cursor=pointer]: asiatiskt
+            - generic [ref=e168] [cursor=pointer]: grillat
+            - generic [ref=e170] [cursor=pointer]: gryta
+            - generic [ref=e172] [cursor=pointer]: tapas
+            - generic [ref=e174] [cursor=pointer]: sallad
+            - generic [ref=e176] [cursor=pointer]: pasta
+            - generic [ref=e178] [cursor=pointer]: pizza
+            - generic [ref=e180] [cursor=pointer]: aperitif
+            - generic [ref=e182] [cursor=pointer]: tryffel
+        - generic [ref=e51]:
+          - generic [ref=e52]: Land
+          - generic [ref=e53]:
+            - generic [ref=e55] [cursor=pointer]: Alla
+            - generic [ref=e184] [cursor=pointer]: Italien
+            - generic [ref=e186] [cursor=pointer]: Tyskland
+            - generic [ref=e188] [cursor=pointer]: Portugal
+            - generic [ref=e190] [cursor=pointer]: USA
+            - generic [ref=e192] [cursor=pointer]: Frankrike
+            - generic [ref=e194] [cursor=pointer]: Spanien
+            - generic [ref=e196] [cursor=pointer]: Australien
+            - generic [ref=e198] [cursor=pointer]: Österrike
+        - generic [ref=e56]:
+          - generic [ref=e57]: Region
+          - generic [ref=e58]:
+            - generic [ref=e60] [cursor=pointer]: Alla
+            - generic [ref=e200] [cursor=pointer]: Toscana
+            - generic [ref=e202] [cursor=pointer]: Dolcetto dAlba
+            - generic [ref=e204] [cursor=pointer]: Rheingau
+            - generic [ref=e206] [cursor=pointer]: Sicilien
+            - generic [ref=e208] [cursor=pointer]: Vinho Verde
+            - generic [ref=e210] [cursor=pointer]: Napa Valley
+            - generic [ref=e212] [cursor=pointer]: Tuscany
+            - generic [ref=e214] [cursor=pointer]: Veneto
+            - generic [ref=e216] [cursor=pointer]: Burgundy
+            - generic [ref=e218] [cursor=pointer]: Alsace
+            - generic [ref=e220] [cursor=pointer]: Rhône
+            - generic [ref=e222] [cursor=pointer]: Rioja
+            - generic [ref=e224] [cursor=pointer]: Loire
+            - generic [ref=e226] [cursor=pointer]: Barossa Valley
+            - generic [ref=e228] [cursor=pointer]: Provence
+            - generic [ref=e230] [cursor=pointer]: Wachau
+            - generic [ref=e232] [cursor=pointer]: Piedmont
+        - generic [ref=e61]:
+          - generic [ref=e62]: Druva
+          - generic [ref=e63]:
+            - generic [ref=e65] [cursor=pointer]: Alla
+            - generic [ref=e234] [cursor=pointer]: Riesling
+            - generic [ref=e236] [cursor=pointer]: Vet inte
+            - generic [ref=e238] [cursor=pointer]: Alvarinho
+            - generic [ref=e240] [cursor=pointer]: Cabernet Sauvignon, Merlot
+            - generic [ref=e242] [cursor=pointer]: Cabernet Sauvignon, Cabernet Franc
+            - generic [ref=e244] [cursor=pointer]: Corvina, Rondinella
+            - generic [ref=e246] [cursor=pointer]: Chardonnay
+            - generic [ref=e248] [cursor=pointer]: Marsanne, Roussanne
+            - generic [ref=e250] [cursor=pointer]: Grenache, Syrah, Mourvèdre
+            - generic [ref=e252] [cursor=pointer]: Tempranillo, Garnacha
+            - generic [ref=e254] [cursor=pointer]: Sauvignon Blanc
+            - generic [ref=e256] [cursor=pointer]: Shiraz
+            - generic [ref=e258] [cursor=pointer]: Sangiovese, Cabernet Sauvignon
+            - generic [ref=e260] [cursor=pointer]: Sangiovese
+            - generic [ref=e262] [cursor=pointer]: Grenache, Cinsault
+            - generic [ref=e264] [cursor=pointer]: Glera
+            - generic [ref=e266] [cursor=pointer]: Grüner Veltliner
+            - generic [ref=e268] [cursor=pointer]: Nebbiolo
+            - generic [ref=e270] [cursor=pointer]: Grenache
+        - generic [ref=e66]:
+          - generic [ref=e67]: Typ
+          - generic [ref=e68]:
+            - generic [ref=e70] [cursor=pointer]: Alla
+            - generic [ref=e272] [cursor=pointer]: Rött
+            - generic [ref=e274] [cursor=pointer]: Vitt
+            - generic [ref=e276] [cursor=pointer]: Rosé
+            - generic [ref=e278] [cursor=pointer]: Mousserande
+        - generic [ref=e71]:
+          - generic [ref=e72]: Årgång
+          - generic [ref=e73]:
+            - generic [ref=e75] [cursor=pointer]: Alla
+            - generic [ref=e280] [cursor=pointer]: "2025"
+            - generic [ref=e282] [cursor=pointer]: "2024"
+            - generic [ref=e284] [cursor=pointer]: "2023"
+            - generic [ref=e286] [cursor=pointer]: "2022"
+            - generic [ref=e288] [cursor=pointer]: "2021"
+            - generic [ref=e290] [cursor=pointer]: "2020"
+            - generic [ref=e292] [cursor=pointer]: "2019"
+            - generic [ref=e294] [cursor=pointer]: "2018"
+            - generic [ref=e296] [cursor=pointer]: "2017"
+            - generic [ref=e298] [cursor=pointer]: "2015"
+            - generic [ref=e300] [cursor=pointer]: "2012"
+            - generic [ref=e302] [cursor=pointer]: "2011"
+            - generic [ref=e304] [cursor=pointer]: "2007"
+        - generic [ref=e305]:
+          - generic [ref=e306]: Plats
+          - generic [ref=e307]:
+            - generic [ref=e309] [cursor=pointer]: Alla
+            - generic [ref=e311] [cursor=pointer]: Vinkyl kök
+            - generic [ref=e313] [cursor=pointer]: Vinkällare
+            - generic [ref=e315] [cursor=pointer]: Vinställ vardagsrum
+            - generic [ref=e317] [cursor=pointer]: Test
+            - generic [ref=e319] [cursor=pointer]: test2
+      - generic [ref=e84] [cursor=pointer]: Provningar
+      - generic [ref=e85]:
+        - generic [ref=e87] [cursor=pointer]: ＋ Ny förvaringsplats
+        - generic [ref=e89]:
+          - generic [ref=e90]: Ny förvaringsplats
+          - generic [ref=e91]:
+            - generic [ref=e92]: Namn
+            - textbox "t.ex. Vinkyl köket" [ref=e93]
+          - generic [ref=e94]:
+            - generic [ref=e95]: Typ
+            - generic [ref=e96]:
+              - generic [ref=e98] [cursor=pointer]: Vinkyl
+              - generic [ref=e100] [cursor=pointer]: Vinställ
+              - generic [ref=e102] [cursor=pointer]: Källare
+              - generic [ref=e104] [cursor=pointer]: Övrigt
+          - generic [ref=e105]:
+            - generic [ref=e106]: Platser
+            - generic [ref=e107]:
+              - generic [ref=e109] [cursor=pointer]: Med platser
+              - generic [ref=e111] [cursor=pointer]: Utan platser
+          - generic [ref=e112]:
+            - generic [ref=e114]:
+              - generic [ref=e115]: Antal rader
+              - textbox [ref=e116]: "6"
+            - generic [ref=e118]:
+              - generic [ref=e119]: Platser per rad
+              - textbox [ref=e120]: "6"
+          - generic [ref=e121]:
+            - generic [ref=e123] [cursor=pointer]: Spara plats
+            - generic [ref=e125] [cursor=pointer]: Avbryt
+    - generic [ref=e321]:
+      - generic [ref=e323] [cursor=pointer]:
+        - generic [ref=e324]:
+          - generic [ref=e325]: wine_fridge
+          - generic [ref=e326]: Vinkyl kök
+        - generic [ref=e327]:
+          - generic [ref=e329]: 14 st
+          - generic [ref=e330]: ▾
+      - generic [ref=e375]:
+        - generic [ref=e377] [cursor=pointer]: Redigera
+        - generic [ref=e379] [cursor=pointer]: Ta bort
+    - generic [ref=e381]:
+      - generic [ref=e382]:
+        - generic [ref=e385]:
+          - generic [ref=e386]: Rött
+          - generic [ref=e387]: Rosso di Toscana
+          - generic [ref=e388]: Tenuta Il Poggione • 2023 • Italien, Toscana
+          - generic [ref=e389]: Vinkyl kök • Rad 1 • Plats 1
+        - generic [ref=e391]: 1 st
+      - generic [ref=e392]:
+        - generic [ref=e394] [cursor=pointer]: Redigera
+        - generic [ref=e396] [cursor=pointer]: Drick
+        - generic [ref=e398] [cursor=pointer]: Ta bort
+    - generic [ref=e400]:
+      - generic [ref=e401]:
+        - generic [ref=e404]:
+          - generic [ref=e405]: Rött
+          - generic [ref=e406]: Dolcetto d'Alba
+          - generic [ref=e407]: Carlo Revello & Figli • 2024 • Italien, Dolcetto dAlba
+          - generic [ref=e408]: Vinkyl kök • Rad 1 • Plats 1
+        - generic [ref=e410]: 1 st
+      - generic [ref=e411]:
+        - generic [ref=e413] [cursor=pointer]: Redigera
+        - generic [ref=e415] [cursor=pointer]: Drick
+        - generic [ref=e417] [cursor=pointer]: Ta bort
+    - generic [ref=e419]:
+      - generic [ref=e420]:
+        - generic [ref=e423]:
+          - generic [ref=e424]: Vitt
+          - generic [ref=e425]: Riesling Spätlese
+          - generic [ref=e426]: Kloster Eberbach • 2025 • Riesling • Tyskland, Rheingau
+          - generic [ref=e427]: Vinkyl kök • Rad 1 • Plats 1
+        - generic [ref=e429]: 1 st
+      - generic [ref=e431] [cursor=pointer]: "Systembolaget #625701 ›"
+      - generic [ref=e432]:
+        - generic [ref=e434] [cursor=pointer]: Redigera
+        - generic [ref=e436] [cursor=pointer]: Drick
+        - generic [ref=e438] [cursor=pointer]: Ta bort
+    - generic [ref=e440]:
+      - generic [ref=e441]:
+        - generic [ref=e444]:
+          - generic [ref=e445]: Vitt
+          - generic [ref=e446]: Spätlese Riesling
+          - generic [ref=e447]: Kloster Eberbach • 2025 • Vet inte • Tyskland, Rheingau
+          - generic [ref=e448]: Vinkyl kök • Rad 1 • Plats 5
+          - generic [ref=e449]: Egen! Riktig!
+        - generic [ref=e451]: 1 st
+      - generic [ref=e452]:
+        - generic [ref=e454] [cursor=pointer]: Redigera
+        - generic [ref=e456] [cursor=pointer]: Drick
+        - generic [ref=e458] [cursor=pointer]: Ta bort
+    - generic [ref=e460]:
+      - generic [ref=e461]:
+        - generic [ref=e462]:
+          - generic [ref=e463]: Vitt
+          - generic [ref=e464]: 50° Riesling Trocken
+          - generic [ref=e465]: G H von Mumm • 2024 • Riesling • Tyskland, Rheingau
+          - generic [ref=e466]: Vinkyl kök • Rad 4 • Plats 4
+        - generic [ref=e468]: 1 st
+      - generic [ref=e470]:
+        - generic [ref=e471]: Passar till
+        - generic [ref=e472]:
+          - generic [ref=e473]: kyckling
+          - generic [ref=e474]: tonfisk
+          - generic [ref=e475]: skaldjur
+      - generic [ref=e477] [cursor=pointer]: "Systembolaget #582401 ›"
+      - generic [ref=e478]:
+        - generic [ref=e480] [cursor=pointer]: Redigera
+        - generic [ref=e482] [cursor=pointer]: Drick
+        - generic [ref=e484] [cursor=pointer]: Ta bort
+    - generic [ref=e486]:
+      - generic [ref=e487]:
+        - generic [ref=e490]:
+          - generic [ref=e491]: Vitt
+          - generic [ref=e492]: Alba Rhino Vinho Verde
+          - generic [ref=e493]: Quinta das Arcas – Soc. Agr. Lda • 2024 • Alvarinho • Portugal, Vinho Verde
+          - generic [ref=e494]: Vinkyl kök • Rad 2 • Plats 3
+        - generic [ref=e496]: 1 st
+      - generic [ref=e498]:
+        - generic [ref=e499]: Passar till
+        - generic [ref=e500]:
+          - generic [ref=e501]: lamm
+          - generic [ref=e502]: fisk
+      - generic [ref=e504] [cursor=pointer]: "Systembolaget #312801 ›"
+      - generic [ref=e505]:
+        - generic [ref=e507] [cursor=pointer]: Redigera
+        - generic [ref=e509] [cursor=pointer]: Drick
+        - generic [ref=e511] [cursor=pointer]: Ta bort
+    - generic [ref=e513]:
+      - generic [ref=e514]:
+        - generic [ref=e515]:
+          - generic [ref=e516]: Vitt
+          - generic [ref=e517]: Chablis Premier Cru
+          - generic [ref=e518]: William Fèvre • 2022 • Chardonnay • Frankrike, Burgundy
+          - generic [ref=e519]: Vinkyl kök • Rad 1 • Plats 2
+        - generic [ref=e521]: 1 st
+      - generic [ref=e523]:
+        - generic [ref=e524]: Passar till
+        - generic [ref=e525]:
+          - generic [ref=e526]: fisk
+          - generic [ref=e527]: skaldjur
+      - generic [ref=e528]:
+        - generic [ref=e530] [cursor=pointer]: Redigera
+        - generic [ref=e532] [cursor=pointer]: Drick
+        - generic [ref=e534] [cursor=pointer]: Ta bort
+    - generic [ref=e536]:
+      - generic [ref=e537]:
+        - generic [ref=e538]:
+          - generic [ref=e539]: Rött
+          - generic [ref=e540]: Tignanello
+          - generic [ref=e541]: Antinori • 2020 • Sangiovese, Cabernet Sauvignon • Italien, Tuscany
+          - generic [ref=e542]: Vinkyl kök • Rad 1 • Plats 1
+        - generic [ref=e544]: 1 st
+      - generic [ref=e546]:
+        - generic [ref=e547]: Passar till
+        - generic [ref=e548]:
+          - generic [ref=e549]: nötkött
+          - generic [ref=e550]: pasta
+          - generic [ref=e551]: ost
+      - generic [ref=e552]:
+        - generic [ref=e554] [cursor=pointer]: Redigera
+        - generic [ref=e556] [cursor=pointer]: Drick
+        - generic [ref=e558] [cursor=pointer]: Ta bort
+    - generic [ref=e560]:
+      - generic [ref=e561]:
+        - generic [ref=e562]:
+          - generic [ref=e563]: Rosé
+          - generic [ref=e564]: Whispering Angel
+          - generic [ref=e565]: Château d'Esclans • 2023 • Grenache, Cinsault • Frankrike, Provence
+          - generic [ref=e566]: Vinkyl kök • Rad 2 • Plats 1
+        - generic [ref=e568]: 3 st
+      - generic [ref=e570]:
+        - generic [ref=e571]: Passar till
+        - generic [ref=e572]:
+          - generic [ref=e573]: sallad
+          - generic [ref=e574]: fisk
+      - generic [ref=e575]:
+        - generic [ref=e577] [cursor=pointer]: Redigera
+        - generic [ref=e579] [cursor=pointer]: Drick
+        - generic [ref=e581] [cursor=pointer]: Ta bort
+    - generic [ref=e583]:
+      - generic [ref=e584]:
+        - generic [ref=e585]:
+          - generic [ref=e586]: Mousserande
+          - generic [ref=e587]: Prosecco Superiore
+          - generic [ref=e588]: Bisol • 2023 • Glera • Italien, Veneto
+          - generic [ref=e589]: Vinkyl kök • Rad 2 • Plats 3
+        - generic [ref=e591]: 2 st
+      - generic [ref=e593]:
+        - generic [ref=e594]: Passar till
+        - generic [ref=e596]: aperitif
+      - generic [ref=e597]:
+        - generic [ref=e599] [cursor=pointer]: Redigera
+        - generic [ref=e601] [cursor=pointer]: Drick
+        - generic [ref=e603] [cursor=pointer]: Ta bort
+    - generic [ref=e605]:
+      - generic [ref=e606]:
+        - generic [ref=e607]:
+          - generic [ref=e608]: Vitt
+          - generic [ref=e609]: Grüner Veltliner Federspiel
+          - generic [ref=e610]: Domäne Wachau • 2022 • Grüner Veltliner • Österrike, Wachau
+          - generic [ref=e611]: Vinkyl kök • Rad 3 • Plats 1
+        - generic [ref=e613]: 1 st
+      - generic [ref=e615]:
+        - generic [ref=e616]: Passar till
+        - generic [ref=e617]:
+          - generic [ref=e618]: kyckling
+          - generic [ref=e619]: skaldjur
+      - generic [ref=e620]:
+        - generic [ref=e622] [cursor=pointer]: Redigera
+        - generic [ref=e624] [cursor=pointer]: Drick
+        - generic [ref=e626] [cursor=pointer]: Ta bort
+    - generic [ref=e334] [cursor=pointer]:
+      - generic [ref=e335]:
+        - generic [ref=e336]: cellar
+        - generic [ref=e337]: Vinkällare
+      - generic [ref=e338]:
+        - generic [ref=e340]: 12 st
+        - generic [ref=e341]: ›
+    - generic [ref=e630] [cursor=pointer]:
+      - generic [ref=e631]:
+        - generic [ref=e632]: rack
+        - generic [ref=e633]: Vinställ vardagsrum
+      - generic [ref=e634]:
+        - generic [ref=e636]: 9 st
+        - generic [ref=e637]: ›
+    - generic [ref=e641] [cursor=pointer]:
+      - generic [ref=e642]:
+        - generic [ref=e643]: Källare
+        - generic [ref=e644]: Test
+      - generic [ref=e645]:
+        - generic [ref=e647]: 1 st
+        - generic [ref=e648]: ›
+    - generic [ref=e652] [cursor=pointer]:
+      - generic [ref=e653]:
+        - generic [ref=e654]: Källare
+        - generic [ref=e655]: test2
+      - generic [ref=e656]:
+        - generic [ref=e658]: 0 st
+        - generic [ref=e659]: ›
+  - generic [ref=e126]:
+    - generic [ref=e127] [cursor=pointer]:
+      - generic [ref=e128]: 🍷
+      - generic [ref=e129]: Min källare
+    - generic [ref=e130] [cursor=pointer]:
+      - generic [ref=e131]: ＋
+      - generic [ref=e132]: Lägg till
+    - generic [ref=e133] [cursor=pointer]:
+      - generic [ref=e134]: 🍽
+      - generic [ref=e135]: Mat
+    - generic [ref=e136] [cursor=pointer]:
+      - generic [ref=e137]: 📖
+      - generic [ref=e138]: Historik

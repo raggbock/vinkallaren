@@ -1,0 +1,9 @@
+{
+  "enabledPlugins": {
+    "code-simplifier@claude-plugins-official": true,
+    "supabase@claude-plugins-official": true,
+    "brightdata-plugin@claude-plugins-official": true,
+    "playwright@claude-plugins-official": true,
+    "superpowers@claude-plugins-official": true
+  }
+}

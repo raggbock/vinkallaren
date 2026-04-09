@@ -1,0 +1,142 @@
+- generic [ref=e3]:
+  - generic [ref=e193]:
+    - generic [ref=e194]:
+      - generic [ref=e195]:
+        - img [ref=e197]:
+          - generic [ref=e213]: SEDAN 2026
+          - generic [ref=e214]: Vinkällaren
+          - generic [ref=e215]: SAMLA · SMAKA · UPPTÄCK
+        - generic [ref=e223] [cursor=pointer]: Profil
+      - generic [ref=e224]:
+        - generic [ref=e225]: Läge
+        - generic [ref=e226]:
+          - generic [ref=e228] [cursor=pointer]: Källare
+          - generic [ref=e230] [cursor=pointer]: Vinprovning
+      - generic [ref=e233]:
+        - textbox "Sök vin eller producent..." [active] [ref=e234]: barolo
+        - generic [ref=e390]:
+          - generic [ref=e392] [cursor=pointer]: Barolo (Giovanni Rosso)
+          - generic [ref=e394] [cursor=pointer]: Barolo (Gianni Gagliardo)
+          - generic [ref=e396] [cursor=pointer]: Barolo (Gian Luca Colombo)
+          - generic [ref=e398] [cursor=pointer]: Barolo (Fontanafredda)
+          - generic [ref=e400] [cursor=pointer]: Barolo (Giacomo Grimaldi di Grimaldi Ferruccio)
+          - generic [ref=e402] [cursor=pointer]: Barolo (Gianfranco Alessandria)
+          - generic [ref=e404] [cursor=pointer]: Barolo (Castello di Verduno)
+          - generic [ref=e406] [cursor=pointer]: Barolo (Carlo Revello & Figli)
+          - generic [ref=e408] [cursor=pointer]: Barolo (Cantina Francone)
+          - generic [ref=e410] [cursor=pointer]: Barolo (Brovia)
+          - generic [ref=e411]: 10 till ↓
+      - generic [ref=e235] [cursor=pointer]:
+        - generic [ref=e236]: ▸
+        - generic [ref=e237]: Fler alternativ
+      - generic [ref=e240]:
+        - generic [ref=e241]: Systembolaget artikelnummer
+        - textbox "t.ex. 12345" [ref=e242]
+      - generic [ref=e245]: Om vinet
+      - generic [ref=e247]:
+        - generic [ref=e248]: Namn
+        - textbox [ref=e249]
+      - generic [ref=e250]:
+        - generic [ref=e251]: Producent
+        - textbox [ref=e252]
+      - generic [ref=e253]:
+        - generic [ref=e255]:
+          - generic [ref=e256]: Land
+          - textbox "Skriv t.ex. fr eller it" [ref=e258]
+        - generic [ref=e260]:
+          - generic [ref=e261]: Region
+          - textbox "Skriv t.ex. bor, rio, nap..." [ref=e263]
+      - generic [ref=e264]:
+        - generic [ref=e265]: Druva
+        - textbox "Nebbiolo, Chardonnay..." [ref=e267]
+      - generic [ref=e268]:
+        - generic [ref=e270]:
+          - generic [ref=e271]: Årgång
+          - textbox [ref=e272]
+        - generic [ref=e274]:
+          - generic [ref=e275]: Antal
+          - textbox [ref=e276]: "1"
+      - generic [ref=e277]:
+        - generic [ref=e278]: Vintyp
+        - generic [ref=e279]:
+          - generic [ref=e281] [cursor=pointer]: Rött
+          - generic [ref=e283] [cursor=pointer]: Vitt
+          - generic [ref=e285] [cursor=pointer]: Mousserande
+          - generic [ref=e287] [cursor=pointer]: Sött
+      - generic [ref=e290]: Förvaring
+      - generic [ref=e292]:
+        - generic [ref=e294]:
+          - generic [ref=e295]: Drick senast (år)
+          - textbox "t.ex. 2028" [ref=e296]
+        - generic [ref=e298]:
+          - generic [ref=e299]: Inköpt
+          - generic [ref=e300]:
+            - textbox "ÅÅÅÅ-MM-DD" [ref=e412]
+            - generic [ref=e304] [cursor=pointer]: Idag
+      - generic [ref=e306] [cursor=pointer]:
+        - generic [ref=e307]: Matförslag
+        - generic [ref=e308]: ›
+      - generic [ref=e309]:
+        - generic [ref=e310]: Passar till
+        - textbox "lamm, ost, svamp, fisk" [ref=e311]
+      - generic [ref=e312]:
+        - generic [ref=e313]: Förvaringsplats
+        - generic [ref=e314]: Skapa en förvaringsplats för att kunna välja rad och plats.
+        - generic [ref=e315]:
+          - generic [ref=e317] [cursor=pointer]: ＋ Ny förvaringsplats
+          - generic [ref=e319]:
+            - generic [ref=e320]: Ny förvaringsplats
+            - generic [ref=e321]:
+              - generic [ref=e322]: Namn
+              - textbox "t.ex. Vinkyl köket" [ref=e323]
+            - generic [ref=e324]:
+              - generic [ref=e325]: Typ
+              - generic [ref=e326]:
+                - generic [ref=e328] [cursor=pointer]: Vinkyl
+                - generic [ref=e330] [cursor=pointer]: Vinställ
+                - generic [ref=e332] [cursor=pointer]: Källare
+                - generic [ref=e334] [cursor=pointer]: Övrigt
+            - generic [ref=e335]:
+              - generic [ref=e336]: Platser
+              - generic [ref=e337]:
+                - generic [ref=e339] [cursor=pointer]: Med platser
+                - generic [ref=e341] [cursor=pointer]: Utan platser
+            - generic [ref=e342]:
+              - generic [ref=e344]:
+                - generic [ref=e345]: Antal rader
+                - textbox [ref=e346]: "6"
+              - generic [ref=e348]:
+                - generic [ref=e349]: Platser per rad
+                - textbox [ref=e350]: "6"
+            - generic [ref=e351]:
+              - generic [ref=e353] [cursor=pointer]: Spara plats
+              - generic [ref=e355] [cursor=pointer]: Avbryt
+      - generic [ref=e356]:
+        - generic [ref=e357]: Fri platsnotering
+        - textbox "t.ex. längst bak, överst i kylen" [ref=e358]
+      - generic [ref=e361]: Övrigt
+      - generic [ref=e363]:
+        - generic [ref=e364]: Etiketter
+        - textbox "middag, present, lagring" [ref=e365]
+      - generic [ref=e366]:
+        - generic [ref=e367]: Anteckningar
+        - textbox [ref=e368]
+      - generic [ref=e371]: Bild
+      - generic [ref=e376] [cursor=pointer]: Ladda upp bild av etiketten
+      - generic [ref=e378] [cursor=pointer]: Spara i källaren
+    - generic [ref=e379]:
+      - generic [ref=e381] [cursor=pointer]: 2026-03-30-574b771
+      - generic [ref=e383] [cursor=pointer]: Integritetspolicy
+  - generic [ref=e129]:
+    - generic [ref=e130] [cursor=pointer]:
+      - img [ref=e384]
+      - generic [ref=e132]: Min källare
+    - generic [ref=e133] [cursor=pointer]:
+      - img [ref=e387]
+      - generic [ref=e135]: Lägg till
+    - generic [ref=e136] [cursor=pointer]:
+      - img [ref=e184]
+      - generic [ref=e138]: Mat
+    - generic [ref=e139] [cursor=pointer]:
+      - img [ref=e188]
+      - generic [ref=e141]: Historik
