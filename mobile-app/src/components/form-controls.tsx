@@ -169,41 +169,57 @@ export function GroupedSuggestionRow({
   selected: string[];
   onSelect: (value: string) => void;
 }) {
-  const [expanded, setExpanded] = useState(false);
-  const visibleGroups = expanded ? groups : groups.slice(0, 3);
+  const [sectionOpen, setSectionOpen] = useState(false);
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+
+  const toggleCategory = (label: string) => setExpandedCategory((prev) => (prev === label ? null : label));
 
   return (
     <View style={styles.foodSection}>
-      <Text style={theme.inputLabel}>{title}</Text>
-      {visibleGroups.map((group) => (
-        <View key={group.label} style={{ marginBottom: 8 }}>
-          <Text style={styles.groupLabel}>{group.label}</Text>
-          <View style={styles.tagRow}>
-            {group.items.map((item) => {
-              const isSelected = selected.includes(item);
-              return (
-                <Pressable
-                  key={`${group.label}-${item}`}
-                  onPress={() => onSelect(item)}
-                  style={({ pressed }) => [theme.foodPill, isSelected && theme.foodPillActive, pressed && { opacity: 0.6 }]}
-                >
-                  <Text style={[theme.foodText, isSelected && theme.foodTextActive]}>{item}</Text>
-                </Pressable>
-              );
-            })}
-          </View>
+      <Pressable onPress={() => setSectionOpen((v) => !v)} style={({ pressed }) => [styles.sectionToggle, pressed && { opacity: 0.7 }]}>
+        <Text style={theme.inputLabel}>{title}{selected.length > 0 ? ` (${selected.length})` : ""}</Text>
+        <Text style={theme.foodCategoryChevron}>{sectionOpen ? "▾" : "›"}</Text>
+      </Pressable>
+      {sectionOpen && selected.length > 0 && (
+        <View style={styles.tagRow}>
+          {selected.map((item) => (
+            <Pressable key={`selected-${item}`} onPress={() => onSelect(item)} style={[theme.foodPill, theme.foodPillActive]}>
+              <Text style={theme.foodTextActive}>{item} ✕</Text>
+            </Pressable>
+          ))}
         </View>
-      ))}
-      {groups.length > 3 && !expanded ? (
-        <Pressable onPress={() => { setExpanded(true); }}>
-          <Text style={styles.expandLink}>Visa fler kategorier ({groups.length - 3} till)</Text>
-        </Pressable>
-      ) : null}
-      {expanded ? (
-        <Pressable onPress={() => { setExpanded(false); }}>
-          <Text style={styles.expandLink}>Visa färre</Text>
-        </Pressable>
-      ) : null}
+      )}
+      {sectionOpen && groups.map((group) => {
+        const isExpanded = expandedCategory === group.label;
+        const hasSelection = group.items.some((item) => selected.includes(item));
+        return (
+          <View key={group.label} style={theme.foodCategoryGroup}>
+            <Pressable
+              onPress={() => toggleCategory(group.label)}
+              style={({ pressed }) => [styles.categoryRow, isExpanded && styles.categoryRowExpanded, pressed && { opacity: 0.7 }]}
+            >
+              <Text style={[theme.foodCategoryLabel, hasSelection && theme.foodCategoryLabelActive]}>{group.label}</Text>
+              <Text style={theme.foodCategoryChevron}>{isExpanded ? "▾" : "›"}</Text>
+            </Pressable>
+            {isExpanded && (
+              <View style={styles.tagRow}>
+                {group.items.map((item) => {
+                  const isSelected = selected.includes(item);
+                  return (
+                    <Pressable
+                      key={`${group.label}-${item}`}
+                      onPress={() => onSelect(item)}
+                      style={({ pressed }) => [theme.foodPill, isSelected && theme.foodPillActive, pressed && { opacity: 0.6 }]}
+                    >
+                      <Text style={[theme.foodText, isSelected && theme.foodTextActive]}>{item}</Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            )}
+          </View>
+        );
+      })}
     </View>
   );
 }
@@ -395,17 +411,25 @@ const styles = StyleSheet.create({
   suggestionTextActive: {
     color: "#fff6ee",
   },
-  groupLabel: {
-    color: "#756861",
-    fontSize: 12,
-    fontWeight: "600",
-    marginBottom: 4,
+  sectionToggle: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
-  expandLink: {
-    color: "#6f1d1b",
-    fontSize: 13,
-    fontWeight: "600",
-    marginTop: 4,
+  categoryRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    backgroundColor: "#fffaf5",
+    borderWidth: 1,
+    borderColor: "#ead8ca",
+  },
+  categoryRowExpanded: {
+    backgroundColor: "#f0e5d9",
+    borderColor: "#d4c4b4",
   },
   importOptionRow: {
     flexDirection: "row",
