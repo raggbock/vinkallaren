@@ -17,6 +17,7 @@ import { StatusBar } from "expo-status-bar";
 import { supabase } from "../lib/supabase";
 import { showError } from "../lib/show-error";
 import { WineGlassDoodle } from "../components/doodles";
+import { colors } from "../styles/tokens";
 
 // Expo Web supports dataSet prop for data-* attributes, but RN types don't include it.
 const web = (props: Record<string, unknown>) => props as Record<string, never>;
@@ -236,11 +237,11 @@ function AuthForm() {
       </View>
       <View style={s.fieldGroup}>
         <Text style={s.fieldLabel}>E-post</Text>
-        <TextInput value={auth.email} onChangeText={auth.setEmail} autoCapitalize="none" keyboardType="email-address" returnKeyType="next" placeholder="namn@exempel.se" style={s.fieldInput} placeholderTextColor="#8f8178" />
+        <TextInput value={auth.email} onChangeText={auth.setEmail} autoCapitalize="none" keyboardType="email-address" returnKeyType="next" placeholder="namn@exempel.se" style={s.fieldInput} placeholderTextColor="#8f8178" accessibilityLabel="E-post" />
       </View>
       <View style={s.fieldGroup}>
         <Text style={s.fieldLabel}>Lösenord</Text>
-        <TextInput value={auth.password} onChangeText={auth.setPassword} secureTextEntry returnKeyType="go" onSubmitEditing={auth.handleAuth} style={s.fieldInput} placeholderTextColor="#8f8178" />
+        <TextInput value={auth.password} onChangeText={auth.setPassword} secureTextEntry returnKeyType="go" onSubmitEditing={auth.handleAuth} style={s.fieldInput} placeholderTextColor="#8f8178" accessibilityLabel="Lösenord" />
       </View>
       <Pressable onPress={auth.handleAuth} style={s.primaryCta} disabled={auth.busy} {...web({ dataSet: { landingCta: true } })}>
         <Text style={s.primaryCtaText}>{auth.busy ? "Arbetar..." : auth.mode === "signup" ? "Skapa konto" : "Logga in"}</Text>
@@ -295,7 +296,7 @@ const s = StyleSheet.create({
   heroBanner: { width: "110%", height: 300, marginLeft: "-5%", marginBottom: 16 },
   heroBannerWide: { height: 380 },
   subheadline: {
-    color: "#6B6B6B",
+    color: colors.textSecondary,
     fontSize: 14,
     lineHeight: 22,
     marginBottom: 24,
@@ -322,7 +323,7 @@ const s = StyleSheet.create({
   iconText: { fontSize: 20 },
   featureText: { flex: 1 },
   featureTitle: { fontFamily: Platform.select({ web: '"Caveat", cursive', default: "serif" }), color: "#2A2A2A", fontSize: 18, fontWeight: "700" },
-  featureDesc: { color: "#6B6B6B", fontSize: 12, lineHeight: 18, marginTop: 3 },
+  featureDesc: { color: colors.textSecondary, fontSize: 12, lineHeight: 18, marginTop: 3 },
 
   // Auth column
   authColumn: { width: "100%", backgroundColor: "transparent", borderRadius: 24, padding: 0 },
@@ -367,12 +368,12 @@ const s = StyleSheet.create({
     borderRadius: 8,
   },
   segmentTabActive: { backgroundColor: "#FFFFFF" },
-  segmentLabel: { color: "#6B6B6B", fontSize: 12, fontWeight: "600" },
+  segmentLabel: { color: colors.textSecondary, fontSize: 12, fontWeight: "600" },
   segmentLabelActive: { color: "#C83C2D" },
 
   // Form fields
   fieldGroup: { gap: 4 },
-  fieldLabel: { color: "#6B6B6B", fontSize: 11, fontWeight: "600" },
+  fieldLabel: { color: colors.textSecondary, fontSize: 11, fontWeight: "600" },
   fieldInput: {
     backgroundColor: "#FDFAF6",
     borderWidth: 1,
@@ -400,7 +401,7 @@ const s = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
   },
-  guestCtaText: { color: "#6B6B6B", fontWeight: "600", fontSize: 13 },
+  guestCtaText: { color: colors.textSecondary, fontWeight: "600", fontSize: 13 },
 
   // Join banner
   joinBanner: {
@@ -418,15 +419,15 @@ const s = StyleSheet.create({
     textAlign: "center",
   },
   joinBannerSub: {
-    color: "#6B6B6B",
+    color: colors.textSecondary,
     fontSize: 12,
     textAlign: "center",
     marginTop: 4,
   },
 
   // Notices
-  notice: { color: "#6B6B6B", fontSize: 11, lineHeight: 16 },
+  notice: { color: colors.textSecondary, fontSize: 11, lineHeight: 16 },
   verifyTitle: { color: "#2A2A2A", fontSize: 16, fontWeight: "700" },
-  verifyText: { color: "#6B6B6B", fontSize: 12, lineHeight: 18 },
+  verifyText: { color: colors.textSecondary, fontSize: 12, lineHeight: 18 },
   verifyHint: { color: "#999", fontSize: 11, lineHeight: 16 },
 });

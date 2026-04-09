@@ -377,7 +377,7 @@ function SvgLogo() {
       <line x1="110" y1="91" x2="250" y2="91" stroke="#C83C2D" stroke-width="0.35" opacity="0.15"/>
 
       <!-- SAMLA · SMAKA · UPPTÄCK -->
-      <text x="180" y="106" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, serif" font-size="8.5" fill="#6B6B6B" letter-spacing="4.5" font-weight="400">SAMLA · SMAKA · UPPTÄCK</text>
+      <text x="180" y="106" text-anchor="middle" font-family="'Cormorant Garamond', Georgia, serif" font-size="8.5" fill="#555555" letter-spacing="4.5" font-weight="400">SAMLA · SMAKA · UPPTÄCK</text>
 
       <!-- Small grape ornament bottom -->
       <circle cx="170" cy="133" r="3.2" fill="#C83C2D" opacity="0.12"/>
