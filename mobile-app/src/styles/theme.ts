@@ -111,7 +111,7 @@ export const styles = StyleSheet.create({
   doubleRow: { flexDirection: "row", gap: 12 },
 
   // Wine card
-  wineCard: { borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 16, gap: 12 },
+  wineCard: { borderTopWidth: 2, borderTopColor: colors.border, paddingTop: 20, paddingBottom: 10, marginTop: 6, gap: 12 },
   wineCardHighlighted: { backgroundColor: "#FFF8F0", borderRadius: 16, padding: 12, borderWidth: 2, borderColor: colors.warm },
   wineImage: { width: "100%", height: 200, borderRadius: 20, backgroundColor: colors.surfaceAlt },
   wineCardHeader: { flexDirection: "row", gap: 12 },
@@ -157,7 +157,7 @@ export const styles = StyleSheet.create({
 
   // Misc
   notesText: { color: colors.textSecondary, lineHeight: 21 },
-  actionRow: { flexDirection: "row", alignItems: "center", gap: 16, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
+  actionRow: { flexDirection: "row", alignItems: "center", gap: 16, paddingTop: 10, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.borderLight },
   drinkAction: { backgroundColor: colors.accent, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 8 },
   drinkActionText: { color: "#FFFFFF", fontWeight: "700", fontSize: 13 },
   actionSpacer: { flex: 1 },
