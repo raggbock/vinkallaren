@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Pressable, RefreshControl, SectionList, Text, View } from "react-native";
 
 import { SPACE_TYPE_LABELS } from "../lib/storage-types";
@@ -50,9 +50,22 @@ export function MinKallarePanel(props: MinKallarePanelProps) {
   const { storageSpaces, storageSpaceById, storageSpaceBottleCounts } = storage;
   const [statsExpanded, setStatsExpanded] = useState(false);
   const [expandedSpaceIds, setExpandedSpaceIds] = useState<Set<string>>(new Set(["__unplaced__"]));
+  const listRef = useRef<SectionList<WineRecord, WineSection>>(null);
 
   const sections = useCellarSections(filteredWines, storageSpaces, storageSpaceBottleCounts, storageSpaceById, expandedSpaceIds);
   useHighlightAutoExpand(props.highlightedWineId, filteredWines, setExpandedSpaceIds, props.onClearHighlight);
+
+  // Scroll to highlighted wine when sections update with expanded data
+  useEffect(() => {
+    if (!props.highlightedWineId) return;
+    for (let sIdx = 0; sIdx < sections.length; sIdx++) {
+      const iIdx = sections[sIdx].data.findIndex((w) => w.id === props.highlightedWineId);
+      if (iIdx >= 0) {
+        setTimeout(() => listRef.current?.scrollToLocation({ sectionIndex: sIdx, itemIndex: iIdx, animated: true, viewOffset: 100 }), 100);
+        return;
+      }
+    }
+  }, [props.highlightedWineId, sections]);
 
   const toggleSpace = useCallback((spaceId: string) => {
     setExpandedSpaceIds((prev) => {
@@ -69,7 +82,11 @@ export function MinKallarePanel(props: MinKallarePanelProps) {
   const renderSectionHeader = useCallback(({ section }: { section: WineSection }) => (
     <SectionHeader section={section} styles={styles} expandedSpaceIds={expandedSpaceIds}
       toggleSpace={toggleSpace} onUpdateStorageSpace={storage.onUpdateStorageSpace} onDeleteStorageSpace={storage.onDeleteStorageSpace} wines={filteredWines}
-      onGoToWine={(wine) => { const spaceId = wine.storage_space_id || "__unplaced__"; setExpandedSpaceIds((prev) => { const next = new Set(prev); next.add(spaceId); return next; }); props.onHighlightWine?.(wine.id); }} />
+      onGoToWine={(wine) => {
+        const spaceId = wine.storage_space_id || "__unplaced__";
+        setExpandedSpaceIds((prev) => { const next = new Set(prev); next.add(spaceId); return next; });
+        props.onHighlightWine?.(wine.id);
+      }} />
   ), [styles, expandedSpaceIds, toggleSpace, storage.onUpdateStorageSpace, storage.onDeleteStorageSpace, filteredWines]);
 
   const renderItem = useCallback(({ item }: { item: WineRecord }) => (
@@ -80,6 +97,7 @@ export function MinKallarePanel(props: MinKallarePanelProps) {
 
   return (
     <SectionList
+      ref={listRef}
       sections={sections}
       keyExtractor={(item) => item.id}
       renderItem={renderItem}
