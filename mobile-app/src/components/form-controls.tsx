@@ -176,7 +176,7 @@ export function GroupedSuggestionRow({
 
   return (
     <View style={styles.foodSection}>
-      <Pressable onPress={() => setSectionOpen((v) => !v)} style={({ pressed }) => [styles.sectionToggle, pressed && { opacity: 0.7 }]}>
+      <Pressable onPress={() => setSectionOpen((v) => !v)} style={({ pressed }) => [styles.categoryRow, sectionOpen && styles.categoryRowExpanded, pressed && { opacity: 0.7 }]}>
         <Text style={theme.inputLabel}>{title}{selected.length > 0 ? ` (${selected.length})` : ""}</Text>
         <Text style={theme.foodCategoryChevron}>{sectionOpen ? "▾" : "›"}</Text>
       </Pressable>
