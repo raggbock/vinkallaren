@@ -6,7 +6,7 @@ export async function searchCatalogWineNames(
   query: string, offset = 0,
 ): Promise<{ suggestions: Suggestion[]; hasMore: boolean; nextOffset: number }> {
   const trimmed = query.trim();
-  if (trimmed.length < 2) return { suggestions: [], hasMore: false, nextOffset: offset };
+  if (trimmed.length < 3) return { suggestions: [], hasMore: false, nextOffset: offset };
 
   const pageSize = 20;
   const { data, error } = await supabase.rpc("autocomplete_catalog", {

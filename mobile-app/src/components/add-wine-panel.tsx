@@ -28,7 +28,7 @@ export function AddWinePanel(props: AddWinePanelProps) {
       {tastingMode ? <Text style={styles.notesText}>Vinet sparas direkt i din historik — det läggs inte till i källaren.</Text> : null}
 
       <View style={{ backgroundColor: colors.surface, borderRadius: 20, borderWidth: 1.5, borderColor: colors.accent, padding: 4, ...Platform.select({ web: { boxShadow: "1px 2px 0px rgba(200, 60, 45, 0.08)" } as any, default: {} }) }}>
-        <AutocompleteInput label="" value={searchQuery} onChangeText={setSearchQuery} onOptionSelected={(name, producer) => { setSearchQuery(""); props.onNameSelected(name, producer); }} options={[]} searchAsync={catalog.searchWineNames} placeholder="Sök vin eller producent..." minimumQueryLength={4} />
+        <AutocompleteInput label="" value={searchQuery} onChangeText={setSearchQuery} onOptionSelected={(name, producer) => { setSearchQuery(""); props.onNameSelected(name, producer); }} options={[]} searchAsync={catalog.searchWineNames} placeholder="Sök vin eller producent..." minimumQueryLength={3} />
       </View>
       <FlerAlternativ styles={styles} draft={draft} isDesktopWeb={isDesktopWeb} onArticleNumberChange={props.onArticleNumberChange} onScanLabel={props.onScanLabel} lookupBusy={catalog.lookupBusy} lookupMessage={catalog.lookupMessage} />
 
