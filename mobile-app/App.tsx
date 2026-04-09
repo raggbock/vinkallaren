@@ -43,21 +43,34 @@ import { ProfilePage } from "./src/components/profile-page";
 import { OcrDebugPage } from "./src/components/ocr-debug-page";
 import { parseJoinCodeFromUrl } from "./src/lib/join-link";
 
-function useWebHoverStyles() {
+function useWebStyles() {
   useEffect(() => {
     if (Platform.OS !== "web") return;
+
+    // Load Cormorant Garamond for wine-label headings
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&display=swap";
+    document.head.appendChild(link);
+
     const style = document.createElement("style");
     style.textContent = [
       'div[tabindex="0"] { transition: opacity 0.15s, filter 0.15s; }',
       'div[tabindex="0"]:hover { filter: brightness(0.92); }',
       'div[tabindex="0"]:active { opacity: 0.7 !important; filter: brightness(0.85); transition: opacity 0.05s; }',
+      // Paper grain texture on panels
+      '[data-testid="panel"]::before, [style*="backgroundColor: rgb(248, 241, 232)"]::after {',
+      '  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.03; border-radius: inherit;',
+      '  background-image: url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\'/%3E%3C/svg%3E");',
+      '  background-size: 200px 200px;',
+      '}',
     ].join("\n");
     document.head.appendChild(style);
   }, []);
 }
 
 export default function App() {
-  useWebHoverStyles();
+  useWebStyles();
   const [session, setSession] = useState<Session | null>(null);
   const [loadingSession, setLoadingSession] = useState(true);
   const [pendingJoinCode, setPendingJoinCode] = useState<string | null>(() => parseJoinCodeFromUrl());

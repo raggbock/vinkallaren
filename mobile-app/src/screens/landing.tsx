@@ -128,7 +128,7 @@ function Divider() {
   return (
     <View style={s.divider}>
       <View style={s.dividerLine} />
-      <Text style={s.dividerDot}>{"\u{1F347}"}</Text>
+      <Text style={s.dividerDot}>✦</Text>
       <View style={s.dividerLine} />
     </View>
   );

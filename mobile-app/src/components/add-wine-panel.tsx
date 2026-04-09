@@ -63,7 +63,9 @@ function SectionLabel({ label }: { label: string }) {
   return (
     <View style={sectionStyles.divider}>
       <View style={sectionStyles.line} />
+      <Text style={sectionStyles.ornament}>✦</Text>
       <Text style={sectionStyles.label}>{label}</Text>
+      <Text style={sectionStyles.ornament}>✦</Text>
       <View style={sectionStyles.line} />
     </View>
   );
@@ -73,9 +75,9 @@ const sectionStyles = StyleSheet.create({
   divider: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    marginTop: 10,
-    marginBottom: 2,
+    gap: 10,
+    marginTop: 14,
+    marginBottom: 4,
     position: "relative",
     zIndex: 1,
     backgroundColor: "#f8f1e8",
@@ -84,14 +86,18 @@ const sectionStyles = StyleSheet.create({
   line: {
     flex: 1,
     height: StyleSheet.hairlineWidth,
-    backgroundColor: "#d4c4b4",
+    backgroundColor: "#c9b8a8",
+  },
+  ornament: {
+    color: "#c4a882",
+    fontSize: 8,
   },
   label: {
     color: "#8a7e74",
     fontSize: 11,
     fontWeight: "600",
     textTransform: "uppercase",
-    letterSpacing: 1.5,
+    letterSpacing: 2,
   },
 });
 

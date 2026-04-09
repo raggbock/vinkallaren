@@ -1,5 +1,11 @@
 import { Platform, StyleSheet } from "react-native";
 
+const serifFont = Platform.select({
+  web: '"Cormorant Garamond", "Georgia", serif',
+  ios: "Georgia",
+  default: "serif",
+});
+
 export const styles = StyleSheet.create({
   flex: {
     flex: 1,
@@ -32,6 +38,7 @@ export const styles = StyleSheet.create({
     gap: 12,
   },
   scannerTitle: {
+    fontFamily: serifFont,
     color: "#fff6ee",
     fontSize: 28,
     lineHeight: 30,
@@ -78,6 +85,7 @@ export const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
   heroTitle: {
+    fontFamily: serifFont,
     color: "#fff6ee",
     fontSize: 34,
     lineHeight: 36,
@@ -302,6 +310,7 @@ export const styles = StyleSheet.create({
     alignItems: "center",
   },
   panelTitle: {
+    fontFamily: serifFont,
     color: "#231815",
     fontSize: 24,
     fontWeight: "700",
@@ -322,6 +331,7 @@ export const styles = StyleSheet.create({
     gap: 4,
   },
   metricValue: {
+    fontFamily: serifFont,
     color: "#fffaf5",
     fontSize: 22,
     fontWeight: "700",
@@ -418,6 +428,7 @@ export const styles = StyleSheet.create({
     gap: 12,
   },
   recommendationName: {
+    fontFamily: serifFont,
     color: "#231815",
     fontSize: 20,
     fontWeight: "700",
@@ -458,6 +469,7 @@ export const styles = StyleSheet.create({
     letterSpacing: 1.2,
   },
   wineName: {
+    fontFamily: serifFont,
     color: "#231815",
     fontSize: 24,
     fontWeight: "700",
@@ -664,6 +676,7 @@ export const styles = StyleSheet.create({
     gap: 10,
   },
   emptyStateTitle: {
+    fontFamily: serifFont,
     color: "#2b1714",
     fontSize: 18,
     fontWeight: "700" as const,
@@ -701,6 +714,7 @@ export const styles = StyleSheet.create({
     maxHeight: "60%",
   },
   vintagePickerTitle: {
+    fontFamily: serifFont,
     fontSize: 18,
     fontWeight: "600",
     color: "#231815",
@@ -762,6 +776,7 @@ export const styles = StyleSheet.create({
     alignItems: "center",
   },
   statBoxValue: {
+    fontFamily: serifFont,
     color: "#6f1d1b",
     fontSize: 20,
     fontWeight: "800",
