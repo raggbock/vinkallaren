@@ -7,6 +7,7 @@ import type { WineRecord } from "../types/wine";
 import type { FilterProps, StorageProps, WineActionsProps } from "../types/panel-prop-groups";
 import { CellarListHeader } from "./cellar-list-header";
 import { StorageSpaceActions } from "./storage-space-actions";
+import { ShelfGrid } from "./shelf-grid";
 import { WineCard } from "./wine-card";
 
 import { colors } from "../styles/theme";
@@ -66,8 +67,8 @@ export function MinKallarePanel(props: MinKallarePanelProps) {
 
   const renderSectionHeader = useCallback(({ section }: { section: WineSection }) => (
     <SectionHeader section={section} styles={styles} expandedSpaceIds={expandedSpaceIds}
-      toggleSpace={toggleSpace} onUpdateStorageSpace={storage.onUpdateStorageSpace} onDeleteStorageSpace={storage.onDeleteStorageSpace} />
-  ), [styles, expandedSpaceIds, toggleSpace, storage.onUpdateStorageSpace, storage.onDeleteStorageSpace]);
+      toggleSpace={toggleSpace} onUpdateStorageSpace={storage.onUpdateStorageSpace} onDeleteStorageSpace={storage.onDeleteStorageSpace} wines={filteredWines} />
+  ), [styles, expandedSpaceIds, toggleSpace, storage.onUpdateStorageSpace, storage.onDeleteStorageSpace, filteredWines]);
 
   const renderItem = useCallback(({ item }: { item: WineRecord }) => (
     <WineCard wine={item} styles={styles} highlighted={item.id === props.highlightedWineId}
@@ -108,12 +109,15 @@ export function MinKallarePanel(props: MinKallarePanelProps) {
   );
 }
 
-function SectionHeader({ section, styles, expandedSpaceIds, toggleSpace, onUpdateStorageSpace, onDeleteStorageSpace }: {
+function SectionHeader({ section, styles, expandedSpaceIds, toggleSpace, onUpdateStorageSpace, onDeleteStorageSpace, wines }: {
   section: WineSection; styles: SharedStyles; expandedSpaceIds: Set<string>;
   toggleSpace: (id: string) => void;
   onUpdateStorageSpace: (id: string, patch: { name?: string; space_type?: string; row_count?: number; slots_per_row?: number }) => void;
   onDeleteStorageSpace: (id: string) => void;
+  wines: WineRecord[];
 }) {
+  const isExpanded = expandedSpaceIds.has(section.key);
+  const hasGrid = !section.isUnplaced && section.space && section.space.row_count > 0 && section.space.slots_per_row > 0;
   return (
     <View>
       <Pressable onPress={() => toggleSpace(section.key)} style={[styles.storageCard, section.isUnplaced && { borderWidth: 2, borderColor: colors.warm }]}>
@@ -126,13 +130,14 @@ function SectionHeader({ section, styles, expandedSpaceIds, toggleSpace, onUpdat
             <View style={[styles.quantityBadge, section.isUnplaced && { backgroundColor: colors.warm }]}>
               <Text style={styles.quantityBadgeText}>{section.bottleCount} st</Text>
             </View>
-            <Text style={styles.sectionChevron}>{expandedSpaceIds.has(section.key) ? "▾" : "›"}</Text>
+            <Text style={styles.sectionChevron}>{isExpanded ? "▾" : "›"}</Text>
           </View>
         </View>
       </Pressable>
-      {!section.isUnplaced && section.space && expandedSpaceIds.has(section.key) ? (
+      {!section.isUnplaced && section.space && isExpanded ? (
         <StorageSpaceActions space={section.space} styles={styles} onUpdate={onUpdateStorageSpace} onDelete={onDeleteStorageSpace} />
       ) : null}
+      {hasGrid && isExpanded ? <ShelfGrid space={section.space!} wines={wines} /> : null}
     </View>
   );
 }
