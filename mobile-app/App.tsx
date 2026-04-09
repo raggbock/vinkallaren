@@ -73,6 +73,7 @@ function useWebStyles() {
       'div[tabindex="0"] { transition: opacity 0.15s; }',
       'div[tabindex="0"]:hover { opacity: 0.85; }',
       'div[tabindex="0"]:active { opacity: 0.65 !important; transition: opacity 0.05s; }',
+      '[aria-modal="true"] *, [aria-modal="true"] { opacity: 1 !important; }',
     ].join("\n");
     document.head.appendChild(style);
   }, []);

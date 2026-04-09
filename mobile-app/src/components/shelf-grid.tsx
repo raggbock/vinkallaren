@@ -70,8 +70,8 @@ export function ShelfGrid({ space, wines, onGoToWine }: ShelfGridProps) {
       </View>
       {selected ? (
         <Modal transparent animationType="fade" onRequestClose={() => setSelected(null)}>
-          <Pressable style={s.overlay} onPress={() => setSelected(null)}>
-            <Pressable style={s.popup} onPress={(e) => e.stopPropagation()}>
+          <Pressable style={s.overlay} onPress={() => setSelected(null)} focusable={false}>
+            <View style={s.popup} onStartShouldSetResponder={() => true}>
               <View style={[s.popupDot, { backgroundColor: slotColor(selected.type) }]} />
               <Text style={s.popupName}>{selected.name}</Text>
               {selected.producer ? <Text style={s.popupDetail}>{selected.producer}</Text> : null}
@@ -92,7 +92,7 @@ export function ShelfGrid({ space, wines, onGoToWine }: ShelfGridProps) {
                   <Text style={s.closeBtnText}>Stäng</Text>
                 </Pressable>
               </View>
-            </Pressable>
+            </View>
           </Pressable>
         </Modal>
       ) : null}
