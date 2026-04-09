@@ -4,7 +4,7 @@ import { ActivityIndicator, Pressable, RefreshControl, SectionList, Text, View }
 import { SPACE_TYPE_LABELS } from "../lib/storage-types";
 import type { StorageSpaceRow } from "../types/storage-space";
 import type { WineRecord } from "../types/wine";
-import type { StorageSpaceDraft } from "../types/cellar-drafts";
+import type { FilterProps, StorageProps, WineActionsProps } from "../types/panel-prop-groups";
 import { CellarListHeader } from "./cellar-list-header";
 import { StorageSpaceActions } from "./storage-space-actions";
 import { WineCard } from "./wine-card";
@@ -26,47 +26,15 @@ type WineSection = {
 type MinKallarePanelProps = {
   styles: SharedStyles;
   stats: { totalBottles: number; totalLabels: number; topCountry: string; topType: string; topPairing: string; averageVintage: string };
-  searchQuery: string;
-  selectedPairingFilter: string;
-  selectedCountryFilter: string;
-  selectedRegionFilter: string;
-  selectedTypeFilter: string;
-  selectedVintageFilter: string;
-  selectedGrapeFilter: string;
-  pairingOptions: string[];
-  countryOptions: string[];
-  regionOptions: string[];
-  typeOptions: string[];
-  vintageOptions: string[];
-  grapeOptions: string[];
-  storageSpaces: StorageSpaceRow[];
-  storageSpaceBottleCounts: Map<string, number>;
+  filter: FilterProps;
+  storage: StorageProps;
+  wineActions: WineActionsProps;
   filteredWines: WineRecord[];
   loading: boolean;
-  storageSpaceById: Map<string, StorageSpaceRow>;
   onRefreshStats: () => void;
-  onSearchChange: (value: string) => void;
-  onPairingChange: (value: string) => void;
-  onCountryChange: (value: string) => void;
-  onRegionChange: (value: string) => void;
-  onTypeChange: (value: string) => void;
-  onVintageChange: (value: string) => void;
-  onGrapeChange: (value: string) => void;
   onSignOut: () => void;
-  onOpenSystembolaget: (productId: string) => void;
-  onEditWine: (wine: WineRecord) => void;
-  onDrinkWine: (wine: WineRecord) => void;
-  onDeleteWine: (wineId: string, imagePath: string | null) => void;
-  storageSpaceDraft: StorageSpaceDraft;
-  savingStorageSpace: boolean;
-  onStorageSpaceDraftChange: (patch: Partial<StorageSpaceDraft>) => void;
-  onSaveStorageSpace: () => void;
-  onUpdateStorageSpace: (id: string, patch: { name?: string; space_type?: string; row_count?: number; slots_per_row?: number }) => void;
-  onDeleteStorageSpace: (id: string) => void;
   onNavigateToAdd: () => void;
   onOpenTastingSessions: () => void;
-  selectedStorageSpaceFilterId: string;
-  onStorageSpaceFilterChange: (id: string) => void;
   hasMoreWines: boolean;
   onLoadMoreWines: () => void;
   highlightedWineId?: string | null;
@@ -76,7 +44,8 @@ type MinKallarePanelProps = {
 };
 
 export function MinKallarePanel(props: MinKallarePanelProps) {
-  const { styles, stats, filteredWines, storageSpaces, storageSpaceBottleCounts, storageSpaceById } = props;
+  const { styles, stats, filteredWines, storage, wineActions } = props;
+  const { storageSpaces, storageSpaceById, storageSpaceBottleCounts } = storage;
   const [statsExpanded, setStatsExpanded] = useState(false);
   const [expandedSpaceIds, setExpandedSpaceIds] = useState<Set<string>>(new Set(["__unplaced__"]));
 
@@ -97,14 +66,14 @@ export function MinKallarePanel(props: MinKallarePanelProps) {
 
   const renderSectionHeader = useCallback(({ section }: { section: WineSection }) => (
     <SectionHeader section={section} styles={styles} expandedSpaceIds={expandedSpaceIds}
-      toggleSpace={toggleSpace} onUpdateStorageSpace={props.onUpdateStorageSpace} onDeleteStorageSpace={props.onDeleteStorageSpace} />
-  ), [styles, expandedSpaceIds, toggleSpace, props.onUpdateStorageSpace, props.onDeleteStorageSpace]);
+      toggleSpace={toggleSpace} onUpdateStorageSpace={storage.onUpdateStorageSpace} onDeleteStorageSpace={storage.onDeleteStorageSpace} />
+  ), [styles, expandedSpaceIds, toggleSpace, storage.onUpdateStorageSpace, storage.onDeleteStorageSpace]);
 
   const renderItem = useCallback(({ item }: { item: WineRecord }) => (
     <WineCard wine={item} styles={styles} highlighted={item.id === props.highlightedWineId}
-      storageSpaceById={storageSpaceById} onOpenSystembolaget={props.onOpenSystembolaget}
-      onEditWine={props.onEditWine} onDrinkWine={props.onDrinkWine} onDeleteWine={props.onDeleteWine} />
-  ), [styles, props.highlightedWineId, storageSpaceById, props.onOpenSystembolaget, props.onEditWine, props.onDrinkWine, props.onDeleteWine]);
+      storageSpaceById={storageSpaceById} onOpenSystembolaget={wineActions.onOpenSystembolaget}
+      onEditWine={wineActions.onEditWine} onDrinkWine={wineActions.onDrinkWine} onDeleteWine={wineActions.onDeleteWine} />
+  ), [styles, props.highlightedWineId, storageSpaceById, wineActions]);
 
   return (
     <SectionList
@@ -113,9 +82,14 @@ export function MinKallarePanel(props: MinKallarePanelProps) {
       renderItem={renderItem}
       renderSectionHeader={renderSectionHeader}
       ListHeaderComponent={
-        <CellarListHeader {...props} statsExpanded={statsExpanded}
-          onToggleStats={() => setStatsExpanded((v) => !v)} summaryText={summaryText}
-          hasSections={sections.length > 0} />
+        <CellarListHeader
+          styles={styles} stats={stats} filter={props.filter} storage={storage}
+          statsExpanded={statsExpanded} onToggleStats={() => setStatsExpanded((v) => !v)}
+          summaryText={summaryText} hasSections={sections.length > 0}
+          onRefreshStats={props.onRefreshStats} onSignOut={props.onSignOut}
+          onNavigateToAdd={props.onNavigateToAdd} onOpenTastingSessions={props.onOpenTastingSessions}
+          loading={props.loading}
+        />
       }
       style={{ backgroundColor: colors.bg }}
       contentContainerStyle={[styles.panel, { flexGrow: 1, marginHorizontal: 20, marginTop: 20, maxWidth: 520, width: "100%", alignSelf: "center" as const }]}
