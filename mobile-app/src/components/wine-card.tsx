@@ -52,7 +52,7 @@ function WineCardHeader({ wine, styles, storageSpaceById }: {
   return (
     <View style={styles.wineCardHeader}>
       {wine.image_url ? (
-        <Image source={{ uri: wine.image_url }} style={styles.wineThumbnail} resizeMode="cover" />
+        <Image source={{ uri: wine.image_url }} style={styles.wineThumbnail} resizeMode="cover" accessibilityLabel={`Bild på ${wine.name}`} />
       ) : null}
       <View style={styles.flex}>
         <Text style={styles.wineType}>{wine.type}</Text>

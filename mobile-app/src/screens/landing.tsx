@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import {
   Alert,
   Dimensions,
-  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -17,6 +16,7 @@ import { StatusBar } from "expo-status-bar";
 import { supabase } from "../lib/supabase";
 import { showError } from "../lib/show-error";
 import { WineGlassDoodle } from "../components/doodles";
+import { SvgLogo } from "../components/form-controls";
 import { colors } from "../styles/tokens";
 
 // Expo Web supports dataSet prop for data-* attributes, but RN types don't include it.
@@ -158,12 +158,12 @@ function Divider() {
   );
 }
 
-const logoBanner = require("../../assets/logo-banner.webp");
-
-function MarketingContent({ isWide }: { isWide: boolean }) {
+function MarketingContent() {
   return (
     <View style={s.marketing}>
-      <Image source={logoBanner} style={[s.heroBanner, isWide && s.heroBannerWide]} resizeMode="contain" />
+      <View style={{ alignItems: "center", marginBottom: 16 }}>
+        <SvgLogo height={220} />
+      </View>
       <Text style={s.subheadline}>
         Din personliga vinsamling i fickan — katalogisera flaskor, håll provningar med vänner och hitta perfekta vinet till middagen.
       </Text>
@@ -263,7 +263,7 @@ export function LandingScreen({ pendingJoinCode }: { pendingJoinCode?: string | 
       <StatusBar style="dark" />
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={s.flex}>
         <ScrollView contentContainerStyle={[s.container, isWide && s.containerWide]} keyboardShouldPersistTaps="handled">
-          <MarketingContent isWide={isWide} />
+          <MarketingContent />
           <View style={[s.authColumn, isWide && s.authColumnWide]}>
             {pendingJoinCode ? (
               <View style={s.joinBanner}>
@@ -293,8 +293,6 @@ const s = StyleSheet.create({
 
   // Marketing column
   marketing: { flex: 1, justifyContent: "center", paddingBottom: 24, maxWidth: 520 },
-  heroBanner: { width: "110%", height: 300, marginLeft: "-5%", marginBottom: 16 },
-  heroBannerWide: { height: 380 },
   subheadline: {
     color: colors.textSecondary,
     fontSize: 14,

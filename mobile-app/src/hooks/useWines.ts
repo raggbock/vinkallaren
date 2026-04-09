@@ -53,7 +53,7 @@ export function useWines() {
   async function deleteWine(id: string, imagePath?: string | null) {
     const { error } = await supabase.from("wines").delete().eq("id", id);
     if (error) { showError("Kunde inte ta bort", error.message); return; }
-    if (imagePath) await supabase.storage.from("wine-images").remove([imagePath]);
+    if (imagePath) await supabase.storage.from("wine-images").remove([imagePath]).catch(() => {});
     setWines((current) => current.filter((wine) => wine.id !== id));
   }
 

@@ -99,7 +99,7 @@ const dateStyles = StyleSheet.create({
     borderRadius: 16,
     paddingHorizontal: 14,
     justifyContent: "center",
-    backgroundColor: "#f0e5d9",
+    backgroundColor: colors.surfaceAlt,
   },
   todayBtnActive: { backgroundColor: colors.accent },
   todayText: { color: colors.textSecondary, fontWeight: "700", fontSize: 13 },
@@ -336,7 +336,7 @@ export function StorageSpaceForm({
 }
 
 
-function SvgLogo() {
+export function SvgLogo({ height = 150 }: { height?: number } = {}) {
   const logoRef = useRef<View>(null);
   useEffect(() => {
     if (Platform.OS !== "web" || !logoRef.current) return;
@@ -390,7 +390,7 @@ function SvgLogo() {
   if (Platform.OS !== "web") {
     return <Text style={{ fontFamily: "Georgia", fontSize: 28, fontWeight: "700", color: "#2A2A2A" }}>Vinkällaren</Text>;
   }
-  return <View ref={logoRef} style={{ width: "100%", height: 150 }} />;
+  return <View ref={logoRef} style={{ width: "100%", height }} />;
 }
 
 export function PanelHeader({ rightLabel, onRightPress }: { title?: string; rightLabel?: string; onRightPress?: () => void }) {
@@ -445,7 +445,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    backgroundColor: "#f0e5d9",
+    backgroundColor: colors.surfaceAlt,
   },
   suggestionPillActive: {
     backgroundColor: colors.accent,
@@ -474,8 +474,8 @@ const styles = StyleSheet.create({
     borderColor: colors.surfaceAlt,
   },
   categoryRowExpanded: {
-    backgroundColor: "#f0e5d9",
-    borderColor: "#d4c4b4",
+    backgroundColor: colors.surfaceAlt,
+    borderColor: colors.border,
   },
   loadingInline: {
     flexDirection: "row",

@@ -26,7 +26,7 @@ export function ImagePickerSection({ styles, imageUri, isDesktopWeb, onChooseIma
           </>
         )}
       </View>
-      {imageUri ? <Image source={{ uri: imageUri }} style={styles.wineImage} resizeMode="contain" /> : null}
+      {imageUri ? <Image source={{ uri: imageUri }} style={styles.wineImage} resizeMode="contain" accessibilityLabel="Vald vinbild" /> : null}
     </View>
   );
 }

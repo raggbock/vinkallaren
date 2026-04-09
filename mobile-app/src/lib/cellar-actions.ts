@@ -162,10 +162,10 @@ export async function saveWineEditEntry(args: SaveWineEditArgs): Promise<Result<
   if (editWineDraft.imageUri && editWineDraft.imageUri !== editingWine.image_url) {
     imagePath = await uploadWineImage(userId, editWineDraft.imageUri);
     if (editingWine.image_path) {
-      await supabase.storage.from("wine-images").remove([editingWine.image_path]);
+      await supabase.storage.from("wine-images").remove([editingWine.image_path]).catch(() => {});
     }
   } else if (!editWineDraft.imageUri && editingWine.image_path) {
-    await supabase.storage.from("wine-images").remove([editingWine.image_path]);
+    await supabase.storage.from("wine-images").remove([editingWine.image_path]).catch(() => {});
     imagePath = null;
   }
   const payload = buildWineInsertFromDraft(editWineDraft, editWineDraft.storageSpaceId, editWineDraft.storageRow, editWineDraft.storageSlot, imagePath);

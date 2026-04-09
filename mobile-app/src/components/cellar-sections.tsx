@@ -347,7 +347,7 @@ const HistoryRow = React.memo(function HistoryRow({ entry, styles, onEdit }: {
     <View style={styles.wineCard}>
       <View style={styles.wineCardHeader}>
         {entry.image_url ? (
-          <Image source={{ uri: entry.image_url }} style={styles.wineThumbnail} resizeMode="cover" />
+          <Image source={{ uri: entry.image_url }} style={styles.wineThumbnail} resizeMode="cover" accessibilityLabel={`Bild på ${entry.name}`} />
         ) : null}
         <View style={styles.flex}>
           <Text style={styles.wineType}>{entry.type || "Historik"}</Text>
@@ -409,8 +409,8 @@ const mealStyles = StyleSheet.create({
     borderColor: colors.surfaceAlt,
   },
   categoryRowExpanded: {
-    backgroundColor: "#f0e5d9",
-    borderColor: "#d4c4b4",
+    backgroundColor: colors.surfaceAlt,
+    borderColor: colors.border,
   },
 });
 
@@ -420,7 +420,7 @@ const historyStyles = StyleSheet.create({
   tabActive: { backgroundColor: colors.accent },
   tabText: { color: colors.accent, fontSize: 13, fontWeight: "700" },
   tabTextActive: { color: colors.textLight },
-  editButton: { marginTop: 8, alignSelf: "flex-start", backgroundColor: "#f0e5d9", borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
+  editButton: { marginTop: 8, alignSelf: "flex-start", backgroundColor: colors.surfaceAlt, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
   editButtonText: { color: colors.accent, fontSize: 12, fontWeight: "700" },
   sessionHeader: { flexDirection: "row", alignItems: "center", gap: 8 },
   sessionInfo: { flex: 1, gap: 4 },

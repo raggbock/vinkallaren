@@ -30,7 +30,7 @@ export function LabelMatchPickerModal({
                 onPress={() => onSelect(match)}
               >
                 {match.image_url ? (
-                  <Image source={{ uri: match.image_url }} style={pickerStyles.matchThumb} />
+                  <Image source={{ uri: match.image_url }} style={pickerStyles.matchThumb} accessibilityLabel={`Bild på ${match.name}`} />
                 ) : (
                   <View style={[pickerStyles.matchThumb, pickerStyles.matchThumbPlaceholder]} />
                 )}

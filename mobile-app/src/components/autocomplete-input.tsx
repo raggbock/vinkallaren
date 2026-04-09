@@ -93,8 +93,8 @@ const styles = StyleSheet.create({
   autocompleteWrapper: { gap: 6 },
   autocompleteListInline: { borderRadius: 16, backgroundColor: colors.textLight, borderWidth: 1, borderColor: colors.border, overflow: "hidden", maxHeight: 280, marginBottom: 8 },
   autocompleteItem: { paddingHorizontal: 14, paddingVertical: 12, backgroundColor: colors.textLight, cursor: "pointer" as unknown as undefined },
-  autocompleteItemHover: { backgroundColor: "#f2e7db" },
+  autocompleteItemHover: { backgroundColor: colors.surfaceAlt },
   autocompleteText: { color: colors.text, fontSize: 15 },
-  autocompleteParent: { color: "#756861", fontSize: 13 },
+  autocompleteParent: { color: colors.textSecondary, fontSize: 13 },
   autocompleteMoreHint: { textAlign: "center", color: colors.textSecondary, fontSize: 12, paddingVertical: 8 },
 });
