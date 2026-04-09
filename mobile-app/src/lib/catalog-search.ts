@@ -1,37 +1,28 @@
 import { supabase } from "./supabase";
-import { normalizeLookupValue } from "./cellar-helpers";
 import type { Suggestion } from "../components/form-controls";
 import type { CatalogTextMatch, CatalogImageMatch, ProductCatalogWineRow } from "../types/product-catalog";
-
-const BATCH_SIZE = 50;
 
 export async function searchCatalogWineNames(
   query: string, offset = 0,
 ): Promise<{ suggestions: Suggestion[]; hasMore: boolean; nextOffset: number }> {
-  const { data, error } = await supabase
-    .from("product_catalog_wines")
-    .select("name, producer")
-    .ilike("name", `%${query}%`)
-    .order("name", { ascending: true })
-    .range(offset, offset + BATCH_SIZE - 1);
+  const trimmed = query.trim();
+  if (trimmed.length < 2) return { suggestions: [], hasMore: false, nextOffset: offset };
+
+  const pageSize = 20;
+  const { data, error } = await supabase.rpc("autocomplete_catalog", {
+    query: trimmed,
+    max_results: pageSize + 1,
+  });
   if (error) return { suggestions: [], hasMore: false, nextOffset: offset };
 
-  const seen = new Set<string>();
-  const results: Suggestion[] = [];
-  for (const row of data ?? []) {
-    const key = normalizeLookupValue(row.name) + "|" + normalizeLookupValue(row.producer ?? "");
-    if (seen.has(key)) continue;
-    seen.add(key);
-    results.push({ name: row.name, parentName: row.producer ?? null });
-  }
-  results.sort((a, b) => {
-    const aStarts = normalizeLookupValue(a.name).startsWith(query) ? 0 : 1;
-    const bStarts = normalizeLookupValue(b.name).startsWith(query) ? 0 : 1;
-    if (aStarts !== bStarts) return aStarts - bStarts;
-    return a.name.localeCompare(b.name);
-  });
-  const rowCount = (data ?? []).length;
-  return { suggestions: results, hasMore: rowCount === BATCH_SIZE, nextOffset: offset + rowCount };
+  const rows = (data ?? []) as { id: string; name: string; producer: string | null; vintage: number | null; image_url: string | null; score: number }[];
+  const hasMore = rows.length > pageSize;
+  const results: Suggestion[] = rows.slice(0, pageSize).map((row) => ({
+    name: row.name,
+    parentName: row.producer ?? null,
+  }));
+
+  return { suggestions: results, hasMore, nextOffset: offset + results.length };
 }
 
 export async function fetchCatalogEntriesByName(name: string): Promise<ProductCatalogWineRow[]> {
