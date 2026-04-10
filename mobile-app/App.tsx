@@ -5,10 +5,10 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } fro
 import { ActivityIndicator, Alert, Platform, Pressable, RefreshControl, SafeAreaView, ScrollView, Text as RNText, View as RNView } from "react-native";
 import type { Session } from "@supabase/supabase-js";
 import { supabase, supabaseConfigured } from "./src/lib/supabase";
-import { openSystembolaget, saveNewWine, updateHistoryEntry } from "./src/lib/cellar-actions";
+import { openSystembolaget, saveNewWine } from "./src/lib/cellar-actions";
 import { hydrateWineRecords } from "./src/lib/wine-helpers";
 import { confirmAction, showError } from "./src/lib/show-error";
-import { BottomTabBar, HistoryPanel } from "./src/components/cellar-sections";
+import { BottomTabBar } from "./src/components/cellar-sections";
 import { MinKallarePanel } from "./src/components/min-kallare-panel";
 import { AddWinePanel } from "./src/components/add-wine-panel";
 import { SuccessOverlay, useSuccessOverlay } from "./src/components/success-overlay";
@@ -17,7 +17,6 @@ import { SuccessOverlay, useSuccessOverlay } from "./src/components/success-over
 const BarcodeScannerModal = lazy(() => import("./src/components/cellar-workflows").then(m => ({ default: m.BarcodeScannerModal })));
 const CatalogEditorModal = lazy(() => import("./src/components/cellar-workflows").then(m => ({ default: m.CatalogEditorModal })));
 const DrinkWineModal = lazy(() => import("./src/components/cellar-workflows").then(m => ({ default: m.DrinkWineModal })));
-const EditHistoryModal = lazy(() => import("./src/components/cellar-workflows").then(m => ({ default: m.EditHistoryModal })));
 const VintagePickerModal = lazy(() => import("./src/components/cellar-workflows").then(m => ({ default: m.VintagePickerModal })));
 const EditWineModal = lazy(() => import("./src/components/edit-wine-modal").then(m => ({ default: m.EditWineModal })));
 const WsetTastingModal = lazy(() => import("./src/components/wset-tasting-modal").then(m => ({ default: m.WsetTastingModal })));
@@ -25,10 +24,10 @@ const TastingSessionPanel = lazy(() => import("./src/components/tasting-session-
 const LabelMatchPickerModal = lazy(() => import("./src/components/label-match-picker").then(m => ({ default: m.LabelMatchPickerModal })));
 const PrivacyPolicyModal = lazy(() => import("./src/components/privacy-policy-modal").then(m => ({ default: m.PrivacyPolicyModal })));
 import { CellarContext, type CellarContextValue } from "./src/contexts/CellarContext";
+import { HistoryTab } from "./src/components/history-tab";
 import { MealTab } from "./src/components/meal-tab";
 import { CELLAR_SECTIONS, type CellarSection } from "./src/types/cellar";
 import type { FilterProps, StorageProps, WineActionsProps, CatalogProps, TastingProps } from "./src/types/panel-prop-groups";
-import type { WineHistoryRecord } from "./src/types/wine-history";
 import { defaultDraft, type WineDraft } from "./src/types/cellar-drafts";
 import { colors, styles } from "./src/styles/theme";
 import { BUILD_VERSION } from "./src/lib/build-version";
@@ -221,26 +220,6 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
   });
   const privacy = useModalToggle();
   const sessionWset = useSessionWset();
-  const [editingHistory, setEditingHistory] = useState<WineHistoryRecord | null>(null);
-  const [editHistorySaving, setEditHistorySaving] = useState(false);
-
-  const handleSaveHistoryEdit = useCallback(async (fields: { rating: string; notes: string; date: string; quantity: string }) => {
-    if (!editingHistory) return;
-    setEditHistorySaving(true);
-    const result = await updateHistoryEntry({
-      id: editingHistory.id,
-      rating: fields.rating ? Number(fields.rating) : null,
-      tasting_notes: fields.notes.trim() || null,
-      consumed_at: fields.date,
-      quantity_consumed: Math.max(1, Number(fields.quantity) || 1),
-    });
-    setEditHistorySaving(false);
-    if (result.error) { showError("Kunde inte spara ändringen", result.error); return; }
-    historyData.setHistoryEntries((prev) => prev.map((e) => (e.id === editingHistory.id ? { ...e, ...result.data! } : e)));
-    setEditingHistory(null);
-    success.show("history_edited");
-  }, [editingHistory, historyData, success]);
-
   const [draft, setDraft] = useState<WineDraft>(defaultDraft);
   const [activeSection, setActiveSection] = useState<CellarSection>("cellar");
   const [highlightedWineId, setHighlightedWineId] = useState<string | null>(null);
@@ -409,11 +388,14 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
       </Suspense>
     );
   } else if (activeSection === "history") {
-    activePanel = <HistoryPanel styles={styles} historyEntries={historyData.historyEntries} loadingHistory={historyData.loadingHistory} storageSpaceById={storageSpaceById}
-      endedSessions={tastingSessions.sessions.filter((ses) => ses.status === "ended")}
-      refreshing={refreshing} onRefresh={onRefresh} hasMore={historyData.hasMoreHistory} onLoadMore={historyData.fetchMoreHistory}
-      onEditEntry={setEditingHistory} onOpenProfile={() => setProfileVisible(true)}
-    />;
+    activePanel = (
+      <HistoryTab hidden={false}
+        historyData={historyData}
+        endedSessions={tastingSessions.sessions.filter((ses) => ses.status === "ended")}
+        refreshing={refreshing} onRefresh={onRefresh}
+        onOpenProfile={() => setProfileVisible(true)}
+      />
+    );
   } else if (activeSection === "meal") {
     activePanel = (
       <MealTab hidden={false}
@@ -488,9 +470,6 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
       />
       <WsetTastingModal {...drink.wsetProps} />
       <DrinkWineModal {...drink.modalProps} styles={styles} />
-      <EditHistoryModal visible={editingHistory !== null} styles={styles} entry={editingHistory} saving={editHistorySaving}
-        onClose={() => setEditingHistory(null)} onSave={handleSaveHistoryEdit}
-      />
       <WsetTastingModal {...sessionWset.wsetProps} />
       <EditWineModal
         {...edit.modalProps} styles={styles}
