@@ -349,6 +349,24 @@ export async function cacheWineRecordAsCatalogEntry(wine: WineRecord, userId: st
   );
 }
 
+export function buildCatalogBackfillPayload(wines: WineRecord[], userId: string) {
+  return wines.map((w) => ({
+    barcode: w.barcode?.trim() || null,
+    systembolaget_product_id: w.systembolaget_product_id?.trim() || null,
+    name: w.name,
+    producer: w.producer ?? null,
+    country: w.country ?? null,
+    region: w.region ?? null,
+    grape: w.grape ?? null,
+    type: w.type ?? null,
+    vintage: w.vintage ?? null,
+    food_pairings: w.food_pairings ?? [],
+    source_label: "MinVinkällaren",
+    source_confidence: "high",
+    created_by: userId,
+  }));
+}
+
 function buildCatalogPayload(wine: WineRow, userId: string) {
   return {
     name: wine.name.trim(),

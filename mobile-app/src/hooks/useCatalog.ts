@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { showError } from "../lib/show-error";
 import { supabase } from "../lib/supabase";
 import { searchCatalogWineNames, fetchCatalogEntriesByName, matchCatalogByText } from "../lib/catalog-search";
-import { canBeSavedAsCatalogEntry } from "../lib/wine-helpers";
+import { canBeSavedAsCatalogEntry, buildCatalogBackfillPayload } from "../lib/wine-helpers";
 import type { ProductCatalogWineRow } from "../types/product-catalog";
 import type { WineRecord } from "../types/wine";
 
@@ -38,14 +38,7 @@ export function useCatalog(userId: string, wines: WineRecord[], winesLoading: bo
     if (completeWines.length === 0) { setCatalogBackfillDone(true); return; }
     let cancelled = false;
     void (async () => {
-      const payload = completeWines.map((w) => ({
-        barcode: w.barcode?.trim() || null,
-        systembolaget_product_id: w.systembolaget_product_id?.trim() || null,
-        name: w.name, producer: w.producer ?? null, country: w.country ?? null,
-        region: w.region ?? null, grape: w.grape ?? null, type: w.type ?? null,
-        vintage: w.vintage ?? null, food_pairings: w.food_pairings ?? [],
-        source_label: "MinVinkällaren", source_confidence: "high", created_by: userId,
-      }));
+      const payload = buildCatalogBackfillPayload(completeWines, userId);
       const { data: count } = await supabase.rpc("batch_upsert_catalog_wines", { wines: payload });
       if (!cancelled) {
         if (count && count > 0) await fetchCatalogEntries();

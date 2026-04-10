@@ -9,6 +9,7 @@ import {
   canBeSavedAsCatalogEntry,
   mergeDraftWithCatalogSuggestion,
   applyCatalogLocksToDraft,
+  buildCatalogBackfillPayload,
 } from "../wine-helpers";
 import type { WineRecord } from "../../types/wine";
 import type { ProductCatalogWineRow } from "../../types/product-catalog";
@@ -369,5 +370,104 @@ describe("applyCatalogLocksToDraft", () => {
   test("with catalog entry, locks vintage as string", () => {
     const result = applyCatalogLocksToDraft(baseDraft, {}, baseCatalogRow);
     expect(result.vintage).toBe("2018");
+  });
+});
+
+// ---- canBeSavedAsCatalogEntry (WineRecord path) ----
+
+describe("canBeSavedAsCatalogEntry – edge cases", () => {
+  test("returns true for a complete WineRecord", () => {
+    expect(canBeSavedAsCatalogEntry(baseRecord)).toBe(true);
+  });
+
+  test("returns false when name is whitespace-only", () => {
+    expect(canBeSavedAsCatalogEntry({ ...baseRecord, name: "   " })).toBe(false);
+  });
+
+  test("returns false when region is null", () => {
+    expect(canBeSavedAsCatalogEntry({ ...baseRecord, region: null })).toBe(false);
+  });
+
+  test("returns false when grape is empty string", () => {
+    expect(canBeSavedAsCatalogEntry({ ...baseRecord, grape: "" })).toBe(false);
+  });
+
+  test("returns false when type is whitespace-only", () => {
+    expect(canBeSavedAsCatalogEntry({ ...baseRecord, type: "  " })).toBe(false);
+  });
+
+  test("returns true even without barcode or systembolaget_product_id", () => {
+    expect(canBeSavedAsCatalogEntry({ ...baseRecord, barcode: null, systembolaget_product_id: null })).toBe(true);
+  });
+});
+
+// ---- buildCatalogBackfillPayload ----
+
+describe("buildCatalogBackfillPayload", () => {
+  test("maps all wine fields correctly", () => {
+    const [item] = buildCatalogBackfillPayload([baseRecord], "u1");
+    expect(item.name).toBe("Barolo");
+    expect(item.producer).toBe("Rocche");
+    expect(item.country).toBe("Italien");
+    expect(item.region).toBe("Piemonte");
+    expect(item.grape).toBe("Nebbiolo");
+    expect(item.type).toBe("Rött");
+    expect(item.vintage).toBe(2018);
+  });
+
+  test("trims barcode and systembolaget_product_id", () => {
+    const wine: WineRecord = { ...baseRecord, barcode: "  7311234  ", systembolaget_product_id: "  558801  " };
+    const [item] = buildCatalogBackfillPayload([wine], "u1");
+    expect(item.barcode).toBe("7311234");
+    expect(item.systembolaget_product_id).toBe("558801");
+  });
+
+  test("converts null/undefined fields to null", () => {
+    const wine: WineRecord = { ...baseRecord, producer: null, country: null, region: null, grape: null, vintage: null };
+    const [item] = buildCatalogBackfillPayload([wine], "u1");
+    expect(item.producer).toBeNull();
+    expect(item.country).toBeNull();
+    expect(item.region).toBeNull();
+    expect(item.grape).toBeNull();
+    expect(item.vintage).toBeNull();
+  });
+
+  test("converts empty barcode to null", () => {
+    const wine: WineRecord = { ...baseRecord, barcode: "", systembolaget_product_id: "" };
+    const [item] = buildCatalogBackfillPayload([wine], "u1");
+    expect(item.barcode).toBeNull();
+    expect(item.systembolaget_product_id).toBeNull();
+  });
+
+  test("sets source_label and source_confidence", () => {
+    const [item] = buildCatalogBackfillPayload([baseRecord], "u1");
+    expect(item.source_label).toBe("MinVinkällaren");
+    expect(item.source_confidence).toBe("high");
+  });
+
+  test("sets created_by to provided userId", () => {
+    const [item] = buildCatalogBackfillPayload([baseRecord], "user-abc");
+    expect(item.created_by).toBe("user-abc");
+  });
+
+  test("preserves food_pairings array", () => {
+    const [item] = buildCatalogBackfillPayload([baseRecord], "u1");
+    expect(item.food_pairings).toEqual(["lamm", "nöt"]);
+  });
+
+  test("defaults food_pairings to empty array when missing", () => {
+    const wine: WineRecord = { ...baseRecord, food_pairings: [] };
+    const [item] = buildCatalogBackfillPayload([wine], "u1");
+    expect(item.food_pairings).toEqual([]);
+  });
+
+  test("handles 500 wines and returns correct array length", () => {
+    const wines = Array.from({ length: 500 }, (_, i) => ({ ...baseRecord, id: String(i) }));
+    const result = buildCatalogBackfillPayload(wines, "u1");
+    expect(result).toHaveLength(500);
+  });
+
+  test("returns empty array for empty input", () => {
+    expect(buildCatalogBackfillPayload([], "u1")).toEqual([]);
   });
 });
