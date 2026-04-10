@@ -64,7 +64,7 @@ const skeleton = `
 const withSkeleton = withTheme.replace('<div id="root"></div>', skeleton);
 
 // Inject Cloudflare Web Analytics beacon before </body>
-const CF_ANALYTICS_TOKEN = process.env.CF_ANALYTICS_TOKEN || "";
+const CF_ANALYTICS_TOKEN = (process.env.CF_ANALYTICS_TOKEN || "").replace(/[^a-zA-Z0-9_-]/g, "");
 const withAnalytics = CF_ANALYTICS_TOKEN
   ? withSkeleton.replace(
       "</body>",
@@ -72,8 +72,7 @@ const withAnalytics = CF_ANALYTICS_TOKEN
     )
   : withSkeleton;
 
-const final = withAnalytics;
-writeFileSync(HTML_PATH, final);
+writeFileSync(HTML_PATH, withAnalytics);
 console.log(
   `Injected SEO meta tags + loading skeleton${CF_ANALYTICS_TOKEN ? " + Cloudflare Analytics" : ""} into dist/index.html`
 );
