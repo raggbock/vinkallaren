@@ -64,7 +64,7 @@ const skeleton = `
 const withSkeleton = withTheme.replace('<div id="root"></div>', skeleton);
 
 // Inject Cloudflare Web Analytics beacon before </body>
-const CF_ANALYTICS_TOKEN = (process.env.CF_ANALYTICS_TOKEN || "").replace(/[^a-zA-Z0-9_-]/g, "");
+const CF_ANALYTICS_TOKEN = "2138bdeaf19c4a6e8322abfd4196952c";
 const withAnalytics = CF_ANALYTICS_TOKEN
   ? withSkeleton.replace(
       "</body>",
