@@ -5,11 +5,10 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } fro
 import { ActivityIndicator, Alert, Platform, Pressable, RefreshControl, SafeAreaView, ScrollView, Text as RNText, View as RNView } from "react-native";
 import type { Session } from "@supabase/supabase-js";
 import { supabase, supabaseConfigured } from "./src/lib/supabase";
-import { buildMealRecommendations } from "./src/lib/cellar-helpers";
 import { openSystembolaget, saveNewWine, updateHistoryEntry } from "./src/lib/cellar-actions";
 import { hydrateWineRecords } from "./src/lib/wine-helpers";
 import { confirmAction, showError } from "./src/lib/show-error";
-import { BottomTabBar, HistoryPanel, MealPlannerPanel } from "./src/components/cellar-sections";
+import { BottomTabBar, HistoryPanel } from "./src/components/cellar-sections";
 import { MinKallarePanel } from "./src/components/min-kallare-panel";
 import { AddWinePanel } from "./src/components/add-wine-panel";
 import { SuccessOverlay, useSuccessOverlay } from "./src/components/success-overlay";
@@ -25,6 +24,8 @@ const WsetTastingModal = lazy(() => import("./src/components/wset-tasting-modal"
 const TastingSessionPanel = lazy(() => import("./src/components/tasting-session-modal").then(m => ({ default: m.TastingSessionPanel })));
 const LabelMatchPickerModal = lazy(() => import("./src/components/label-match-picker").then(m => ({ default: m.LabelMatchPickerModal })));
 const PrivacyPolicyModal = lazy(() => import("./src/components/privacy-policy-modal").then(m => ({ default: m.PrivacyPolicyModal })));
+import { CellarContext, type CellarContextValue } from "./src/contexts/CellarContext";
+import { MealTab } from "./src/components/meal-tab";
 import { CELLAR_SECTIONS, type CellarSection } from "./src/types/cellar";
 import type { FilterProps, StorageProps, WineActionsProps, CatalogProps, TastingProps } from "./src/types/panel-prop-groups";
 import type { WineHistoryRecord } from "./src/types/wine-history";
@@ -120,6 +121,26 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
   const catalogData = useCatalog(session.user.id, wineData.wines, wineData.loading);
   const refOptions = useReferenceOptions();
   const storageSpaceById = useMemo(() => new Map(storageData.storageSpaces.map((s) => [s.id, s])), [storageData.storageSpaces]);
+  const cellarCtx: CellarContextValue = useMemo(() => ({
+    userId: session.user.id,
+    wines: wineData.wines,
+    winesLoading: wineData.loading,
+    storageSpaces: storageData.storageSpaces,
+    storageSpaceById,
+    refreshWines: wineData.fetchWines,
+    fetchMoreWines: wineData.fetchMoreWines,
+    hasMoreWines: wineData.hasMoreWines,
+    setWines: wineData.setWines,
+    deleteWine: wineData.deleteWine,
+    storageSpaceBottleCounts: wineData.storageSpaceBottleCounts,
+    pairingOptions: wineData.pairingOptions,
+    countryOptions: wineData.countryOptions,
+    regionOptions: wineData.regionOptions,
+    typeOptions: wineData.typeOptions,
+    vintageOptions: wineData.vintageOptions,
+    cellarGrapeOptions: wineData.cellarGrapeOptions,
+    stats: wineData.stats,
+  }), [session.user.id, wineData, storageData.storageSpaces, storageSpaceById]);
   const filters = useCellarFilters(wineData.wines, storageSpaceById);
   const images = useImagePicker();
   const storage = useStorageSelection(storageData.storageSpaces, wineData.wines);
@@ -223,7 +244,6 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
   const [draft, setDraft] = useState<WineDraft>(defaultDraft);
   const [activeSection, setActiveSection] = useState<CellarSection>("cellar");
   const [highlightedWineId, setHighlightedWineId] = useState<string | null>(null);
-  const [selectedMeal, setSelectedMeal] = useState("lamm");
   const [refreshing, setRefreshing] = useState(false);
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -282,8 +302,6 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
   const tastingGroupProps: TastingProps = useMemo(() => ({
     ...tasting.panelProps,
   }), [tasting.panelProps]);
-
-  const mealRecommendations = useMemo(() => buildMealRecommendations(wineData.wines, selectedMeal), [selectedMeal, wineData.wines]);
 
   async function handleSaveWine() {
     setSaving(true);
@@ -398,9 +416,8 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
     />;
   } else if (activeSection === "meal") {
     activePanel = (
-      <MealPlannerPanel styles={styles} wines={wineData.wines} selectedMeal={selectedMeal} mealRecommendations={mealRecommendations}
-        onSelectMeal={setSelectedMeal}
-        onWinePress={(wine) => { setHighlightedWineId(wine.id); setActiveSection("cellar"); }}
+      <MealTab hidden={false}
+        onWinePress={(id) => { setHighlightedWineId(id); setActiveSection("cellar"); }}
         onOpenProfile={() => setProfileVisible(true)}
       />
     );
@@ -434,6 +451,7 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
   }
 
   return (
+    <CellarContext.Provider value={cellarCtx}>
     <SafeAreaView style={styles.screen}>
       <StatusBar style="light" />
       <DisplayNamePrompt
@@ -502,5 +520,6 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
       )}
       <BottomTabBar activeSection={activeSection} sections={CELLAR_SECTIONS} styles={styles} onSelect={setActiveSection} />
     </SafeAreaView>
+    </CellarContext.Provider>
   );
 }
