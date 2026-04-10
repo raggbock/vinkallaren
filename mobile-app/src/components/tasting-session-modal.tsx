@@ -153,6 +153,7 @@ export function TastingSessionPanel({
             onSetActiveSession({ ...activeSession, status: "active" });
           }}
           onBack={() => { onCloseSession(); setView("list"); }}
+          onReorder={(reordered) => onSetActiveWines(() => reordered)}
         >
           {isHost ? (
             <AddWineForm sessionId={activeSession.id} wineCount={activeWines.length}

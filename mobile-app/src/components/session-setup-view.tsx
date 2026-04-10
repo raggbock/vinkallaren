@@ -1,8 +1,9 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import DraggableFlatList, { ScaleDecorator } from "react-native-draggable-flatlist";
 import { styles as theme, colors } from "../styles/theme";
 import { Avatar } from "./avatar";
 import { PanelHeader } from "./form-controls";
-import { shareSession } from "../lib/session-actions";
+import { reorderSessionWines, shareSession } from "../lib/session-actions";
 import type { SessionParticipant, SessionWineRow, TastingSessionRow } from "../types/tasting-session";
 
 type Props = {
@@ -12,10 +13,11 @@ type Props = {
   isHost: boolean;
   onStart: () => void;
   onBack: () => void;
+  onReorder: (wines: SessionWineRow[]) => void;
   children?: React.ReactNode; // AddWineForm slot for host
 };
 
-export function SessionSetupView({ session, wines, participants, isHost, onStart, onBack, children }: Props) {
+export function SessionSetupView({ session, wines, participants, isHost, onStart, onBack, onReorder, children }: Props) {
   return (
     <View style={s.container}>
       <PanelHeader title="Provning" rightLabel="Tillbaka" onRightPress={onBack} />
@@ -65,15 +67,41 @@ export function SessionSetupView({ session, wines, participants, isHost, onStart
       {wines.length > 0 ? (
         <View style={s.section}>
           <Text style={s.sectionTitle}>Viner ({wines.length})</Text>
-          {wines.map((w) => (
-            <View key={w.id} style={s.wineRow}>
-              <Text style={s.winePosition}>{w.position}</Text>
-              <View style={{ flex: 1 }}>
-                <Text style={s.wineName}>{w.name}</Text>
-                {w.producer ? <Text style={s.wineMeta}>{w.producer}</Text> : null}
+          {isHost ? (
+            <DraggableFlatList
+              data={wines}
+              keyExtractor={(item) => item.id}
+              onDragEnd={async ({ data }) => {
+                const reordered = data.map((w, i) => ({ ...w, position: i + 1 }));
+                onReorder(reordered);
+                await reorderSessionWines(session.id, data.map((w) => w.id));
+              }}
+              renderItem={({ item, drag, isActive }) => (
+                <ScaleDecorator>
+                  <Pressable onLongPress={drag} disabled={isActive}
+                    style={[s.wineRow, isActive && s.wineRowDragging]}>
+                    <Text style={s.dragHandle}>≡</Text>
+                    <Text style={s.winePosition}>{item.position}</Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={s.wineName}>{item.name}</Text>
+                      {item.producer ? <Text style={s.wineMeta}>{item.producer}</Text> : null}
+                    </View>
+                  </Pressable>
+                </ScaleDecorator>
+              )}
+              scrollEnabled={false}
+            />
+          ) : (
+            wines.map((w) => (
+              <View key={w.id} style={s.wineRow}>
+                <Text style={s.winePosition}>{w.position}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={s.wineName}>{w.name}</Text>
+                  {w.producer ? <Text style={s.wineMeta}>{w.producer}</Text> : null}
+                </View>
               </View>
-            </View>
-          ))}
+            ))
+          )}
         </View>
       ) : null}
 
@@ -112,7 +140,9 @@ const s = StyleSheet.create({
   participantList: { gap: 8 },
   participantRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   participantName: { color: colors.text, fontSize: 15, fontWeight: "600" },
-  wineRow: { flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: colors.textLight, borderRadius: 12, padding: 10, borderWidth: 1, borderColor: colors.surfaceAlt },
+  wineRow: { flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: colors.textLight, borderRadius: 12, padding: 10, borderWidth: 1, borderColor: colors.surfaceAlt, marginBottom: 4 },
+  wineRowDragging: { opacity: 0.8, elevation: 5, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4 },
+  dragHandle: { color: colors.textSecondary, fontSize: 20, width: 24, textAlign: "center" },
   winePosition: { color: colors.accent, fontSize: 16, fontWeight: "700", width: 24 },
   wineName: { color: colors.text, fontSize: 14, fontWeight: "600" },
   wineMeta: { color: colors.textSecondary, fontSize: 12 },
