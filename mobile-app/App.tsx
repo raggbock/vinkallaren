@@ -1,4 +1,5 @@
 import "react-native-url-polyfill/auto";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { StatusBar } from "expo-status-bar";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Alert, Platform, Pressable, RefreshControl, SafeAreaView, ScrollView, Text as RNText, View as RNView } from "react-native";
@@ -79,7 +80,7 @@ function useWebStyles() {
   }, []);
 }
 
-export default function App() {
+function AppRoot() {
   useWebStyles();
   const [session, setSession] = useState<Session | null>(null);
   const [loadingSession, setLoadingSession] = useState(true);
@@ -102,6 +103,14 @@ export default function App() {
   if (loadingSession) return <LoadingScreen label="Kopplar upp vinkällaren..." />;
   if (!session) return <LandingScreen pendingJoinCode={pendingJoinCode} />;
   return <CellarScreen session={session} pendingJoinCode={pendingJoinCode} onJoinCodeConsumed={() => setPendingJoinCode(null)} />;
+}
+
+export default function App() {
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <AppRoot />
+    </GestureHandlerRootView>
+  );
 }
 
 function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { session: Session; pendingJoinCode: string | null; onJoinCodeConsumed: () => void }) {
