@@ -64,7 +64,16 @@
       "Bash(git rm:*)",
       "Bash(git merge:*)",
       "Bash(wc:*)",
-      "Bash(gh issue:*)"
+      "Bash(gh issue:*)",
+      "Bash(npx lhci:*)",
+      "Bash(gh run:*)",
+      "Bash(xargs -I{} node -e \"const d=JSON.parse\\(require\\('fs'\\).readFileSync\\('{}','utf8'\\)\\);const c=d.categories;const a=d.audits;console.log\\('=== LOCAL BUILD WITH SKELETON ==='\\);for\\(const[k,v]of Object.entries\\(c\\)\\)console.log\\(k.padEnd\\(20\\),Math.round\\(v.score*100\\)+'/100'\\);console.log\\('---'\\);console.log\\('FCP:',a['first-contentful-paint']?.displayValue\\);console.log\\('LCP:',a['largest-contentful-paint']?.displayValue\\);console.log\\('TBT:',a['total-blocking-time']?.displayValue\\);console.log\\('CLS:',a['cumulative-layout-shift']?.displayValue\\);console.log\\('SI:',a['speed-index']?.displayValue\\);\")",
+      "Bash(xargs '-I{}' node -e ':*)",
+      "WebFetch(domain:minvinkallare.se)",
+      "Bash(find mobile-app/src -name \"*.test.*\" -o -name \"*.spec.*\")",
+      "Bash(ls mobile-app/e2e/)",
+      "Bash(ls mobile-app/src/hooks/__tests__/)",
+      "Bash(cat /c/Projects/vinkällaren/.github/workflows/*.yml)"
     ]
   },
   "enableAllProjectMcpServers": true,
