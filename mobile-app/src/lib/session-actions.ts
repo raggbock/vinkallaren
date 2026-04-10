@@ -114,3 +114,34 @@ export async function fetchSessionParticipants(sessionId: string): Promise<Resul
 }
 
 export { shareSession } from "./join-link";
+
+export async function reorderSessionWines(
+  sessionId: string,
+  wineIds: string[],
+): Promise<Result<true>> {
+  const updates = wineIds.map((id, i) =>
+    supabase.from("session_wines").update({ position: i + 1 }).eq("id", id).eq("session_id", sessionId)
+  );
+  const results = await Promise.all(updates);
+  const err = results.find((r) => r.error);
+  if (err?.error) return fail(err.error.message);
+  return ok(true);
+}
+
+export async function batchAddWinesToSession(
+  sessionId: string,
+  startPosition: number,
+  wines: Array<{ name: string; producer: string | null; vintage: number | null; wine_id: string | null }>,
+): Promise<Result<SessionWineRow[]>> {
+  const rows = wines.map((w, i) => ({
+    session_id: sessionId,
+    position: startPosition + i,
+    name: w.name,
+    producer: w.producer,
+    vintage: w.vintage,
+    wine_id: w.wine_id,
+  }));
+  const { data, error } = await supabase.from("session_wines").insert(rows).select();
+  if (error) return fail(error.message);
+  return ok(data as SessionWineRow[]);
+}
