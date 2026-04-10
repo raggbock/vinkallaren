@@ -25,7 +25,11 @@ export async function createSession(userId: string, input: CreateSessionInput): 
       .insert({ host_id: userId, title: input.title, join_code: joinCode, mode: input.mode, format: input.format, free_order: input.free_order, status: "setup" })
       .select("*")
       .single();
-    if (!error) return ok(data as TastingSessionRow);
+    if (!error) {
+      // Auto-join host as participant
+      await supabase.from("session_participants").insert({ session_id: data.id, user_id: userId });
+      return ok(data as TastingSessionRow);
+    }
     if (error.code !== "23505") return fail(error.message);
   }
   return fail("Försök igen.");
