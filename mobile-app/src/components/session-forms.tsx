@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { colors } from "../styles/theme";
 import { AutocompleteInput, Expandable, LabeledInput, SuggestionRow, type Suggestion } from "./form-controls";
 import { isAllDone } from "./session-active-view";
-import { addWineToSession, endSession, revealSession, shareSession } from "../lib/session-actions";
+import { addWineToSession, batchAddWinesToSession, endSession, revealSession, shareSession } from "../lib/session-actions";
 import type { CreateSessionInput, SessionTastingRow, SessionWineRow, TastingSessionRow } from "../types/tasting-session";
 import type { WineRecord } from "../types/wine";
 
@@ -144,44 +144,62 @@ export function JoinForm({ onJoin, onCancel }: { onJoin: (code: string) => void;
 
 /* ── Add wine form ── */
 
-export function AddWineForm({ sessionId, wineCount, wines, searchWineNames }: {
+export function AddWineForm({ sessionId, wineCount, wines, searchWineNames, onWinesAdded }: {
   sessionId: string; wineCount: number; wines: WineRecord[];
   searchWineNames: (query: string, offset?: number) => Promise<{ suggestions: Suggestion[]; hasMore: boolean; nextOffset: number }>;
+  onWinesAdded?: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const [source, setSource] = useState<"manual" | "cellar">("manual");
-  const [name, setName] = useState("");
-  const [producer, setProducer] = useState("");
-  const [vintage, setVintage] = useState("");
+  const [source, setSource] = useState<"manual" | "cellar">("cellar");
   const [cellarFilter, setCellarFilter] = useState("");
-  const [selectedWineId, setSelectedWineId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  function prefill(wineName: string, wineProducer: string | null, wineVintage: number | null, wineId?: string | null) {
-    setName(wineName);
-    setProducer(wineProducer || "");
-    setVintage(wineVintage ? String(wineVintage) : "");
-    setSelectedWineId(wineId || null);
+  const filteredCellarWines = cellarFilter.length >= 2
+    ? wines.filter((w) => w.name.toLowerCase().includes(cellarFilter.toLowerCase())).slice(0, 20)
+    : wines.slice(0, 20);
+
+  function toggleWine(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
   }
 
-  const filteredCellarWines = cellarFilter.length >= 2
-    ? wines.filter((w) => w.name.toLowerCase().includes(cellarFilter.toLowerCase())).slice(0, 8)
-    : wines.slice(0, 8);
-
-  async function handleAdd() {
-    if (!name.trim()) { setError("Namn saknas"); return; }
-    setError(null);
+  async function handleBatchAdd() {
+    const selected = wines.filter((w) => selectedIds.has(w.id));
+    if (selected.length === 0) return;
     setSaving(true);
+    setError(null);
+    const result = await batchAddWinesToSession(
+      sessionId,
+      wineCount + 1,
+      selected.map((w) => ({ name: w.name, producer: w.producer, vintage: w.vintage, wine_id: w.id })),
+    );
+    setSaving(false);
+    if (result.error) { setError("Kunde inte lägga till viner"); return; }
+    setSelectedIds(new Set());
+    setCellarFilter("");
+    setExpanded(false);
+    onWinesAdded?.();
+  }
+
+  async function handleSearchSelect(wineName: string, parentName?: string | null) {
+    setSaving(true);
+    setError(null);
     const result = await addWineToSession({
-      session_id: sessionId, position: wineCount + 1, name: name.trim(),
-      producer: producer.trim() || null, vintage: vintage ? Number(vintage) : null,
-      wine_id: selectedWineId,
+      session_id: sessionId,
+      position: wineCount + 1,
+      name: wineName,
+      producer: parentName || null,
+      vintage: null,
+      wine_id: null,
     });
     setSaving(false);
     if (result.error) { setError("Kunde inte lägga till vin"); return; }
-    setName(""); setProducer(""); setVintage(""); setCellarFilter("");
-    setSelectedWineId(null); setExpanded(false);
+    onWinesAdded?.();
   }
 
   return (
@@ -197,28 +215,31 @@ export function AddWineForm({ sessionId, wineCount, wines, searchWineNames }: {
 
           {source === "cellar" ? (
             <>
-              <LabeledInput label="Filtrera" value={cellarFilter} onChangeText={setCellarFilter} placeholder="Sök bland dina viner..." />
+              <LabeledInput label="Filtrera" value={cellarFilter}
+                onChangeText={setCellarFilter} placeholder="Sök bland dina viner..." />
               {filteredCellarWines.map((w) => (
-                <Pressable key={w.id} style={s.cellarPick} onPress={() => prefill(w.name, w.producer, w.vintage, w.id)}>
-                  <Text style={s.cellarPickName}>{w.name}</Text>
+                <Pressable key={w.id} style={[s.cellarPick, selectedIds.has(w.id) && s.cellarPickSelected]}
+                  onPress={() => toggleWine(w.id)}>
+                  <Text style={s.cellarPickName}>{selectedIds.has(w.id) ? "☑ " : "☐ "}{w.name}</Text>
                   <Text style={s.cellarPickMeta}>{[w.producer, w.vintage].filter(Boolean).join(" · ")}</Text>
                 </Pressable>
               ))}
+              {selectedIds.size > 0 ? (
+                <Pressable onPress={handleBatchAdd} style={s.primaryBtn} disabled={saving}>
+                  <Text style={s.primaryBtnText}>
+                    {saving ? "Lägger till..." : `Lägg till ${selectedIds.size} vin${selectedIds.size > 1 ? "er" : ""}`}
+                  </Text>
+                </Pressable>
+              ) : null}
             </>
           ) : (
-            <AutocompleteInput label="Sök vin" value={name} onChangeText={setName}
-              onOptionSelected={(v, parentName) => prefill(v, parentName || null, null)}
-              options={[]} searchAsync={searchWineNames} placeholder="Skriv minst 4 bokstäver" minimumQueryLength={4} />
+            <AutocompleteInput label="Sök vin" value="" onChangeText={() => {}}
+              onOptionSelected={handleSearchSelect}
+              options={[]} searchAsync={searchWineNames}
+              placeholder="Skriv minst 4 bokstäver" minimumQueryLength={4} />
           )}
 
-          <LabeledInput label="Namn" value={name} onChangeText={(v) => { setName(v); setError(null); }} placeholder="t.ex. Barolo 2018" />
-          <LabeledInput label="Producent" value={producer} onChangeText={setProducer} />
-          <LabeledInput label="Årgång" value={vintage} onChangeText={setVintage} keyboardType="number-pad" />
-
           <InlineError message={error} />
-          <Pressable onPress={handleAdd} style={s.primaryBtn} disabled={saving}>
-            <Text style={s.primaryBtnText}>{saving ? "Lägger till..." : "Lägg till"}</Text>
-          </Pressable>
         </View>
       </Expandable>
     </View>
@@ -239,6 +260,7 @@ export const s = StyleSheet.create({
   hostButtonText: { color: colors.textLight, fontWeight: "700", fontSize: 13 },
   hostButtonHighlight: { backgroundColor: colors.warm, borderWidth: 2, borderColor: colors.accent },
   cellarPick: { backgroundColor: colors.textLight, borderRadius: 12, padding: 10, borderWidth: 1, borderColor: colors.surfaceAlt },
+  cellarPickSelected: { borderColor: colors.accent, borderWidth: 2 },
   cellarPickName: { color: colors.text, fontSize: 14, fontWeight: "600" },
   cellarPickMeta: { color: colors.textSecondary, fontSize: 12 },
   inlineError: { color: "#c0392b", fontSize: 13, fontWeight: "600" },
