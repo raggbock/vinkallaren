@@ -63,6 +63,17 @@ const skeleton = `
     </div></div>`;
 const withSkeleton = withTheme.replace('<div id="root"></div>', skeleton);
 
-const final = withSkeleton;
+// Inject Cloudflare Web Analytics beacon before </body>
+const CF_ANALYTICS_TOKEN = process.env.CF_ANALYTICS_TOKEN || "";
+const withAnalytics = CF_ANALYTICS_TOKEN
+  ? withSkeleton.replace(
+      "</body>",
+      `  <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token":"${CF_ANALYTICS_TOKEN}"}'></script>\n</body>`
+    )
+  : withSkeleton;
+
+const final = withAnalytics;
 writeFileSync(HTML_PATH, final);
-console.log("Injected SEO meta tags + loading skeleton into dist/index.html");
+console.log(
+  `Injected SEO meta tags + loading skeleton${CF_ANALYTICS_TOKEN ? " + Cloudflare Analytics" : ""} into dist/index.html`
+);
