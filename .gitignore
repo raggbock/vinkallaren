@@ -29,3 +29,9 @@ Thumbs.db
 # Expo / React Native
 mobile-app/web-build/
 mobile-app/.expo-shared/
+
+# Claude Code worktrees
+.claude/worktrees/
+
+# Playwright MCP snapshots
+.playwright-mcp/
