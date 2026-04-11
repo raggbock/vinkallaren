@@ -2,7 +2,7 @@ import "react-native-url-polyfill/auto";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { StatusBar } from "expo-status-bar";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Pressable, RefreshControl, SafeAreaView, ScrollView, Text as RNText, View as RNView } from "react-native";
+import { ActivityIndicator, Platform, Pressable, RefreshControl, SafeAreaView, ScrollView, Text as RNText, View as RNView } from "react-native";
 import type { Session } from "@supabase/supabase-js";
 import { supabase, supabaseConfigured } from "./src/lib/supabase";
 import { showError } from "./src/lib/show-error";
@@ -273,7 +273,6 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
         onSetActiveTastings={tastingSessions.setActiveTastings} onSetActiveSession={tastingSessions.setActiveSession}
         onOpenWset={sessionWset.open} wsetData={sessionWset.data}
         onSessionEnded={() => { setTastingSessionsVisible(false); setActiveSection("history"); }}
-        onUpdateParticipantNames={tastingSessions.updateParticipantNames}
       />
       </Suspense>
     );

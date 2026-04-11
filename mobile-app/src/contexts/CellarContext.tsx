@@ -8,7 +8,7 @@ export type CellarContextValue = {
   winesLoading: boolean;
   storageSpaces: StorageSpaceRow[];
   storageSpaceById: Map<string, StorageSpaceRow>;
-  refreshWines: () => Promise<WineRecord[] | undefined>;
+  refreshWines: () => Promise<void | undefined>;
   fetchMoreWines: () => Promise<void>;
   hasMoreWines: boolean;
   setWines: React.Dispatch<React.SetStateAction<WineRecord[]>>;
@@ -20,7 +20,7 @@ export type CellarContextValue = {
   typeOptions: string[];
   vintageOptions: string[];
   cellarGrapeOptions: string[];
-  stats: { total: number; countries: number; types: number; producers: number; grapes: number; oldestVintage: number | null; storageSpaces: number };
+  stats: { totalBottles: number; totalLabels: number; drinkSoon: number; topCountry: string; topType: string; topPairing: string; averageVintage: string };
 };
 
 const CellarContext = createContext<CellarContextValue | null>(null);
