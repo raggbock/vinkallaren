@@ -336,6 +336,7 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
     activePanel = (
       <AddWineTab
         hidden={false}
+        isAnonymous={session.user.is_anonymous ?? false}
         onOpenProfile={() => setProfileVisible(true)}
         onNavigateToCellar={() => setActiveSection("cellar")}
         catalogData={catalogData}

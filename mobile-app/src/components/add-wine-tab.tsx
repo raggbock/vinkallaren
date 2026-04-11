@@ -21,6 +21,9 @@ import { useVintagePicker } from "../hooks/useVintagePicker";
 import { useLabelScanner } from "../hooks/useLabelScanner";
 import { useAddWineTasting } from "../hooks/useAddWineTasting";
 import { styles } from "../styles/theme";
+import { useCellar } from "../contexts/CellarContext";
+import { useGuestGate } from "../hooks/useGuestGate";
+import { UpgradePrompt } from "./upgrade-prompt";
 
 const BarcodeScannerModal = lazy(() => import("./cellar-workflows").then(m => ({ default: m.BarcodeScannerModal })));
 const VintagePickerModal = lazy(() => import("./cellar-workflows").then(m => ({ default: m.VintagePickerModal })));
@@ -29,6 +32,7 @@ const WsetTastingModal = lazy(() => import("./wset-tasting-modal").then(m => ({ 
 
 export type AddWineTabProps = {
   hidden: boolean;
+  isAnonymous: boolean;
   onOpenProfile: () => void;
   onNavigateToCellar: () => void;
   catalogData: ReturnType<typeof useCatalog>;
@@ -51,6 +55,7 @@ export function AddWineTab({ hidden, ...props }: AddWineTabProps) {
 
 function AddWineTabContent({
   hidden,
+  isAnonymous,
   onOpenProfile,
   onNavigateToCellar,
   catalogData,
@@ -90,6 +95,9 @@ function AddWineTabContent({
     setHistoryEntries: historyData.setHistoryEntries,
     showSuccess: success.show,
   });
+
+  const ctx = useCellar();
+  const gate = useGuestGate(isAnonymous, ctx.wines.length);
 
   const catalogProps: CatalogProps = useMemo(() => ({
     searchWineNames: catalogData.searchCatalogWineNames,
@@ -166,8 +174,17 @@ function AddWineTabContent({
         onOpenSystembolaget={handleOpenSystembolaget}
         onChooseImage={async () => { const uri = await images.pickImageFromLibrary(); if (uri) setDraft((c) => ({ ...c, imageUri: uri })); }}
         onTakePhoto={async () => { const uri = await images.takePhoto(); if (uri) setDraft((c) => ({ ...c, imageUri: uri })); }}
-        onSaveWine={handleSaveWine}
+        onSaveWine={() => {
+          if (gate.shouldPrompt) return;
+          handleSaveWine();
+        }}
         onOpenProfile={onOpenProfile}
+      />
+      <UpgradePrompt
+        visible={gate.shouldPrompt}
+        isBlocked={gate.isBlocked}
+        onUpgraded={() => handleSaveWine()}
+        onDismiss={() => { gate.dismiss(); handleSaveWine(); }}
       />
       <Suspense fallback={null}>
         <BarcodeScannerModal visible={barcode.scannerVisible} styles={styles} onClose={() => barcode.setScannerVisible(false)} onBarcodeScanned={({ data: d }) => barcode.handleBarcodeScanned(d, draft, setDraft)} onLabelPhoto={() => { barcode.setScannerVisible(false); label.handleLabelPhoto(setDraft); }} />
