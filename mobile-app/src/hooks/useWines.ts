@@ -10,18 +10,10 @@ import {
   buildVintageOptions,
 } from "../lib/cellar-helpers";
 import { hydrateWineRecords } from "../lib/wine-helpers";
+import { createGuardedFetcher } from "../lib/guarded-fetcher";
 import type { WineRecord, WineRow } from "../types/wine";
 
 const WINES_PAGE_SIZE = 50;
-
-function createGuardedFetcher<T>(fn: () => Promise<T>): () => Promise<T | undefined> {
-  let inFlight: Promise<T> | null = null;
-  return () => {
-    if (inFlight) return inFlight;
-    inFlight = fn().finally(() => { inFlight = null; });
-    return inFlight;
-  };
-}
 
 export function useWines() {
   const [wines, setWines] = useState<WineRecord[]>([]);

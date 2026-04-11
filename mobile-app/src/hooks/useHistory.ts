@@ -2,18 +2,10 @@ import { useEffect, useState } from "react";
 import { showError } from "../lib/show-error";
 import { supabase } from "../lib/supabase";
 import { hydrateWineHistoryRecords } from "../lib/wine-helpers";
+import { createGuardedFetcher } from "../lib/guarded-fetcher";
 import type { WineHistoryRecord, WineHistoryRow } from "../types/wine-history";
 
 const HISTORY_PAGE_SIZE = 50;
-
-function createGuardedFetcher<T>(fn: () => Promise<T>): () => Promise<T | undefined> {
-  let inFlight: Promise<T> | null = null;
-  return () => {
-    if (inFlight) return inFlight;
-    inFlight = fn().finally(() => { inFlight = null; });
-    return inFlight;
-  };
-}
 
 export function useHistory() {
   const [historyEntries, setHistoryEntries] = useState<WineHistoryRecord[]>([]);

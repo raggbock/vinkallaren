@@ -4,16 +4,8 @@ import { supabase } from "../lib/supabase";
 import { searchCatalogWineNames, fetchCatalogEntriesByName, matchCatalogByText } from "../lib/catalog-search";
 import { canBeSavedAsCatalogEntry, buildCatalogBackfillPayload } from "../lib/wine-helpers";
 import type { ProductCatalogWineRow } from "../types/product-catalog";
+import { createGuardedFetcher } from "../lib/guarded-fetcher";
 import type { WineRecord } from "../types/wine";
-
-function createGuardedFetcher<T>(fn: () => Promise<T>): () => Promise<T | undefined> {
-  let inFlight: Promise<T> | null = null;
-  return () => {
-    if (inFlight) return inFlight;
-    inFlight = fn().finally(() => { inFlight = null; });
-    return inFlight;
-  };
-}
 
 export function useCatalog(userId: string, wines: WineRecord[], winesLoading: boolean) {
   const [catalogEntries, setCatalogEntries] = useState<ProductCatalogWineRow[]>([]);
