@@ -72,7 +72,30 @@ export function CellarTab(props: Props) {
     onVintageChange: filters.setSelectedVintageFilter,
     onGrapeChange: filters.setSelectedGrapeFilter,
     onStorageSpaceFilterChange: filters.setSelectedStorageSpaceFilterId,
-  }), [filters, ctx.pairingOptions, ctx.countryOptions, ctx.regionOptions, ctx.typeOptions, ctx.vintageOptions, ctx.cellarGrapeOptions]);
+  }), [
+    filters.searchQuery,
+    filters.selectedPairingFilter,
+    filters.selectedCountryFilter,
+    filters.selectedRegionFilter,
+    filters.selectedTypeFilter,
+    filters.selectedVintageFilter,
+    filters.selectedGrapeFilter,
+    filters.selectedStorageSpaceFilterId,
+    filters.setSearchQuery,
+    filters.setSelectedPairingFilter,
+    filters.setSelectedCountryFilter,
+    filters.setSelectedRegionFilter,
+    filters.setSelectedTypeFilter,
+    filters.setSelectedVintageFilter,
+    filters.setSelectedGrapeFilter,
+    filters.setSelectedStorageSpaceFilterId,
+    ctx.pairingOptions,
+    ctx.countryOptions,
+    ctx.regionOptions,
+    ctx.typeOptions,
+    ctx.vintageOptions,
+    ctx.cellarGrapeOptions,
+  ]);
 
   const wineActionsProps = useMemo(() => ({
     onEditWine: props.onEditWine,

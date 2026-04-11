@@ -5,7 +5,7 @@ import { hydrateWineRecords } from "../lib/wine-helpers";
 import { showError } from "../lib/show-error";
 import { AddWinePanel } from "./add-wine-panel";
 import { defaultDraft, type WineDraft } from "../types/cellar-drafts";
-import type { CatalogProps, TastingProps } from "../types/panel-prop-groups";
+import type { CatalogProps } from "../types/panel-prop-groups";
 import type { ProductCatalogWineRow } from "../types/product-catalog";
 import type { useCatalog } from "../hooks/useCatalog";
 import type { useReferenceOptions } from "../hooks/useReferenceOptions";
@@ -109,11 +109,19 @@ function AddWineTabContent({
     grapeReferenceRows: refOptions.grapeReferenceRows,
     lookupBusy: label.labelBusy || catalogLookup.lookupBusy,
     lookupMessage: label.labelMessage || catalogLookup.lookupMessage,
-  }), [catalogData.searchCatalogWineNames, refOptions, catalogLookup.lookupBusy, catalogLookup.lookupMessage, label.labelBusy, label.labelMessage]);
-
-  const tastingGroupProps: TastingProps = useMemo(() => ({
-    ...tasting.panelProps,
-  }), [tasting.panelProps]);
+  }), [
+    catalogData.searchCatalogWineNames,
+    refOptions.effectiveCountryOptions,
+    refOptions.effectiveRegionOptions,
+    refOptions.effectiveGrapeOptions,
+    refOptions.countryReferenceRows,
+    refOptions.regionReferenceRows,
+    refOptions.grapeReferenceRows,
+    catalogLookup.lookupBusy,
+    catalogLookup.lookupMessage,
+    label.labelBusy,
+    label.labelMessage,
+  ]);
 
   async function handleSaveWine() {
     setSaving(true);
@@ -155,7 +163,7 @@ function AddWineTabContent({
     <>
       <AddWinePanel
         styles={styles} draft={draft}
-        catalog={catalogProps} tasting={tastingGroupProps}
+        catalog={catalogProps} tasting={tasting.panelProps}
         storageSpaces={storageData.storageSpaces}
         wines={wineData.wines}
         saving={saving}
