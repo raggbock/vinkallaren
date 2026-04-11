@@ -17,7 +17,7 @@ import type { SessionWineRow, SessionTastingRow } from "../types/tasting-session
 
 import { colors } from "../styles/theme";
 import type { styles as themeStyles } from "../styles/theme";
-import { WineGlassDoodle, SquigglyLine, TabIconCellar, TabIconAdd, TabIconFood, TabIconHistory } from "./doodles";
+import { WineGlassDoodle, SquigglyLine, TabIconCellar, TabIconAdd, TabIconTasting, TabIconHistory } from "./doodles";
 type SharedStyles = typeof themeStyles;
 
 export function BottomTabBar({
@@ -34,7 +34,7 @@ export function BottomTabBar({
   const TAB_ICON_COMPONENTS: Record<string, React.FC<{ size?: number; color?: string }>> = {
     cellar: TabIconCellar,
     add: TabIconAdd,
-    meal: TabIconFood,
+    tasting: TabIconTasting,
     history: TabIconHistory,
   };
 

@@ -90,6 +90,21 @@ export function TabIconFood({ size = 24, color = "#C83C2D" }: { size?: number; c
   );
 }
 
+/** Tab icon: wine glass outline */
+export function TabIconTasting({ size = 24, color = "#C83C2D" }: { size?: number; color?: string }) {
+  if (Platform.OS !== "web") return <View style={{ width: size, height: size }} />;
+  return (
+    <WebSvg
+      size={size}
+      svg={`<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
+        <path d="M8 2 L16 2 L14.5 9 Q12 13, 12 13 Q12 13, 9.5 9 Z" stroke="${color}" stroke-width="1.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M12 13 L12 19" stroke="${color}" stroke-width="1.3" stroke-linecap="round"/>
+        <path d="M9 19 L15 19" stroke="${color}" stroke-width="1.3" stroke-linecap="round"/>
+      </svg>`}
+    />
+  );
+}
+
 /** Tab icon: open book */
 export function TabIconHistory({ size = 24, color = "#C83C2D" }: { size?: number; color?: string }) {
   if (Platform.OS !== "web") return <View style={{ width: size, height: size }} />;
