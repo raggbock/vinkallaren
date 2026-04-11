@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { PanelHeader } from "./form-controls";
 import type { CreateSessionInput, TastingSessionRow } from "../types/tasting-session";
@@ -26,6 +26,7 @@ function statusColor(status: TastingSessionRow["status"]): string {
 }
 
 export function TastingTab({ sessions, loading, onCreateSession, onJoinSession, onOpenSession, onOpenProfile, onFetchSessions }: Props) {
+  useEffect(() => { onFetchSessions(); }, []);
   const [view, setView] = useState<"list" | "create" | "join">("list");
   const [error, setError] = useState<string | null>(null);
 
