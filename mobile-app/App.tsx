@@ -7,9 +7,9 @@ import type { Session } from "@supabase/supabase-js";
 import { supabase, supabaseConfigured } from "./src/lib/supabase";
 import { openSystembolaget, saveNewWine } from "./src/lib/cellar-actions";
 import { hydrateWineRecords } from "./src/lib/wine-helpers";
-import { confirmAction, showError } from "./src/lib/show-error";
+import { showError } from "./src/lib/show-error";
 import { BottomTabBar } from "./src/components/cellar-sections";
-import { MinKallarePanel } from "./src/components/min-kallare-panel";
+import { CellarTab } from "./src/components/cellar-tab";
 import { AddWinePanel } from "./src/components/add-wine-panel";
 import { SuccessOverlay, useSuccessOverlay } from "./src/components/success-overlay";
 
@@ -27,7 +27,7 @@ import { CellarContext, type CellarContextValue } from "./src/contexts/CellarCon
 import { HistoryTab } from "./src/components/history-tab";
 import { MealTab } from "./src/components/meal-tab";
 import { CELLAR_SECTIONS, type CellarSection } from "./src/types/cellar";
-import type { FilterProps, StorageProps, WineActionsProps, CatalogProps, TastingProps } from "./src/types/panel-prop-groups";
+import type { StorageProps, CatalogProps, TastingProps } from "./src/types/panel-prop-groups";
 import { defaultDraft, type WineDraft } from "./src/types/cellar-drafts";
 import { colors, styles } from "./src/styles/theme";
 import { BUILD_VERSION } from "./src/lib/build-version";
@@ -38,7 +38,6 @@ import { useHistory } from "./src/hooks/useHistory";
 import { useCatalog } from "./src/hooks/useCatalog";
 import { useReferenceOptions } from "./src/hooks/useReferenceOptions";
 import { useStorageSpaces } from "./src/hooks/useStorageSpaces";
-import { useCellarFilters } from "./src/hooks/useCellarFilters";
 import { useImagePicker } from "./src/hooks/useImagePicker";
 import { useStorageSelection } from "./src/hooks/useStorageSelection";
 import { useCatalogLookup } from "./src/hooks/useCatalogLookup";
@@ -140,7 +139,6 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
     cellarGrapeOptions: wineData.cellarGrapeOptions,
     stats: wineData.stats,
   }), [session.user.id, wineData, storageData.storageSpaces, storageSpaceById]);
-  const filters = useCellarFilters(wineData.wines, storageSpaceById);
   const images = useImagePicker();
   const storage = useStorageSelection(storageData.storageSpaces, wineData.wines);
   const success = useSuccessOverlay();
@@ -240,34 +238,14 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
     showSuccess: success.show,
   });
 
-  const filterProps: FilterProps = useMemo(() => ({
-    searchQuery: filters.searchQuery, selectedPairingFilter: filters.selectedPairingFilter,
-    selectedCountryFilter: filters.selectedCountryFilter, selectedRegionFilter: filters.selectedRegionFilter,
-    selectedTypeFilter: filters.selectedTypeFilter, selectedVintageFilter: filters.selectedVintageFilter,
-    selectedGrapeFilter: filters.selectedGrapeFilter, selectedStorageSpaceFilterId: filters.selectedStorageSpaceFilterId,
-    pairingOptions: wineData.pairingOptions, countryOptions: wineData.countryOptions,
-    regionOptions: wineData.regionOptions, typeOptions: wineData.typeOptions,
-    vintageOptions: wineData.vintageOptions, grapeOptions: wineData.cellarGrapeOptions,
-    onSearchChange: filters.setSearchQuery, onPairingChange: filters.setSelectedPairingFilter,
-    onCountryChange: filters.setSelectedCountryFilter, onRegionChange: filters.setSelectedRegionFilter,
-    onTypeChange: filters.setSelectedTypeFilter, onVintageChange: filters.setSelectedVintageFilter,
-    onGrapeChange: filters.setSelectedGrapeFilter, onStorageSpaceFilterChange: filters.setSelectedStorageSpaceFilterId,
-  }), [filters, wineData.pairingOptions, wineData.countryOptions, wineData.regionOptions, wineData.typeOptions, wineData.vintageOptions, wineData.cellarGrapeOptions]);
-
   const storageProps: StorageProps = useMemo(() => ({
     storageSpaces: storageData.storageSpaces, storageSpaceById, storageSpaceBottleCounts: wineData.storageSpaceBottleCounts,
     storageSpaceDraft: storageData.storageSpaceDraft, savingStorageSpace: storageData.savingStorageSpace,
     onStorageSpaceDraftChange: (patch: Partial<import("./src/types/cellar-drafts").StorageSpaceDraft>) => storageData.setStorageSpaceDraft((c) => ({ ...c, ...patch })),
     onSaveStorageSpace: async () => { const newId = await storageData.saveStorageSpace(); if (newId) { storage.setSelectedStorageSpaceId(newId); storage.setSelectedStorageRow("1"); storage.setSelectedStorageSlot("1"); } success.show("storage_saved"); },
     onUpdateStorageSpace: storageData.updateStorageSpace,
-    onDeleteStorageSpace: async (id: string) => { const ok = await deleteStorageSpace(id); if (ok) { if (storage.selectedStorageSpaceId === id) { storage.setSelectedStorageSpaceId(""); storage.setSelectedStorageRow("1"); storage.setSelectedStorageSlot("1"); } if (filters.selectedStorageSpaceFilterId === id) { filters.setSelectedStorageSpaceFilterId(""); } } },
-  }), [storageData, storageSpaceById, wineData.storageSpaceBottleCounts, storage, filters, deleteStorageSpace, success]);
-
-  const wineActionsProps: WineActionsProps = useMemo(() => ({
-    onEditWine: edit.actions.open, onDrinkWine: drink.actions.open,
-    onDeleteWine: (id: string, imagePath: string | null) => confirmAction("Ta bort vin", "Är du säker på att du vill ta bort det här vinet?", () => wineData.deleteWine(id, imagePath)),
-    onOpenSystembolaget: handleOpenSystembolaget,
-  }), [edit.actions.open, drink.actions.open, wineData.deleteWine]);
+    onDeleteStorageSpace: async (id: string) => { const ok = await deleteStorageSpace(id); if (ok) { if (storage.selectedStorageSpaceId === id) { storage.setSelectedStorageSpaceId(""); storage.setSelectedStorageRow("1"); storage.setSelectedStorageSlot("1"); } } },
+  }), [storageData, storageSpaceById, wineData.storageSpaceBottleCounts, storage, deleteStorageSpace, success]);
 
   const catalogProps: CatalogProps = useMemo(() => ({
     searchWineNames: catalogData.searchCatalogWineNames,
@@ -350,21 +328,21 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
   }
 
   let activePanel = (
-    <MinKallarePanel
-      styles={styles} stats={wineData.stats}
-      filter={filterProps} storage={storageProps} wineActions={wineActionsProps}
-      filteredWines={filters.filteredWines} loading={wineData.loading}
-      onRefreshStats={wineData.fetchWines}
-      onSignOut={() => setProfileVisible(true)}
+    <CellarTab
+      hidden={activeSection !== "cellar"}
+      refreshing={refreshing}
+      onRefresh={onRefresh}
       onNavigateToAdd={() => setActiveSection("add")}
       onOpenTastingSessions={() => { setTastingSessionsVisible(true); tastingSessions.fetchSessions(); }}
-      hasMoreWines={wineData.hasMoreWines}
-      onLoadMoreWines={wineData.fetchMoreWines}
+      onOpenProfile={() => setProfileVisible(true)}
+      onEditWine={edit.actions.open}
+      onDrinkWine={drink.actions.open}
+      storage={storageProps}
+      stats={wineData.stats}
+      onRefreshStats={wineData.fetchWines}
       highlightedWineId={highlightedWineId}
       onClearHighlight={() => setHighlightedWineId(null)}
       onHighlightWine={setHighlightedWineId}
-      refreshing={refreshing}
-      onRefresh={onRefresh}
     />
   );
   if (activeSection === "cellar" && tastingSessionsVisible) {
