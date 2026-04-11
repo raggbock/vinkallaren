@@ -1,4 +1,4 @@
-import { Linking } from "react-native";
+import { Linking, Platform } from "react-native";
 
 import { supabase } from "./supabase";
 import { ok, fail, type Result } from "../types/result";
@@ -224,6 +224,10 @@ export async function updateHistoryEntry(args: UpdateHistoryArgs): Promise<Resul
 
 export async function openSystembolaget(productId: string): Promise<Result<true>> {
   const url = buildSystembolagetProductUrl(productId);
+  if (Platform.OS === "web") {
+    window.open(url, "_blank", "noopener,noreferrer");
+    return ok(true as const);
+  }
   const supported = await Linking.canOpenURL(url);
   if (!supported) return fail("Det gick inte att öppna Systembolaget just nu.");
   await Linking.openURL(url);

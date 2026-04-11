@@ -14,7 +14,7 @@ import { AutocompleteInput, DateInput, DoubleRow, LabeledInput, SuggestionRow, t
 import { colors } from "../styles/theme";
 import type { styles as themeStyles } from "../styles/theme";
 type SharedStyles = typeof themeStyles;
-const WINE_TYPE_OPTIONS = ["Rött", "Vitt", "Mousserande", "Sött"];
+const WINE_TYPE_OPTIONS = ["Rött", "Vitt", "Rosé", "Mousserande", "Dessert"];
 
 export function BarcodeScannerModal({
   visible, styles, onClose, onBarcodeScanned, onLabelPhoto,

@@ -9,7 +9,7 @@ import { AutocompleteInput, DateInput, DoubleRow, LabeledInput, StorageSpaceForm
 import type { styles as themeStyles } from "../styles/theme";
 
 type SharedStyles = typeof themeStyles;
-const WINE_TYPE_OPTIONS = ["Rött", "Vitt", "Mousserande", "Sött"];
+const WINE_TYPE_OPTIONS = ["Rött", "Vitt", "Rosé", "Mousserande", "Dessert"];
 
 export function EditWineModal({
   visible, styles, draft, storageSpaces, selectedStorageSpace, storageSpaceById,

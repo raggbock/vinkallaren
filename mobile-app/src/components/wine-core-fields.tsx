@@ -2,7 +2,7 @@ import type { ReferenceOptionRow } from "../types/reference-data";
 import type { WineDraft } from "../types/cellar-drafts";
 import { AutocompleteInput, DoubleRow, LabeledInput, SuggestionRow, type Suggestion } from "./form-controls";
 
-const WINE_TYPE_OPTIONS = ["Rött", "Vitt", "Mousserande", "Sött"];
+const WINE_TYPE_OPTIONS = ["Rött", "Vitt", "Rosé", "Mousserande", "Dessert"];
 
 export function WineCoreFields({ draft, tastingMode, effectiveCountryOptions, effectiveRegionOptions, effectiveGrapeOptions, countryReferenceRows, regionReferenceRows, grapeReferenceRows, onDraftChange }: {
   draft: WineDraft; tastingMode: boolean;

@@ -9,7 +9,7 @@ const WINE_TYPE_COLORS: Record<string, string> = {
   Vitt: "#E8D44D",
   Rosé: "#F4A6B0",
   Mousserande: "#F5E6CA",
-  Sött: "#D4A017",
+  Dessert: "#D4A017",
 };
 
 function slotColor(type: string): string {
