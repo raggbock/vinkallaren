@@ -70,7 +70,7 @@ export function useCatalogLookup(deps: CatalogLookupDeps) {
 
   return {
     catalogSuggestion, importSelection, importMode, setImportMode,
-    lookupBusy, lookupMessage, setLookupBusy, setLookupMessage,
+    lookupBusy, lookupMessage,
     updateDraft, maybeSuggestCatalogMatch,
     applyCatalogSuggestion, toggleImportField,
   };

@@ -12,36 +12,34 @@ type LabelScannerDeps = {
   takePhoto: () => Promise<string | null>;
   matchCatalogByText: (query: string, maxResults?: number, rawOcrQuery?: string, vintage?: number | null) => Promise<CatalogTextMatch[]>;
   fetchCatalogEntriesByName: (name: string, producer?: string | null) => Promise<ProductCatalogWineRow[]>;
-  setScannerVisible: (visible: boolean) => void;
-  setLookupBusy: (busy: boolean) => void;
-  setLookupMessage: (msg: string) => void;
   setSelectedCatalogNameEntry: (entry: ProductCatalogWineRow | null) => void;
 };
 
 export function useLabelScanner(deps: LabelScannerDeps) {
   const {
     takePhoto, matchCatalogByText, fetchCatalogEntriesByName,
-    setScannerVisible, setLookupBusy, setLookupMessage, setSelectedCatalogNameEntry,
+    setSelectedCatalogNameEntry,
   } = deps;
 
   const [labelMatches, setLabelMatches] = useState<CatalogTextMatch[]>([]);
   const [labelPickerVisible, setLabelPickerVisible] = useState(false);
   const [labelOcrText, setLabelOcrText] = useState<string | null>(null);
   const [labelRawOcrText, setLabelRawOcrText] = useState<string | null>(null);
+  const [labelBusy, setLabelBusy] = useState(false);
+  const [labelMessage, setLabelMessage] = useState("");
 
   function showLabelError() {
-    setLookupBusy(false);
-    setLookupMessage("Kunde inte läsa etiketten. Försök igen med bättre belysning.");
+    setLabelBusy(false);
+    setLabelMessage("Kunde inte läsa etiketten. Försök igen med bättre belysning.");
   }
 
   async function handleLabelPhoto(setDraft: React.Dispatch<React.SetStateAction<WineDraft>>) {
-    setScannerVisible(false);
     setLabelRawOcrText(null);
     const uri = await takePhoto();
-    if (!uri) { setScannerVisible(true); return; }
+    if (!uri) return;
 
-    setLookupBusy(true);
-    setLookupMessage("Läser etiketten...");
+    setLabelBusy(true);
+    setLabelMessage("Läser etiketten...");
     try {
       const ocrTimeout = new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timeout")), 30_000));
       const blocks = await Promise.race([recognizeLabel(uri), ocrTimeout]);
@@ -50,7 +48,7 @@ export function useLabelScanner(deps: LabelScannerDeps) {
       const parsed = parseWineLabel(blocks);
 
       if (!parsed.searchQuery && Platform.OS === "web") {
-        setLookupMessage("Ingen text hittad, provar bildmatchning...");
+        setLabelMessage("Ingen text hittad, provar bildmatchning...");
         try {
           const hashes = await computeImageHashes(uri);
           const imageMatches = await matchCatalogByImage(hashes, 5);
@@ -60,7 +58,7 @@ export function useLabelScanner(deps: LabelScannerDeps) {
             }));
             setLabelMatches(asTextMatches);
             setLabelPickerVisible(true);
-            setLookupMessage("");
+            setLabelMessage("");
             return;
           }
         } catch { /* fall through */ }
@@ -75,7 +73,7 @@ export function useLabelScanner(deps: LabelScannerDeps) {
         setDraft((current) => ({ ...current, vintage: current.vintage || parsed.vintage! }));
       }
 
-      setLookupMessage("Söker i katalogen...");
+      setLabelMessage("Söker i katalogen...");
       const normalizedQuery = normalizeOcrText(parsed.searchQuery);
       const parsedVintage = parsed.vintage ? parseInt(parsed.vintage, 10) : null;
 
@@ -91,19 +89,19 @@ export function useLabelScanner(deps: LabelScannerDeps) {
       if (matches.length > 0) {
         setLabelMatches(matches);
         setLabelPickerVisible(true);
-        setLookupMessage("");
+        setLabelMessage("");
       } else {
         if (parsed.name) setDraft((current) => ({ ...current, name: current.name || parsed.name! }));
         if (parsed.producer) setDraft((current) => ({ ...current, producer: current.producer || parsed.producer! }));
-        setLookupMessage("Ingen katalogträff — etikettexten har fyllts i, korrigera vid behov.");
+        setLabelMessage("Ingen katalogträff — etikettexten har fyllts i, korrigera vid behov.");
       }
     } catch (err) {
       const msg = err instanceof Error && err.message === "timeout"
         ? "OCR tog för lång tid. Försök med en tydligare bild."
         : "Kunde inte läsa etiketten. Försök igen med bättre belysning.";
-      setLookupMessage(msg);
+      setLabelMessage(msg);
     } finally {
-      setLookupBusy(false);
+      setLabelBusy(false);
     }
   }
 
@@ -148,14 +146,14 @@ export function useLabelScanner(deps: LabelScannerDeps) {
     setLabelMatches([]);
     if (labelOcrText) {
       setDraft((current) => ({ ...current, name: current.name || labelOcrText! }));
-      setLookupMessage("Ingen matchning vald — etikettexten har fyllts i, korrigera vid behov.");
+      setLabelMessage("Ingen matchning vald — etikettexten har fyllts i, korrigera vid behov.");
     } else {
-      setLookupMessage("Ingen matchning vald. Fyll i vinets uppgifter manuellt.");
+      setLabelMessage("Ingen matchning vald. Fyll i vinets uppgifter manuellt.");
     }
   }
 
   return {
-    labelMatches, labelPickerVisible,
+    labelMatches, labelPickerVisible, labelBusy, labelMessage,
     handleLabelPhoto, handleLabelMatchSelected, handleLabelMatchDismissed,
   };
 }

@@ -81,9 +81,6 @@ function AddWineTabContent({
     takePhoto: images.takePhoto,
     matchCatalogByText: catalogData.matchCatalogByText,
     fetchCatalogEntriesByName: catalogData.fetchCatalogEntriesByName,
-    setScannerVisible: barcode.setScannerVisible,
-    setLookupBusy: catalogLookup.setLookupBusy,
-    setLookupMessage: catalogLookup.setLookupMessage,
     setSelectedCatalogNameEntry,
   });
   const tasting = useAddWineTasting({
@@ -102,9 +99,9 @@ function AddWineTabContent({
     countryReferenceRows: refOptions.countryReferenceRows,
     regionReferenceRows: refOptions.regionReferenceRows,
     grapeReferenceRows: refOptions.grapeReferenceRows,
-    lookupBusy: catalogLookup.lookupBusy,
-    lookupMessage: catalogLookup.lookupMessage,
-  }), [catalogData.searchCatalogWineNames, refOptions, catalogLookup.lookupBusy, catalogLookup.lookupMessage]);
+    lookupBusy: label.labelBusy || catalogLookup.lookupBusy,
+    lookupMessage: label.labelMessage || catalogLookup.lookupMessage,
+  }), [catalogData.searchCatalogWineNames, refOptions, catalogLookup.lookupBusy, catalogLookup.lookupMessage, label.labelBusy, label.labelMessage]);
 
   const tastingGroupProps: TastingProps = useMemo(() => ({
     ...tasting.panelProps,
@@ -165,7 +162,7 @@ function AddWineTabContent({
         onStorageSpaceDraftChange={(patch) => storageData.setStorageSpaceDraft((c) => ({ ...c, ...patch }))}
         onSaveStorageSpace={async () => { const newId = await storageData.saveStorageSpace(); if (newId) { storage.setSelectedStorageSpaceId(newId); storage.setSelectedStorageRow("1"); storage.setSelectedStorageSlot("1"); } success.show("storage_saved"); }}
         onPositionChange={(spaceId, row, slot) => { storage.setSelectedStorageSpaceId(spaceId); storage.setSelectedStorageRow(row); storage.setSelectedStorageSlot(slot); }}
-        onScanLabel={() => label.handleLabelPhoto(setDraft)}
+        onScanLabel={() => { barcode.setScannerVisible(false); label.handleLabelPhoto(setDraft); }}
         onOpenSystembolaget={handleOpenSystembolaget}
         onChooseImage={async () => { const uri = await images.pickImageFromLibrary(); if (uri) setDraft((c) => ({ ...c, imageUri: uri })); }}
         onTakePhoto={async () => { const uri = await images.takePhoto(); if (uri) setDraft((c) => ({ ...c, imageUri: uri })); }}
@@ -173,7 +170,7 @@ function AddWineTabContent({
         onOpenProfile={onOpenProfile}
       />
       <Suspense fallback={null}>
-        <BarcodeScannerModal visible={barcode.scannerVisible} styles={styles} onClose={() => barcode.setScannerVisible(false)} onBarcodeScanned={({ data: d }) => barcode.handleBarcodeScanned(d, draft, setDraft)} onLabelPhoto={() => label.handleLabelPhoto(setDraft)} />
+        <BarcodeScannerModal visible={barcode.scannerVisible} styles={styles} onClose={() => barcode.setScannerVisible(false)} onBarcodeScanned={({ data: d }) => barcode.handleBarcodeScanned(d, draft, setDraft)} onLabelPhoto={() => { barcode.setScannerVisible(false); label.handleLabelPhoto(setDraft); }} />
         <LabelMatchPickerModal visible={label.labelPickerVisible} matches={label.labelMatches} onSelect={(m) => label.handleLabelMatchSelected(m, setDraft)} onDismiss={() => label.handleLabelMatchDismissed(setDraft)} />
         <WsetTastingModal {...tasting.wsetProps} wineType={draft.type} />
         <VintagePickerModal visible={vintage.vintagePickerVisible} wineName={vintage.vintagePickerWineName} vintages={vintage.vintagePickerOptions} loading={vintage.vintagePickerLoading} onSelectVintage={(e) => vintage.handleVintageSelected(e, setDraft)} onAddNew={() => vintage.handleVintageAddNew(setDraft)} onClose={() => vintage.setVintagePickerVisible(false)} styles={styles} />
