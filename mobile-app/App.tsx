@@ -20,7 +20,7 @@ const TastingSessionPanel = lazy(() => import("./src/components/tasting-session-
 const PrivacyPolicyModal = lazy(() => import("./src/components/privacy-policy-modal").then(m => ({ default: m.PrivacyPolicyModal })));
 import { CellarContext, type CellarContextValue } from "./src/contexts/CellarContext";
 import { HistoryTab } from "./src/components/history-tab";
-import { MealTab } from "./src/components/meal-tab";
+import { TastingTab } from "./src/components/tasting-tab";
 import { CELLAR_SECTIONS, type CellarSection } from "./src/types/cellar";
 import type { StorageProps } from "./src/types/panel-prop-groups";
 import { colors, styles } from "./src/styles/theme";
@@ -188,7 +188,7 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
   useEffect(() => {
     if (!pendingJoinCode) return;
     onJoinCodeConsumed();
-    setTastingSessionsVisible(true);
+    setActiveSection("tasting");
     tastingSessions.joinSession(pendingJoinCode);
   }, [pendingJoinCode]);
 
@@ -229,7 +229,7 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
     await Promise.all([wineData.fetchWines(), storageData.fetchStorageSpaces(), historyData.fetchHistoryEntries(), catalogData.fetchCatalogEntries(), refOptions.fetchReferenceOptions()]);
     setRefreshing(false);
   }, [wineData.fetchWines, storageData.fetchStorageSpaces, historyData.fetchHistoryEntries, catalogData.fetchCatalogEntries, refOptions.fetchReferenceOptions]);
-  const [tastingSessionsVisible, setTastingSessionsVisible] = useState(false);
+
 
   const storageProps: StorageProps = useMemo(() => ({
     storageSpaces: storageData.storageSpaces, storageSpaceById, storageSpaceBottleCounts: wineData.storageSpaceBottleCounts,
@@ -279,7 +279,7 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
       refreshing={refreshing}
       onRefresh={onRefresh}
       onNavigateToAdd={() => setActiveSection("add")}
-      onOpenTastingSessions={() => { setTastingSessionsVisible(true); tastingSessions.fetchSessions(); }}
+      onOpenTastingSessions={() => {}}
       onOpenProfile={() => setProfileVisible(true)}
       onEditWine={edit.actions.open}
       onDrinkWine={drink.actions.open}
@@ -291,26 +291,7 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
       onHighlightWine={setHighlightedWineId}
     />
   );
-  if (activeSection === "cellar" && tastingSessionsVisible) {
-    activePanel = (
-      <Suspense fallback={<ActivityIndicator style={{ flex: 1, justifyContent: "center" }} color={colors.accent} />}>
-      <TastingSessionPanel
-        styles={styles} userId={session.user.id}
-        sessions={tastingSessions.sessions} loading={tastingSessions.loading} toasts={tastingSessions.toasts}
-        activeSession={tastingSessions.activeSession} activeWines={tastingSessions.activeWines}
-        activeTastings={tastingSessions.activeTastings} wines={wineData.wines}
-        searchWineNames={catalogData.searchCatalogWineNames}
-        onBack={() => { setTastingSessionsVisible(false); tastingSessions.closeSession(); }}
-        onFetchSessions={tastingSessions.fetchSessions} onCreateSession={tastingSessions.createSession}
-        onJoinSession={tastingSessions.joinSession} onOpenSession={tastingSessions.openSession}
-        onCloseSession={tastingSessions.closeSession} onSetActiveWines={tastingSessions.setActiveWines}
-        onSetActiveTastings={tastingSessions.setActiveTastings} onSetActiveSession={tastingSessions.setActiveSession}
-        onOpenWset={sessionWset.open} wsetData={sessionWset.data}
-        onSessionEnded={() => { setTastingSessionsVisible(false); setActiveSection("history"); }}
-      />
-      </Suspense>
-    );
-  } else if (activeSection === "history") {
+  if (activeSection === "history") {
     activePanel = (
       <HistoryTab hidden={false}
         historyData={historyData}
@@ -319,13 +300,39 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
         onOpenProfile={() => setProfileVisible(true)}
       />
     );
-  } else if (activeSection === "meal") {
-    activePanel = (
-      <MealTab hidden={false}
-        onWinePress={(id) => { setHighlightedWineId(id); setActiveSection("cellar"); }}
-        onOpenProfile={() => setProfileVisible(true)}
-      />
-    );
+  } else if (activeSection === "tasting") {
+    if (tastingSessions.activeSession) {
+      activePanel = (
+        <Suspense fallback={<ActivityIndicator style={{ flex: 1, justifyContent: "center" }} color={colors.accent} />}>
+          <TastingSessionPanel
+            styles={styles} userId={session.user.id}
+            sessions={tastingSessions.sessions} loading={tastingSessions.loading} toasts={tastingSessions.toasts}
+            activeSession={tastingSessions.activeSession} activeWines={tastingSessions.activeWines}
+            activeTastings={tastingSessions.activeTastings} wines={wineData.wines}
+            searchWineNames={catalogData.searchCatalogWineNames}
+            onBack={() => { tastingSessions.closeSession(); }}
+            onFetchSessions={tastingSessions.fetchSessions} onCreateSession={tastingSessions.createSession}
+            onJoinSession={tastingSessions.joinSession} onOpenSession={tastingSessions.openSession}
+            onCloseSession={tastingSessions.closeSession} onSetActiveWines={tastingSessions.setActiveWines}
+            onSetActiveTastings={tastingSessions.setActiveTastings} onSetActiveSession={tastingSessions.setActiveSession}
+            onOpenWset={sessionWset.open} wsetData={sessionWset.data}
+            onSessionEnded={() => { tastingSessions.closeSession(); setActiveSection("history"); }}
+          />
+        </Suspense>
+      );
+    } else {
+      activePanel = (
+        <TastingTab
+          sessions={tastingSessions.sessions}
+          loading={tastingSessions.loading}
+          onCreateSession={tastingSessions.createSession}
+          onJoinSession={tastingSessions.joinSession}
+          onOpenSession={tastingSessions.openSession}
+          onOpenProfile={() => setProfileVisible(true)}
+          onFetchSessions={tastingSessions.fetchSessions}
+        />
+      );
+    }
   } else if (activeSection === "add") {
     activePanel = (
       <AddWineTab
@@ -393,7 +400,7 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
         onStorageSpaceDraftChange={(patch) => storageData.setStorageSpaceDraft((c) => ({ ...c, ...patch }))}
       />
       </Suspense>
-      {activeSection === "history" || (activeSection === "cellar" && !tastingSessionsVisible) ? (
+      {activeSection === "history" || activeSection === "cellar" ? (
         <RNView style={[styles.scrollFlex, { backgroundColor: colors.bg }]}>
           {activePanel}
         </RNView>
