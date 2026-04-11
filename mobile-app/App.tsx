@@ -2,33 +2,27 @@ import "react-native-url-polyfill/auto";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { StatusBar } from "expo-status-bar";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Platform, Pressable, RefreshControl, SafeAreaView, ScrollView, Text as RNText, View as RNView } from "react-native";
+import { ActivityIndicator, Pressable, RefreshControl, SafeAreaView, ScrollView, Text as RNText, View as RNView } from "react-native";
 import type { Session } from "@supabase/supabase-js";
 import { supabase, supabaseConfigured } from "./src/lib/supabase";
-import { openSystembolaget, saveNewWine } from "./src/lib/cellar-actions";
-import { hydrateWineRecords } from "./src/lib/wine-helpers";
 import { showError } from "./src/lib/show-error";
 import { BottomTabBar } from "./src/components/cellar-sections";
 import { CellarTab } from "./src/components/cellar-tab";
-import { AddWinePanel } from "./src/components/add-wine-panel";
+import { AddWineTab } from "./src/components/add-wine-tab";
 import { SuccessOverlay, useSuccessOverlay } from "./src/components/success-overlay";
 
 // Lazy-load heavy modals (only loaded when opened)
-const BarcodeScannerModal = lazy(() => import("./src/components/cellar-workflows").then(m => ({ default: m.BarcodeScannerModal })));
 const CatalogEditorModal = lazy(() => import("./src/components/cellar-workflows").then(m => ({ default: m.CatalogEditorModal })));
 const DrinkWineModal = lazy(() => import("./src/components/cellar-workflows").then(m => ({ default: m.DrinkWineModal })));
-const VintagePickerModal = lazy(() => import("./src/components/cellar-workflows").then(m => ({ default: m.VintagePickerModal })));
 const EditWineModal = lazy(() => import("./src/components/edit-wine-modal").then(m => ({ default: m.EditWineModal })));
 const WsetTastingModal = lazy(() => import("./src/components/wset-tasting-modal").then(m => ({ default: m.WsetTastingModal })));
 const TastingSessionPanel = lazy(() => import("./src/components/tasting-session-modal").then(m => ({ default: m.TastingSessionPanel })));
-const LabelMatchPickerModal = lazy(() => import("./src/components/label-match-picker").then(m => ({ default: m.LabelMatchPickerModal })));
 const PrivacyPolicyModal = lazy(() => import("./src/components/privacy-policy-modal").then(m => ({ default: m.PrivacyPolicyModal })));
 import { CellarContext, type CellarContextValue } from "./src/contexts/CellarContext";
 import { HistoryTab } from "./src/components/history-tab";
 import { MealTab } from "./src/components/meal-tab";
 import { CELLAR_SECTIONS, type CellarSection } from "./src/types/cellar";
-import type { StorageProps, CatalogProps, TastingProps } from "./src/types/panel-prop-groups";
-import { defaultDraft, type WineDraft } from "./src/types/cellar-drafts";
+import type { StorageProps } from "./src/types/panel-prop-groups";
 import { colors, styles } from "./src/styles/theme";
 import { BUILD_VERSION } from "./src/lib/build-version";
 import { LoadingScreen, SetupScreen } from "./src/screens/auth";
@@ -40,16 +34,11 @@ import { useReferenceOptions } from "./src/hooks/useReferenceOptions";
 import { useStorageSpaces } from "./src/hooks/useStorageSpaces";
 import { useImagePicker } from "./src/hooks/useImagePicker";
 import { useStorageSelection } from "./src/hooks/useStorageSelection";
-import { useCatalogLookup } from "./src/hooks/useCatalogLookup";
-import { useBarcodeScanner } from "./src/hooks/useBarcodeScanner";
-import { useVintagePicker } from "./src/hooks/useVintagePicker";
-import { useLabelScanner } from "./src/hooks/useLabelScanner";
 import { useTastingSessions } from "./src/hooks/useTastingSessions";
 import { useDrinkWineModal } from "./src/hooks/useDrinkWineModal";
 import { useEditWineModal } from "./src/hooks/useEditWineModal";
 import { useCatalogEditorModal } from "./src/hooks/useCatalogEditorModal";
 import { useModalToggle } from "./src/hooks/useModalToggle";
-import { useAddWineTasting } from "./src/hooks/useAddWineTasting";
 import { useSessionWset } from "./src/hooks/useSessionWset";
 import { useProfile } from "./src/hooks/useProfile";
 import { DisplayNamePrompt } from "./src/components/display-name-prompt";
@@ -142,26 +131,6 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
   const images = useImagePicker();
   const storage = useStorageSelection(storageData.storageSpaces, wineData.wines);
   const success = useSuccessOverlay();
-  const [selectedCatalogNameEntry, setSelectedCatalogNameEntry] = useState<import("./src/types/product-catalog").ProductCatalogWineRow | null>(null);
-  const catalogLookup = useCatalogLookup({ selectedCatalogNameEntry });
-  const vintage = useVintagePicker({
-    fetchCatalogEntriesByName: catalogData.fetchCatalogEntriesByName,
-    setSelectedCatalogNameEntry,
-  });
-  const barcode = useBarcodeScanner({
-    sessionUserId: session.user.id,
-    wines: wineData.wines,
-    maybeSuggestCatalogMatch: catalogLookup.maybeSuggestCatalogMatch,
-  });
-  const label = useLabelScanner({
-    takePhoto: images.takePhoto,
-    matchCatalogByText: catalogData.matchCatalogByText,
-    fetchCatalogEntriesByName: catalogData.fetchCatalogEntriesByName,
-    setScannerVisible: barcode.setScannerVisible,
-    setLookupBusy: catalogLookup.setLookupBusy,
-    setLookupMessage: catalogLookup.setLookupMessage,
-    setSelectedCatalogNameEntry,
-  });
   const tastingSessions = useTastingSessions(session.user.id);
   const userProfile = useProfile(session.user.id);
   const [profileVisible, setProfileVisible] = useState(false);
@@ -218,7 +187,6 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
   });
   const privacy = useModalToggle();
   const sessionWset = useSessionWset();
-  const [draft, setDraft] = useState<WineDraft>(defaultDraft);
   const [activeSection, setActiveSection] = useState<CellarSection>("cellar");
   const [highlightedWineId, setHighlightedWineId] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -228,15 +196,6 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
     setRefreshing(false);
   }, [wineData.fetchWines, storageData.fetchStorageSpaces, historyData.fetchHistoryEntries, catalogData.fetchCatalogEntries, refOptions.fetchReferenceOptions]);
   const [tastingSessionsVisible, setTastingSessionsVisible] = useState(false);
-  const [saving, setSaving] = useState(false);
-
-  const tasting = useAddWineTasting({
-    userId: session.user.id,
-    draft,
-    resetDraft: useCallback(() => setDraft(defaultDraft), []),
-    setHistoryEntries: historyData.setHistoryEntries,
-    showSuccess: success.show,
-  });
 
   const storageProps: StorageProps = useMemo(() => ({
     storageSpaces: storageData.storageSpaces, storageSpaceById, storageSpaceBottleCounts: wineData.storageSpaceBottleCounts,
@@ -246,53 +205,6 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
     onUpdateStorageSpace: storageData.updateStorageSpace,
     onDeleteStorageSpace: async (id: string) => { const ok = await deleteStorageSpace(id); if (ok) { if (storage.selectedStorageSpaceId === id) { storage.setSelectedStorageSpaceId(""); storage.setSelectedStorageRow("1"); storage.setSelectedStorageSlot("1"); } } },
   }), [storageData, storageSpaceById, wineData.storageSpaceBottleCounts, storage, deleteStorageSpace, success]);
-
-  const catalogProps: CatalogProps = useMemo(() => ({
-    searchWineNames: catalogData.searchCatalogWineNames,
-    effectiveCountryOptions: refOptions.effectiveCountryOptions, effectiveRegionOptions: refOptions.effectiveRegionOptions,
-    effectiveGrapeOptions: refOptions.effectiveGrapeOptions,
-    countryReferenceRows: refOptions.countryReferenceRows, regionReferenceRows: refOptions.regionReferenceRows,
-    grapeReferenceRows: refOptions.grapeReferenceRows,
-    lookupBusy: catalogLookup.lookupBusy, lookupMessage: catalogLookup.lookupMessage,
-  }), [catalogData.searchCatalogWineNames, refOptions, catalogLookup.lookupBusy, catalogLookup.lookupMessage]);
-
-  const tastingGroupProps: TastingProps = useMemo(() => ({
-    ...tasting.panelProps,
-  }), [tasting.panelProps]);
-
-  async function handleSaveWine() {
-    setSaving(true);
-    const result = await saveNewWine({
-      userId: session.user.id,
-      draft,
-      storageSpaceId: storage.selectedStorageSpaceId,
-      storageRow: storage.selectedStorageRow,
-      storageSlot: storage.selectedStorageSlot,
-      selectedCatalogNameEntry,
-    });
-    setSaving(false);
-    if (result.error) { showError("Kunde inte spara", result.error); return; }
-    setDraft(defaultDraft); setSelectedCatalogNameEntry(null);
-    storage.setSelectedStorageRow("1"); storage.setSelectedStorageSlot("1");
-    const savedRow = result.data!;
-    const [hydrated] = await hydrateWineRecords([savedRow]);
-    wineData.setWines(prev => [hydrated, ...prev]);
-    refOptions.mergeReferenceOptions(savedRow);
-    success.show("wine_added");
-    if (Platform.OS === "web") {
-      if (window.confirm("Vinet är sparat! Vill du gå till din källare?")) setActiveSection("cellar");
-    } else {
-      Alert.alert("Vinet är sparat!", "Vad vill du göra nu?", [
-        { text: "Lägg till fler", style: "default" },
-        { text: "Gå till min källare", onPress: () => setActiveSection("cellar") },
-      ]);
-    }
-  }
-
-  async function handleOpenSystembolaget(productId: string) {
-    const result = await openSystembolaget(productId);
-    if (result.error) showError("Kunde inte öppna länken", result.error);
-  }
 
   async function signOut() {
     const { error } = await supabase.auth.signOut();
@@ -383,29 +295,19 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
     );
   } else if (activeSection === "add") {
     activePanel = (
-      <AddWinePanel
-        styles={styles} draft={draft}
-        catalog={catalogProps} tasting={tastingGroupProps}
-        storageSpaces={storageData.storageSpaces}
-        wines={wineData.wines}
-        saving={saving}
-        onDraftChange={(patch) => setDraft((c) => catalogLookup.updateDraft(c, patch))}
-        onNameSelected={(name, producer) => vintage.handleWineNameSelected(name, producer, setDraft)}
-        onArticleNumberChange={(value) => {
-          setDraft((current) => catalogLookup.updateDraft(current, { systembolagetProductId: value }));
-          void catalogLookup.maybeSuggestCatalogMatch({ ...draft, systembolagetProductId: value });
-        }}
-        storageSpaceDraft={storageData.storageSpaceDraft}
-        savingStorageSpace={storageData.savingStorageSpace}
-        onStorageSpaceDraftChange={(patch) => storageData.setStorageSpaceDraft((c) => ({ ...c, ...patch }))}
-        onSaveStorageSpace={async () => { const newId = await storageData.saveStorageSpace(); if (newId) { storage.setSelectedStorageSpaceId(newId); storage.setSelectedStorageRow("1"); storage.setSelectedStorageSlot("1"); } success.show("storage_saved"); }}
-        onPositionChange={(spaceId, row, slot) => { storage.setSelectedStorageSpaceId(spaceId); storage.setSelectedStorageRow(row); storage.setSelectedStorageSlot(slot); }}
-        onScanLabel={() => label.handleLabelPhoto(setDraft)}
-        onOpenSystembolaget={handleOpenSystembolaget}
-        onChooseImage={async () => { const uri = await images.pickImageFromLibrary(); if (uri) setDraft((c) => ({ ...c, imageUri: uri })); }}
-        onTakePhoto={async () => { const uri = await images.takePhoto(); if (uri) setDraft((c) => ({ ...c, imageUri: uri })); }}
-        onSaveWine={handleSaveWine}
+      <AddWineTab
+        hidden={false}
         onOpenProfile={() => setProfileVisible(true)}
+        onNavigateToCellar={() => setActiveSection("cellar")}
+        catalogData={catalogData}
+        refOptions={refOptions}
+        images={images}
+        storageData={storageData}
+        storage={storage}
+        success={success}
+        wineData={{ wines: wineData.wines, setWines: wineData.setWines }}
+        historyData={{ setHistoryEntries: historyData.setHistoryEntries }}
+        sessionUserId={session.user.id}
       />
     );
   }
@@ -434,10 +336,6 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
       <SuccessOverlay config={success.config} onDone={success.clear} />
       <Suspense fallback={null}>
       <PrivacyPolicyModal visible={privacy.visible} styles={styles} onClose={privacy.close} />
-      <BarcodeScannerModal visible={barcode.scannerVisible} styles={styles} onClose={() => barcode.setScannerVisible(false)} onBarcodeScanned={({ data: d }) => barcode.handleBarcodeScanned(d, draft, setDraft)} onLabelPhoto={() => label.handleLabelPhoto(setDraft)} />
-      <LabelMatchPickerModal visible={label.labelPickerVisible} matches={label.labelMatches} onSelect={(m) => label.handleLabelMatchSelected(m, setDraft)} onDismiss={() => label.handleLabelMatchDismissed(setDraft)} />
-      <WsetTastingModal {...tasting.wsetProps} wineType={draft.type} />
-      <VintagePickerModal visible={vintage.vintagePickerVisible} wineName={vintage.vintagePickerWineName} vintages={vintage.vintagePickerOptions} loading={vintage.vintagePickerLoading} onSelectVintage={(e) => vintage.handleVintageSelected(e, setDraft)} onAddNew={() => vintage.handleVintageAddNew(setDraft)} onClose={() => vintage.setVintagePickerVisible(false)} styles={styles} />
       <CatalogEditorModal
         {...catalogEditor.modalProps} styles={styles}
         searchWineNames={catalogData.searchCatalogWineNames}
