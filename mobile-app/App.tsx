@@ -65,6 +65,40 @@ function useWebStyles() {
       '[aria-modal="true"] *, [aria-modal="true"] { opacity: 1 !important; }',
     ].join("\n");
     document.head.appendChild(style);
+
+    // Paper grain texture on panel backgrounds (rgb(248, 241, 232))
+    const svgData = encodeURIComponent(
+      "<svg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'>" +
+      "<filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/></filter>" +
+      "<rect width='100%' height='100%' filter='url(#n)' opacity='0.06'/></svg>"
+    );
+    const grainBg = `url("data:image/svg+xml,${svgData}")`;
+    const PANEL_COLOR = "rgb(240, 235, 227)"; // tokens.surfaceAlt (#F0EBE3)
+
+    function applyGrain(el: HTMLElement) {
+      if (getComputedStyle(el).backgroundColor === PANEL_COLOR && !el.style.backgroundImage) {
+        el.style.backgroundImage = grainBg;
+        el.style.backgroundSize = "200px";
+      }
+    }
+
+    // Apply to existing panels
+    document.querySelectorAll<HTMLElement>("div").forEach(applyGrain);
+
+    // Watch for new panels added to the DOM
+    const observer = new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        for (const node of m.addedNodes) {
+          if (node instanceof HTMLElement) {
+            if (node.tagName === "DIV") applyGrain(node);
+            node.querySelectorAll<HTMLElement>("div").forEach(applyGrain);
+          }
+        }
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    return () => observer.disconnect();
   }, []);
 }
 

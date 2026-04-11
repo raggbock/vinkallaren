@@ -329,26 +329,6 @@ export async function cacheWineDraftAsCatalogEntry(payload: WineInsert, userId: 
   );
 }
 
-export async function cacheWineRecordAsCatalogEntry(wine: WineRecord, userId: string): Promise<boolean> {
-  return cacheCatalogEntry(
-    {
-      barcode: wine.barcode?.trim() || undefined,
-      systembolagetProductId: wine.systembolaget_product_id?.trim() || undefined,
-      name: wine.name,
-      producer: wine.producer ?? undefined,
-      country: wine.country ?? undefined,
-      region: wine.region ?? undefined,
-      grape: wine.grape ?? undefined,
-      type: wine.type ?? undefined,
-      vintage: wine.vintage ?? undefined,
-      foodPairings: wine.food_pairings ?? [],
-      sourceLabel: "MinVinkällare",
-      sourceConfidence: "high",
-    },
-    userId
-  );
-}
-
 export function buildCatalogBackfillPayload(wines: WineRecord[], userId: string) {
   return wines.map((w) => ({
     barcode: w.barcode?.trim() || null,
