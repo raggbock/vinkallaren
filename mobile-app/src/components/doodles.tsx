@@ -74,22 +74,6 @@ export function TabIconAdd({ size = 24, color = "#C83C2D" }: { size?: number; co
   );
 }
 
-/** Tab icon: plate with fork */
-export function TabIconFood({ size = 24, color = "#C83C2D" }: { size?: number; color?: string }) {
-  if (Platform.OS !== "web") return <View style={{ width: size, height: size }} />;
-  return (
-    <WebSvg
-      size={size}
-      svg={`<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
-        <circle cx="13" cy="13" r="8.5" stroke="${color}" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-        <circle cx="13" cy="13" r="5" stroke="${color}" stroke-width="0.8" fill="none" opacity="0.4" stroke-linecap="round"/>
-        <path d="M4 3 L4 5.5 Q4 7.5, 5 7.5 Q6 7.5, 6 5.5 L6 3" stroke="${color}" stroke-width="1.2" fill="none" stroke-linecap="round"/>
-        <path d="M5 7.5 L5 11" stroke="${color}" stroke-width="1.2" stroke-linecap="round"/>
-      </svg>`}
-    />
-  );
-}
-
 /** Tab icon: wine glass outline */
 export function TabIconTasting({ size = 24, color = "#C83C2D" }: { size?: number; color?: string }) {
   if (Platform.OS !== "web") return <View style={{ width: size, height: size }} />;
