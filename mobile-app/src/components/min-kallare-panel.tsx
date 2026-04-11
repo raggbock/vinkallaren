@@ -35,7 +35,6 @@ type MinKallarePanelProps = {
   onRefreshStats: () => void;
   onSignOut: () => void;
   onNavigateToAdd: () => void;
-  onOpenTastingSessions: () => void;
   hasMoreWines: boolean;
   onLoadMoreWines: () => void;
   highlightedWineId?: string | null;
@@ -108,7 +107,7 @@ export function MinKallarePanel(props: MinKallarePanelProps) {
           statsExpanded={statsExpanded} onToggleStats={() => setStatsExpanded((v) => !v)}
           summaryText={summaryText} hasSections={sections.length > 0}
           onRefreshStats={props.onRefreshStats} onSignOut={props.onSignOut}
-          onNavigateToAdd={props.onNavigateToAdd} onOpenTastingSessions={props.onOpenTastingSessions}
+          onNavigateToAdd={props.onNavigateToAdd}
           loading={props.loading}
         />
       }

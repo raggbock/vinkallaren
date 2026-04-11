@@ -18,7 +18,6 @@ export type CellarListHeaderProps = {
   summaryText: string;
   onRefreshStats: () => void;
   onSignOut: () => void;
-  onOpenTastingSessions: () => void;
   onNavigateToAdd: () => void;
   loading: boolean;
   hasSections: boolean;
@@ -31,7 +30,6 @@ export function CellarListHeader(props: CellarListHeaderProps) {
       <StatsSummaryBar {...props} />
       <CellarFilters {...props} />
       {props.loading ? <LoadingInline /> : null}
-      <TastingsButton styles={props.styles} onPress={props.onOpenTastingSessions} />
       <StorageSpaceForm
         draft={props.storage.storageSpaceDraft} saving={props.storage.savingStorageSpace}
         onDraftChange={props.storage.onStorageSpaceDraftChange} onSave={props.storage.onSaveStorageSpace}
@@ -109,19 +107,6 @@ function CellarFilters({ styles, filter, storage }: CellarListHeaderProps) {
         </View>
       </Expandable>
     </>
-  );
-}
-
-function TastingsButton({ onPress }: { styles: SharedStyles; onPress: () => void }) {
-  return (
-    <Pressable onPress={onPress} style={({ pressed }) => [
-      { flexDirection: "row" as const, alignItems: "center" as const, backgroundColor: colors.surfaceAlt, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 14, gap: 10 },
-      pressed && { opacity: 0.8 },
-    ]}>
-      <Text style={{ fontSize: 18 }}>🥂</Text>
-      <Text style={{ flex: 1, color: colors.accent, fontWeight: "700", fontSize: 15 }}>Provningar</Text>
-      <Text style={{ color: colors.textSecondary, fontSize: 14 }}>›</Text>
-    </Pressable>
   );
 }
 

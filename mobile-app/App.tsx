@@ -279,7 +279,6 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
       refreshing={refreshing}
       onRefresh={onRefresh}
       onNavigateToAdd={() => setActiveSection("add")}
-      onOpenTastingSessions={() => {}}
       onOpenProfile={() => setProfileVisible(true)}
       onEditWine={edit.actions.open}
       onDrinkWine={drink.actions.open}
