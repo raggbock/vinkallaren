@@ -7,23 +7,19 @@ import { SuccessOverlay, useSuccessOverlay } from "./success-overlay";
 import { styles } from "../styles/theme";
 import type { WineHistoryRecord } from "../types/wine-history";
 import type { TastingSessionRow } from "../types/tasting-session";
-import type { useHistory } from "../hooks/useHistory";
 
 const EditHistoryModal = lazy(() => import("./cellar-workflows").then(m => ({ default: m.EditHistoryModal })));
 
-type HistoryData = ReturnType<typeof useHistory>;
-
 type Props = {
   hidden: boolean;
-  historyData: HistoryData;
   endedSessions: TastingSessionRow[];
   refreshing: boolean;
   onRefresh: () => Promise<void>;
   onOpenProfile: () => void;
 };
 
-export function HistoryTab({ hidden, historyData, endedSessions, refreshing, onRefresh, onOpenProfile }: Props) {
-  const { storageSpaceById } = useCellar();
+export function HistoryTab({ hidden, endedSessions, refreshing, onRefresh, onOpenProfile }: Props) {
+  const ctx = useCellar();
   const [editingHistory, setEditingHistory] = useState<WineHistoryRecord | null>(null);
   const [editHistorySaving, setEditHistorySaving] = useState(false);
   const success = useSuccessOverlay();
@@ -40,10 +36,10 @@ export function HistoryTab({ hidden, historyData, endedSessions, refreshing, onR
     });
     setEditHistorySaving(false);
     if (result.error) { showError("Kunde inte spara ändringen", result.error); return; }
-    historyData.setHistoryEntries((prev) => prev.map((e) => (e.id === editingHistory.id ? { ...e, ...result.data! } : e)));
+    ctx.setHistoryEntries((prev) => prev.map((e) => (e.id === editingHistory.id ? { ...e, ...result.data! } : e)));
     setEditingHistory(null);
     success.show("history_edited");
-  }, [editingHistory, historyData, success]);
+  }, [editingHistory, ctx, success]);
 
   if (hidden) return null;
 
@@ -51,14 +47,14 @@ export function HistoryTab({ hidden, historyData, endedSessions, refreshing, onR
     <>
       <HistoryPanel
         styles={styles}
-        historyEntries={historyData.historyEntries}
-        loadingHistory={historyData.loadingHistory}
-        storageSpaceById={storageSpaceById}
+        historyEntries={ctx.historyEntries}
+        loadingHistory={ctx.historyLoading}
+        storageSpaceById={ctx.storageSpaceById}
         endedSessions={endedSessions}
         refreshing={refreshing}
         onRefresh={onRefresh}
-        hasMore={historyData.hasMoreHistory}
-        onLoadMore={historyData.fetchMoreHistory}
+        hasMore={ctx.historyHasMore}
+        onLoadMore={ctx.fetchMoreHistory}
         onEditEntry={setEditingHistory}
         onOpenProfile={onOpenProfile}
       />

@@ -18,7 +18,7 @@ const EditWineModal = lazy(() => import("./src/components/edit-wine-modal").then
 const WsetTastingModal = lazy(() => import("./src/components/wset-tasting-modal").then(m => ({ default: m.WsetTastingModal })));
 const TastingSessionPanel = lazy(() => import("./src/components/tasting-session-modal").then(m => ({ default: m.TastingSessionPanel })));
 const PrivacyPolicyModal = lazy(() => import("./src/components/privacy-policy-modal").then(m => ({ default: m.PrivacyPolicyModal })));
-import { CellarContext, type CellarContextValue } from "./src/contexts/CellarContext";
+import { CellarProvider, useCellar } from "./src/contexts/CellarContext";
 import { HistoryTab } from "./src/components/history-tab";
 import { TastingTab } from "./src/components/tasting-tab";
 import { CELLAR_SECTIONS, type CellarSection } from "./src/types/cellar";
@@ -27,11 +27,6 @@ import { colors, styles } from "./src/styles/theme";
 import { BUILD_VERSION } from "./src/lib/build-version";
 import { LoadingScreen, SetupScreen } from "./src/screens/auth";
 import { LandingScreen } from "./src/screens/landing";
-import { useWines } from "./src/hooks/useWines";
-import { useHistory } from "./src/hooks/useHistory";
-import { useCatalog } from "./src/hooks/useCatalog";
-import { useReferenceOptions } from "./src/hooks/useReferenceOptions";
-import { useStorageSpaces } from "./src/hooks/useStorageSpaces";
 import { useImagePicker } from "./src/hooks/useImagePicker";
 import { useStorageSelection } from "./src/hooks/useStorageSelection";
 import { useTastingSessions } from "./src/hooks/useTastingSessions";
@@ -136,34 +131,17 @@ export default function App() {
 }
 
 function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { session: Session; pendingJoinCode: string | null; onJoinCodeConsumed: () => void }) {
-  const wineData = useWines();
-  const historyData = useHistory();
-  const storageData = useStorageSpaces(session.user.id);
-  const catalogData = useCatalog(session.user.id, wineData.wines, wineData.loading);
-  const refOptions = useReferenceOptions();
-  const storageSpaceById = useMemo(() => new Map(storageData.storageSpaces.map((s) => [s.id, s])), [storageData.storageSpaces]);
-  const cellarCtx: CellarContextValue = useMemo(() => ({
-    userId: session.user.id,
-    wines: wineData.wines,
-    winesLoading: wineData.loading,
-    storageSpaces: storageData.storageSpaces,
-    storageSpaceById,
-    refreshWines: wineData.fetchWines,
-    fetchMoreWines: wineData.fetchMoreWines,
-    hasMoreWines: wineData.hasMoreWines,
-    setWines: wineData.setWines,
-    deleteWine: wineData.deleteWine,
-    storageSpaceBottleCounts: wineData.storageSpaceBottleCounts,
-    pairingOptions: wineData.pairingOptions,
-    countryOptions: wineData.countryOptions,
-    regionOptions: wineData.regionOptions,
-    typeOptions: wineData.typeOptions,
-    vintageOptions: wineData.vintageOptions,
-    cellarGrapeOptions: wineData.cellarGrapeOptions,
-    stats: wineData.stats,
-  }), [session.user.id, wineData, storageData.storageSpaces, storageSpaceById]);
+  return (
+    <CellarProvider userId={session.user.id}>
+      <CellarScreenInner session={session} pendingJoinCode={pendingJoinCode} onJoinCodeConsumed={onJoinCodeConsumed} />
+    </CellarProvider>
+  );
+}
+
+function CellarScreenInner({ session, pendingJoinCode, onJoinCodeConsumed }: { session: Session; pendingJoinCode: string | null; onJoinCodeConsumed: () => void }) {
+  const ctx = useCellar();
   const images = useImagePicker();
-  const storage = useStorageSelection(storageData.storageSpaces, wineData.wines);
+  const storage = useStorageSelection(ctx.storageSpaces, ctx.wines);
   const success = useSuccessOverlay();
   const tastingSessions = useTastingSessions(session.user.id);
   const userProfile = useProfile(session.user.id);
@@ -192,32 +170,27 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
     tastingSessions.joinSession(pendingJoinCode);
   }, [pendingJoinCode]);
 
-  const deleteStorageSpace = useCallback(async (id: string): Promise<boolean> => {
-    const ok = await storageData.deleteStorageSpace(id);
-    if (ok) await wineData.fetchWines();
-    return ok;
-  }, [storageData, wineData]);
   const drink = useDrinkWineModal({
     userId: session.user.id,
-    setHistoryEntries: historyData.setHistoryEntries,
-    setWines: wineData.setWines,
+    setHistoryEntries: ctx.setHistoryEntries,
+    setWines: ctx.setWines,
     showSuccess: success.show,
     pickImageFromLibrary: images.pickImageFromLibrary,
     takePhoto: images.takePhoto,
   });
   const edit = useEditWineModal({
     userId: session.user.id,
-    setWines: wineData.setWines,
-    fetchCatalogEntries: catalogData.fetchCatalogEntries,
+    setWines: ctx.setWines,
+    fetchCatalogEntries: ctx.fetchCatalogEntries,
     showSuccess: success.show,
-    storageSpaces: storageData.storageSpaces,
-    saveStorageSpace: storageData.saveStorageSpace,
+    storageSpaces: ctx.storageSpaces,
+    saveStorageSpace: ctx.saveStorageSpace,
     getOccupiedPositions: storage.getOccupiedPositions,
     pickImageFromLibrary: images.pickImageFromLibrary,
     takePhoto: images.takePhoto,
   });
   const catalogEditor = useCatalogEditorModal({
-    fetchCatalogEntries: catalogData.fetchCatalogEntries,
+    fetchCatalogEntries: ctx.fetchCatalogEntries,
   });
   const privacy = useModalToggle();
   const sessionWset = useSessionWset();
@@ -226,19 +199,18 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
   const [refreshing, setRefreshing] = useState(false);
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([wineData.fetchWines(), storageData.fetchStorageSpaces(), historyData.fetchHistoryEntries(), catalogData.fetchCatalogEntries(), refOptions.fetchReferenceOptions()]);
+    await ctx.refreshAll();
     setRefreshing(false);
-  }, [wineData.fetchWines, storageData.fetchStorageSpaces, historyData.fetchHistoryEntries, catalogData.fetchCatalogEntries, refOptions.fetchReferenceOptions]);
-
+  }, [ctx.refreshAll]);
 
   const storageProps: StorageProps = useMemo(() => ({
-    storageSpaces: storageData.storageSpaces, storageSpaceById, storageSpaceBottleCounts: wineData.storageSpaceBottleCounts,
-    storageSpaceDraft: storageData.storageSpaceDraft, savingStorageSpace: storageData.savingStorageSpace,
-    onStorageSpaceDraftChange: (patch: Partial<import("./src/types/cellar-drafts").StorageSpaceDraft>) => storageData.setStorageSpaceDraft((c) => ({ ...c, ...patch })),
-    onSaveStorageSpace: async () => { const newId = await storageData.saveStorageSpace(); if (newId) { storage.setSelectedStorageSpaceId(newId); storage.setSelectedStorageRow("1"); storage.setSelectedStorageSlot("1"); } success.show("storage_saved"); },
-    onUpdateStorageSpace: storageData.updateStorageSpace,
-    onDeleteStorageSpace: async (id: string) => { const ok = await deleteStorageSpace(id); if (ok) { if (storage.selectedStorageSpaceId === id) { storage.setSelectedStorageSpaceId(""); storage.setSelectedStorageRow("1"); storage.setSelectedStorageSlot("1"); } } },
-  }), [storageData, storageSpaceById, wineData.storageSpaceBottleCounts, storage, deleteStorageSpace, success]);
+    storageSpaces: ctx.storageSpaces, storageSpaceById: ctx.storageSpaceById, storageSpaceBottleCounts: ctx.storageSpaceBottleCounts,
+    storageSpaceDraft: ctx.storageSpaceDraft, savingStorageSpace: ctx.savingStorageSpace,
+    onStorageSpaceDraftChange: (patch: Partial<import("./src/types/cellar-drafts").StorageSpaceDraft>) => ctx.setStorageSpaceDraft((c) => ({ ...c, ...patch })),
+    onSaveStorageSpace: async () => { const newId = await ctx.saveStorageSpace(); if (newId) { storage.setSelectedStorageSpaceId(newId); storage.setSelectedStorageRow("1"); storage.setSelectedStorageSlot("1"); } success.show("storage_saved"); },
+    onUpdateStorageSpace: ctx.updateStorageSpace,
+    onDeleteStorageSpace: async (id: string) => { const ok = await ctx.deleteStorageSpace(id); if (ok) { if (storage.selectedStorageSpaceId === id) { storage.setSelectedStorageSpaceId(""); storage.setSelectedStorageRow("1"); storage.setSelectedStorageSlot("1"); } } },
+  }), [ctx, storage, success]);
 
   async function signOut() {
     const { error } = await supabase.auth.signOut();
@@ -283,8 +255,8 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
       onEditWine={edit.actions.open}
       onDrinkWine={drink.actions.open}
       storage={storageProps}
-      stats={wineData.stats}
-      onRefreshStats={wineData.fetchWines}
+      stats={ctx.stats}
+      onRefreshStats={ctx.refreshWines}
       highlightedWineId={highlightedWineId}
       onClearHighlight={() => setHighlightedWineId(null)}
       onHighlightWine={setHighlightedWineId}
@@ -293,7 +265,6 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
   if (activeSection === "history") {
     activePanel = (
       <HistoryTab hidden={false}
-        historyData={historyData}
         endedSessions={tastingSessions.sessions.filter((ses) => ses.status === "ended")}
         refreshing={refreshing} onRefresh={onRefresh}
         onOpenProfile={() => setProfileVisible(true)}
@@ -307,8 +278,8 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
             styles={styles} userId={session.user.id}
             sessions={tastingSessions.sessions} loading={tastingSessions.loading} toasts={tastingSessions.toasts}
             activeSession={tastingSessions.activeSession} activeWines={tastingSessions.activeWines}
-            activeTastings={tastingSessions.activeTastings} wines={wineData.wines}
-            searchWineNames={catalogData.searchCatalogWineNames}
+            activeTastings={tastingSessions.activeTastings} wines={ctx.wines}
+            searchWineNames={ctx.searchCatalogWineNames}
             onBack={() => { tastingSessions.closeSession(); }}
             onFetchSessions={tastingSessions.fetchSessions} onCreateSession={tastingSessions.createSession}
             onJoinSession={tastingSessions.joinSession} onOpenSession={tastingSessions.openSession}
@@ -339,21 +310,15 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
         isAnonymous={session.user.is_anonymous ?? false}
         onOpenProfile={() => setProfileVisible(true)}
         onNavigateToCellar={() => setActiveSection("cellar")}
-        catalogData={catalogData}
-        refOptions={refOptions}
         images={images}
-        storageData={storageData}
         storage={storage}
         success={success}
-        wineData={{ wines: wineData.wines, setWines: wineData.setWines }}
-        historyData={{ setHistoryEntries: historyData.setHistoryEntries }}
         sessionUserId={session.user.id}
       />
     );
   }
 
   return (
-    <CellarContext.Provider value={cellarCtx}>
     <SafeAreaView style={styles.screen}>
       <StatusBar style="light" />
       <DisplayNamePrompt
@@ -378,26 +343,26 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
       <PrivacyPolicyModal visible={privacy.visible} styles={styles} onClose={privacy.close} />
       <CatalogEditorModal
         {...catalogEditor.modalProps} styles={styles}
-        searchWineNames={catalogData.searchCatalogWineNames}
-        effectiveCountryOptions={refOptions.effectiveCountryOptions} effectiveRegionOptions={refOptions.effectiveRegionOptions}
-        effectiveGrapeOptions={refOptions.effectiveGrapeOptions}
-        countryReferenceRows={refOptions.countryReferenceRows} regionReferenceRows={refOptions.regionReferenceRows}
-        grapeReferenceRows={refOptions.grapeReferenceRows}
+        searchWineNames={ctx.searchCatalogWineNames}
+        effectiveCountryOptions={ctx.effectiveCountryOptions} effectiveRegionOptions={ctx.effectiveRegionOptions}
+        effectiveGrapeOptions={ctx.effectiveGrapeOptions}
+        countryReferenceRows={ctx.countryReferenceRows} regionReferenceRows={ctx.regionReferenceRows}
+        grapeReferenceRows={ctx.grapeReferenceRows}
       />
       <WsetTastingModal {...drink.wsetProps} />
       <DrinkWineModal {...drink.modalProps} styles={styles} />
       <WsetTastingModal {...sessionWset.wsetProps} />
       <EditWineModal
         {...edit.modalProps} styles={styles}
-        storageSpaces={storageData.storageSpaces}
-        storageSpaceById={storageSpaceById}
-        searchWineNames={catalogData.searchCatalogWineNames}
-        effectiveCountryOptions={refOptions.effectiveCountryOptions} effectiveRegionOptions={refOptions.effectiveRegionOptions}
-        effectiveGrapeOptions={refOptions.effectiveGrapeOptions}
-        countryReferenceRows={refOptions.countryReferenceRows} regionReferenceRows={refOptions.regionReferenceRows}
-        grapeReferenceRows={refOptions.grapeReferenceRows}
-        storageSpaceDraft={storageData.storageSpaceDraft} savingStorageSpace={storageData.savingStorageSpace}
-        onStorageSpaceDraftChange={(patch) => storageData.setStorageSpaceDraft((c) => ({ ...c, ...patch }))}
+        storageSpaces={ctx.storageSpaces}
+        storageSpaceById={ctx.storageSpaceById}
+        searchWineNames={ctx.searchCatalogWineNames}
+        effectiveCountryOptions={ctx.effectiveCountryOptions} effectiveRegionOptions={ctx.effectiveRegionOptions}
+        effectiveGrapeOptions={ctx.effectiveGrapeOptions}
+        countryReferenceRows={ctx.countryReferenceRows} regionReferenceRows={ctx.regionReferenceRows}
+        grapeReferenceRows={ctx.grapeReferenceRows}
+        storageSpaceDraft={ctx.storageSpaceDraft} savingStorageSpace={ctx.savingStorageSpace}
+        onStorageSpaceDraftChange={(patch) => ctx.setStorageSpaceDraft((c) => ({ ...c, ...patch }))}
       />
       </Suspense>
       {activeSection === "history" || activeSection === "cellar" ? (
@@ -415,6 +380,5 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
       )}
       <BottomTabBar activeSection={activeSection} sections={CELLAR_SECTIONS} styles={styles} onSelect={setActiveSection} />
     </SafeAreaView>
-    </CellarContext.Provider>
   );
 }
