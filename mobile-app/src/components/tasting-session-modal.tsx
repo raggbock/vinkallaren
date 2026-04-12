@@ -101,12 +101,14 @@ export function TastingSessionPanel({
   async function handleAddDish(name: string) {
     if (!activeSession) return;
     const r = await addSessionDish(activeSession.id, name);
-    if (r.data) setDishes((prev) => [...prev, r.data!]);
+    if (r.error) { setInlineError("Kunde inte lägga till maträtt"); return; }
+    setDishes((prev) => [...prev, r.data!]);
   }
 
   async function handleRemoveDish(dishId: string) {
     const r = await deleteSessionDish(dishId);
-    if (r.data) setDishes((prev) => prev.filter((d) => d.id !== dishId));
+    if (r.error) { setInlineError("Kunde inte ta bort maträtt"); return; }
+    setDishes((prev) => prev.filter((d) => d.id !== dishId));
   }
 
   // Tasting a specific wine

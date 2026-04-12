@@ -175,15 +175,21 @@ export async function deleteSessionDish(dishId: string): Promise<Result<true>> {
 }
 
 export async function fetchTastingDishes(sessionId: string): Promise<Result<SessionTastingDishRow[]>> {
+  // Two-step: get tasting IDs for this session, then fetch their dish links
+  const { data: tastings, error: tErr } = await supabase
+    .from("session_tastings")
+    .select("id")
+    .eq("session_id", sessionId);
+  if (tErr) return fail(tErr.message);
+  const tastingIds = (tastings ?? []).map((t) => t.id);
+  if (tastingIds.length === 0) return ok([]);
+
   const { data, error } = await supabase
     .from("session_tasting_dishes")
-    .select("session_tasting_id, session_dish_id, session_tastings!inner(session_id)")
-    .eq("session_tastings.session_id", sessionId);
+    .select("session_tasting_id, session_dish_id")
+    .in("session_tasting_id", tastingIds);
   if (error) return fail(error.message);
-  return ok((data ?? []).map((d: any) => ({
-    session_tasting_id: d.session_tasting_id,
-    session_dish_id: d.session_dish_id,
-  })));
+  return ok((data ?? []) as SessionTastingDishRow[]);
 }
 
 export async function saveTastingDishes(
