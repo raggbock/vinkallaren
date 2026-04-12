@@ -1,10 +1,10 @@
 import { lazy, Suspense, useCallback, useMemo, useState } from "react";
 import { Alert, Platform } from "react-native";
 import { openSystembolaget, saveNewWine } from "../lib/cellar-actions";
-import { hydrateWineRecords } from "../lib/wine-helpers";
+import { hydrateWineRecords, mergeDraftWithCatalogSuggestion } from "../lib/wine-helpers";
 import { showError } from "../lib/show-error";
 import { AddWinePanel } from "./add-wine-panel";
-import { defaultDraft, type WineDraft } from "../types/cellar-drafts";
+import { defaultDraft, defaultImportSelection, type WineDraft } from "../types/cellar-drafts";
 import type { CatalogProps } from "../types/panel-prop-groups";
 import type { ProductCatalogWineRow } from "../types/product-catalog";
 import type { useCatalog } from "../hooks/useCatalog";
@@ -171,7 +171,9 @@ function AddWineTabContent({
         onNameSelected={(name, producer) => vintage.handleWineNameSelected(name, producer, setDraft)}
         onArticleNumberChange={(value) => {
           setDraft((current) => catalogLookup.updateDraft(current, { systembolagetProductId: value }));
-          void catalogLookup.maybeSuggestCatalogMatch({ ...draft, systembolagetProductId: value });
+          catalogLookup.maybeSuggestCatalogMatch({ ...draft, systembolagetProductId: value }).then((match) => {
+            if (match) setDraft((current) => mergeDraftWithCatalogSuggestion(current, match, "empty", defaultImportSelection));
+          });
         }}
         storageSpaceDraft={storageData.storageSpaceDraft}
         savingStorageSpace={storageData.savingStorageSpace}
