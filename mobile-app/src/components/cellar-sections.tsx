@@ -1,7 +1,6 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, Image, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from "react-native";
 
-import { buildCustomPairings, FOOD_CATEGORIES } from "../lib/cellar-helpers";
 import { buildWsetSummary, type WsetTastingData } from "../lib/wset-data";
 import type { StorageSpaceRow } from "../types/storage-space";
 import type { SessionParticipant, TastingSessionRow } from "../types/tasting-session";
@@ -17,7 +16,7 @@ import type { SessionWineRow, SessionTastingRow } from "../types/tasting-session
 
 import { colors } from "../styles/theme";
 import type { styles as themeStyles } from "../styles/theme";
-import { WineGlassDoodle, SquigglyLine, TabIconCellar, TabIconAdd, TabIconTasting, TabIconHistory } from "./doodles";
+import { WineGlassDoodle, TabIconCellar, TabIconAdd, TabIconTasting, TabIconHistory } from "./doodles";
 type SharedStyles = typeof themeStyles;
 
 export function BottomTabBar({
@@ -62,116 +61,6 @@ export function BottomTabBar({
   );
 }
 
-
-export function MealPlannerPanel({
-  styles,
-  wines,
-  selectedMeal,
-  mealRecommendations,
-  onSelectMeal,
-  onWinePress,
-  onOpenProfile,
-}: {
-  styles: SharedStyles;
-  wines: WineRecord[];
-  selectedMeal: string;
-  mealRecommendations: WineRecord[];
-  onSelectMeal: (value: string) => void;
-  onWinePress?: (wine: WineRecord) => void;
-  onOpenProfile?: () => void;
-}) {
-  const customPairings = useMemo(() => buildCustomPairings(wines), [wines]);
-  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
-
-  const toggleCategory = useCallback((label: string) => {
-    setExpandedCategory((prev) => (prev === label ? null : label));
-  }, []);
-
-  const allCategories = useMemo(() => {
-    const cats = [...FOOD_CATEGORIES];
-    if (customPairings.length > 0) cats.push({ label: "Övriga", items: customPairings });
-    return cats;
-  }, [customPairings]);
-
-  return (
-    <View style={styles.panel}>
-      <PanelHeader title="Vad ska vi äta?" rightLabel="Profil" onRightPress={onOpenProfile} />
-
-      {selectedMeal ? (
-        <Pressable onPress={() => onSelectMeal("")} style={({ pressed }) => [mealStyles.selectedChip, pressed && { opacity: 0.7 }]}>
-          <Text style={mealStyles.selectedChipText}>{selectedMeal}</Text>
-          <Text style={mealStyles.selectedChipClear}>✕</Text>
-        </Pressable>
-      ) : null}
-
-      {allCategories.map((category) => {
-        const isExpanded = expandedCategory === category.label;
-        const hasSelection = category.items.includes(selectedMeal);
-        return (
-          <View key={category.label} style={styles.foodCategoryGroup}>
-            <Pressable
-              onPress={() => toggleCategory(category.label)}
-              style={({ pressed }) => [mealStyles.categoryRow, isExpanded && mealStyles.categoryRowExpanded, pressed && { opacity: 0.7 }]}
-            >
-              <Text style={[styles.foodCategoryLabel, hasSelection && styles.foodCategoryLabelActive]}>
-                {category.label}
-              </Text>
-              <Text style={styles.foodCategoryChevron}>{isExpanded ? "▾" : "›"}</Text>
-            </Pressable>
-            {isExpanded && (
-              <View style={styles.tagRow}>
-                {category.items.map((item) => {
-                  const isSelected = selectedMeal === item;
-                  return (
-                    <Pressable
-                      key={`food-${item}`}
-                      onPress={() => onSelectMeal(isSelected ? "" : item)}
-                      style={[styles.foodPill, isSelected && styles.foodPillActive]}
-                    >
-                      <Text style={[styles.foodText, isSelected && styles.foodTextActive]}>{item}</Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-            )}
-          </View>
-        );
-      })}
-
-      {selectedMeal ? <SquigglyLine /> : null}
-
-      {selectedMeal && mealRecommendations.length === 0 ? (
-        <View style={{ alignItems: "center", gap: 8, paddingVertical: 12 }}>
-          <WineGlassDoodle size={44} />
-          <Text style={styles.emptyState}>Inga viner matchar "{selectedMeal}" ännu.</Text>
-        </View>
-      ) : null}
-
-      {mealRecommendations.map((wine) => (
-        <Pressable key={`meal-${wine.id}`} onPress={() => onWinePress?.(wine)} style={styles.recommendationCard}>
-          <View style={styles.recommendationHeader}>
-            <View style={styles.flex}>
-              <Text style={styles.wineType}>{wine.type}</Text>
-              <Text style={styles.recommendationName}>{wine.name}</Text>
-              <Text style={styles.wineMeta}>{[wine.producer, wine.grape, wine.country].filter(Boolean).join(" • ")}</Text>
-            </View>
-            <View style={styles.quantityBadge}>
-              <Text style={styles.quantityBadgeText}>{wine.quantity} st</Text>
-            </View>
-          </View>
-
-          <View style={styles.tagRow}>
-            {wine.food_pairings.map((pairing) => (
-              <View key={`recommend-${wine.id}-${pairing}`} style={[styles.foodPill, pairing === selectedMeal && styles.foodPillActive]}>
-                <Text style={[styles.foodText, pairing === selectedMeal && styles.foodTextActive]}>{pairing}</Text>
-              </View>
-            ))}
-          </View>
-        </Pressable>
-      ))}
-    </View>
-  );
-}
 
 export function HistoryPanel({
   styles, historyEntries, loadingHistory, storageSpaceById,
@@ -382,36 +271,6 @@ const HistoryRow = React.memo(function HistoryRow({ entry, styles, onEdit }: {
       ) : null}
     </View>
   );
-});
-
-const mealStyles = StyleSheet.create({
-  selectedChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    alignSelf: "flex-start",
-    gap: 8,
-    backgroundColor: colors.accent,
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-  },
-  selectedChipText: { color: colors.textLight, fontWeight: "700", fontSize: 14 },
-  selectedChipClear: { color: colors.surfaceAlt, fontSize: 12 },
-  categoryRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    backgroundColor: colors.textLight,
-    borderWidth: 1,
-    borderColor: colors.surfaceAlt,
-  },
-  categoryRowExpanded: {
-    backgroundColor: colors.surfaceAlt,
-    borderColor: colors.border,
-  },
 });
 
 const historyStyles = StyleSheet.create({

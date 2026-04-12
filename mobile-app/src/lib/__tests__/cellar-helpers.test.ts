@@ -8,7 +8,6 @@ import {
   getSuggestedPairings,
   buildStats,
   buildVintageOptions,
-  buildMealRecommendations,
   buildStorageSpaceBottleCounts,
   buildPairingOptions,
 } from "../cellar-helpers";
@@ -401,46 +400,6 @@ describe("buildVintageOptions", () => {
   it("excludes null vintages", () => {
     const wines = [wine({ vintage: null }), wine({ vintage: 2020 })];
     expect(buildVintageOptions(wines)).toEqual(["Alla", "2020"]);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// buildMealRecommendations
-// ---------------------------------------------------------------------------
-
-describe("buildMealRecommendations", () => {
-  it("returns empty array when no wines match the meal", () => {
-    const wines = [wine({ food_pairings: ["lamm"] })];
-    expect(buildMealRecommendations(wines, "fisk")).toEqual([]);
-  });
-
-  it("filters wines by the selected meal pairing", () => {
-    const w1 = wine({ food_pairings: ["fisk"] });
-    const w2 = wine({ food_pairings: ["lamm"] });
-    const result = buildMealRecommendations([w1, w2], "fisk");
-    expect(result).toHaveLength(1);
-    expect(result[0].id).toBe(w1.id);
-  });
-
-  it("caps results at 5", () => {
-    const wines = Array.from({ length: 8 }, () => wine({ food_pairings: ["fisk"] }));
-    expect(buildMealRecommendations(wines, "fisk")).toHaveLength(5);
-  });
-
-  it("sorts by proximity to current year when drink_by_year is set", () => {
-    const currentYear = new Date().getFullYear();
-    const w1 = wine({ food_pairings: ["fisk"], drink_by_year: currentYear + 3 });
-    const w2 = wine({ food_pairings: ["fisk"], drink_by_year: currentYear + 1 });
-    const result = buildMealRecommendations([w1, w2], "fisk");
-    expect(result[0].id).toBe(w2.id);
-  });
-
-  it("uses quantity as tiebreaker when drink_by_year proximity is equal", () => {
-    const currentYear = new Date().getFullYear();
-    const w1 = wine({ food_pairings: ["fisk"], drink_by_year: currentYear + 2, quantity: 1 });
-    const w2 = wine({ food_pairings: ["fisk"], drink_by_year: currentYear + 2, quantity: 4 });
-    const result = buildMealRecommendations([w1, w2], "fisk");
-    expect(result[0].id).toBe(w2.id);
   });
 });
 

@@ -1,10 +1,8 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { openSystembolaget } from "../lib/cellar-actions";
-import { buildMealRecommendations } from "../lib/cellar-helpers";
 import { confirmAction, showError } from "../lib/show-error";
 import { useCellar } from "../contexts/CellarContext";
 import { useCellarFilters } from "../hooks/useCellarFilters";
-import { MealPlannerPanel } from "./cellar-sections";
 import { MinKallarePanel } from "./min-kallare-panel";
 import { styles } from "../styles/theme";
 import type { StorageProps } from "../types/panel-prop-groups";
@@ -38,11 +36,6 @@ type Props = {
 export function CellarTab(props: Props) {
   const ctx = useCellar();
   const filters = useCellarFilters(ctx.wines, ctx.storageSpaceById);
-  const [selectedMeal, setSelectedMeal] = useState("");
-  const mealRecommendations = useMemo(
-    () => selectedMeal ? buildMealRecommendations(ctx.wines, selectedMeal) : [],
-    [selectedMeal, ctx.wines],
-  );
 
   const handleOpenSystembolaget = useCallback(async (productId: string) => {
     const result = await openSystembolaget(productId);
@@ -106,34 +99,24 @@ export function CellarTab(props: Props) {
   }), [props.onEditWine, props.onDrinkWine, ctx.deleteWine, handleOpenSystembolaget]);
 
   return (
-    <>
-      <MinKallarePanel
-        styles={styles}
-        stats={props.stats}
-        filter={filterProps}
-        storage={props.storage}
-        wineActions={wineActionsProps}
-        filteredWines={filters.filteredWines}
-        loading={ctx.winesLoading}
-        onRefreshStats={props.onRefreshStats}
-        onSignOut={props.onOpenProfile}
-        onNavigateToAdd={props.onNavigateToAdd}
-        hasMoreWines={ctx.hasMoreWines}
-        onLoadMoreWines={ctx.fetchMoreWines}
-        highlightedWineId={props.highlightedWineId}
-        onClearHighlight={props.onClearHighlight}
-        onHighlightWine={props.onHighlightWine}
-        refreshing={props.refreshing}
-        onRefresh={props.onRefresh}
-      />
-      <MealPlannerPanel
-        styles={styles}
-        wines={ctx.wines}
-        selectedMeal={selectedMeal}
-        mealRecommendations={mealRecommendations}
-        onSelectMeal={setSelectedMeal}
-        onWinePress={(wine) => props.onHighlightWine?.(wine.id)}
-      />
-    </>
+    <MinKallarePanel
+      styles={styles}
+      stats={props.stats}
+      filter={filterProps}
+      storage={props.storage}
+      wineActions={wineActionsProps}
+      filteredWines={filters.filteredWines}
+      loading={ctx.winesLoading}
+      onRefreshStats={props.onRefreshStats}
+      onSignOut={props.onOpenProfile}
+      onNavigateToAdd={props.onNavigateToAdd}
+      hasMoreWines={ctx.hasMoreWines}
+      onLoadMoreWines={ctx.fetchMoreWines}
+      highlightedWineId={props.highlightedWineId}
+      onClearHighlight={props.onClearHighlight}
+      onHighlightWine={props.onHighlightWine}
+      refreshing={props.refreshing}
+      onRefresh={props.onRefresh}
+    />
   );
 }

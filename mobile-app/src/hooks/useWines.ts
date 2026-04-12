@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { showError } from "../lib/show-error";
 import { supabase } from "../lib/supabase";
 import {
-  buildMealRecommendations,
   buildPairingOptions,
   buildStats,
   buildStorageSpaceBottleCounts,
@@ -66,6 +65,5 @@ export function useWines() {
     fetchWines, fetchMoreWines, hasMoreWines, deleteWine,
     stats, storageSpaceBottleCounts,
     pairingOptions, countryOptions, regionOptions, typeOptions, vintageOptions, cellarGrapeOptions,
-    buildMealRecommendations: (meal: string) => buildMealRecommendations(wines, meal),
   };
 }

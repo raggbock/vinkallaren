@@ -34,7 +34,6 @@ jest.mock("../../lib/cellar-helpers", () => ({
   buildStorageSpaceBottleCounts: () => new Map(),
   buildValueOptions: () => [],
   buildVintageOptions: () => [],
-  buildMealRecommendations: () => ({ recommendations: [] }),
 }));
 
 // --- Factories ---
