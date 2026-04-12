@@ -155,6 +155,7 @@ export function AddWineForm({ sessionId, wineCount, wines, searchWineNames, onWi
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const filteredCellarWines = cellarFilter.length >= 2
     ? wines.filter((w) => w.name.toLowerCase().includes(cellarFilter.toLowerCase())).slice(0, 20)
@@ -233,8 +234,8 @@ export function AddWineForm({ sessionId, wineCount, wines, searchWineNames, onWi
               ) : null}
             </>
           ) : (
-            <AutocompleteInput label="Sök vin" value="" onChangeText={() => {}}
-              onOptionSelected={handleSearchSelect}
+            <AutocompleteInput label="Sök vin" value={searchQuery} onChangeText={setSearchQuery}
+              onOptionSelected={(name, producer) => { setSearchQuery(""); handleSearchSelect(name, producer); }}
               options={[]} searchAsync={searchWineNames}
               placeholder="Skriv minst 4 bokstäver" minimumQueryLength={4} />
           )}
