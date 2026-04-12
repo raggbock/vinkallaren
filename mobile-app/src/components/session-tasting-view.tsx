@@ -2,8 +2,9 @@ import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { styles as theme, colors } from "../styles/theme";
 import { LabeledInput, SuggestionRow } from "./form-controls";
-import type { SessionWineRow } from "../types/tasting-session";
+import type { SessionDishRow, SessionWineRow } from "../types/tasting-session";
 import { buildWsetSummary, type WsetTastingData } from "../lib/wset-data";
+import { DishToggleChips } from "./session-dishes";
 
 export function SessionTastingView({
   wine,
@@ -12,6 +13,8 @@ export function SessionTastingView({
   initialNotes,
   initialFoodPairings,
   initialWsetData,
+  dishes,
+  initialDishIds,
   saving,
   onSave,
   onOpenWset,
@@ -23,14 +26,26 @@ export function SessionTastingView({
   initialNotes: string | null;
   initialFoodPairings: string[];
   initialWsetData: WsetTastingData | null;
+  dishes: SessionDishRow[];
+  initialDishIds: string[];
   saving: boolean;
-  onSave: (data: { rating: number | null; notes: string | null; foodPairings: string[]; wsetData: WsetTastingData | null }) => void;
+  onSave: (data: { rating: number | null; notes: string | null; foodPairings: string[]; wsetData: WsetTastingData | null; dishIds: string[] }) => void;
   onOpenWset: (wineType?: string) => void;
   onBack: () => void;
 }) {
   const [rating, setRating] = useState(initialRating ? String(initialRating) : "");
   const [notes, setNotes] = useState(initialNotes ?? "");
   const [foodPairings, setFoodPairings] = useState(initialFoodPairings.join(", "));
+  const [selectedDishIds, setSelectedDishIds] = useState<Set<string>>(new Set(initialDishIds));
+
+  function toggleDish(dishId: string) {
+    setSelectedDishIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(dishId)) next.delete(dishId);
+      else next.add(dishId);
+      return next;
+    });
+  }
 
   function handleSave() {
     const pairings = foodPairings.split(",").map((s) => s.trim()).filter(Boolean);
@@ -39,6 +54,7 @@ export function SessionTastingView({
       notes: notes.trim() || null,
       foodPairings: pairings,
       wsetData: initialWsetData,
+      dishIds: [...selectedDishIds],
     });
   }
 
@@ -72,6 +88,8 @@ export function SessionTastingView({
             </Pressable>
           )
         ) : null}
+
+        <DishToggleChips dishes={dishes} selectedIds={selectedDishIds} onToggle={toggleDish} />
 
         <LabeledInput label="Smaknotering" value={notes} onChangeText={setNotes} placeholder="t.ex. mörk frukt, bra syra" multiline />
         <LabeledInput label="Passar till" value={foodPairings} onChangeText={setFoodPairings} placeholder="lamm, pasta, ost" />

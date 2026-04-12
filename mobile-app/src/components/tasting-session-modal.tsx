@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { PanelHeader, type Suggestion } from "./form-controls";
 import { ActiveSessionView } from "./session-active-view";
 import { SessionTastingView } from "./session-tasting-view";
-import { addSessionDish, advanceReveal, deleteSessionDish, fetchSessionDishes, fetchSessionParticipants, fetchTastingDishes, finishReveal, saveTasting, startSession } from "../lib/session-actions";
+import { addSessionDish, advanceReveal, deleteSessionDish, fetchSessionDishes, fetchSessionParticipants, fetchTastingDishes, finishReveal, saveTasting, saveTastingDishes, startSession } from "../lib/session-actions";
 import { SessionSetupView } from "./session-setup-view";
 import { AddWineForm, CreateForm, HostControls, InlineError, JoinForm, s } from "./session-forms";
 import type { CreateSessionInput, SessionDishRow, SessionParticipant, SessionTastingDishRow, SessionTastingRow, SessionToast, SessionWineRow, TastingSessionRow } from "../types/tasting-session";
@@ -56,7 +56,10 @@ export function TastingSessionPanel({
 
   useEffect(() => { onFetchSessions(); setView("list"); setTastingWine(null); }, []);
 
-  async function handleSaveTasting(data: { rating: number | null; notes: string | null; foodPairings: string[]; wsetData?: WsetTastingData | null }) {
+  async function handleSaveTasting(data: {
+    rating: number | null; notes: string | null; foodPairings: string[];
+    wsetData?: WsetTastingData | null; dishIds: string[];
+  }) {
     if (!activeSession || !tastingWine) return;
     setSavingTasting(true);
     const result = await saveTasting({
@@ -64,8 +67,15 @@ export function TastingSessionPanel({
       user_id: userId, rating: data.rating, notes: data.notes,
       food_pairings: data.foodPairings, tasting_data: data.wsetData ?? null,
     });
+    if (result.error) { setSavingTasting(false); setInlineError("Kunde inte spara provning"); return; }
+
+    if (result.data) {
+      await saveTastingDishes(result.data.id, data.dishIds);
+      const tdResult = await fetchTastingDishes(activeSession.id);
+      if (tdResult.data) setTastingDishes(tdResult.data);
+    }
+
     setSavingTasting(false);
-    if (result.error) { setInlineError("Kunde inte spara provning"); return; }
     setTastingWine(null);
   }
 
@@ -102,13 +112,25 @@ export function TastingSessionPanel({
   // Tasting a specific wine
   if (activeSession && tastingWine) {
     const existing = activeTastings.find((t) => t.session_wine_id === tastingWine.id && t.user_id === userId);
+    const existingDishIds = tastingDishes
+      .filter((td) => td.session_tasting_id === existing?.id)
+      .map((td) => td.session_dish_id);
     return (
       <View style={styles.panel}>
-        <SessionTastingView wine={tastingWine} format={activeSession.format}
-          initialRating={existing?.rating ?? null} initialNotes={existing?.notes ?? null}
-          initialFoodPairings={existing?.food_pairings ?? []} initialWsetData={wsetData}
-          saving={savingTasting} onSave={handleSaveTasting}
-          onOpenWset={() => onOpenWset(tastingWine.type || "")} onBack={() => setTastingWine(null)} />
+        <SessionTastingView
+          wine={tastingWine}
+          format={activeSession.format}
+          initialRating={existing?.rating ?? null}
+          initialNotes={existing?.notes ?? null}
+          initialFoodPairings={existing?.food_pairings ?? []}
+          initialWsetData={wsetData}
+          initialDishIds={existingDishIds}
+          dishes={dishes}
+          saving={savingTasting}
+          onSave={handleSaveTasting}
+          onOpenWset={() => onOpenWset(tastingWine.type || "")}
+          onBack={() => setTastingWine(null)}
+        />
       </View>
     );
   }
