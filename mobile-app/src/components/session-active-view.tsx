@@ -3,7 +3,8 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { AvatarRow } from "./avatar";
 import { getPersonalProgress, getWineProgress, isAllDone } from "../lib/session-progress";
 import { styles as theme, colors } from "../styles/theme";
-import type { SessionParticipant, SessionTastingRow, SessionToast, SessionWineRow, TastingSessionRow } from "../types/tasting-session";
+import type { SessionDishRow, SessionParticipant, SessionTastingRow, SessionToast, SessionWineRow, TastingSessionRow } from "../types/tasting-session";
+import { SessionDishes } from "./session-dishes";
 
 export { isAllDone } from "../lib/session-progress";
 
@@ -14,13 +15,16 @@ type ActiveSessionViewProps = {
   tastings: SessionTastingRow[];
   toasts: SessionToast[];
   participants: SessionParticipant[];
+  dishes: SessionDishRow[];
+  onAddDish: (name: string) => void;
+  onRemoveDish: (dishId: string) => void;
   onTasteWine: (wine: SessionWineRow) => void;
   onBack: () => void;
   children?: ReactNode;
 };
 
 export function ActiveSessionView({
-  session, userId, wines, tastings, toasts, participants, onTasteWine, onBack, children,
+  session, userId, wines, tastings, toasts, participants, dishes, onAddDish, onRemoveDish, onTasteWine, onBack, children,
 }: ActiveSessionViewProps) {
   const progress = getPersonalProgress(userId, wines, tastings);
   const progressPct = progress.total > 0 ? progress.tasted / progress.total : 0;
@@ -67,6 +71,9 @@ export function ActiveSessionView({
           <Text style={s.toastText}>{toast.message}</Text>
         </View>
       ))}
+
+      {/* Dishes */}
+      <SessionDishes dishes={dishes} isHost={session.host_id === userId} onAdd={onAddDish} onRemove={onRemoveDish} />
 
       {/* Wine cards */}
       {wines.map((wine) => {

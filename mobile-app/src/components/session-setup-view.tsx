@@ -3,20 +3,24 @@ import { styles as theme, colors } from "../styles/theme";
 import { Avatar } from "./avatar";
 import { PanelHeader } from "./form-controls";
 import { reorderSessionWines, shareSession } from "../lib/session-actions";
-import type { SessionParticipant, SessionWineRow, TastingSessionRow } from "../types/tasting-session";
+import type { SessionDishRow, SessionParticipant, SessionWineRow, TastingSessionRow } from "../types/tasting-session";
+import { SessionDishes } from "./session-dishes";
 
 type Props = {
   session: TastingSessionRow;
   wines: SessionWineRow[];
   participants: SessionParticipant[];
   isHost: boolean;
+  dishes: SessionDishRow[];
+  onAddDish: (name: string) => void;
+  onRemoveDish: (dishId: string) => void;
   onStart: () => void;
   onBack: () => void;
   onReorder: (wines: SessionWineRow[]) => void;
   children?: React.ReactNode; // AddWineForm slot for host
 };
 
-export function SessionSetupView({ session, wines, participants, isHost, onStart, onBack, onReorder, children }: Props) {
+export function SessionSetupView({ session, wines, participants, isHost, dishes, onAddDish, onRemoveDish, onStart, onBack, onReorder, children }: Props) {
   function swapWines(a: number, b: number) {
     const reordered = [...wines];
     [reordered[a], reordered[b]] = [reordered[b], reordered[a]];
@@ -99,6 +103,9 @@ export function SessionSetupView({ session, wines, participants, isHost, onStart
           ))}
         </View>
       ) : null}
+
+      {/* Dishes */}
+      <SessionDishes dishes={dishes} isHost={isHost} onAdd={onAddDish} onRemove={onRemoveDish} />
 
       {/* Host: add wine form + start button */}
       {children}

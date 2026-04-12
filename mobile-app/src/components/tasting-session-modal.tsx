@@ -3,10 +3,10 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { PanelHeader, type Suggestion } from "./form-controls";
 import { ActiveSessionView } from "./session-active-view";
 import { SessionTastingView } from "./session-tasting-view";
-import { advanceReveal, fetchSessionParticipants, finishReveal, saveTasting, startSession } from "../lib/session-actions";
+import { addSessionDish, advanceReveal, deleteSessionDish, fetchSessionDishes, fetchSessionParticipants, fetchTastingDishes, finishReveal, saveTasting, startSession } from "../lib/session-actions";
 import { SessionSetupView } from "./session-setup-view";
 import { AddWineForm, CreateForm, HostControls, InlineError, JoinForm, s } from "./session-forms";
-import type { CreateSessionInput, SessionParticipant, SessionTastingRow, SessionToast, SessionWineRow, TastingSessionRow } from "../types/tasting-session";
+import type { CreateSessionInput, SessionDishRow, SessionParticipant, SessionTastingDishRow, SessionTastingRow, SessionToast, SessionWineRow, TastingSessionRow } from "../types/tasting-session";
 import type { WsetTastingData } from "../lib/wset-data";
 import type { WineRecord } from "../types/wine";
 import { ResultsDashboard } from "./results-dashboard";
@@ -51,6 +51,8 @@ export function TastingSessionPanel({
   const [savingTasting, setSavingTasting] = useState(false);
   const [participants, setParticipants] = useState<SessionParticipant[]>([]);
   const [inlineError, setInlineError] = useState<string | null>(null);
+  const [dishes, setDishes] = useState<SessionDishRow[]>([]);
+  const [tastingDishes, setTastingDishes] = useState<SessionTastingDishRow[]>([]);
 
   useEffect(() => { onFetchSessions(); setView("list"); setTastingWine(null); }, []);
 
@@ -79,6 +81,23 @@ export function TastingSessionPanel({
       return () => clearInterval(interval);
     }
   }, [activeSession?.id, activeSession?.status, activeTastings.length]);
+
+  useEffect(() => {
+    if (!activeSession) { setDishes([]); setTastingDishes([]); return; }
+    fetchSessionDishes(activeSession.id).then((r) => { if (r.data) setDishes(r.data); });
+    fetchTastingDishes(activeSession.id).then((r) => { if (r.data) setTastingDishes(r.data); });
+  }, [activeSession?.id, activeSession?.status]);
+
+  async function handleAddDish(name: string) {
+    if (!activeSession) return;
+    const r = await addSessionDish(activeSession.id, name);
+    if (r.data) setDishes((prev) => [...prev, r.data!]);
+  }
+
+  async function handleRemoveDish(dishId: string) {
+    const r = await deleteSessionDish(dishId);
+    if (r.data) setDishes((prev) => prev.filter((d) => d.id !== dishId));
+  }
 
   // Tasting a specific wine
   if (activeSession && tastingWine) {
@@ -147,6 +166,9 @@ export function TastingSessionPanel({
           wines={activeWines}
           participants={participants}
           isHost={isHost}
+          dishes={dishes}
+          onAddDish={handleAddDish}
+          onRemoveDish={handleRemoveDish}
           onStart={async () => {
             const r = await startSession(activeSession.id);
             if (r.error) { setInlineError("Kunde inte starta"); return; }
@@ -176,6 +198,9 @@ export function TastingSessionPanel({
           tastings={activeTastings}
           toasts={toasts}
           participants={participants}
+          dishes={dishes}
+          onAddDish={handleAddDish}
+          onRemoveDish={handleRemoveDish}
           onTasteWine={(wine) => activeSession.status === "active" ? setTastingWine(wine) : null}
           onBack={() => { onCloseSession(); setView("list"); }}
         >
