@@ -2,7 +2,9 @@ import { ok, fail, type Result } from "../types/result";
 import { supabase } from "./supabase";
 import type {
   CreateSessionInput,
+  SessionDishRow,
   SessionParticipant,
+  SessionTastingDishRow,
   SessionTastingInsert,
   SessionWineInsert,
   TastingSessionRow,
@@ -144,4 +146,60 @@ export async function batchAddWinesToSession(
   const { data, error } = await supabase.from("session_wines").insert(rows).select();
   if (error) return fail(error.message);
   return ok(data as SessionWineRow[]);
+}
+
+export async function fetchSessionDishes(sessionId: string): Promise<Result<SessionDishRow[]>> {
+  const { data, error } = await supabase
+    .from("session_dishes")
+    .select("*")
+    .eq("session_id", sessionId)
+    .order("created_at", { ascending: true });
+  if (error) return fail(error.message);
+  return ok((data ?? []) as SessionDishRow[]);
+}
+
+export async function addSessionDish(sessionId: string, name: string): Promise<Result<SessionDishRow>> {
+  const { data, error } = await supabase
+    .from("session_dishes")
+    .insert({ session_id: sessionId, name })
+    .select("*")
+    .single();
+  if (error) return fail(error.message);
+  return ok(data as SessionDishRow);
+}
+
+export async function deleteSessionDish(dishId: string): Promise<Result<true>> {
+  const { error } = await supabase.from("session_dishes").delete().eq("id", dishId);
+  if (error) return fail(error.message);
+  return ok(true);
+}
+
+export async function fetchTastingDishes(sessionId: string): Promise<Result<SessionTastingDishRow[]>> {
+  const { data, error } = await supabase
+    .from("session_tasting_dishes")
+    .select("session_tasting_id, session_dish_id, session_tastings!inner(session_id)")
+    .eq("session_tastings.session_id", sessionId);
+  if (error) return fail(error.message);
+  return ok((data ?? []).map((d: any) => ({
+    session_tasting_id: d.session_tasting_id,
+    session_dish_id: d.session_dish_id,
+  })));
+}
+
+export async function saveTastingDishes(
+  sessionTastingId: string,
+  dishIds: string[],
+): Promise<Result<true>> {
+  const { error: delError } = await supabase
+    .from("session_tasting_dishes")
+    .delete()
+    .eq("session_tasting_id", sessionTastingId);
+  if (delError) return fail(delError.message);
+
+  if (dishIds.length > 0) {
+    const rows = dishIds.map((id) => ({ session_tasting_id: sessionTastingId, session_dish_id: id }));
+    const { error: insError } = await supabase.from("session_tasting_dishes").insert(rows);
+    if (insError) return fail(insError.message);
+  }
+  return ok(true);
 }

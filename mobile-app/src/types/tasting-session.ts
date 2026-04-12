@@ -75,3 +75,15 @@ export type SessionParticipant = {
 };
 
 export type SessionToast = { id: number; message: string };
+
+export type SessionDishRow = {
+  id: string;
+  session_id: string;
+  name: string;
+  created_at: string;
+};
+
+export type SessionTastingDishRow = {
+  session_tasting_id: string;
+  session_dish_id: string;
+};
