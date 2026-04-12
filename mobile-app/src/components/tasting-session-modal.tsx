@@ -137,7 +137,7 @@ export function TastingSessionPanel({
 
   // Results view for ended/revealed sessions
   if (activeSession && activeSession.status === "ended") {
-    const results = buildSessionResults(activeWines, activeTastings, activeSession.format, activeSession.created_at);
+    const results = buildSessionResults(activeWines, activeTastings, activeSession.format, activeSession.created_at, dishes, tastingDishes);
     return (
       <View style={styles.panel}>
         <ResultsDashboard

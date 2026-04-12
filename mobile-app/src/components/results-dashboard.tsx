@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { styles as theme, colors } from "../styles/theme";
 import { Avatar } from "./avatar";
 import { Expandable } from "./form-controls";
-import { getWsetParameterComparison, getSharedAromas, type SessionResults, type WineResult } from "../lib/session-results";
+import { getWsetParameterComparison, getSharedAromas, type DishWineResult, type SessionResults, type WineResult } from "../lib/session-results";
 import { buildWsetSummary, type WsetTastingData } from "../lib/wset-data";
 import type { SessionParticipant } from "../types/tasting-session";
 import { formatDateShort } from "../lib/format-date";
@@ -50,6 +50,8 @@ export function ResultsDashboard({ results, participants, onBack }: Props) {
           detail={`Spridning: ${results.mostDivided.ratingSpread.toFixed(1)}`}
         />
       ) : null}
+
+      <DishWinePairings results={results.dishWineResults} />
 
       {/* Wine list */}
       {results.wines.map((wr, i) => (
@@ -197,6 +199,25 @@ function WsetDetails({ tastings, participantMap }: {
   );
 }
 
+function DishWinePairings({ results }: { results: DishWineResult[] }) {
+  if (results.length === 0) return null;
+
+  return (
+    <View style={s.dishSection}>
+      <Text style={s.dishSectionTitle}>Mat & vin</Text>
+      {results.map((r, i) => (
+        <View key={`${r.dish.id}-${r.wine.id}`} style={s.dishRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={s.dishName}>{r.dish.name}</Text>
+            <Text style={s.dishWine}>{r.wine.name}</Text>
+          </View>
+          <Text style={s.dishRating}>{r.averageRating.toFixed(1)}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
 const s = StyleSheet.create({
   container: { gap: 12 },
   header: { flexDirection: "row", justifyContent: "flex-end" },
@@ -235,4 +256,10 @@ const s = StyleSheet.create({
   aromaTag: { backgroundColor: colors.surfaceAlt, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 },
   aromaText: { color: colors.accent, fontSize: 11, fontWeight: "600" },
   wsetSummary: { color: colors.textSecondary, fontSize: 12, lineHeight: 18, marginTop: 2 },
+  dishSection: { gap: 8 },
+  dishSectionTitle: { color: colors.textSecondary, fontSize: 11, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.5 },
+  dishRow: { flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: colors.textLight, borderRadius: 12, padding: 12, borderWidth: 1, borderColor: colors.surfaceAlt },
+  dishName: { color: colors.accent, fontSize: 14, fontWeight: "700" },
+  dishWine: { color: colors.textSecondary, fontSize: 12 },
+  dishRating: { color: colors.accent, fontSize: 18, fontWeight: "800" },
 });

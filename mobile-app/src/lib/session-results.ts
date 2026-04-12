@@ -1,4 +1,4 @@
-import type { SessionTastingRow, SessionWineRow } from "../types/tasting-session";
+import type { SessionDishRow, SessionTastingDishRow, SessionTastingRow, SessionWineRow } from "../types/tasting-session";
 import type { WsetTastingData } from "./wset-data";
 
 export type WineResult = {
@@ -11,6 +11,13 @@ export type WineResult = {
   averageQuality: string | null; // most common quality ≥ "good"
 };
 
+export type DishWineResult = {
+  dish: SessionDishRow;
+  wine: SessionWineRow;
+  averageRating: number;
+  tastingCount: number;
+};
+
 export type SessionResults = {
   format: "quick" | "wset";
   wineCount: number;
@@ -20,6 +27,7 @@ export type SessionResults = {
   favorite: WineResult | null; // highest avg rating (quick) or most quality ≥ good (wset)
   mostDivided: WineResult | null; // highest spread
   participantIds: string[];
+  dishWineResults: DishWineResult[];
 };
 
 const CONSENSUS_THRESHOLD = 0.8;
@@ -74,11 +82,49 @@ function buildWineResult(wine: SessionWineRow, tastings: SessionTastingRow[]): W
   };
 }
 
+function buildDishWineResults(
+  wines: SessionWineRow[],
+  tastings: SessionTastingRow[],
+  dishes: SessionDishRow[],
+  tastingDishes: SessionTastingDishRow[],
+): DishWineResult[] {
+  if (dishes.length === 0) return [];
+
+  const wineMap = new Map(wines.map((w) => [w.id, w]));
+  const results: DishWineResult[] = [];
+
+  for (const dish of dishes) {
+    const linkedTastingIds = new Set(
+      tastingDishes.filter((td) => td.session_dish_id === dish.id).map((td) => td.session_tasting_id),
+    );
+
+    const byWine = new Map<string, number[]>();
+    for (const t of tastings) {
+      if (!linkedTastingIds.has(t.id) || t.rating == null) continue;
+      const arr = byWine.get(t.session_wine_id) ?? [];
+      arr.push(t.rating);
+      byWine.set(t.session_wine_id, arr);
+    }
+
+    for (const [wineId, ratings] of byWine) {
+      const wine = wineMap.get(wineId);
+      if (!wine) continue;
+      const avg = ratings.reduce((a, b) => a + b, 0) / ratings.length;
+      results.push({ dish, wine, averageRating: avg, tastingCount: ratings.length });
+    }
+  }
+
+  results.sort((a, b) => b.averageRating - a.averageRating);
+  return results;
+}
+
 export function buildSessionResults(
   wines: SessionWineRow[],
   tastings: SessionTastingRow[],
   format: "quick" | "wset",
   sessionDate: string,
+  dishes: SessionDishRow[] = [],
+  tastingDishes: SessionTastingDishRow[] = [],
 ): SessionResults {
   const participantIds = [...new Set(tastings.map((t) => t.user_id))];
   const wineResults = wines.map((w) => buildWineResult(w, tastings));
@@ -111,6 +157,7 @@ export function buildSessionResults(
     favorite,
     mostDivided: mostDivided && mostDivided.ratingSpread > 0 ? mostDivided : null,
     participantIds,
+    dishWineResults: buildDishWineResults(wines, tastings, dishes, tastingDishes),
   };
 }
 
