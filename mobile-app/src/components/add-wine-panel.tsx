@@ -39,7 +39,7 @@ export function AddWinePanel(props: AddWinePanelProps) {
       {tastingMode ? (
         <TastingFields styles={styles} draft={draft} tastingDate={tasting.tastingDate} tastingRating={tasting.tastingRating} wsetData={tasting.wsetData} onDraftChange={props.onDraftChange} onTastingDateChange={tasting.onTastingDateChange} onTastingRatingChange={tasting.onTastingRatingChange} onOpenWset={tasting.onOpenWset} />
       ) : (
-        <CellarFields styles={styles} draft={draft} storageSpaces={props.storageSpaces} wines={props.wines} storageSpaceDraft={props.storageSpaceDraft} savingStorageSpace={props.savingStorageSpace} onStorageSpaceDraftChange={props.onStorageSpaceDraftChange} onSaveStorageSpace={props.onSaveStorageSpace} onDraftChange={props.onDraftChange} onPositionChange={props.onPositionChange} />
+        <CellarFields styles={styles} draft={draft} storageSpaces={props.storageSpaces} wines={props.wines} storageSpaceDraft={props.storageSpaceDraft} savingStorageSpace={props.savingStorageSpace} onStorageSpaceDraftChange={props.onStorageSpaceDraftChange} onSaveStorageSpace={props.onSaveStorageSpace} onDraftChange={props.onDraftChange} onPositionChange={props.onPositionChange} userDishGroups={props.userDishGroups} userCategories={props.userCategories} onAddUserDish={props.onAddUserDish} />
       )}
 
       <SectionLabel label="Övrigt" />
@@ -146,4 +146,7 @@ export interface AddWinePanelProps {
   onTakePhoto: () => void;
   onSaveWine: () => void;
   onOpenProfile?: () => void;
+  userDishGroups: Array<{ label: string; items: string[] }>;
+  userCategories: string[];
+  onAddUserDish: (name: string, category: string | null) => void;
 }

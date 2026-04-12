@@ -3,12 +3,13 @@ import type { StorageSpaceRow } from "../types/storage-space";
 import type { StorageSpaceDraft, WineDraft } from "../types/cellar-drafts";
 import type { WineRecord } from "../types/wine";
 import { DateInput, DoubleRow, GroupedSuggestionRow, LabeledInput } from "./form-controls";
+import { AddDishInline } from "./add-dish-inline";
 import { StorageSpaceManager } from "./storage-space-manager";
 import type { styles as themeStyles } from "../styles/theme";
 
 type SharedStyles = typeof themeStyles;
 
-export function CellarFields({ styles, draft, storageSpaces, wines, storageSpaceDraft, savingStorageSpace, onStorageSpaceDraftChange, onSaveStorageSpace, onDraftChange, onPositionChange }: {
+export function CellarFields({ styles, draft, storageSpaces, wines, storageSpaceDraft, savingStorageSpace, onStorageSpaceDraftChange, onSaveStorageSpace, onDraftChange, onPositionChange, userDishGroups, userCategories, onAddUserDish }: {
   styles: SharedStyles;
   draft: WineDraft;
   storageSpaces: StorageSpaceRow[];
@@ -19,6 +20,9 @@ export function CellarFields({ styles, draft, storageSpaces, wines, storageSpace
   onSaveStorageSpace: () => void;
   onDraftChange: (patch: Partial<WineDraft>) => void;
   onPositionChange: (spaceId: string, row: string, slot: string) => void;
+  userDishGroups: Array<{ label: string; items: string[] }>;
+  userCategories: string[];
+  onAddUserDish: (name: string, category: string | null) => void;
 }) {
   return (
     <>
@@ -26,7 +30,8 @@ export function CellarFields({ styles, draft, storageSpaces, wines, storageSpace
         <LabeledInput label="Drick senast (år)" value={draft.drinkBy} onChangeText={(value) => onDraftChange({ drinkBy: value })} keyboardType="number-pad" placeholder="t.ex. 2028" />
         <DateInput label="Inköpt" value={draft.acquiredAt} onChangeText={(value) => onDraftChange({ acquiredAt: value })} />
       </DoubleRow>
-      <GroupedSuggestionRow title="Matförslag" groups={FOOD_CATEGORIES} selected={parseTags(draft.foodPairings)} onSelect={(pairing) => onDraftChange({ foodPairings: mergeTagText(draft.foodPairings, pairing) })} />
+      <GroupedSuggestionRow title="Matförslag" groups={[...FOOD_CATEGORIES, ...userDishGroups]} selected={parseTags(draft.foodPairings)} onSelect={(pairing) => onDraftChange({ foodPairings: mergeTagText(draft.foodPairings, pairing) })} />
+      <AddDishInline userCategories={userCategories} onAdd={(name, category) => { onAddUserDish(name, category); onDraftChange({ foodPairings: mergeTagText(draft.foodPairings, name) }); }} />
       <LabeledInput label="Passar till" value={draft.foodPairings} onChangeText={(value) => onDraftChange({ foodPairings: value })} placeholder="lamm, ost, svamp, fisk" />
       <StorageSpaceManager
         styles={styles}

@@ -16,6 +16,7 @@ import type { useSuccessOverlay } from "./success-overlay";
 import type { useWines } from "../hooks/useWines";
 import type { useHistory } from "../hooks/useHistory";
 import { useCatalogLookup } from "../hooks/useCatalogLookup";
+import { useUserDishes } from "../hooks/useUserDishes";
 import { useBarcodeScanner } from "../hooks/useBarcodeScanner";
 import { useVintagePicker } from "../hooks/useVintagePicker";
 import { useLabelScanner } from "../hooks/useLabelScanner";
@@ -73,6 +74,7 @@ function AddWineTabContent({
   const [selectedCatalogNameEntry, setSelectedCatalogNameEntry] = useState<ProductCatalogWineRow | null>(null);
 
   const catalogLookup = useCatalogLookup({ selectedCatalogNameEntry });
+  const userDishes = useUserDishes();
   const vintage = useVintagePicker({
     fetchCatalogEntriesByName: catalogData.fetchCatalogEntriesByName,
     setSelectedCatalogNameEntry,
@@ -189,6 +191,9 @@ function AddWineTabContent({
           handleSaveWine();
         }}
         onOpenProfile={onOpenProfile}
+        userDishGroups={userDishes.groups}
+        userCategories={userDishes.categories}
+        onAddUserDish={userDishes.addDish}
       />
       <UpgradePrompt
         visible={gate.shouldPrompt}
