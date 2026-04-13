@@ -5,6 +5,7 @@ import { Avatar } from "./avatar";
 import { PanelHeader } from "./form-controls";
 import { SquigglyLine } from "./doodles";
 import { TasteProfile } from "./taste-profile";
+import { VisibilitySettings } from "./visibility-settings";
 import type { ProfileRow } from "../lib/profile-actions";
 
 type ProfilePageProps = {
@@ -13,9 +14,10 @@ type ProfilePageProps = {
   onSignOut: () => void;
   onBack: () => void;
   onOpenSession?: (sessionId: string) => void;
+  onProfileUpdated?: (profile: ProfileRow) => void;
 };
 
-export function ProfilePage({ profile, onUpdateName, onSignOut, onBack, onOpenSession }: ProfilePageProps) {
+export function ProfilePage({ profile, onUpdateName, onSignOut, onBack, onOpenSession, onProfileUpdated }: ProfilePageProps) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(profile.display_name || "");
   const [saving, setSaving] = useState(false);
@@ -73,6 +75,9 @@ export function ProfilePage({ profile, onUpdateName, onSignOut, onBack, onOpenSe
         <Text style={s.sectionTitle}>Smakprofil</Text>
         <TasteProfile userId={profile.id} onOpenSession={onOpenSession ?? (() => {})} />
       </View>
+
+      <SquigglyLine />
+      <VisibilitySettings profile={profile} onUpdate={onProfileUpdated ?? (() => {})} />
 
       <View style={s.section}>
         <Pressable onPress={onSignOut} style={s.signOutBtn}>
