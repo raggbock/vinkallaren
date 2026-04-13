@@ -27,7 +27,7 @@ export function AutocompleteInput({
   const [focused, setFocused] = useState(false);
   const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const { suggestions, visibleSuggestions, loadingMore, asyncHasMore, handleScroll, resetVisibleCount } =
+  const { suggestions, loadingMore, asyncHasMore, loadMore } =
     useAutocompleteSearch({ value, options, optionRows, searchAsync, minimumQueryLength });
 
   useEffect(() => {
@@ -57,15 +57,15 @@ export function AutocompleteInput({
           value={value}
           editable={editable}
           accessibilityLabel={label || placeholder}
-          onChangeText={(nextValue) => { onChangeText(nextValue); resetVisibleCount(); setFocused(true); }}
+          onChangeText={(nextValue) => { onChangeText(nextValue); setFocused(true); }}
           onFocus={() => { cancelBlur(); setFocused(true); }}
           onBlur={() => { blurTimeoutRef.current = setTimeout(() => setFocused(false), BLUR_DELAY_MS); }}
         />
         {editable && showSuggestions ? (
-          <ScrollView style={styles.autocompleteListInline} nestedScrollEnabled onScroll={handleScroll} scrollEventThrottle={100}>
-            {visibleSuggestions.map((option) => (
+          <ScrollView style={styles.autocompleteListInline} nestedScrollEnabled>
+            {suggestions.map((option, i) => (
               <Pressable
-                key={`${label}-${option.name}-${option.parentName ?? ""}`}
+                key={`${option.name}-${option.parentName ?? ""}-${i}`}
                 onPress={() => selectOption(option)} onPressIn={cancelBlur} onResponderGrant={cancelBlur}
                 style={(state) => [styles.autocompleteItem, ("hovered" in state && (state as { hovered?: boolean }).hovered) && styles.autocompleteItemHover]}
               >
@@ -77,10 +77,10 @@ export function AutocompleteInput({
             ))}
             {loadingMore ? (
               <ActivityIndicator size="small" color={colors.textSecondary} style={{ paddingVertical: 8 }} />
-            ) : visibleSuggestions.length < suggestions.length || asyncHasMore ? (
-              <Text style={styles.autocompleteMoreHint}>
-                {visibleSuggestions.length < suggestions.length ? `${suggestions.length - visibleSuggestions.length} till \u2193` : "Scrolla f\u00f6r fler \u2193"}
-              </Text>
+            ) : asyncHasMore ? (
+              <Pressable onPress={() => { cancelBlur(); loadMore(); }} onPressIn={cancelBlur} style={styles.loadMoreBtn}>
+                <Text style={styles.loadMoreText}>Ladda fler...</Text>
+              </Pressable>
             ) : null}
           </ScrollView>
         ) : null}
@@ -96,5 +96,6 @@ const styles = StyleSheet.create({
   autocompleteItemHover: { backgroundColor: colors.surfaceAlt },
   autocompleteText: { color: colors.text, fontSize: 15 },
   autocompleteParent: { color: colors.textSecondary, fontSize: 13 },
-  autocompleteMoreHint: { textAlign: "center", color: colors.textSecondary, fontSize: 12, paddingVertical: 8 },
+  loadMoreBtn: { paddingVertical: 12, alignItems: "center", borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
+  loadMoreText: { color: colors.accent, fontSize: 13, fontWeight: "600" },
 });
