@@ -68,5 +68,5 @@ export function useProfile(userId: string) {
     [userId],
   );
 
-  return { profile, loading, needsDisplayName, saveDisplayName, updateName };
+  return { profile, setProfile, loading, needsDisplayName, saveDisplayName, updateName };
 }

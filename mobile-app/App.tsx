@@ -9,6 +9,7 @@ import { showError } from "./src/lib/show-error";
 import { BottomTabBar } from "./src/components/cellar-sections";
 import { CellarTab } from "./src/components/cellar-tab";
 import { AddWineTab } from "./src/components/add-wine-tab";
+import { DiscoverTab } from "./src/components/discover-tab";
 import { SuccessOverlay, useSuccessOverlay } from "./src/components/success-overlay";
 
 // Lazy-load heavy components
@@ -31,8 +32,11 @@ import { useEditWineModal } from "./src/hooks/useEditWineModal";
 import { useCatalogEditorModal } from "./src/hooks/useCatalogEditorModal";
 import { useModalToggle } from "./src/hooks/useModalToggle";
 import { useProfile } from "./src/hooks/useProfile";
+import { usePublicProfile } from "./src/hooks/usePublicProfile";
 import { DisplayNamePrompt } from "./src/components/display-name-prompt";
 import { ProfilePage } from "./src/components/profile-page";
+import { CellarLookupModal } from "./src/components/cellar-lookup-modal";
+import { PublicProfilePage } from "./src/components/public-profile-page";
 import { OcrDebugPage } from "./src/components/ocr-debug-page";
 import { parseJoinCodeFromUrl } from "./src/lib/join-link";
 
@@ -144,6 +148,9 @@ function CellarScreenInner({ session, pendingJoinCode, onJoinCodeConsumed }: { s
   const userProfile = useProfile(session.user.id);
   const [profileVisible, setProfileVisible] = useState(false);
   const [ocrDebugVisible, setOcrDebugVisible] = useState(false);
+  const [cellarLookupVisible, setCellarLookupVisible] = useState(false);
+  const [peekCode, setPeekCode] = useState<string | null>(null);
+  const publicProfile = usePublicProfile(peekCode);
   const versionTapCount = useRef(0);
   const versionTapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleVersionTap = useCallback(() => {
@@ -222,6 +229,26 @@ function CellarScreenInner({ session, pendingJoinCode, onJoinCodeConsumed }: { s
     );
   }
 
+  if (peekCode && publicProfile.profile) {
+    return (
+      <SafeAreaView style={styles.screen}>
+        <StatusBar style="light" />
+        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" style={styles.scrollFlex}>
+          <RNView style={styles.panel}>
+            <PublicProfilePage
+              profile={publicProfile.profile}
+              summary={publicProfile.summary}
+              wines={publicProfile.wines}
+              tasteProfile={publicProfile.tasteProfile}
+              onClose={() => setPeekCode(null)}
+            />
+          </RNView>
+        </ScrollView>
+        <BottomTabBar activeSection={activeSection} sections={CELLAR_SECTIONS} styles={styles} onSelect={(s) => { setPeekCode(null); setActiveSection(s); }} />
+      </SafeAreaView>
+    );
+  }
+
   if (profileVisible && userProfile.profile) {
     return (
       <SafeAreaView style={styles.screen}>
@@ -231,6 +258,7 @@ function CellarScreenInner({ session, pendingJoinCode, onJoinCodeConsumed }: { s
             <ProfilePage
               profile={userProfile.profile}
               onUpdateName={userProfile.updateName}
+              onProfileUpdated={(p) => userProfile.setProfile(p)}
               onSignOut={signOut}
               onBack={() => setProfileVisible(false)}
             />
@@ -312,6 +340,10 @@ function CellarScreenInner({ session, pendingJoinCode, onJoinCodeConsumed }: { s
         sessionUserId={session.user.id}
       />
     );
+  } else if (activeSection === "discover") {
+    activePanel = (
+      <DiscoverTab onOpenProfile={() => setProfileVisible(true)} />
+    );
   }
 
   return (
@@ -350,6 +382,33 @@ function CellarScreenInner({ session, pendingJoinCode, onJoinCodeConsumed }: { s
         </ScrollView>
       )}
       <BottomTabBar activeSection={activeSection} sections={CELLAR_SECTIONS} styles={styles} onSelect={setActiveSection} />
+      <Pressable
+        style={peekBtnStyle}
+        onPress={() => setCellarLookupVisible(true)}
+        accessibilityLabel="Titta in i en källare"
+      >
+        <RNText style={peekBtnText}>👥</RNText>
+      </Pressable>
+      {cellarLookupVisible && (
+        <CellarLookupModal
+          onSelectProfile={(p) => { setCellarLookupVisible(false); setPeekCode(p.cellar_code ?? null); }}
+          onClose={() => setCellarLookupVisible(false)}
+        />
+      )}
     </SafeAreaView>
   );
 }
+
+const peekBtnStyle = {
+  position: "absolute" as const,
+  bottom: 68,
+  right: 16,
+  width: 44,
+  height: 44,
+  borderRadius: 22,
+  backgroundColor: "rgba(0,0,0,0.55)",
+  alignItems: "center" as const,
+  justifyContent: "center" as const,
+};
+
+const peekBtnText = { fontSize: 20, lineHeight: 24 };
