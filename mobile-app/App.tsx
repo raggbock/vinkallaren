@@ -11,14 +11,10 @@ import { CellarTab } from "./src/components/cellar-tab";
 import { AddWineTab } from "./src/components/add-wine-tab";
 import { SuccessOverlay, useSuccessOverlay } from "./src/components/success-overlay";
 
-// Lazy-load heavy modals (only loaded when opened)
-const CatalogEditorModal = lazy(() => import("./src/components/cellar-workflows").then(m => ({ default: m.CatalogEditorModal })));
-const DrinkWineModal = lazy(() => import("./src/components/cellar-workflows").then(m => ({ default: m.DrinkWineModal })));
-const EditWineModal = lazy(() => import("./src/components/edit-wine-modal").then(m => ({ default: m.EditWineModal })));
-const WsetTastingModal = lazy(() => import("./src/components/wset-tasting-modal").then(m => ({ default: m.WsetTastingModal })));
+// Lazy-load heavy components
 const TastingSessionPanel = lazy(() => import("./src/components/tasting-session-modal").then(m => ({ default: m.TastingSessionPanel })));
-const PrivacyPolicyModal = lazy(() => import("./src/components/privacy-policy-modal").then(m => ({ default: m.PrivacyPolicyModal })));
 import { CellarProvider, useCellar } from "./src/contexts/CellarContext";
+import { ModalLayer } from "./src/components/modal-layer";
 import { HistoryTab } from "./src/components/history-tab";
 import { TastingTab } from "./src/components/tasting-tab";
 import { CELLAR_SECTIONS, type CellarSection } from "./src/types/cellar";
@@ -339,32 +335,7 @@ function CellarScreenInner({ session, pendingJoinCode, onJoinCodeConsumed }: { s
         }}
       />
       <SuccessOverlay config={success.config} onDone={success.clear} />
-      <Suspense fallback={null}>
-      <PrivacyPolicyModal visible={privacy.visible} styles={styles} onClose={privacy.close} />
-      <CatalogEditorModal
-        {...catalogEditor.modalProps} styles={styles}
-        searchWineNames={ctx.searchCatalogWineNames}
-        effectiveCountryOptions={ctx.effectiveCountryOptions} effectiveRegionOptions={ctx.effectiveRegionOptions}
-        effectiveGrapeOptions={ctx.effectiveGrapeOptions}
-        countryReferenceRows={ctx.countryReferenceRows} regionReferenceRows={ctx.regionReferenceRows}
-        grapeReferenceRows={ctx.grapeReferenceRows}
-      />
-      <WsetTastingModal {...drink.wsetProps} />
-      <DrinkWineModal {...drink.modalProps} styles={styles} />
-      <WsetTastingModal {...sessionWset.wsetProps} />
-      <EditWineModal
-        {...edit.modalProps} styles={styles}
-        storageSpaces={ctx.storageSpaces}
-        storageSpaceById={ctx.storageSpaceById}
-        searchWineNames={ctx.searchCatalogWineNames}
-        effectiveCountryOptions={ctx.effectiveCountryOptions} effectiveRegionOptions={ctx.effectiveRegionOptions}
-        effectiveGrapeOptions={ctx.effectiveGrapeOptions}
-        countryReferenceRows={ctx.countryReferenceRows} regionReferenceRows={ctx.regionReferenceRows}
-        grapeReferenceRows={ctx.grapeReferenceRows}
-        storageSpaceDraft={ctx.storageSpaceDraft} savingStorageSpace={ctx.savingStorageSpace}
-        onStorageSpaceDraftChange={(patch) => ctx.setStorageSpaceDraft((c) => ({ ...c, ...patch }))}
-      />
-      </Suspense>
+      <ModalLayer drink={drink} edit={edit} catalogEditor={catalogEditor} privacy={privacy} sessionWset={sessionWset} />
       {activeSection === "history" || activeSection === "cellar" ? (
         <RNView style={[styles.scrollFlex, { backgroundColor: colors.bg }]}>
           {activePanel}
