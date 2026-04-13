@@ -6,6 +6,10 @@ export type ProfileRow = {
   display_name: string | null;
   avatar_color: string | null;
   avatar_url: string | null;
+  is_public: boolean;
+  show_wines: boolean;
+  show_taste_profile: boolean;
+  cellar_code: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -63,4 +67,57 @@ export async function setDisplayName(
 ): Promise<Result<ProfileRow>> {
   const color = generateAvatarColor(userId);
   return updateProfile(userId, { display_name: displayName, avatar_color: color });
+}
+
+export async function updateVisibility(
+  userId: string,
+  patch: { is_public?: boolean; show_wines?: boolean; show_taste_profile?: boolean }
+): Promise<ProfileRow | null> {
+  let extras: Record<string, unknown> = {};
+  if (patch.is_public === true) {
+    const { data: current } = await supabase
+      .from("profiles")
+      .select("cellar_code")
+      .eq("id", userId)
+      .single();
+    if (!current?.cellar_code) {
+      const { data: codeResult } = await supabase.rpc("generate_cellar_code");
+      extras.cellar_code = codeResult;
+    }
+  }
+  if (patch.is_public === false) {
+    patch.show_wines = false;
+    patch.show_taste_profile = false;
+  }
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .update({ ...patch, ...extras })
+    .eq("id", userId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function regenerateCellarCode(userId: string): Promise<string> {
+  const { data: code } = await supabase.rpc("generate_cellar_code");
+  const { error } = await supabase
+    .from("profiles")
+    .update({ cellar_code: code })
+    .eq("id", userId);
+  if (error) throw error;
+  return code as string;
+}
+
+export async function lookupByCellarCode(
+  code: string
+): Promise<ProfileRow | null> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("cellar_code", code.toUpperCase().trim())
+    .single();
+  if (error) return null;
+  return data;
 }
