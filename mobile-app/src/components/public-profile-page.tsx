@@ -181,7 +181,7 @@ function WinesTab({ wines }: { wines: PublicWineRow[] }) {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg },
+  container: { flex: 1 },
   header: { flexDirection: "row", alignItems: "center", gap: 14, padding: 20, borderBottomWidth: 1, borderBottomColor: colors.border },
   avatar: { width: 52, height: 52, borderRadius: 26, alignItems: "center", justifyContent: "center" },
   avatarLetter: { color: "#FFFFFF", fontSize: 22, fontWeight: "700" },
