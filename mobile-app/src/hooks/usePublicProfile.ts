@@ -4,7 +4,7 @@ import {
   ProfileRow,
   lookupByCellarCode,
 } from "../lib/profile-actions";
-import { WineRow } from "../types/wine";
+import { PublicWineRow } from "../types/wine";
 import { fetchTasteProfile, TasteProfileData } from "../lib/taste-profile";
 
 export type CellarSummary = {
@@ -20,7 +20,7 @@ export type CellarSummary = {
 type PublicProfileState = {
   profile: ProfileRow | null;
   summary: CellarSummary | null;
-  wines: WineRow[];
+  wines: PublicWineRow[];
   tasteProfile: TasteProfileData | null;
   loading: boolean;
   error: string | null;
@@ -56,7 +56,7 @@ export function usePublicProfile(cellarCode: string | null) {
     });
 
     // Fetch wines if visible (RLS handles access)
-    let wines: WineRow[] = [];
+    let wines: PublicWineRow[] = [];
     if (profile.show_wines) {
       const { data } = await supabase
         .from("wines")

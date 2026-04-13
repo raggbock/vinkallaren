@@ -30,6 +30,13 @@ export type WineRecord = WineRow & {
   image_url: string | null;
 };
 
+/** Subset of WineRow exposed to other users via cellar peek. */
+export type PublicWineRow = Pick<WineRow,
+  "id" | "user_id" | "name" | "producer" | "country" | "region" | "grape" |
+  "vintage" | "type" | "food_pairings" | "tags" | "image_path" |
+  "systembolaget_product_id" | "barcode" | "created_at" | "updated_at"
+>;
+
 export type WineInsert = {
   user_id: string;
   name: string;

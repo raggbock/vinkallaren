@@ -6,14 +6,14 @@ import { getAvatarLetter, type ProfileRow } from "../lib/profile-actions";
 import type { TasteProfileData } from "../lib/taste-profile";
 import { colors } from "../styles/theme";
 import { styles as theme } from "../styles/theme";
-import type { WineRow, WineRecord } from "../types/wine";
+import type { PublicWineRow, WineRecord } from "../types/wine";
 import { TasteProfile } from "./taste-profile";
 import { WineCard } from "./wine-card";
 
 type Props = {
   profile: ProfileRow;
   summary: CellarSummary | null;
-  wines: WineRow[];
+  wines: PublicWineRow[];
   tasteProfile: TasteProfileData | null;
   onClose: () => void;
 };
@@ -50,7 +50,7 @@ export function PublicProfilePage({ profile, summary, wines, tasteProfile, onClo
   );
 }
 
-function buildTabs(profile: ProfileRow, wines: WineRow[], tasteProfile: TasteProfileData | null): TabId[] {
+function buildTabs(profile: ProfileRow, wines: PublicWineRow[], tasteProfile: TasteProfileData | null): TabId[] {
   const tabs: TabId[] = ["overview"];
   if (profile.show_wines && wines.length > 0) tabs.push("wines");
   if (profile.show_taste_profile && tasteProfile) tabs.push("taste");
@@ -157,7 +157,7 @@ function TypeBar({ distribution, total }: { distribution: Record<string, number>
   );
 }
 
-function WinesTab({ wines }: { wines: WineRow[] }) {
+function WinesTab({ wines }: { wines: PublicWineRow[] }) {
   const records = wines as WineRecord[];
   return (
     <FlatList
