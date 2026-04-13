@@ -16,7 +16,7 @@ import type { SessionWineRow, SessionTastingRow } from "../types/tasting-session
 
 import { colors } from "../styles/theme";
 import type { styles as themeStyles } from "../styles/theme";
-import { WineGlassDoodle, TabIconCellar, TabIconAdd, TabIconTasting, TabIconHistory } from "./doodles";
+import { WineGlassDoodle, TabIconCellar, TabIconAdd, TabIconTasting, TabIconDiscover, TabIconHistory } from "./doodles";
 type SharedStyles = typeof themeStyles;
 
 export function BottomTabBar({
@@ -34,6 +34,7 @@ export function BottomTabBar({
     cellar: TabIconCellar,
     add: TabIconAdd,
     tasting: TabIconTasting,
+    discover: TabIconDiscover,
     history: TabIconHistory,
   };
 

@@ -108,6 +108,20 @@ export function TabIconHistory({ size = 24, color = "#C83C2D" }: { size?: number
   );
 }
 
+export function TabIconDiscover({ size = 24, color = "#C83C2D" }: { size?: number; color?: string }) {
+  if (Platform.OS !== "web") return <View style={{ width: size, height: size }} />;
+  return (
+    <WebSvg
+      size={size}
+      svg={`<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
+        <circle cx="12" cy="12" r="9" stroke="${color}" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <path d="M15 9 L13 13 L9 15 L11 11 Z" stroke="${color}" stroke-width="1.2" fill="none" stroke-linejoin="round"/>
+        <circle cx="12" cy="12" r="1" fill="${color}" opacity="0.5"/>
+      </svg>`}
+    />
+  );
+}
+
 /** Squiggly horizontal line divider */
 export function SquigglyLine({ color = "#C83C2D", opacity = 0.3 }: { color?: string; opacity?: number }) {
   const ref = useRef<View>(null);
