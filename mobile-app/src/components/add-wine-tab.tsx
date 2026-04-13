@@ -85,6 +85,7 @@ function AddWineTabContent({
   });
 
   const gate = useGuestGate(isAnonymous, ctx.wines.length);
+  const [imageNudge, setImageNudge] = useState(false);
 
   const catalogProps: CatalogProps = useMemo(() => ({
     searchWineNames: ctx.searchCatalogWineNames,
@@ -163,10 +164,17 @@ function AddWineTabContent({
         onPositionChange={(spaceId, row, slot) => { storage.setSelectedStorageSpaceId(spaceId); storage.setSelectedStorageRow(row); storage.setSelectedStorageSlot(slot); }}
         onScanLabel={() => { barcode.setScannerVisible(false); label.handleLabelPhoto(setDraft); }}
         onOpenSystembolaget={handleOpenSystembolaget}
-        onChooseImage={async () => { const uri = await images.pickImageFromLibrary(); if (uri) setDraft((c) => ({ ...c, imageUri: uri })); }}
-        onTakePhoto={async () => { const uri = await images.takePhoto(); if (uri) setDraft((c) => ({ ...c, imageUri: uri })); }}
+        onChooseImage={async () => { const uri = await images.pickImageFromLibrary(); if (uri) { setDraft((c) => ({ ...c, imageUri: uri })); setImageNudge(false); } }}
+        onTakePhoto={async () => { const uri = await images.takePhoto(); if (uri) { setDraft((c) => ({ ...c, imageUri: uri })); setImageNudge(false); } }}
+        imageNudge={imageNudge}
+        onSkipImage={() => { setImageNudge(false); handleSaveWine(); }}
         onSaveWine={() => {
           if (gate.shouldPrompt) return;
+          if (!draft.imageUri && !imageNudge) {
+            setImageNudge(true);
+            return;
+          }
+          setImageNudge(false);
           handleSaveWine();
         }}
         onOpenProfile={onOpenProfile}

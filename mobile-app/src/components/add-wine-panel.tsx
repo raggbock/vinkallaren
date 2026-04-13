@@ -47,7 +47,13 @@ export function AddWinePanel(props: AddWinePanelProps) {
       <LabeledInput label="Anteckningar" value={draft.notes} onChangeText={(value) => props.onDraftChange({ notes: value })} multiline />
 
       <SectionLabel label="Bild" />
-      <ImagePickerSection styles={styles} imageUri={draft.imageUri} isDesktopWeb={isDesktopWeb} onChooseImage={props.onChooseImage} onTakePhoto={props.onTakePhoto} />
+      <ImagePickerSection styles={styles} imageUri={draft.imageUri} isDesktopWeb={isDesktopWeb} onChooseImage={props.onChooseImage} onTakePhoto={props.onTakePhoto} highlighted={props.imageNudge} onLayout={props.onImageSectionLayout} />
+
+      {props.imageNudge && !draft.imageUri ? (
+        <Pressable onPress={props.onSkipImage} style={({ pressed }) => [styles.secondaryButton, pressed && { opacity: 0.8 }]}>
+          <Text style={styles.secondaryButtonText}>Spara utan bild</Text>
+        </Pressable>
+      ) : null}
 
       <Pressable onPress={tastingMode ? onSaveTasting : onSaveWine} style={({ pressed }) => [styles.primaryButton, pressed && { opacity: 0.8 }]} disabled={tastingMode ? savingTasting : saving}>
         <Text style={styles.primaryButtonText}>{tastingMode ? (savingTasting ? "Sparar..." : "Spara i historik") : (saving ? "Sparar..." : "Spara i källaren")}</Text>
@@ -145,6 +151,9 @@ export interface AddWinePanelProps {
   onChooseImage: () => void;
   onTakePhoto: () => void;
   onSaveWine: () => void;
+  onSkipImage?: () => void;
+  imageNudge?: boolean;
+  onImageSectionLayout?: (y: number) => void;
   onOpenProfile?: () => void;
   userDishGroups: Array<{ label: string; items: string[] }>;
   userCategories: string[];

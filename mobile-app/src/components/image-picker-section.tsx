@@ -1,15 +1,42 @@
-import { Image, Pressable, Text, View } from "react-native";
+import { useEffect, useRef } from "react";
+import { Animated, Image, Pressable, StyleSheet, Text, View } from "react-native";
 
+import { colors } from "../styles/theme";
 import type { styles as themeStyles } from "../styles/theme";
 
 type SharedStyles = typeof themeStyles;
 
-export function ImagePickerSection({ styles, imageUri, isDesktopWeb, onChooseImage, onTakePhoto }: {
+export function ImagePickerSection({ styles, imageUri, isDesktopWeb, onChooseImage, onTakePhoto, highlighted, onLayout }: {
   styles: SharedStyles; imageUri: string; isDesktopWeb: boolean;
   onChooseImage: () => void; onTakePhoto: () => void;
+  highlighted?: boolean; onLayout?: (y: number) => void;
 }) {
+  const pulse = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (!highlighted) { pulse.setValue(0); return; }
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, { toValue: 1, duration: 800, useNativeDriver: false }),
+        Animated.timing(pulse, { toValue: 0, duration: 800, useNativeDriver: false }),
+      ]),
+      { iterations: 3 },
+    ).start();
+  }, [highlighted]);
+
+  const borderColor = pulse.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["rgba(200, 60, 45, 0)", "rgba(200, 60, 45, 0.5)"],
+  });
+
   return (
-    <View style={{ gap: 12 }}>
+    <Animated.View
+      style={[s.container, highlighted && { borderColor, borderWidth: 2, borderRadius: 16 }]}
+      onLayout={onLayout ? (e) => onLayout(e.nativeEvent.layout.y) : undefined}
+    >
+      {highlighted && !imageUri ? (
+        <Text style={s.nudge}>En bild på etiketten hjälper dig hitta vinet igen!</Text>
+      ) : null}
       <View style={styles.imageButtonRow}>
         {isDesktopWeb ? (
           <Pressable onPress={onChooseImage} style={styles.secondaryButton}>
@@ -27,6 +54,11 @@ export function ImagePickerSection({ styles, imageUri, isDesktopWeb, onChooseIma
         )}
       </View>
       {imageUri ? <Image source={{ uri: imageUri }} style={styles.wineImage} resizeMode="contain" accessibilityLabel="Vald vinbild" /> : null}
-    </View>
+    </Animated.View>
   );
 }
+
+const s = StyleSheet.create({
+  container: { gap: 12, padding: 4 },
+  nudge: { color: colors.accent, fontSize: 13, fontWeight: "600", textAlign: "center" },
+});
