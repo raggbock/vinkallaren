@@ -8,21 +8,19 @@ export async function searchCatalogWineNames(
   const trimmed = query.trim();
   if (trimmed.length < 3) return { suggestions: [], hasMore: false, nextOffset: offset };
 
-  const pageSize = 20;
   const { data, error } = await supabase.rpc("autocomplete_catalog", {
     query: trimmed,
-    max_results: pageSize + 1,
+    max_results: 50,
   });
-  if (error) return { suggestions: [], hasMore: false, nextOffset: offset };
+  if (error) return { suggestions: [], hasMore: false, nextOffset: 0 };
 
   const rows = (data ?? []) as { id: string; name: string; producer: string | null; vintage: number | null; image_url: string | null; score: number }[];
-  const hasMore = rows.length > pageSize;
-  const results: Suggestion[] = rows.slice(0, pageSize).map((row) => ({
+  const results: Suggestion[] = rows.map((row) => ({
     name: row.name,
     parentName: row.producer ?? null,
   }));
 
-  return { suggestions: results, hasMore, nextOffset: offset + results.length };
+  return { suggestions: results, hasMore: false, nextOffset: results.length };
 }
 
 export async function fetchCatalogEntriesByName(name: string, producer?: string | null): Promise<ProductCatalogWineRow[]> {
