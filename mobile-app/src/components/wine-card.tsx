@@ -12,6 +12,7 @@ export type WineCardProps = {
   wine: WineRecord;
   styles: SharedStyles;
   highlighted?: boolean;
+  readonly?: boolean;
   storageSpaceById: Map<string, StorageSpaceRow>;
   onOpenSystembolaget: (productId: string) => void;
   onEditWine: (wine: WineRecord) => void;
@@ -20,34 +21,36 @@ export type WineCardProps = {
 };
 
 export const WineCard = React.memo(function WineCard({
-  wine, styles, highlighted, storageSpaceById,
+  wine, styles, highlighted, readonly, storageSpaceById,
   onOpenSystembolaget, onEditWine, onDrinkWine, onDeleteWine,
 }: WineCardProps) {
   return (
     <View style={[styles.wineCard, highlighted && styles.wineCardHighlighted]}>
-      <WineCardHeader wine={wine} styles={styles} storageSpaceById={storageSpaceById} />
+      <WineCardHeader wine={wine} styles={styles} storageSpaceById={storageSpaceById} readonly={readonly} />
       <WineCardTags wine={wine} styles={styles} />
       <WineCardPairings wine={wine} styles={styles} />
       <WineCardSystembolaget wine={wine} styles={styles} onOpenSystembolaget={onOpenSystembolaget} />
-      {wine.notes ? <Text style={styles.notesText}>{wine.notes}</Text> : null}
-      <View style={styles.actionRow}>
-        <Pressable onPress={() => onEditWine(wine)} style={({ pressed }) => pressed && { opacity: 0.5 }}>
-          <Text style={styles.linkText}>Redigera</Text>
-        </Pressable>
-        <Pressable onPress={() => onDrinkWine(wine)} style={({ pressed }) => [styles.drinkAction, pressed && { opacity: 0.5 }]}>
-          <Text style={styles.drinkActionText}>Drick</Text>
-        </Pressable>
-        <View style={styles.actionSpacer} />
-        <Pressable onPress={() => onDeleteWine(wine.id, wine.image_path)} style={({ pressed }) => pressed && { opacity: 0.5 }}>
-          <Text style={styles.dangerText}>Ta bort</Text>
-        </Pressable>
-      </View>
+      {!readonly && wine.notes ? <Text style={styles.notesText}>{wine.notes}</Text> : null}
+      {!readonly && (
+        <View style={styles.actionRow}>
+          <Pressable onPress={() => onEditWine(wine)} style={({ pressed }) => pressed && { opacity: 0.5 }}>
+            <Text style={styles.linkText}>Redigera</Text>
+          </Pressable>
+          <Pressable onPress={() => onDrinkWine(wine)} style={({ pressed }) => [styles.drinkAction, pressed && { opacity: 0.5 }]}>
+            <Text style={styles.drinkActionText}>Drick</Text>
+          </Pressable>
+          <View style={styles.actionSpacer} />
+          <Pressable onPress={() => onDeleteWine(wine.id, wine.image_path)} style={({ pressed }) => pressed && { opacity: 0.5 }}>
+            <Text style={styles.dangerText}>Ta bort</Text>
+          </Pressable>
+        </View>
+      )}
     </View>
   );
 });
 
-function WineCardHeader({ wine, styles, storageSpaceById }: {
-  wine: WineRecord; styles: SharedStyles; storageSpaceById: Map<string, StorageSpaceRow>;
+function WineCardHeader({ wine, styles, storageSpaceById, readonly }: {
+  wine: WineRecord; styles: SharedStyles; storageSpaceById: Map<string, StorageSpaceRow>; readonly?: boolean;
 }) {
   return (
     <View style={styles.wineCardHeader}>
@@ -60,14 +63,18 @@ function WineCardHeader({ wine, styles, storageSpaceById }: {
         <Text style={styles.wineMeta}>
           {[wine.producer, wine.vintage, wine.grape, [wine.country, wine.region].filter(Boolean).join(", ")].filter(Boolean).join(" • ")}
         </Text>
-        <Text style={styles.locationText}>
-          {getWineStoragePlacementLabel(wine, storageSpaceById) || wine.cellar_location || "Ingen plats angiven"}
-        </Text>
-        {wine.cellar_location && getWineStoragePlacementLabel(wine, storageSpaceById) ? (
-          <Text style={styles.notesText}>{wine.cellar_location}</Text>
-        ) : null}
+        {!readonly && (
+          <>
+            <Text style={styles.locationText}>
+              {getWineStoragePlacementLabel(wine, storageSpaceById) || wine.cellar_location || "Ingen plats angiven"}
+            </Text>
+            {wine.cellar_location && getWineStoragePlacementLabel(wine, storageSpaceById) ? (
+              <Text style={styles.notesText}>{wine.cellar_location}</Text>
+            ) : null}
+          </>
+        )}
       </View>
-      <View style={styles.quantityBadge}><Text style={styles.quantityBadgeText}>{wine.quantity} st</Text></View>
+      {!readonly && <View style={styles.quantityBadge}><Text style={styles.quantityBadgeText}>{wine.quantity} st</Text></View>}
     </View>
   );
 }
