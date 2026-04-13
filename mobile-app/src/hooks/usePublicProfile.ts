@@ -60,7 +60,7 @@ export function usePublicProfile(cellarCode: string | null) {
     if (profile.show_wines) {
       const { data } = await supabase
         .from("wines")
-        .select("*")
+        .select("id, user_id, name, producer, country, region, grape, vintage, type, food_pairings, tags, image_path, systembolaget_product_id, barcode, created_at, updated_at")
         .eq("user_id", profile.id)
         .order("created_at", { ascending: false });
       wines = data ?? [];
