@@ -1,11 +1,11 @@
 import { lazy, Suspense } from "react";
 import { useCellar } from "../contexts/CellarContext";
+import { useTasting } from "../contexts/TastingContext";
 import { styles } from "../styles/theme";
 import type { useDrinkWineModal } from "../hooks/useDrinkWineModal";
 import type { useEditWineModal } from "../hooks/useEditWineModal";
 import type { useCatalogEditorModal } from "../hooks/useCatalogEditorModal";
 import type { useModalToggle } from "../hooks/useModalToggle";
-import type { useSessionWset } from "../hooks/useSessionWset";
 
 const CatalogEditorModal = lazy(() => import("./cellar-workflows").then(m => ({ default: m.CatalogEditorModal })));
 const DrinkWineModal = lazy(() => import("./cellar-workflows").then(m => ({ default: m.DrinkWineModal })));
@@ -18,11 +18,11 @@ type Props = {
   edit: ReturnType<typeof useEditWineModal>;
   catalogEditor: ReturnType<typeof useCatalogEditorModal>;
   privacy: ReturnType<typeof useModalToggle>;
-  sessionWset: ReturnType<typeof useSessionWset>;
 };
 
-export function ModalLayer({ drink, edit, catalogEditor, privacy, sessionWset }: Props) {
+export function ModalLayer({ drink, edit, catalogEditor, privacy }: Props) {
   const ctx = useCellar();
+  const tasting = useTasting();
 
   return (
     <Suspense fallback={null}>
@@ -37,7 +37,7 @@ export function ModalLayer({ drink, edit, catalogEditor, privacy, sessionWset }:
       />
       <WsetTastingModal {...drink.wsetProps} />
       <DrinkWineModal {...drink.modalProps} styles={styles} />
-      <WsetTastingModal {...sessionWset.wsetProps} />
+      <WsetTastingModal {...tasting.wsetProps} />
       <EditWineModal
         {...edit.modalProps} styles={styles}
         storageSpaces={ctx.storageSpaces}
