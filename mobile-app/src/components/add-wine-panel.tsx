@@ -47,7 +47,7 @@ export function AddWinePanel(props: AddWinePanelProps) {
       <LabeledInput label="Anteckningar" value={draft.notes} onChangeText={(value) => props.onDraftChange({ notes: value })} multiline />
 
       <SectionLabel label="Bild" />
-      <ImagePickerSection styles={styles} imageUri={draft.imageUri} isDesktopWeb={isDesktopWeb} onChooseImage={props.onChooseImage} onTakePhoto={props.onTakePhoto} highlighted={props.imageNudge} onLayout={props.onImageSectionLayout} />
+      <ImagePickerSection styles={styles} imageUri={draft.imageUri} isDesktopWeb={isDesktopWeb} onChooseImage={props.onChooseImage} onTakePhoto={props.onTakePhoto} highlighted={props.imageNudge} />
 
       {props.imageNudge && !draft.imageUri ? (
         <Pressable onPress={props.onSkipImage} style={({ pressed }) => [styles.secondaryButton, pressed && { opacity: 0.8 }]}>
@@ -55,12 +55,44 @@ export function AddWinePanel(props: AddWinePanelProps) {
         </Pressable>
       ) : null}
 
-      <Pressable onPress={tastingMode ? onSaveTasting : onSaveWine} style={({ pressed }) => [styles.primaryButton, pressed && { opacity: 0.8 }]} disabled={tastingMode ? savingTasting : saving}>
-        <Text style={styles.primaryButtonText}>{tastingMode ? (savingTasting ? "Sparar..." : "Spara i historik") : (saving ? "Sparar..." : "Spara i källaren")}</Text>
-      </Pressable>
+      {props.savedPrompt ? (
+        <SavedPrompt onGoToCellar={props.onSavedGoToCellar} onAddMore={props.onSavedAddMore} />
+      ) : (
+        <Pressable onPress={tastingMode ? onSaveTasting : onSaveWine} style={({ pressed }) => [styles.primaryButton, pressed && { opacity: 0.8 }]} disabled={tastingMode ? savingTasting : saving}>
+          <Text style={styles.primaryButtonText}>{tastingMode ? (savingTasting ? "Sparar..." : "Spara i historik") : (saving ? "Sparar..." : "Spara i källaren")}</Text>
+        </Pressable>
+      )}
     </View>
   );
 }
+
+function SavedPrompt({ onGoToCellar, onAddMore }: { onGoToCellar?: () => void; onAddMore?: () => void }) {
+  return (
+    <View style={savedStyles.container}>
+      <Text style={savedStyles.title}>Vinet är sparat!</Text>
+      <Text style={savedStyles.subtitle}>Vill du gå till din källare?</Text>
+      <View style={savedStyles.buttons}>
+        <Pressable onPress={onAddMore} style={({ pressed }) => [savedStyles.btnNo, pressed && { opacity: 0.7 }]}>
+          <Text style={savedStyles.btnNoText}>Nej, lägg till fler</Text>
+        </Pressable>
+        <Pressable onPress={onGoToCellar} style={({ pressed }) => [savedStyles.btnYes, pressed && { opacity: 0.7 }]}>
+          <Text style={savedStyles.btnYesText}>Ja</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
+const savedStyles = StyleSheet.create({
+  container: { alignItems: "center", gap: 8, paddingVertical: 20 },
+  title: { color: colors.accent, fontSize: 18, fontWeight: "700" },
+  subtitle: { color: colors.textSecondary, fontSize: 14 },
+  buttons: { flexDirection: "row", gap: 12, marginTop: 8 },
+  btnNo: { borderWidth: 1.5, borderColor: colors.accent, borderRadius: 999, paddingVertical: 12, paddingHorizontal: 20 },
+  btnNoText: { color: colors.accent, fontWeight: "700", fontSize: 14 },
+  btnYes: { backgroundColor: colors.accent, borderRadius: 999, paddingVertical: 12, paddingHorizontal: 28 },
+  btnYesText: { color: colors.textLight, fontWeight: "700", fontSize: 14 },
+});
 
 function SectionLabel({ label }: { label: string }) {
   return (
@@ -153,7 +185,9 @@ export interface AddWinePanelProps {
   onSaveWine: () => void;
   onSkipImage?: () => void;
   imageNudge?: boolean;
-  onImageSectionLayout?: (y: number) => void;
+  savedPrompt?: boolean;
+  onSavedGoToCellar?: () => void;
+  onSavedAddMore?: () => void;
   onOpenProfile?: () => void;
   userDishGroups: Array<{ label: string; items: string[] }>;
   userCategories: string[];

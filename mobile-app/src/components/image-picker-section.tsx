@@ -6,10 +6,10 @@ import type { styles as themeStyles } from "../styles/theme";
 
 type SharedStyles = typeof themeStyles;
 
-export function ImagePickerSection({ styles, imageUri, isDesktopWeb, onChooseImage, onTakePhoto, highlighted, onLayout }: {
+export function ImagePickerSection({ styles, imageUri, isDesktopWeb, onChooseImage, onTakePhoto, highlighted }: {
   styles: SharedStyles; imageUri: string; isDesktopWeb: boolean;
   onChooseImage: () => void; onTakePhoto: () => void;
-  highlighted?: boolean; onLayout?: (y: number) => void;
+  highlighted?: boolean;
 }) {
   const pulse = useRef(new Animated.Value(0)).current;
 
@@ -32,7 +32,6 @@ export function ImagePickerSection({ styles, imageUri, isDesktopWeb, onChooseIma
   return (
     <Animated.View
       style={[s.container, highlighted && { borderColor, borderWidth: 2, borderRadius: 16 }]}
-      onLayout={onLayout ? (e) => onLayout(e.nativeEvent.layout.y) : undefined}
     >
       {highlighted && !imageUri ? (
         <Text style={s.nudge}>En bild på etiketten hjälper dig hitta vinet igen!</Text>

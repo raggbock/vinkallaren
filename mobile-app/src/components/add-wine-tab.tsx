@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useMemo, useState } from "react";
-import { Alert, Platform } from "react-native";
+import { Platform } from "react-native";
 import { openSystembolaget, saveNewWine } from "../lib/cellar-actions";
 import { hydrateWineRecords, mergeDraftWithCatalogSuggestion } from "../lib/wine-helpers";
 import { showError } from "../lib/show-error";
@@ -86,6 +86,7 @@ function AddWineTabContent({
 
   const gate = useGuestGate(isAnonymous, ctx.wines.length);
   const [imageNudge, setImageNudge] = useState(false);
+  const [savedPrompt, setSavedPrompt] = useState(false);
 
   const catalogProps: CatalogProps = useMemo(() => ({
     searchWineNames: ctx.searchCatalogWineNames,
@@ -124,14 +125,7 @@ function AddWineTabContent({
     ctx.setWines(prev => [hydrated, ...prev]);
     ctx.mergeReferenceOptions(savedRow);
     success.show("wine_added");
-    if (Platform.OS === "web") {
-      if (window.confirm("Vinet är sparat! Vill du gå till din källare?")) onNavigateToCellar();
-    } else {
-      Alert.alert("Vinet är sparat!", "Vad vill du göra nu?", [
-        { text: "Lägg till fler", style: "default" },
-        { text: "Gå till min källare", onPress: onNavigateToCellar },
-      ]);
-    }
+    setSavedPrompt(true);
   }
 
   async function handleOpenSystembolaget(productId: string) {
@@ -168,6 +162,9 @@ function AddWineTabContent({
         onTakePhoto={async () => { const uri = await images.takePhoto(); if (uri) { setDraft((c) => ({ ...c, imageUri: uri })); setImageNudge(false); } }}
         imageNudge={imageNudge}
         onSkipImage={() => { setImageNudge(false); handleSaveWine(); }}
+        savedPrompt={savedPrompt}
+        onSavedGoToCellar={() => { setSavedPrompt(false); onNavigateToCellar(); }}
+        onSavedAddMore={() => { setSavedPrompt(false); setDraft(defaultDraft); setSelectedCatalogNameEntry(null); }}
         onSaveWine={() => {
           if (gate.shouldPrompt) return;
           if (!draft.imageUri && !imageNudge) {
