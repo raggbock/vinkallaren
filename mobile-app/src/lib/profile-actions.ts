@@ -115,7 +115,7 @@ export async function lookupByCellarCode(
 ): Promise<ProfileRow | null> {
   const { data, error } = await supabase
     .from("profiles")
-    .select("*")
+    .select("id, display_name, avatar_color, avatar_url, is_public, show_wines, show_taste_profile, cellar_code, created_at, updated_at")
     .eq("cellar_code", code.toUpperCase().trim())
     .single();
   if (error) return null;

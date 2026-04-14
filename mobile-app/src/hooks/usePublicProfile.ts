@@ -1,11 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../lib/supabase";
-import {
-  ProfileRow,
-  lookupByCellarCode,
-} from "../lib/profile-actions";
-import { PublicWineRow } from "../types/wine";
-import { fetchTasteProfile, TasteProfileData } from "../lib/taste-profile";
+import type { ProfileRow } from "../lib/profile-actions";
+import type { PublicWineRow } from "../types/wine";
+import { fetchTasteProfile, type TasteProfileData } from "../lib/taste-profile";
 
 export type CellarSummary = {
   total_bottles: number;
@@ -26,54 +23,41 @@ type PublicProfileState = {
   error: string | null;
 };
 
-export function usePublicProfile(cellarCode: string | null) {
-  const [state, setState] = useState<PublicProfileState>({
-    profile: null,
-    summary: null,
-    wines: [],
-    tasteProfile: null,
-    loading: false,
-    error: null,
-  });
+const EMPTY: PublicProfileState = {
+  profile: null, summary: null, wines: [], tasteProfile: null, loading: false, error: null,
+};
 
-  const load = useCallback(async (code: string) => {
-    setState((s) => ({ ...s, loading: true, error: null }));
+/**
+ * Fetches public cellar data for a given profile.
+ * Pass a validated ProfileRow to load their data. Pass null to reset.
+ */
+export function usePublicProfile(profile: ProfileRow | null) {
+  const [state, setState] = useState<PublicProfileState>(EMPTY);
 
-    const profile = await lookupByCellarCode(code);
-    if (!profile || !profile.is_public) {
-      setState((s) => ({
-        ...s,
-        loading: false,
-        error: "Ingen källare hittades med den koden",
-        profile: null,
-      }));
-      return;
-    }
+  const load = useCallback(async (p: ProfileRow) => {
+    setState((s) => ({ ...s, profile: p, loading: true, error: null }));
 
-    // Fetch summary (always available for public profiles)
     const { data: summary } = await supabase.rpc("get_cellar_summary", {
-      target_user_id: profile.id,
+      target_user_id: p.id,
     });
 
-    // Fetch wines if visible (RLS handles access)
     let wines: PublicWineRow[] = [];
-    if (profile.show_wines) {
+    if (p.show_wines) {
       const { data } = await supabase
         .from("wines")
         .select("id, user_id, name, producer, country, region, grape, vintage, type, food_pairings, tags, image_path, systembolaget_product_id, barcode, created_at, updated_at")
-        .eq("user_id", profile.id)
+        .eq("user_id", p.id)
         .order("created_at", { ascending: false });
-      wines = data ?? [];
+      wines = (data ?? []) as PublicWineRow[];
     }
 
-    // Fetch taste profile if visible
     let tasteProfile: TasteProfileData | null = null;
-    if (profile.show_taste_profile) {
-      tasteProfile = await fetchTasteProfile(profile.id);
+    if (p.show_taste_profile) {
+      tasteProfile = await fetchTasteProfile(p.id);
     }
 
     setState({
-      profile,
+      profile: p,
       summary: summary as CellarSummary | null,
       wines,
       tasteProfile,
@@ -83,8 +67,12 @@ export function usePublicProfile(cellarCode: string | null) {
   }, []);
 
   useEffect(() => {
-    if (cellarCode) load(cellarCode);
-  }, [cellarCode, load]);
+    if (profile) {
+      load(profile);
+    } else {
+      setState(EMPTY);
+    }
+  }, [profile, load]);
 
   return state;
 }

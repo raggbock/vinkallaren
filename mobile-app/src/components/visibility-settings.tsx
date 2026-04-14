@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Pressable, StyleSheet, Switch, Text, View } from "react-native";
 import * as Clipboard from "expo-clipboard";
 import { colors } from "../styles/theme";
+import { showError } from "../lib/show-error";
 import { updateVisibility, regenerateCellarCode } from "../lib/profile-actions";
 import type { ProfileRow } from "../lib/profile-actions";
 
@@ -64,6 +65,8 @@ export function VisibilitySettings({ profile, onUpdate }: Props) {
     try {
       const code = await regenerateCellarCode(profile.id);
       onUpdate({ ...profile, cellar_code: code });
+    } catch {
+      showError("Kunde inte generera ny kod");
     } finally {
       setBusy(false);
     }

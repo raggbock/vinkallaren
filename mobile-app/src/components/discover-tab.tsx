@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { colors, styles as theme } from "../styles/theme";
 import { getAvatarLetter, lookupByCellarCode, type ProfileRow } from "../lib/profile-actions";
@@ -20,8 +20,8 @@ export function DiscoverTab({ onOpenProfile }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [recent, setRecent] = useState<ProfileRow[]>([]);
-  const [peekCode, setPeekCode] = useState<string | null>(null);
-  const publicProfile = usePublicProfile(peekCode);
+  const [peekProfile, setPeekProfile] = useState<ProfileRow | null>(null);
+  const publicProfile = usePublicProfile(peekProfile);
 
   useEffect(() => {
     loadRecent().then(setRecent);
@@ -40,20 +40,21 @@ export function DiscoverTab({ onOpenProfile }: Props) {
     }
     const updated = await saveRecent(profile, recent);
     setRecent(updated);
-    setPeekCode(profile.cellar_code);
+    setCode("");
+    setPeekProfile(profile);
   }
 
   // Show inline public profile when a code is selected
-  if (peekCode && publicProfile.profile) {
+  if (peekProfile && (publicProfile.profile || publicProfile.loading)) {
     return (
       <View style={s.panel}>
         <PanelHeader title="Upptäck" rightLabel="Profil" onRightPress={onOpenProfile} />
         <PublicProfilePage
-          profile={publicProfile.profile}
+          profile={publicProfile.profile ?? peekProfile}
           summary={publicProfile.summary}
           wines={publicProfile.wines}
           tasteProfile={publicProfile.tasteProfile}
-          onClose={() => { setPeekCode(null); setCode(""); }}
+          onClose={() => { setPeekProfile(null); }}
         />
       </View>
     );
