@@ -2,6 +2,14 @@ import { supabase } from "./supabase";
 import type { Suggestion } from "../components/form-controls";
 import type { CatalogTextMatch, CatalogImageMatch, ProductCatalogWineRow } from "../types/product-catalog";
 
+let warmedUp = false;
+/** Fire a minimal query to warm the Supabase connection + PG index cache. */
+export function warmupCatalogSearch(): void {
+  if (warmedUp) return;
+  warmedUp = true;
+  void supabase.rpc("autocomplete_catalog", { query: "vin", max_results: 1 }).then(() => {});
+}
+
 export async function searchCatalogWineNames(
   query: string, offset = 0,
 ): Promise<{ suggestions: Suggestion[]; hasMore: boolean; nextOffset: number }> {

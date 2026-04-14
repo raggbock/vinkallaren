@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { showError } from "../lib/show-error";
 import { supabase } from "../lib/supabase";
-import { searchCatalogWineNames, fetchCatalogEntriesByName, matchCatalogByText } from "../lib/catalog-search";
+import { searchCatalogWineNames, fetchCatalogEntriesByName, matchCatalogByText, warmupCatalogSearch } from "../lib/catalog-search";
 import { canBeSavedAsCatalogEntry, buildCatalogBackfillPayload } from "../lib/wine-helpers";
 import type { ProductCatalogWineRow } from "../types/product-catalog";
 import { createGuardedFetcher } from "../lib/guarded-fetcher";
@@ -24,7 +24,7 @@ export function useCatalog(userId: string, wines: WineRecord[], winesLoading: bo
   }
   const fetchCatalogEntries = createGuardedFetcher(fetchCatalogEntriesRaw);
 
-  useEffect(() => { void fetchCatalogEntries(); }, []);
+  useEffect(() => { warmupCatalogSearch(); void fetchCatalogEntries(); }, []);
 
   // Catalog backfill — runs at most once per day (persisted via AsyncStorage)
   useEffect(() => {
