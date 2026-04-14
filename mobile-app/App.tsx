@@ -1,5 +1,5 @@
 import "react-native-url-polyfill/auto";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { View as GestureHandlerRootView } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Platform, Pressable, RefreshControl, SafeAreaView, ScrollView, Text as RNText, View as RNView } from "react-native";
