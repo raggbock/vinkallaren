@@ -8,17 +8,19 @@ import { supabase, supabaseConfigured } from "./src/lib/supabase";
 import { showError } from "./src/lib/show-error";
 import { BottomTabBar } from "./src/components/cellar-sections";
 import { CellarTab } from "./src/components/cellar-tab";
-import { AddWineTab } from "./src/components/add-wine-tab";
-import { DiscoverTab } from "./src/components/discover-tab";
 import { SuccessOverlay, useSuccessOverlay } from "./src/components/success-overlay";
 
-// Lazy-load heavy components
+// Lazy-load tabs and heavy components (only CellarTab is eager — it's the default view)
+const AddWineTab = lazy(() => import("./src/components/add-wine-tab").then(m => ({ default: m.AddWineTab })));
+const DiscoverTab = lazy(() => import("./src/components/discover-tab").then(m => ({ default: m.DiscoverTab })));
+const HistoryTab = lazy(() => import("./src/components/history-tab").then(m => ({ default: m.HistoryTab })));
+const TastingTab = lazy(() => import("./src/components/tasting-tab").then(m => ({ default: m.TastingTab })));
 const TastingSessionPanel = lazy(() => import("./src/components/tasting-session-modal").then(m => ({ default: m.TastingSessionPanel })));
+const ModalLayer = lazy(() => import("./src/components/modal-layer").then(m => ({ default: m.ModalLayer })));
+const ProfilePage = lazy(() => import("./src/components/profile-page").then(m => ({ default: m.ProfilePage })));
+const OcrDebugPage = lazy(() => import("./src/components/ocr-debug-page").then(m => ({ default: m.OcrDebugPage })));
 import { CellarProvider, useCellar } from "./src/contexts/CellarContext";
 import { TastingProvider, useTasting } from "./src/contexts/TastingContext";
-import { ModalLayer } from "./src/components/modal-layer";
-import { HistoryTab } from "./src/components/history-tab";
-import { TastingTab } from "./src/components/tasting-tab";
 import { CELLAR_SECTIONS, type CellarSection } from "./src/types/cellar";
 import type { StorageProps } from "./src/types/panel-prop-groups";
 import { colors, styles } from "./src/styles/theme";
@@ -33,8 +35,6 @@ import { useCatalogEditorModal } from "./src/hooks/useCatalogEditorModal";
 import { useModalToggle } from "./src/hooks/useModalToggle";
 import { useProfile } from "./src/hooks/useProfile";
 import { DisplayNamePrompt } from "./src/components/display-name-prompt";
-import { ProfilePage } from "./src/components/profile-page";
-import { OcrDebugPage } from "./src/components/ocr-debug-page";
 import { parseJoinCodeFromUrl } from "./src/lib/join-link";
 
 function useWebStyles() {
@@ -214,11 +214,15 @@ function CellarScreenInner({ session, pendingJoinCode, onJoinCodeConsumed }: { s
     if (error) showError("Kunde inte logga ut", error.message);
   }
 
+  const lazyFallback = <ActivityIndicator style={{ flex: 1, justifyContent: "center" }} color={colors.accent} />;
+
   if (ocrDebugVisible) {
     return (
       <SafeAreaView style={styles.screen}>
         <StatusBar style="light" />
-        <OcrDebugPage onClose={() => setOcrDebugVisible(false)} />
+        <Suspense fallback={lazyFallback}>
+          <OcrDebugPage onClose={() => setOcrDebugVisible(false)} />
+        </Suspense>
       </SafeAreaView>
     );
   }
@@ -229,13 +233,15 @@ function CellarScreenInner({ session, pendingJoinCode, onJoinCodeConsumed }: { s
         <StatusBar style="light" />
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" style={styles.scrollFlex}>
           <RNView style={styles.panel}>
-            <ProfilePage
-              profile={userProfile.profile}
-              onUpdateName={userProfile.updateName}
-              onProfileUpdated={(p) => userProfile.setProfile(p)}
-              onSignOut={signOut}
-              onBack={() => setProfileVisible(false)}
-            />
+            <Suspense fallback={lazyFallback}>
+              <ProfilePage
+                profile={userProfile.profile}
+                onUpdateName={userProfile.updateName}
+                onProfileUpdated={(p) => userProfile.setProfile(p)}
+                onSignOut={signOut}
+                onBack={() => setProfileVisible(false)}
+              />
+            </Suspense>
           </RNView>
         </ScrollView>
         <BottomTabBar activeSection={activeSection} sections={CELLAR_SECTIONS} styles={styles} onSelect={(s) => { setProfileVisible(false); setActiveSection(s); }} />
@@ -262,16 +268,18 @@ function CellarScreenInner({ session, pendingJoinCode, onJoinCodeConsumed }: { s
   );
   if (activeSection === "history") {
     activePanel = (
-      <HistoryTab hidden={false}
-        endedSessions={tasting.sessions.filter((ses) => ses.status === "ended")}
-        refreshing={refreshing} onRefresh={onRefresh}
-        onOpenProfile={() => setProfileVisible(true)}
-      />
+      <Suspense fallback={lazyFallback}>
+        <HistoryTab hidden={false}
+          endedSessions={tasting.sessions.filter((ses) => ses.status === "ended")}
+          refreshing={refreshing} onRefresh={onRefresh}
+          onOpenProfile={() => setProfileVisible(true)}
+        />
+      </Suspense>
     );
   } else if (activeSection === "tasting") {
     if (tasting.activeSession) {
       activePanel = (
-        <Suspense fallback={<ActivityIndicator style={{ flex: 1, justifyContent: "center" }} color={colors.accent} />}>
+        <Suspense fallback={lazyFallback}>
           <TastingSessionPanel
             styles={styles} userId={session.user.id}
             sessions={tasting.sessions} loading={tasting.loading} toasts={tasting.toasts}
@@ -290,33 +298,39 @@ function CellarScreenInner({ session, pendingJoinCode, onJoinCodeConsumed }: { s
       );
     } else {
       activePanel = (
-        <TastingTab
-          sessions={tasting.sessions}
-          loading={tasting.loading}
-          onCreateSession={tasting.createSession}
-          onJoinSession={tasting.joinSession}
-          onOpenSession={tasting.openSession}
-          onOpenProfile={() => setProfileVisible(true)}
-          onFetchSessions={tasting.fetchSessions}
-        />
+        <Suspense fallback={lazyFallback}>
+          <TastingTab
+            sessions={tasting.sessions}
+            loading={tasting.loading}
+            onCreateSession={tasting.createSession}
+            onJoinSession={tasting.joinSession}
+            onOpenSession={tasting.openSession}
+            onOpenProfile={() => setProfileVisible(true)}
+            onFetchSessions={tasting.fetchSessions}
+          />
+        </Suspense>
       );
     }
   } else if (activeSection === "add") {
     activePanel = (
-      <AddWineTab
-        hidden={false}
-        isAnonymous={session.user.is_anonymous ?? false}
-        onOpenProfile={() => setProfileVisible(true)}
-        onNavigateToCellar={() => setActiveSection("cellar")}
-        images={images}
-        storage={storage}
-        success={success}
-        sessionUserId={session.user.id}
-      />
+      <Suspense fallback={lazyFallback}>
+        <AddWineTab
+          hidden={false}
+          isAnonymous={session.user.is_anonymous ?? false}
+          onOpenProfile={() => setProfileVisible(true)}
+          onNavigateToCellar={() => setActiveSection("cellar")}
+          images={images}
+          storage={storage}
+          success={success}
+          sessionUserId={session.user.id}
+        />
+      </Suspense>
     );
   } else if (activeSection === "discover") {
     activePanel = (
-      <DiscoverTab onOpenProfile={() => setProfileVisible(true)} />
+      <Suspense fallback={lazyFallback}>
+        <DiscoverTab onOpenProfile={() => setProfileVisible(true)} />
+      </Suspense>
     );
   }
 
@@ -341,7 +355,9 @@ function CellarScreenInner({ session, pendingJoinCode, onJoinCodeConsumed }: { s
         }}
       />
       <SuccessOverlay config={success.config} onDone={success.clear} />
-      <ModalLayer drink={drink} edit={edit} catalogEditor={catalogEditor} privacy={privacy} />
+      <Suspense fallback={null}>
+        <ModalLayer drink={drink} edit={edit} catalogEditor={catalogEditor} privacy={privacy} />
+      </Suspense>
       {activeSection === "history" || activeSection === "cellar" ? (
         <RNView style={[styles.scrollFlex, { backgroundColor: colors.bg }]}>
           {activePanel}
