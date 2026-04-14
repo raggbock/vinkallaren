@@ -8,8 +8,10 @@ import type { WineRecord } from "../types/wine";
 import type { styles as themeStyles } from "../styles/theme";
 type SharedStyles = typeof themeStyles;
 
+export type WineData = Partial<WineRecord> & Pick<WineRecord, "id" | "name" | "type" | "tags" | "food_pairings">;
+
 export type WineCardProps = {
-  wine: WineRecord;
+  wine: WineData;
   styles: SharedStyles;
   highlighted?: boolean;
   readonly?: boolean;
@@ -33,14 +35,14 @@ export const WineCard = React.memo(function WineCard({
       {!readonly && wine.notes ? <Text style={styles.notesText}>{wine.notes}</Text> : null}
       {!readonly && (
         <View style={styles.actionRow}>
-          <Pressable onPress={() => onEditWine(wine)} style={({ pressed }) => pressed && { opacity: 0.5 }}>
+          <Pressable onPress={() => onEditWine(wine as WineRecord)} style={({ pressed }) => pressed && { opacity: 0.5 }}>
             <Text style={styles.linkText}>Redigera</Text>
           </Pressable>
-          <Pressable onPress={() => onDrinkWine(wine)} style={({ pressed }) => [styles.drinkAction, pressed && { opacity: 0.5 }]}>
+          <Pressable onPress={() => onDrinkWine(wine as WineRecord)} style={({ pressed }) => [styles.drinkAction, pressed && { opacity: 0.5 }]}>
             <Text style={styles.drinkActionText}>Drick</Text>
           </Pressable>
           <View style={styles.actionSpacer} />
-          <Pressable onPress={() => onDeleteWine(wine.id, wine.image_path)} style={({ pressed }) => pressed && { opacity: 0.5 }}>
+          <Pressable onPress={() => onDeleteWine(wine.id, wine.image_path ?? null)} style={({ pressed }) => pressed && { opacity: 0.5 }}>
             <Text style={styles.dangerText}>Ta bort</Text>
           </Pressable>
         </View>
@@ -50,7 +52,7 @@ export const WineCard = React.memo(function WineCard({
 });
 
 function WineCardHeader({ wine, styles, storageSpaceById, readonly }: {
-  wine: WineRecord; styles: SharedStyles; storageSpaceById: Map<string, StorageSpaceRow>; readonly?: boolean;
+  wine: WineData; styles: SharedStyles; storageSpaceById: Map<string, StorageSpaceRow>; readonly?: boolean;
 }) {
   return (
     <View style={styles.wineCardHeader}>
@@ -66,20 +68,20 @@ function WineCardHeader({ wine, styles, storageSpaceById, readonly }: {
         {!readonly && (
           <>
             <Text style={styles.locationText}>
-              {getWineStoragePlacementLabel(wine, storageSpaceById) || wine.cellar_location || "Ingen plats angiven"}
+              {getWineStoragePlacementLabel(wine as WineRecord, storageSpaceById) || wine.cellar_location || "Ingen plats angiven"}
             </Text>
-            {wine.cellar_location && getWineStoragePlacementLabel(wine, storageSpaceById) ? (
+            {wine.cellar_location && getWineStoragePlacementLabel(wine as WineRecord, storageSpaceById) ? (
               <Text style={styles.notesText}>{wine.cellar_location}</Text>
             ) : null}
           </>
         )}
       </View>
-      {!readonly && <View style={styles.quantityBadge}><Text style={styles.quantityBadgeText}>{wine.quantity} st</Text></View>}
+      {!readonly && <View style={styles.quantityBadge}><Text style={styles.quantityBadgeText}>{wine.quantity ?? 0} st</Text></View>}
     </View>
   );
 }
 
-function WineCardTags({ wine, styles }: { wine: WineRecord; styles: SharedStyles }) {
+function WineCardTags({ wine, styles }: { wine: WineData; styles: SharedStyles }) {
   if (wine.tags.length === 0) return null;
   return (
     <View style={styles.tagRow}>
@@ -90,7 +92,7 @@ function WineCardTags({ wine, styles }: { wine: WineRecord; styles: SharedStyles
 
 const MAX_VISIBLE_PAIRINGS = 3;
 
-function WineCardPairings({ wine, styles }: { wine: WineRecord; styles: SharedStyles }) {
+function WineCardPairings({ wine, styles }: { wine: WineData; styles: SharedStyles }) {
   if (wine.food_pairings.length === 0) return null;
   const visible = wine.food_pairings.slice(0, MAX_VISIBLE_PAIRINGS);
   const overflow = wine.food_pairings.length - MAX_VISIBLE_PAIRINGS;
@@ -108,7 +110,7 @@ function WineCardPairings({ wine, styles }: { wine: WineRecord; styles: SharedSt
 }
 
 function WineCardSystembolaget({ wine, styles, onOpenSystembolaget }: {
-  wine: WineRecord; styles: SharedStyles; onOpenSystembolaget: (productId: string) => void;
+  wine: WineData; styles: SharedStyles; onOpenSystembolaget: (productId: string) => void;
 }) {
   if (!wine.systembolaget_product_id) return null;
   return (

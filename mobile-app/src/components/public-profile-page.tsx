@@ -6,7 +6,7 @@ import { getAvatarLetter, type ProfileRow } from "../lib/profile-actions";
 import type { TasteProfileData } from "../lib/taste-profile";
 import { colors } from "../styles/theme";
 import { styles as theme } from "../styles/theme";
-import type { PublicWineRow, WineRecord } from "../types/wine";
+import type { PublicWineRow } from "../types/wine";
 import { TasteProfile } from "./taste-profile";
 import { WineCard } from "./wine-card";
 
@@ -158,10 +158,9 @@ function TypeBar({ distribution, total }: { distribution: Record<string, number>
 }
 
 function WinesTab({ wines }: { wines: PublicWineRow[] }) {
-  const records = wines as WineRecord[];
   return (
     <FlatList
-      data={records}
+      data={wines}
       keyExtractor={(w) => w.id}
       scrollEnabled={false}
       renderItem={({ item }) => (
