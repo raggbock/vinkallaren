@@ -164,7 +164,7 @@ function AddWineTabContent({
         onSkipImage={() => { setImageNudge(false); handleSaveWine(); }}
         savedPrompt={savedPrompt}
         onSavedGoToCellar={() => { setSavedPrompt(false); onNavigateToCellar(); }}
-        onSavedAddMore={() => { setSavedPrompt(false); setDraft(defaultDraft); setSelectedCatalogNameEntry(null); }}
+        onSavedAddMore={() => { setSavedPrompt(false); setDraft(defaultDraft); setSelectedCatalogNameEntry(null); if (Platform.OS === 'web') (window as any).scrollTo?.({ top: 0, behavior: 'smooth' }); }}
         onSaveWine={() => {
           if (gate.shouldPrompt) return;
           if (!draft.imageUri && !imageNudge) {
