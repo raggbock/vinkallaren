@@ -44,7 +44,7 @@ export function PublicProfilePage({ profile, summary, wines, tasteProfile, onClo
       <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
         {activeTab === "overview" && <OverviewTab summary={summary} />}
         {activeTab === "wines" && <WinesTab wines={wines} />}
-        {activeTab === "taste" && <TasteProfile userId={profile.id} onOpenSession={noop} />}
+        {activeTab === "taste" && <TasteProfile userId={profile.id} onOpenSession={noop} data={tasteProfile} />}
       </ScrollView>
     </View>
   );

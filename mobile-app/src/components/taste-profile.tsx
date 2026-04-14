@@ -7,16 +7,20 @@ import { styles as theme, colors } from "../styles/theme";
 type Props = {
   userId: string;
   onOpenSession: (sessionId: string) => void;
+  data?: TasteProfileData | null;
 };
 
-export function TasteProfile({ userId, onOpenSession }: Props) {
-  const [data, setData] = useState<TasteProfileData | null>(null);
-  const [loading, setLoading] = useState(true);
+export function TasteProfile({ userId, onOpenSession, data: prefetched }: Props) {
+  const [fetched, setFetched] = useState<TasteProfileData | null>(null);
+  const [loading, setLoading] = useState(prefetched === undefined);
 
   useEffect(() => {
+    if (prefetched !== undefined) return;
     setLoading(true);
-    fetchTasteProfile(userId).then((d) => { setData(d); setLoading(false); });
-  }, [userId]);
+    fetchTasteProfile(userId).then((d) => { setFetched(d); setLoading(false); });
+  }, [userId, prefetched]);
+
+  const data = prefetched !== undefined ? prefetched : fetched;
 
   if (loading) return <Text style={s.hint}>Laddar smakprofil...</Text>;
   if (!data || !data.ready) {
