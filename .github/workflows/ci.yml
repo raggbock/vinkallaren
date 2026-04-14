@@ -2,9 +2,9 @@ name: CI
 
 on:
   pull_request:
-    branches: [main, codex/initial-setup]
+    branches: [main]
   push:
-    branches: [codex/initial-setup]
+    branches: [main]
 
 jobs:
   test:

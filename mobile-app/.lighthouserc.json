@@ -4,8 +4,7 @@
       "staticDistDir": "./dist",
       "numberOfRuns": 3,
       "settings": {
-        "chromeFlags": ["--headless", "--no-sandbox"],
-        "preset": "desktop"
+        "chromeFlags": ["--headless", "--no-sandbox"]
       }
     },
     "assert": {
