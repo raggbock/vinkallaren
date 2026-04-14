@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { showError } from "../lib/show-error";
 import type { WineRecord } from "../types/wine";
 import type { WineDraft } from "../types/cellar-drafts";
@@ -76,26 +76,24 @@ export function useEditWineModal(deps: Deps) {
   const selectedStorageSpace = deps.storageSpaces.find((s) => s.id === (draft?.storageSpaceId || "")) ?? null;
   const occupiedPositions = deps.getOccupiedPositions(draft?.storageSpaceId || "", draft?.storageRow || "1", editingWine?.id);
 
-  const modalProps = {
-    visible,
-    draft,
-    saving,
-    selectedStorageSpace,
-    occupiedPositions,
-    onClose: close,
-    onDraftChange: patchDraft,
-    onStorageSpaceChange: useCallback((spaceId: string) => setDraft((c) => c ? { ...c, storageSpaceId: spaceId, storageRow: "1", storageSlot: "1" } : c), []),
-    onStorageRowChange: useCallback((value: string) => setDraft((c) => (c ? { ...c, storageRow: value, storageSlot: "1" } : c)), []),
-    onStorageSlotChange: useCallback((value: string) => setDraft((c) => (c ? { ...c, storageSlot: value } : c)), []),
-    onChooseImage: useCallback(async () => { const uri = await deps.pickImageFromLibrary(); if (uri) setDraft((c) => c ? { ...c, imageUri: uri } : c); }, [deps.pickImageFromLibrary]),
-    onTakePhoto: useCallback(async () => { const uri = await deps.takePhoto(); if (uri) setDraft((c) => c ? { ...c, imageUri: uri } : c); }, [deps.takePhoto]),
-    onRemoveImage: useCallback(() => setDraft((c) => c ? { ...c, imageUri: "" } : c), []),
-    onSaveStorageSpace: useCallback(async () => {
-      const newId = await deps.saveStorageSpace();
-      if (newId) setDraft((c) => c ? { ...c, storageSpaceId: newId, storageRow: "1", storageSlot: "1" } : c);
-    }, [deps.saveStorageSpace]),
-    onSave: save,
-  };
+  const onStorageSpaceChange = useCallback((spaceId: string) => setDraft((c) => c ? { ...c, storageSpaceId: spaceId, storageRow: "1", storageSlot: "1" } : c), []);
+  const onStorageRowChange = useCallback((value: string) => setDraft((c) => (c ? { ...c, storageRow: value, storageSlot: "1" } : c)), []);
+  const onStorageSlotChange = useCallback((value: string) => setDraft((c) => (c ? { ...c, storageSlot: value } : c)), []);
+  const onChooseImage = useCallback(async () => { const uri = await deps.pickImageFromLibrary(); if (uri) setDraft((c) => c ? { ...c, imageUri: uri } : c); }, [deps.pickImageFromLibrary]);
+  const onTakePhoto = useCallback(async () => { const uri = await deps.takePhoto(); if (uri) setDraft((c) => c ? { ...c, imageUri: uri } : c); }, [deps.takePhoto]);
+  const onRemoveImage = useCallback(() => setDraft((c) => c ? { ...c, imageUri: "" } : c), []);
+  const onSaveStorageSpace = useCallback(async () => {
+    const newId = await deps.saveStorageSpace();
+    if (newId) setDraft((c) => c ? { ...c, storageSpaceId: newId, storageRow: "1", storageSlot: "1" } : c);
+  }, [deps.saveStorageSpace]);
+
+  const modalProps = useMemo(() => ({
+    visible, draft, saving, selectedStorageSpace, occupiedPositions,
+    onClose: close, onDraftChange: patchDraft, onStorageSpaceChange, onStorageRowChange,
+    onStorageSlotChange, onChooseImage, onTakePhoto, onRemoveImage, onSaveStorageSpace, onSave: save,
+  }), [visible, draft, saving, selectedStorageSpace, occupiedPositions, close, patchDraft,
+    onStorageSpaceChange, onStorageRowChange, onStorageSlotChange, onChooseImage, onTakePhoto,
+    onRemoveImage, onSaveStorageSpace, save]);
 
   return { actions: { open }, modalProps };
 }

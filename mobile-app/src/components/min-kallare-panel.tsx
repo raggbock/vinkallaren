@@ -75,8 +75,10 @@ export function MinKallarePanel(props: MinKallarePanelProps) {
     });
   }, []);
 
-  const totalCountries = new Set(filteredWines.map((w) => w.country).filter(Boolean)).size;
-  const summaryText = `${stats.totalBottles} flaskor · ${totalCountries} länder · snitt ${stats.averageVintage}`;
+  const summaryText = useMemo(() => {
+    const totalCountries = new Set(filteredWines.map((w) => w.country).filter(Boolean)).size;
+    return `${stats.totalBottles} flaskor · ${totalCountries} länder · snitt ${stats.averageVintage}`;
+  }, [filteredWines, stats.totalBottles, stats.averageVintage]);
 
   const renderSectionHeader = useCallback(({ section }: { section: WineSection }) => (
     <SectionHeader section={section} styles={styles} expandedSpaceIds={expandedSpaceIds}

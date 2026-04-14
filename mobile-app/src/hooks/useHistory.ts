@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { showError } from "../lib/show-error";
 import { supabase } from "../lib/supabase";
 import { hydrateWineHistoryRecords } from "../lib/wine-helpers";
@@ -12,7 +12,7 @@ export function useHistory() {
   const [hasMoreHistory, setHasMoreHistory] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(true);
 
-  async function fetchHistoryEntriesRaw() {
+  const fetchHistoryEntries = useMemo(() => createGuardedFetcher(async () => {
     setLoadingHistory(true);
     const { data, error } = await supabase.from("wine_history").select("*").order("consumed_at", { ascending: false }).limit(HISTORY_PAGE_SIZE);
     if (error) { showError("Kunde inte hämta historiken", error.message); setLoadingHistory(false); return; }
@@ -20,10 +20,9 @@ export function useHistory() {
     setHasMoreHistory(rows.length === HISTORY_PAGE_SIZE);
     setHistoryEntries(await hydrateWineHistoryRecords(rows));
     setLoadingHistory(false);
-  }
-  const fetchHistoryEntries = createGuardedFetcher(fetchHistoryEntriesRaw);
+  }), []);
 
-  async function fetchMoreHistory() {
+  const fetchMoreHistory = useCallback(async () => {
     if (!hasMoreHistory) return;
     const offset = historyEntries.length;
     const { data, error } = await supabase.from("wine_history").select("*").order("consumed_at", { ascending: false }).range(offset, offset + HISTORY_PAGE_SIZE - 1);
@@ -32,7 +31,7 @@ export function useHistory() {
     setHasMoreHistory(rows.length === HISTORY_PAGE_SIZE);
     const hydrated = await hydrateWineHistoryRecords(rows);
     setHistoryEntries((prev) => [...prev, ...hydrated]);
-  }
+  }, [hasMoreHistory, historyEntries.length]);
 
   useEffect(() => { void fetchHistoryEntries(); }, []);
 

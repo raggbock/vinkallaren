@@ -153,7 +153,22 @@ export function CellarProvider({ userId, children }: { userId: string; children:
     matchCatalogByText: catalogData.matchCatalogByText,
     // Refresh all
     refreshAll,
-  }), [userId, wineData, storageData, storageSpaceById, deleteStorageSpaceAndRefresh, historyData, refOptions, catalogData, refreshAll]);
+  }), [userId,
+    wineData.wines, wineData.loading, wineData.setWines, wineData.fetchWines, wineData.fetchMoreWines,
+    wineData.hasMoreWines, wineData.deleteWine, wineData.stats, wineData.storageSpaceBottleCounts,
+    wineData.pairingOptions, wineData.countryOptions, wineData.regionOptions, wineData.typeOptions,
+    wineData.vintageOptions, wineData.cellarGrapeOptions,
+    storageData.storageSpaces, storageSpaceById, storageData.storageSpaceDraft, storageData.savingStorageSpace,
+    storageData.setStorageSpaceDraft, storageData.fetchStorageSpaces, storageData.saveStorageSpace,
+    storageData.updateStorageSpace, deleteStorageSpaceAndRefresh,
+    historyData.historyEntries, historyData.loadingHistory, historyData.hasMoreHistory,
+    historyData.setHistoryEntries, historyData.fetchHistoryEntries, historyData.fetchMoreHistory,
+    refOptions.effectiveCountryOptions, refOptions.effectiveRegionOptions, refOptions.effectiveGrapeOptions,
+    refOptions.countryReferenceRows, refOptions.regionReferenceRows, refOptions.grapeReferenceRows,
+    refOptions.mergeReferenceOptions, refOptions.fetchReferenceOptions,
+    catalogData.searchCatalogWineNames, catalogData.fetchCatalogEntriesByName,
+    catalogData.fetchCatalogEntries, catalogData.matchCatalogByText,
+    refreshAll]);
 
   return <CellarContext.Provider value={value}>{children}</CellarContext.Provider>;
 }

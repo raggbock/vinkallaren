@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { showError } from "../lib/show-error";
 import { hydrateWineHistoryRecords } from "../lib/wine-helpers";
 import type { WineRecord } from "../types/wine";
@@ -65,32 +65,20 @@ export function useDrinkWineModal(deps: Deps) {
     if (uri) setImageUri(uri);
   }, [deps.takePhoto]);
 
-  const modalProps = {
-    visible,
-    wine,
-    rating,
-    notes,
-    consumedDate,
-    imageUri,
-    saving,
-    wsetData,
-    onOpenWset: useCallback(() => setWsetVisible(true), []),
-    onClose: close,
-    onRatingChange: setRating,
-    onNotesChange: setNotes,
-    onConsumedDateChange: setConsumedDate,
-    onChooseImage: chooseImage,
-    onTakePhoto: takePhoto,
-    onConfirm: save,
-  };
+  const onOpenWset = useCallback(() => setWsetVisible(true), []);
+  const onWsetSave = useCallback((d: WsetTastingData) => { setWsetData(d); setWsetVisible(false); }, []);
+  const onWsetClose = useCallback(() => setWsetVisible(false), []);
 
-  const wsetProps = {
-    visible: wsetVisible,
-    wineType: wine?.type || "",
-    initialData: wsetData,
-    onSave: useCallback((d: WsetTastingData) => { setWsetData(d); setWsetVisible(false); }, []),
-    onClose: useCallback(() => setWsetVisible(false), []),
-  };
+  const modalProps = useMemo(() => ({
+    visible, wine, rating, notes, consumedDate, imageUri, saving, wsetData,
+    onOpenWset, onClose: close, onRatingChange: setRating, onNotesChange: setNotes,
+    onConsumedDateChange: setConsumedDate, onChooseImage: chooseImage, onTakePhoto: takePhoto, onConfirm: save,
+  }), [visible, wine, rating, notes, consumedDate, imageUri, saving, wsetData, onOpenWset, close, chooseImage, takePhoto, save]);
+
+  const wsetProps = useMemo(() => ({
+    visible: wsetVisible, wineType: wine?.type || "", initialData: wsetData,
+    onSave: onWsetSave, onClose: onWsetClose,
+  }), [wsetVisible, wine?.type, wsetData, onWsetSave, onWsetClose]);
 
   return { actions: { open }, modalProps, wsetProps };
 }

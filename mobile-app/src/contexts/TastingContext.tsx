@@ -1,4 +1,4 @@
-import { createContext, useContext, type ReactNode } from "react";
+import { createContext, useContext, useMemo, type ReactNode } from "react";
 import { useTastingSessions } from "../hooks/useTastingSessions";
 import { useSessionWset } from "../hooks/useSessionWset";
 import type { WsetTastingData } from "../lib/wset-data";
@@ -37,7 +37,7 @@ export function TastingProvider({ userId, children }: { userId: string; children
   const sessions = useTastingSessions(userId);
   const wset = useSessionWset();
 
-  const value: TastingContextValue = {
+  const value: TastingContextValue = useMemo(() => ({
     sessions: sessions.sessions,
     loading: sessions.loading,
     toasts: sessions.toasts,
@@ -55,7 +55,11 @@ export function TastingProvider({ userId, children }: { userId: string; children
     wsetData: wset.data,
     openWset: wset.open,
     wsetProps: wset.wsetProps,
-  };
+  }), [sessions.sessions, sessions.loading, sessions.toasts, sessions.activeSession,
+    sessions.activeWines, sessions.activeTastings, sessions.fetchSessions,
+    sessions.openSession, sessions.closeSession, sessions.createSession,
+    sessions.joinSession, sessions.setActiveWines, sessions.setActiveTastings,
+    sessions.setActiveSession, wset.data, wset.open, wset.wsetProps]);
 
   return <TastingContext.Provider value={value}>{children}</TastingContext.Provider>;
 }
