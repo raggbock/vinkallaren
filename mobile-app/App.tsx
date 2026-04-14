@@ -107,6 +107,11 @@ function AppRoot() {
     return () => { mounted = false; subscription.unsubscribe(); };
   }, []);
 
+  // Hide loading skeleton overlay once app is ready
+  useEffect(() => {
+    if (Platform.OS === "web") document.body.classList.add("app-ready");
+  }, []);
+
   if (!supabaseConfigured) return <SetupScreen />;
   if (loadingSession) return <LoadingScreen label="Kopplar upp vinkällaren..." />;
   if (!session) return <LandingScreen pendingJoinCode={pendingJoinCode} />;

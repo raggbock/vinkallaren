@@ -5,8 +5,19 @@
  */
 import { readFileSync, writeFileSync } from "fs";
 
+const { readdirSync } = await import("fs");
 const HTML_PATH = "dist/index.html";
 const html = readFileSync(HTML_PATH, "utf-8");
+
+// Find the main bundle for preloading (largest JS file in the output)
+const jsDir = "dist/_expo/static/js/web";
+const mainBundle = readdirSync(jsDir)
+  .filter(f => f.startsWith("index-") && f.endsWith(".js") && !f.endsWith(".map"))
+  .map(f => ({ name: f, size: readFileSync(`${jsDir}/${f}`).length }))
+  .sort((a, b) => b.size - a.size)[0]?.name;
+const preloadTag = mainBundle
+  ? `\n    <link rel="preload" href="/_expo/static/js/web/${mainBundle}" as="script" />`
+  : "";
 
 const tags = `
     <link rel="preconnect" href="https://gonspypbhqvfvpgwsdtu.supabase.co" crossorigin />
@@ -14,7 +25,7 @@ const tags = `
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&display=swap" onload="this.rel='stylesheet'" />
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&display=swap" /></noscript>
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&display=swap" /></noscript>${preloadTag}
     <link rel="canonical" href="https://minvinkallare.se/" />
     <meta property="og:title" content="Vinkällaren — Din digitala vinsamling" />
     <meta property="og:description" content="Håll koll på din vinsamling, hitta rätt vin till maten och spara smaknoteringar. Gratis och utan reklam." />
@@ -45,9 +56,10 @@ const withTheme = withNoscript.replace(
   '<meta name="theme-color" content="#FDFAF6">'
 );
 
-// Inject loading skeleton into <div id="root"> for instant LCP
+// Loading skeleton as overlay outside #root — renders instantly as LCP element,
+// hidden by React via CSS class when the app mounts.
 const skeleton = `
-    <div id="root"><div role="status" aria-label="Laddar Vinkällaren" style="background:#FDFAF6;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding-top:12vh;font-family:'Cormorant Garamond',Georgia,serif">
+    <div id="loading-skeleton" role="status" aria-label="Laddar Vinkällaren" style="position:fixed;inset:0;z-index:9999;background:#FDFAF6;display:flex;flex-direction:column;align-items:center;padding-top:12vh;font-family:'Cormorant Garamond',Georgia,serif;transition:opacity 0.3s">
       <svg viewBox="0 0 360 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Vinkällaren logotyp" style="width:280px;height:auto;opacity:0.9">
         <ellipse cx="180" cy="72" rx="155" ry="65" fill="none" stroke="#2A2A2A" stroke-width="1.8" opacity="0.14"/>
         <ellipse cx="180" cy="72" rx="146" ry="58" fill="none" stroke="#C83C2D" stroke-width="0.6" opacity="0.13"/>
@@ -61,8 +73,9 @@ const skeleton = `
         <div style="width:150px;height:12px;background:#E0D8CE;border-radius:6px;animation:pulse 1.5s ease-in-out infinite;animation-delay:0.2s"></div>
         <div style="width:170px;height:12px;background:#E0D8CE;border-radius:6px;animation:pulse 1.5s ease-in-out infinite;animation-delay:0.4s"></div>
       </div>
-      <style>@keyframes pulse{0%,100%{opacity:0.4}50%{opacity:1}}</style>
-    </div></div>`;
+      <style>@keyframes pulse{0%,100%{opacity:0.4}50%{opacity:1}}.app-ready #loading-skeleton{opacity:0;pointer-events:none}</style>
+    </div>
+    <div id="root"></div>`;
 const withSkeleton = withTheme.replace('<div id="root"></div>', skeleton);
 
 // Inject Cloudflare Web Analytics beacon before </body>
