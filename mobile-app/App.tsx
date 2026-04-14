@@ -41,12 +41,7 @@ function useWebStyles() {
   useEffect(() => {
     if (Platform.OS !== "web") return;
 
-    // Load Cormorant Garamond + Caveat for hand-drawn accents
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = "https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&display=swap";
-    document.head.appendChild(link);
-
+    // Fonts are preloaded in HTML <head> via inject-meta.mjs
     const style = document.createElement("style");
     style.textContent = [
       "body { background-color: #FDFAF6; }",
