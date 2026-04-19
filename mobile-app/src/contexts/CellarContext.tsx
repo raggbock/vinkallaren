@@ -90,7 +90,7 @@ export function CellarProvider({ userId, children }: { userId: string; children:
   const catalogData = useCatalog(userId, wineData.wines, wineData.loading);
   const filters = useCellarFilters();
   const { aggregate, loading: aggregateLoading, refresh: refreshAggregate } =
-    useCellarAggregate(filters.filterState, filters.searchQuery);
+    useCellarAggregate(userId, filters.filterState, filters.searchQuery);
   const spaceWines = useCellarSpaceWines(filters.filterState, filters.searchQuery);
 
   const storageSpaceById = useMemo(
