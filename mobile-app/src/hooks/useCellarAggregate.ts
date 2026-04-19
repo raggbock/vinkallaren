@@ -9,10 +9,7 @@ export function useCellarAggregate(filters: CellarFilterState, search: string) {
   const inFlight = useRef(0);
 
   const filtersKey = useMemo(() => JSON.stringify(filters), [filters]);
-  const searchArg = useMemo(() => {
-    const trimmed = search.trim();
-    return trimmed.length > 0 ? trimmed : null;
-  }, [search]);
+  const searchArg = search.trim() || null;
 
   const fetchAggregate = useCallback(async () => {
     const token = ++inFlight.current;
@@ -21,7 +18,7 @@ export function useCellarAggregate(filters: CellarFilterState, search: string) {
       p_filters: JSON.parse(filtersKey),
       p_search: searchArg,
     });
-    if (token !== inFlight.current) return; // stale response, ignore
+    if (token !== inFlight.current) return; // a later fetch has started; discard this stale response
     if (error) {
       showError("Kunde inte hämta källaren", error.message);
       setLoading(false);
