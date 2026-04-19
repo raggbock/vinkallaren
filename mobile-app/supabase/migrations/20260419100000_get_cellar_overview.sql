@@ -22,10 +22,15 @@ BEGIN
   END IF;
 
   WITH all_mine AS (
-    SELECT * FROM wines WHERE user_id = v_user_id AND quantity > 0
+    SELECT quantity, storage_space_id, country, type, grape, vintage,
+           food_pairings, name, producer, region, cellar_location
+    FROM wines
+    WHERE user_id = v_user_id AND quantity > 0
   ),
   filtered AS (
-    SELECT * FROM all_mine
+    SELECT quantity, storage_space_id, country, type, grape, vintage,
+           food_pairings, name, producer, region, cellar_location
+    FROM all_mine
     WHERE (NOT p_filters ? 'country'  OR country  = p_filters->>'country')
       AND (NOT p_filters ? 'region'   OR region   = p_filters->>'region')
       AND (NOT p_filters ? 'type'     OR type     = p_filters->>'type')
@@ -33,7 +38,7 @@ BEGIN
       AND (NOT p_filters ? 'vintage'  OR vintage::text = p_filters->>'vintage')
       AND (NOT p_filters ? 'pairing'  OR p_filters->>'pairing' = ANY(food_pairings))
       AND (NOT p_filters ? 'storage_space_id'
-           OR storage_space_id::text = p_filters->>'storage_space_id')
+           OR storage_space_id = (p_filters->>'storage_space_id')::uuid)
       AND (v_like IS NULL OR (
         name ILIKE v_like
         OR COALESCE(producer, '') ILIKE v_like
@@ -62,6 +67,7 @@ BEGIN
   top_type AS (
     SELECT type, SUM(quantity)::int AS cnt
     FROM filtered
+    WHERE type IS NOT NULL
     GROUP BY type ORDER BY cnt DESC LIMIT 1
   ),
   top_pairing AS (
@@ -102,7 +108,7 @@ BEGIN
         (SELECT jsonb_agg(v ORDER BY v) FROM (SELECT DISTINCT type AS v FROM all_mine WHERE type IS NOT NULL) s),
         '[]'::jsonb),
       'vintages', COALESCE(
-        (SELECT jsonb_agg(v ORDER BY v DESC) FROM (SELECT DISTINCT vintage AS v FROM all_mine WHERE vintage IS NOT NULL) s),
+        (SELECT jsonb_agg(v ORDER BY v DESC) FROM (SELECT DISTINCT vintage::text AS v FROM all_mine WHERE vintage IS NOT NULL) s),
         '[]'::jsonb),
       'grapes', COALESCE(
         (SELECT jsonb_agg(v ORDER BY v) FROM (SELECT DISTINCT grape AS v FROM all_mine WHERE grape IS NOT NULL) s),
@@ -118,3 +124,7 @@ END;
 $$;
 
 GRANT EXECUTE ON FUNCTION get_cellar_overview(jsonb, text) TO authenticated;
+
+CREATE INDEX IF NOT EXISTS wines_user_id_quantity_partial_idx
+  ON wines (user_id, storage_space_id, quantity)
+  WHERE quantity > 0;
