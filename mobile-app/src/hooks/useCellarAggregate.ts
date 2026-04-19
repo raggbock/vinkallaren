@@ -14,10 +14,12 @@ export function useCellarAggregate(filters: CellarFilterState, search: string) {
   const fetchAggregate = useCallback(async () => {
     const token = ++inFlight.current;
     setLoading(true);
+    const t0 = performance.now();
     const { data, error } = await supabase.rpc("get_cellar_overview", {
       p_filters: JSON.parse(filtersKey),
       p_search: searchArg,
     });
+    console.log(`[perf] aggregate.rpc ${error ? "err" : "ok"} start=${Math.round(t0)}ms dur=${Math.round(performance.now() - t0)}ms`);
     if (token !== inFlight.current) return; // a later fetch has started; discard this stale response
     if (error) {
       showError("Kunde inte hämta källaren", error.message);
