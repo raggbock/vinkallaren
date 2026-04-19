@@ -25,7 +25,6 @@ type WineSection = {
   isUnplaced: boolean;
   space?: StorageSpaceRow;
   data: WineRecord[];
-  loading: boolean;
 };
 
 type MinKallarePanelProps = {
@@ -50,6 +49,7 @@ export function MinKallarePanel(props: MinKallarePanelProps) {
   const { styles, stats, aggregate, storage, wineActions } = props;
   const ctx = useCellar();
   const { storageSpaces, storageSpaceById } = storage;
+  const { requestSpace, getSpaceWines } = ctx;
 
   const [statsExpanded, setStatsExpanded] = useState(false);
   const [expandedSpaceIds, setExpandedSpaceIds] = useState<Set<string>>(
@@ -59,10 +59,8 @@ export function MinKallarePanel(props: MinKallarePanelProps) {
 
   // Default-expand "Otilldelade" on mount → request its wines.
   useEffect(() => {
-    ctx.requestSpace(UNPLACED_SPACE_ID);
-    // Only on mount.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    requestSpace(UNPLACED_SPACE_ID);
+  }, [requestSpace]);
 
   const filterIsActive = Object.keys(ctx.filters.filterState).length > 0
     || ctx.filters.searchQuery.trim().length > 0;
@@ -76,26 +74,26 @@ export function MinKallarePanel(props: MinKallarePanelProps) {
       if (cnt > 0) matching.add(id);
     }
     setExpandedSpaceIds(matching);
-    matching.forEach((id) => ctx.requestSpace(id));
-  }, [filterIsActive, aggregate.bottleCountsBySpaceId, aggregate.unplacedCount, ctx]);
+    matching.forEach((id) => requestSpace(id));
+  }, [filterIsActive, aggregate.bottleCountsBySpaceId, aggregate.unplacedCount, requestSpace]);
 
   const toggleSpace = useCallback((spaceId: string) => {
     setExpandedSpaceIds((prev) => {
       const next = new Set(prev);
       if (next.has(spaceId)) next.delete(spaceId);
-      else { next.add(spaceId); ctx.requestSpace(spaceId); }
+      else { next.add(spaceId); requestSpace(spaceId); }
       return next;
     });
-  }, [ctx]);
+  }, [requestSpace]);
 
   const sections = useCellarSections({
     aggregate, storageSpaces, storageSpaceById, expandedSpaceIds,
-    getSpaceWines: ctx.getSpaceWines,
+    getSpaceWines,
   });
 
   useHighlightAutoExpand(
-    props.highlightedWineId, sections, setExpandedSpaceIds,
-    ctx.requestSpace, props.onClearHighlight,
+    props.highlightedWineId, ctx.wines, setExpandedSpaceIds,
+    requestSpace, props.onClearHighlight,
   );
 
   useEffect(() => {
@@ -112,9 +110,8 @@ export function MinKallarePanel(props: MinKallarePanelProps) {
   }, [props.highlightedWineId, sections]);
 
   const summaryText = useMemo(() => {
-    const c = aggregate.filterOptions.countries.length;
-    return `${stats.totalBottles} flaskor · ${c} länder · snitt ${stats.averageVintage}`;
-  }, [stats.totalBottles, stats.averageVintage, aggregate.filterOptions.countries.length]);
+    return `${stats.totalBottles} flaskor · snitt ${stats.averageVintage}`;
+  }, [stats.totalBottles, stats.averageVintage]);
 
   const renderSectionHeader = useCallback(({ section }: { section: WineSection }) => (
     <SectionHeader
@@ -122,16 +119,16 @@ export function MinKallarePanel(props: MinKallarePanelProps) {
       toggleSpace={toggleSpace}
       onUpdateStorageSpace={storage.onUpdateStorageSpace}
       onDeleteStorageSpace={storage.onDeleteStorageSpace}
-      getSpaceWines={ctx.getSpaceWines}
+      getSpaceWines={getSpaceWines}
       onGoToWine={(wine) => {
         const spaceId = wine.storage_space_id || UNPLACED_SPACE_ID;
         setExpandedSpaceIds((prev) => { const n = new Set(prev); n.add(spaceId); return n; });
-        ctx.requestSpace(spaceId);
+        requestSpace(spaceId);
         props.onHighlightWine?.(wine.id);
       }}
     />
   ), [styles, expandedSpaceIds, toggleSpace, storage.onUpdateStorageSpace,
-      storage.onDeleteStorageSpace, ctx, props.onHighlightWine]);
+      storage.onDeleteStorageSpace, getSpaceWines, requestSpace, props.onHighlightWine]);
 
   const renderItem = useCallback(({ item }: { item: WineRecord }) => (
     <WineCard wine={item} styles={styles} highlighted={item.id === props.highlightedWineId}
@@ -230,7 +227,6 @@ function useCellarSections({ aggregate, storageSpaces, storageSpaceById,
         key: UNPLACED_SPACE_ID, title: "Otilldelade", spaceType: "Behöver plats",
         bottleCount: aggregate.unplacedCount, isUnplaced: true,
         data: expandedSpaceIds.has(UNPLACED_SPACE_ID) ? s.wines : [],
-        loading: s.loading,
       });
     }
 
@@ -242,7 +238,6 @@ function useCellarSections({ aggregate, storageSpaces, storageSpaceById,
         spaceType: SPACE_TYPE_LABELS[space.space_type] || space.space_type,
         bottleCount: cnt, isUnplaced: false, space: storageSpaceById.get(space.id),
         data: expandedSpaceIds.has(space.id) ? s.wines : [],
-        loading: s.loading,
       });
     }
     return result;
@@ -252,23 +247,22 @@ function useCellarSections({ aggregate, storageSpaces, storageSpaceById,
 
 function useHighlightAutoExpand(
   highlightedWineId: string | null | undefined,
-  sections: WineSection[],
+  wines: WineRecord[],
   setExpandedSpaceIds: React.Dispatch<React.SetStateAction<Set<string>>>,
   requestSpace: (id: string) => void,
   onClearHighlight?: () => void,
 ) {
   useEffect(() => {
     if (!highlightedWineId) return;
-    for (const section of sections) {
-      if (section.data.some((w) => w.id === highlightedWineId)) {
-        setExpandedSpaceIds((prev) => {
-          if (prev.has(section.key)) return prev;
-          const n = new Set(prev); n.add(section.key); return n;
-        });
-        requestSpace(section.key);
-        const t = setTimeout(() => onClearHighlight?.(), 3000);
-        return () => clearTimeout(t);
-      }
-    }
-  }, [highlightedWineId, sections, setExpandedSpaceIds, requestSpace, onClearHighlight]);
+    const wine = wines.find((w) => w.id === highlightedWineId);
+    if (!wine) return;
+    const spaceId = wine.storage_space_id || UNPLACED_SPACE_ID;
+    setExpandedSpaceIds((prev) => {
+      if (prev.has(spaceId)) return prev;
+      const n = new Set(prev); n.add(spaceId); return n;
+    });
+    requestSpace(spaceId);
+    const t = setTimeout(() => onClearHighlight?.(), 3000);
+    return () => clearTimeout(t);
+  }, [highlightedWineId, wines, setExpandedSpaceIds, requestSpace, onClearHighlight]);
 }
