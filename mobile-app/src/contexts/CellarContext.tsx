@@ -5,7 +5,7 @@ import { useHistory } from "../hooks/useHistory";
 import { useReferenceOptions } from "../hooks/useReferenceOptions";
 import { useCatalog } from "../hooks/useCatalog";
 import { useCellarAggregate } from "../hooks/useCellarAggregate";
-import { useCellarSpaceWines } from "../hooks/useCellarSpaceWines";
+import { useCellarSpaceWines, UNPLACED_SPACE_ID } from "../hooks/useCellarSpaceWines";
 import { useCellarFilters } from "../hooks/useCellarFilters";
 import type { WineRecord } from "../types/wine";
 import type { StorageSpaceRow } from "../types/storage-space";
@@ -70,6 +70,7 @@ export type CellarContextValue = {
   aggregate: CellarAggregate;
   aggregateLoading: boolean;
   refreshAggregate: () => Promise<void>;
+  onCellarMutated: (opts?: { spaceIds?: Array<string | null> }) => Promise<void>;
   // Space-wines loader (filtered)
   getSpaceWines: (spaceId: string) => { wines: WineRecord[]; loading: boolean; loaded: boolean };
   requestSpace: (spaceId: string) => void;
@@ -121,6 +122,26 @@ export function CellarProvider({ userId, children }: { userId: string; children:
     ]);
   }, [wineData.fetchWines, storageData.fetchStorageSpaces, historyData.fetchHistoryEntries, catalogData.fetchCatalogEntries, refOptions.fetchReferenceOptions]);
 
+  const onCellarMutated = useCallback(
+    async (opts: { spaceIds?: Array<string | null> } = {}) => {
+      const ids = opts.spaceIds ?? [];
+      if (ids.length === 0) {
+        spaceWines.invalidateAll();
+      } else {
+        const uniqueKeys = new Set(ids.map((id) => id ?? UNPLACED_SPACE_ID));
+        for (const key of uniqueKeys) spaceWines.invalidateSpace(key);
+      }
+      await refreshAggregate();
+    },
+    [spaceWines, refreshAggregate],
+  );
+
+  const deleteWineAndMutate = useCallback(async (id: string, imagePath?: string | null) => {
+    const wine = wineData.wines.find((w) => w.id === id);
+    await wineData.deleteWine(id, imagePath);
+    await onCellarMutated({ spaceIds: [wine?.storage_space_id ?? null] });
+  }, [wineData, onCellarMutated]);
+
   const value: CellarContextValue = useMemo(() => ({
     userId,
     // Wines
@@ -130,7 +151,7 @@ export function CellarProvider({ userId, children }: { userId: string; children:
     refreshWines: wineData.fetchWines,
     fetchMoreWines: wineData.fetchMoreWines,
     hasMoreWines: wineData.hasMoreWines,
-    deleteWine: wineData.deleteWine,
+    deleteWine: deleteWineAndMutate,
     stats: wineData.stats,
     storageSpaceBottleCounts: wineData.storageSpaceBottleCounts,
     pairingOptions: wineData.pairingOptions,
@@ -170,6 +191,7 @@ export function CellarProvider({ userId, children }: { userId: string; children:
     fetchCatalogEntriesByName: catalogData.fetchCatalogEntriesByName,
     fetchCatalogEntries: catalogData.fetchCatalogEntries,
     matchCatalogByText: catalogData.matchCatalogByText,
+    onCellarMutated,
     // Aggregate (filtered)
     aggregate, aggregateLoading, refreshAggregate,
     // Space-wines loader (filtered)
@@ -183,7 +205,7 @@ export function CellarProvider({ userId, children }: { userId: string; children:
     refreshAll,
   }), [userId,
     wineData.wines, wineData.loading, wineData.setWines, wineData.fetchWines, wineData.fetchMoreWines,
-    wineData.hasMoreWines, wineData.deleteWine, wineData.stats, wineData.storageSpaceBottleCounts,
+    wineData.hasMoreWines, deleteWineAndMutate, wineData.stats, wineData.storageSpaceBottleCounts,
     wineData.pairingOptions, wineData.countryOptions, wineData.regionOptions, wineData.typeOptions,
     wineData.vintageOptions, wineData.cellarGrapeOptions,
     storageData.storageSpaces, storageSpaceById, storageData.storageSpaceDraft, storageData.savingStorageSpace,
@@ -196,6 +218,7 @@ export function CellarProvider({ userId, children }: { userId: string; children:
     refOptions.mergeReferenceOptions, refOptions.fetchReferenceOptions,
     catalogData.searchCatalogWineNames, catalogData.fetchCatalogEntriesByName,
     catalogData.fetchCatalogEntries, catalogData.matchCatalogByText,
+    onCellarMutated,
     aggregate, aggregateLoading, refreshAggregate,
     spaceWines.getSpaceWines, spaceWines.requestSpace, spaceWines.invalidateSpace, spaceWines.invalidateAll,
     filters,

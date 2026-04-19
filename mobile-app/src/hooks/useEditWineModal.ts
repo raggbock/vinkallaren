@@ -17,6 +17,7 @@ type Deps = {
   getOccupiedPositions: (spaceId: string, row: string, excludeWineId?: string) => { occupiedRows: Set<string>; occupiedSlots: Set<string> };
   pickImageFromLibrary: () => Promise<string | null>;
   takePhoto: () => Promise<string | null>;
+  onCellarMutated: (opts?: { spaceIds?: Array<string | null> }) => Promise<void>;
 };
 
 export function useEditWineModal(deps: Deps) {
@@ -62,6 +63,11 @@ export function useEditWineModal(deps: Deps) {
       if (result.error) { showError("Kunde inte spara ändringen", result.error); setSaving(false); return; }
     }
     await deps.fetchCatalogEntries();
+    const affectedSpaces: Array<string | null> = [
+      editingWine.storage_space_id ?? null,
+      draft.storageSpaceId || null,
+    ];
+    await deps.onCellarMutated({ spaceIds: affectedSpaces });
     setVisible(false);
     setEditingWine(null);
     setDraft(null);

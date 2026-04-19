@@ -175,6 +175,7 @@ function CellarScreenInner({ session, pendingJoinCode, onJoinCodeConsumed }: { s
     showSuccess: success.show,
     pickImageFromLibrary: images.pickImageFromLibrary,
     takePhoto: images.takePhoto,
+    onCellarMutated: ctx.onCellarMutated,
   });
   const edit = useEditWineModal({
     userId: session.user.id,
@@ -186,6 +187,7 @@ function CellarScreenInner({ session, pendingJoinCode, onJoinCodeConsumed }: { s
     getOccupiedPositions: storage.getOccupiedPositions,
     pickImageFromLibrary: images.pickImageFromLibrary,
     takePhoto: images.takePhoto,
+    onCellarMutated: ctx.onCellarMutated,
   });
   const catalogEditor = useCatalogEditorModal({
     fetchCatalogEntries: ctx.fetchCatalogEntries,
