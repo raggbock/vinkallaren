@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { showError } from "../lib/show-error";
 import { hydrateWineRecords } from "../lib/wine-helpers";
+import { escapeOrFilterValue } from "../lib/query-helpers";
 import type { CellarFilterState } from "../types/cellar-aggregate";
 import type { WineRecord, WineRow } from "../types/wine";
 
@@ -20,12 +21,13 @@ export function useCellarSpaceWines(filters: CellarFilterState, search: string) 
   const [states, setStates] = useState<Record<string, SpaceState>>({});
   const activeCacheKey = useRef(cacheKey);
 
-  // Filter/search changed → drop previous cache entirely.
+  // Sync the ref to the latest cacheKey during render so requestSpace() sees it immediately.
+  // When the key actually changes, schedule a state reset in an effect (state updates are illegal during render).
+  const keyChanged = activeCacheKey.current !== cacheKey;
+  if (keyChanged) activeCacheKey.current = cacheKey;
+
   useEffect(() => {
-    if (activeCacheKey.current !== cacheKey) {
-      activeCacheKey.current = cacheKey;
-      setStates({});
-    }
+    if (keyChanged) setStates({});
   }, [cacheKey]);
 
   const fetchSpace = useCallback(async (spaceId: string, keyAtStart: string) => {
@@ -47,7 +49,7 @@ export function useCellarSpaceWines(filters: CellarFilterState, search: string) 
 
     const searchTrim = search.trim();
     if (searchTrim.length > 0) {
-      const like = `%${searchTrim}%`;
+      const like = `%${escapeOrFilterValue(searchTrim)}%`;
       query = query.or(
         `name.ilike.${like},producer.ilike.${like},country.ilike.${like},` +
         `region.ilike.${like},grape.ilike.${like},type.ilike.${like},` +

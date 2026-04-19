@@ -104,4 +104,21 @@ describe("useCellarSpaceWines", () => {
     await waitFor(() => expect(result.current.getSpaceWines("__unplaced__").loaded).toBe(true));
     expect(mockIs).toHaveBeenCalledWith("storage_space_id", null);
   });
+
+  test("fetch error sets loaded=true, empty wines, calls showError", async () => {
+    const { showError } = require("../../lib/show-error");
+    mockOrder.mockReturnValue(Promise.resolve({ data: null, error: { message: "DB error" } }));
+    mockOr.mockReturnValue({ order: mockOrder });
+    mockIs.mockReturnValue({ gt: mockGt, order: mockOrder, or: mockOr });
+    mockEq.mockReturnValue({ gt: mockGt, order: mockOrder, or: mockOr });
+    mockGt.mockReturnValue({ order: mockOrder, or: mockOr, eq: mockEq, is: mockIs });
+    mockSelect.mockReturnValue({ eq: mockEq, is: mockIs, gt: mockGt, order: mockOrder });
+    mockFrom.mockReturnValue({ select: mockSelect });
+
+    const { result } = renderHook(() => useCellarSpaceWines({}, ""));
+    act(() => { result.current.requestSpace("sp-1"); });
+    await waitFor(() => expect(result.current.getSpaceWines("sp-1").loaded).toBe(true));
+    expect(result.current.getSpaceWines("sp-1").wines).toEqual([]);
+    expect(showError).toHaveBeenCalledWith("Kunde inte hämta viner", "DB error");
+  });
 });
