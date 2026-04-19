@@ -27,14 +27,6 @@ export type CellarContextValue = {
   fetchMoreWines: () => Promise<void>;
   hasMoreWines: boolean;
   deleteWine: (id: string, imagePath?: string | null) => Promise<void>;
-  stats: { totalBottles: number; totalLabels: number; drinkSoon: number; topCountry: string; topType: string; topPairing: string; averageVintage: string };
-  storageSpaceBottleCounts: Map<string, number>;
-  pairingOptions: string[];
-  countryOptions: string[];
-  regionOptions: string[];
-  typeOptions: string[];
-  vintageOptions: string[];
-  cellarGrapeOptions: string[];
   // Storage
   storageSpaces: StorageSpaceRow[];
   storageSpaceById: Map<string, StorageSpaceRow>;
@@ -152,14 +144,6 @@ export function CellarProvider({ userId, children }: { userId: string; children:
     fetchMoreWines: wineData.fetchMoreWines,
     hasMoreWines: wineData.hasMoreWines,
     deleteWine: deleteWineAndMutate,
-    stats: wineData.stats,
-    storageSpaceBottleCounts: wineData.storageSpaceBottleCounts,
-    pairingOptions: wineData.pairingOptions,
-    countryOptions: wineData.countryOptions,
-    regionOptions: wineData.regionOptions,
-    typeOptions: wineData.typeOptions,
-    vintageOptions: wineData.vintageOptions,
-    cellarGrapeOptions: wineData.cellarGrapeOptions,
     // Storage
     storageSpaces: storageData.storageSpaces,
     storageSpaceById,
@@ -205,9 +189,7 @@ export function CellarProvider({ userId, children }: { userId: string; children:
     refreshAll,
   }), [userId,
     wineData.wines, wineData.loading, wineData.setWines, wineData.fetchWines, wineData.fetchMoreWines,
-    wineData.hasMoreWines, deleteWineAndMutate, wineData.stats, wineData.storageSpaceBottleCounts,
-    wineData.pairingOptions, wineData.countryOptions, wineData.regionOptions, wineData.typeOptions,
-    wineData.vintageOptions, wineData.cellarGrapeOptions,
+    wineData.hasMoreWines, deleteWineAndMutate,
     storageData.storageSpaces, storageSpaceById, storageData.storageSpaceDraft, storageData.savingStorageSpace,
     storageData.setStorageSpaceDraft, storageData.fetchStorageSpaces, storageData.saveStorageSpace,
     storageData.updateStorageSpace, deleteStorageSpaceAndRefresh,

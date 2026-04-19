@@ -35,7 +35,6 @@ export type FilterProps = {
 export type StorageProps = {
   storageSpaces: StorageSpaceRow[];
   storageSpaceById: Map<string, StorageSpaceRow>;
-  storageSpaceBottleCounts: Map<string, number>;
   storageSpaceDraft: StorageSpaceDraft;
   savingStorageSpace: boolean;
   onStorageSpaceDraftChange: (patch: Partial<StorageSpaceDraft>) => void;

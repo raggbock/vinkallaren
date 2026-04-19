@@ -7,6 +7,7 @@ import type { WineHistoryRecord } from "../../types/wine-history";
 // --- Mock setup ---
 
 const mockSelect = jest.fn();
+const mockGt = jest.fn();
 const mockOrder = jest.fn();
 const mockLimit = jest.fn();
 const mockRange = jest.fn();
@@ -27,14 +28,6 @@ jest.mock("../../lib/wine-helpers", () => ({
 }));
 
 jest.mock("../../lib/show-error", () => ({ showError: jest.fn() }));
-
-jest.mock("../../lib/cellar-helpers", () => ({
-  buildStats: (wines: any[]) => ({ totalBottles: wines.length }),
-  buildPairingOptions: () => [],
-  buildStorageSpaceBottleCounts: () => new Map(),
-  buildValueOptions: () => [],
-  buildVintageOptions: () => [],
-}));
 
 // --- Factories ---
 
@@ -64,10 +57,12 @@ const historyEntry = (overrides: Partial<WineHistoryRecord> = {}): WineHistoryRe
 });
 
 function setupChain(data: any[], error: any = null) {
-  mockLimit.mockResolvedValue({ data, error });
-  mockRange.mockResolvedValue({ data, error });
+  const terminal = { data, error };
+  mockLimit.mockResolvedValue(terminal);
+  mockRange.mockResolvedValue(terminal);
   mockOrder.mockReturnValue({ limit: mockLimit, range: mockRange });
-  mockSelect.mockReturnValue({ order: mockOrder });
+  mockGt.mockReturnValue({ order: mockOrder });
+  mockSelect.mockReturnValue({ gt: mockGt, order: mockOrder });
   mockDelete.mockReturnValue({ eq: mockEq });
   mockEq.mockResolvedValue({ error: null });
   mockFrom.mockReturnValue({ select: mockSelect, delete: mockDelete });
@@ -119,19 +114,6 @@ describe("useWines", () => {
     expect(result.current.wines).toHaveLength(1);
   });
 
-  test("stats reflect loaded wines", async () => {
-    setupChain([wine(), wine({ id: "w2" })]);
-    const { result } = renderHook(() => useWines());
-    await waitFor(() => expect(result.current.loading).toBe(false));
-    expect(result.current.stats).toEqual({ totalBottles: 2 });
-  });
-
-  test("pairingOptions derived from wines", async () => {
-    setupChain([wine()]);
-    const { result } = renderHook(() => useWines());
-    await waitFor(() => expect(result.current.loading).toBe(false));
-    expect(Array.isArray(result.current.pairingOptions)).toBe(true);
-  });
 });
 
 // --- useHistory ---

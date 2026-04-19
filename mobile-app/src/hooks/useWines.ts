@@ -1,13 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { showError } from "../lib/show-error";
 import { supabase } from "../lib/supabase";
-import {
-  buildPairingOptions,
-  buildStats,
-  buildStorageSpaceBottleCounts,
-  buildValueOptions,
-  buildVintageOptions,
-} from "../lib/cellar-helpers";
 import { hydrateWineRecords } from "../lib/wine-helpers";
 import { createGuardedFetcher } from "../lib/guarded-fetcher";
 import type { WineRecord, WineRow } from "../types/wine";
@@ -49,20 +42,5 @@ export function useWines() {
 
   useEffect(() => { void fetchWines(); }, []);
 
-  // Derived data
-  const stats = useMemo(() => buildStats(wines), [wines]);
-  const storageSpaceBottleCounts = useMemo(() => buildStorageSpaceBottleCounts(wines), [wines]);
-  const pairingOptions = useMemo(() => buildPairingOptions(wines), [wines]);
-  const countryOptions = useMemo(() => buildValueOptions(wines, (w) => w.country), [wines]);
-  const regionOptions = useMemo(() => buildValueOptions(wines, (w) => w.region), [wines]);
-  const typeOptions = useMemo(() => buildValueOptions(wines, (w) => w.type), [wines]);
-  const vintageOptions = useMemo(() => buildVintageOptions(wines), [wines]);
-  const cellarGrapeOptions = useMemo(() => buildValueOptions(wines, (w) => w.grape ?? null), [wines]);
-
-  return {
-    wines, setWines, loading,
-    fetchWines, fetchMoreWines, hasMoreWines, deleteWine,
-    stats, storageSpaceBottleCounts,
-    pairingOptions, countryOptions, regionOptions, typeOptions, vintageOptions, cellarGrapeOptions,
-  };
+  return { wines, setWines, loading, fetchWines, fetchMoreWines, hasMoreWines, deleteWine };
 }

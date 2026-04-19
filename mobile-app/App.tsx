@@ -203,7 +203,7 @@ function CellarScreenInner({ session, pendingJoinCode, onJoinCodeConsumed }: { s
   }, [ctx.refreshAll]);
 
   const storageProps: StorageProps = useMemo(() => ({
-    storageSpaces: ctx.storageSpaces, storageSpaceById: ctx.storageSpaceById, storageSpaceBottleCounts: ctx.storageSpaceBottleCounts,
+    storageSpaces: ctx.storageSpaces, storageSpaceById: ctx.storageSpaceById,
     storageSpaceDraft: ctx.storageSpaceDraft, savingStorageSpace: ctx.savingStorageSpace,
     onStorageSpaceDraftChange: (patch: Partial<import("./src/types/cellar-drafts").StorageSpaceDraft>) => ctx.setStorageSpaceDraft((c) => ({ ...c, ...patch })),
     onSaveStorageSpace: async () => { const newId = await ctx.saveStorageSpace(); if (newId) { storage.setSelectedStorageSpaceId(newId); storage.setSelectedStorageRow("1"); storage.setSelectedStorageSlot("1"); } success.show("storage_saved"); },
