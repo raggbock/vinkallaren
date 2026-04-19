@@ -196,6 +196,18 @@ function CellarScreenInner({ session, pendingJoinCode, onJoinCodeConsumed }: { s
   const [activeSection, setActiveSection] = useState<CellarSection>("cellar");
   const [highlightedWineId, setHighlightedWineId] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+
+  // Lazy-load data only when the user actually navigates somewhere that needs it.
+  useEffect(() => {
+    if (activeSection === "tasting") void ctx.refreshWines();
+    if (activeSection === "history") void tasting.fetchSessions();
+  }, [activeSection, ctx.refreshWines, tasting.fetchSessions]);
+  useEffect(() => {
+    if (edit.modalProps.visible) {
+      void ctx.refreshWines();
+      void ctx.fetchReferenceOptions();
+    }
+  }, [edit.modalProps.visible, ctx.refreshWines, ctx.fetchReferenceOptions]);
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await ctx.refreshAll();

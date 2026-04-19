@@ -1,4 +1,4 @@
-import { renderHook, act, waitFor } from "@testing-library/react-native";
+import { renderHook, act } from "@testing-library/react-native";
 import { useWines } from "../useWines";
 import { useHistory } from "../useHistory";
 import type { WineRecord } from "../../types/wine";
@@ -76,39 +76,39 @@ describe("useWines", () => {
     setupChain([]);
   });
 
-  test("initializes with empty wines and loading=true", () => {
-    mockLimit.mockReturnValue(new Promise(() => {})); // never resolves
+  test("initializes empty and idle — no auto-fetch on mount", () => {
     const { result } = renderHook(() => useWines());
     expect(result.current.wines).toHaveLength(0);
-    expect(result.current.loading).toBe(true);
+    expect(result.current.loading).toBe(false);
   });
 
-  test("after fetch: sets wines and loading=false", async () => {
+  test("fetchWines populates wines", async () => {
     setupChain([wine(), wine({ id: "w2", name: "Chablis" })]);
     const { result } = renderHook(() => useWines());
-    await waitFor(() => expect(result.current.loading).toBe(false));
+    await act(async () => { await result.current.fetchWines(); });
     expect(result.current.wines).toHaveLength(2);
+    expect(result.current.loading).toBe(false);
   });
 
   test("hasMoreWines is true when exactly 50 results returned", async () => {
     const fifty = Array.from({ length: 50 }, (_, i) => wine({ id: `w${i}` }));
     setupChain(fifty);
     const { result } = renderHook(() => useWines());
-    await waitFor(() => expect(result.current.loading).toBe(false));
+    await act(async () => { await result.current.fetchWines(); });
     expect(result.current.hasMoreWines).toBe(true);
   });
 
   test("hasMoreWines is false when fewer than 50 results returned", async () => {
     setupChain([wine()]);
     const { result } = renderHook(() => useWines());
-    await waitFor(() => expect(result.current.loading).toBe(false));
+    await act(async () => { await result.current.fetchWines(); });
     expect(result.current.hasMoreWines).toBe(false);
   });
 
   test("deleteWine removes wine from local state", async () => {
     setupChain([wine({ id: "w1" }), wine({ id: "w2", name: "Chablis" })]);
     const { result } = renderHook(() => useWines());
-    await waitFor(() => expect(result.current.loading).toBe(false));
+    await act(async () => { await result.current.fetchWines(); });
     await act(async () => { await result.current.deleteWine("w1"); });
     expect(result.current.wines.find((w) => w.id === "w1")).toBeUndefined();
     expect(result.current.wines).toHaveLength(1);
@@ -124,54 +124,44 @@ describe("useHistory", () => {
     setupChain([]);
   });
 
-  test("initializes with empty entries and loadingHistory=true", () => {
-    mockLimit.mockReturnValue(new Promise(() => {}));
+  test("initializes empty and idle — no auto-fetch on mount", () => {
     const { result } = renderHook(() => useHistory());
     expect(result.current.historyEntries).toHaveLength(0);
-    expect(result.current.loadingHistory).toBe(true);
+    expect(result.current.loadingHistory).toBe(false);
   });
 
-  test("after fetch: sets entries and loadingHistory=false", async () => {
+  test("fetchHistoryEntries populates entries", async () => {
     setupChain([historyEntry(), historyEntry({ id: "h2" })]);
     const { result } = renderHook(() => useHistory());
-    await waitFor(() => expect(result.current.loadingHistory).toBe(false));
+    await act(async () => { await result.current.fetchHistoryEntries(); });
     expect(result.current.historyEntries).toHaveLength(2);
+    expect(result.current.loadingHistory).toBe(false);
   });
 
   test("hasMoreHistory is true when exactly 50 results returned", async () => {
     const fifty = Array.from({ length: 50 }, (_, i) => historyEntry({ id: `h${i}` }));
     setupChain(fifty);
     const { result } = renderHook(() => useHistory());
-    await waitFor(() => expect(result.current.loadingHistory).toBe(false));
+    await act(async () => { await result.current.fetchHistoryEntries(); });
     expect(result.current.hasMoreHistory).toBe(true);
   });
 
   test("hasMoreHistory is false when fewer than 50 results returned", async () => {
     setupChain([historyEntry()]);
     const { result } = renderHook(() => useHistory());
-    await waitFor(() => expect(result.current.loadingHistory).toBe(false));
+    await act(async () => { await result.current.fetchHistoryEntries(); });
     expect(result.current.hasMoreHistory).toBe(false);
   });
 
   test("fetchMoreHistory appends to existing entries", async () => {
-    setupChain([historyEntry()]);
-    const { result } = renderHook(() => useHistory());
-    await waitFor(() => expect(result.current.loadingHistory).toBe(false));
-
-    // Force hasMoreHistory=true so fetchMoreHistory actually runs
-    act(() => { result.current.setHistoryEntries(
-      Array.from({ length: 50 }, (_, i) => historyEntry({ id: `h${i}` }))
-    ); });
-    // Patch hasMoreHistory via internal state — re-trigger with 50-item page
     const fifty = Array.from({ length: 50 }, (_, i) => historyEntry({ id: `h${i}` }));
     setupChain(fifty);
-    const { result: result2 } = renderHook(() => useHistory());
-    await waitFor(() => expect(result2.current.loadingHistory).toBe(false));
+    const { result } = renderHook(() => useHistory());
+    await act(async () => { await result.current.fetchHistoryEntries(); });
+    expect(result.current.hasMoreHistory).toBe(true);
 
     setupChain([historyEntry({ id: "h_extra" })]);
-    await act(async () => { await result2.current.fetchMoreHistory(); });
-    // hasMoreHistory was true (50 loaded), fetchMoreHistory should have been called
-    // Since the second page returns 1 item, entries grow by 1
-    expect(result2.current.historyEntries.length).toBe(51);
+    await act(async () => { await result.current.fetchMoreHistory(); });
+    expect(result.current.historyEntries.length).toBe(51);
   });
 });

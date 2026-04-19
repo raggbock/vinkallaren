@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { showError } from "../lib/show-error";
 import { supabase } from "../lib/supabase";
 import { GRAPE_VARIETIES, WINE_COUNTRIES, WINE_REGIONS } from "../lib/reference-data";
@@ -26,8 +26,6 @@ export function useReferenceOptions() {
       return additions.length > 0 ? [...prev, ...additions] : prev;
     });
   }, []);
-
-  useEffect(() => { void fetchReferenceOptions(); }, []);
 
   // Reference rows
   const grapeReferenceRows = useMemo(() => mergeReferenceRows(referenceOptions.filter((o) => o.category === "grape")), [referenceOptions]);
