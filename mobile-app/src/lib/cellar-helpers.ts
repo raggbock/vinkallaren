@@ -77,6 +77,32 @@ export function buildStats(wines: WineRecord[]) {
   };
 }
 
+export function buildHistoryStats(entries: Array<{ quantity_consumed: number; country?: string | null; type?: string | null; rating?: number | null; vintage?: number | null }>) {
+  const totalDrunk = entries.reduce((sum, e) => sum + e.quantity_consumed, 0);
+  const totalTastings = entries.length;
+
+  const byCountry = new Map<string, number>();
+  const byType = new Map<string, number>();
+  const ratings: number[] = [];
+
+  for (const entry of entries) {
+    if (entry.country) byCountry.set(entry.country, (byCountry.get(entry.country) || 0) + entry.quantity_consumed);
+    if (entry.type) byType.set(entry.type, (byType.get(entry.type) || 0) + entry.quantity_consumed);
+    if (entry.rating != null) ratings.push(entry.rating);
+  }
+
+  const topCountry = [...byCountry.entries()].sort((a, b) => b[1] - a[1])[0];
+  const topType = [...byType.entries()].sort((a, b) => b[1] - a[1])[0];
+
+  return {
+    totalDrunk,
+    totalTastings,
+    topCountry: topCountry ? `${topCountry[0]} (${topCountry[1]})` : "Ingen data",
+    topType: topType ? `${topType[0]} (${topType[1]})` : "Ingen data",
+    averageRating: ratings.length > 0 ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1) : "-",
+  };
+}
+
 export function buildPairingOptions(wines: WineRecord[]) {
   const pairings = new Set<string>(["Alla"]);
 

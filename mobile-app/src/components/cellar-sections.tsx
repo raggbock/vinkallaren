@@ -7,7 +7,8 @@ import type { SessionParticipant, TastingSessionRow } from "../types/tasting-ses
 import type { WineHistoryRecord } from "../types/wine-history";
 import type { WineRecord } from "../types/wine";
 import type { CellarSection } from "../types/cellar";
-import { Expandable, LoadingInline, PanelHeader } from "./form-controls";
+import { Expandable, InsightCard, LoadingInline, PanelHeader } from "./form-controls";
+import { buildHistoryStats } from "../lib/cellar-helpers";
 import { fetchSessionWines, fetchSessionTastings, fetchSessionParticipants } from "../lib/session-actions";
 import { formatDateFull, formatDateISO } from "../lib/format-date";
 import { buildSessionResults } from "../lib/session-results";
@@ -99,6 +100,7 @@ export function HistoryPanel({
   ), [styles, onEditEntry]);
 
   const sessionCount = endedSessions?.length ?? 0;
+  const historyStats = useMemo(() => buildHistoryStats(historyEntries), [historyEntries]);
 
   const listHeader = useMemo(() => (
     <View style={{ gap: 14 }}>
@@ -115,14 +117,25 @@ export function HistoryPanel({
       </View>
 
       {tab === "viner" && historyEntries.length > 0 ? (
-        <TextInput
-          style={styles.input}
-          placeholder="Sök namn, producent, årgång..."
-          placeholderTextColor={colors.textSecondary}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          autoCorrect={false}
-        />
+        <>
+          <View style={styles.statsSummaryBar}>
+            <Text style={styles.statsSummaryText}>{historyStats.totalDrunk} flaskor druckna · {historyStats.totalTastings} tillfällen · snitt {historyStats.averageRating}/5</Text>
+          </View>
+          <View style={styles.statsGrid}>
+            <View style={styles.statsGridRow}>
+              <InsightCard label="Mest drucket land" value={historyStats.topCountry} />
+              <InsightCard label="Vanligaste typ" value={historyStats.topType} />
+            </View>
+          </View>
+          <TextInput
+            style={styles.input}
+            placeholder="Sök namn, producent, årgång..."
+            placeholderTextColor={colors.textSecondary}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            autoCorrect={false}
+          />
+        </>
       ) : null}
 
       {tab === "provningar" ? (
@@ -153,7 +166,7 @@ export function HistoryPanel({
         <Text style={styles.emptyState}>Inga träffar för "{searchQuery}"</Text>
       ) : null}
     </View>
-  ), [styles, tab, sessionCount, filteredEntries.length, historyEntries.length, searchQuery, endedSessions, loadingHistory, onOpenProfile]);
+  ), [styles, tab, sessionCount, filteredEntries.length, historyEntries.length, searchQuery, endedSessions, loadingHistory, onOpenProfile, historyStats]);
 
   return (
     <FlatList

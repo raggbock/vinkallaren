@@ -21,7 +21,7 @@ export function useWines() {
 
   const fetchWines = useMemo(() => createGuardedFetcher(async () => {
     setLoading(true);
-    const { data, error } = await supabase.from("wines").select("*").order("created_at", { ascending: false }).limit(WINES_PAGE_SIZE);
+    const { data, error } = await supabase.from("wines").select("*").gt("quantity", 0).order("created_at", { ascending: false }).limit(WINES_PAGE_SIZE);
     if (error) { showError("Kunde inte hämta viner", error.message); setLoading(false); return; }
     const rows = (data ?? []) as WineRow[];
     setHasMoreWines(rows.length === WINES_PAGE_SIZE);
@@ -32,7 +32,7 @@ export function useWines() {
   const fetchMoreWines = useCallback(async () => {
     if (!hasMoreWines) return;
     const offset = wines.length;
-    const { data, error } = await supabase.from("wines").select("*").order("created_at", { ascending: false }).range(offset, offset + WINES_PAGE_SIZE - 1);
+    const { data, error } = await supabase.from("wines").select("*").gt("quantity", 0).order("created_at", { ascending: false }).range(offset, offset + WINES_PAGE_SIZE - 1);
     if (error) { showError("Kunde inte hämta fler viner", error.message); return; }
     const rows = (data ?? []) as WineRow[];
     setHasMoreWines(rows.length === WINES_PAGE_SIZE);
