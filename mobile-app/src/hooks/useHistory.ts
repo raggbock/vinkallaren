@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { showError } from "../lib/show-error";
 import { supabase } from "../lib/supabase";
 import { hydrateWineHistoryRecords } from "../lib/wine-helpers";
@@ -10,7 +10,7 @@ const HISTORY_PAGE_SIZE = 50;
 export function useHistory() {
   const [historyEntries, setHistoryEntries] = useState<WineHistoryRecord[]>([]);
   const [hasMoreHistory, setHasMoreHistory] = useState(false);
-  const [loadingHistory, setLoadingHistory] = useState(true);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
   const fetchHistoryEntries = useMemo(() => createGuardedFetcher(async () => {
     setLoadingHistory(true);
@@ -32,8 +32,6 @@ export function useHistory() {
     const hydrated = await hydrateWineHistoryRecords(rows);
     setHistoryEntries((prev) => [...prev, ...hydrated]);
   }, [hasMoreHistory, historyEntries.length]);
-
-  useEffect(() => { void fetchHistoryEntries(); }, []);
 
   return {
     historyEntries, setHistoryEntries, loadingHistory,

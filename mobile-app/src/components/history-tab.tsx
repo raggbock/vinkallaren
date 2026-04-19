@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import { HistoryPanel } from "./cellar-sections";
 import { updateHistoryEntry } from "../lib/cellar-actions";
 import { showError } from "../lib/show-error";
@@ -20,6 +20,7 @@ type Props = {
 
 export function HistoryTab({ hidden, endedSessions, refreshing, onRefresh, onOpenProfile }: Props) {
   const ctx = useCellar();
+  useEffect(() => { void ctx.fetchHistoryEntries(); }, [ctx.fetchHistoryEntries]);
   const [editingHistory, setEditingHistory] = useState<WineHistoryRecord | null>(null);
   const [editHistorySaving, setEditHistorySaving] = useState(false);
   const success = useSuccessOverlay();

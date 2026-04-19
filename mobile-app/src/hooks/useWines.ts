@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { showError } from "../lib/show-error";
 import { supabase } from "../lib/supabase";
 import { hydrateWineRecords } from "../lib/wine-helpers";
@@ -10,7 +10,7 @@ const WINES_PAGE_SIZE = 50;
 export function useWines() {
   const [wines, setWines] = useState<WineRecord[]>([]);
   const [hasMoreWines, setHasMoreWines] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const fetchWines = useMemo(() => createGuardedFetcher(async () => {
     setLoading(true);
@@ -43,8 +43,6 @@ export function useWines() {
     if (imagePath) await supabase.storage.from("wine-images").remove([imagePath]).catch(() => {});
     setWines((current) => current.filter((wine) => wine.id !== id));
   }, []);
-
-  useEffect(() => { void fetchWines(); }, []);
 
   return { wines, setWines, loading, fetchWines, fetchMoreWines, hasMoreWines, deleteWine };
 }

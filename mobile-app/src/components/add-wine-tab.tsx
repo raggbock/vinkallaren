@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useMemo, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { Platform } from "react-native";
 import { openSystembolaget, saveNewWine } from "../lib/cellar-actions";
 import { hydrateWineRecords, mergeDraftWithCatalogSuggestion } from "../lib/wine-helpers";
@@ -10,6 +10,7 @@ import type { ProductCatalogWineRow } from "../types/product-catalog";
 import type { useImagePicker } from "../hooks/useImagePicker";
 import type { useStorageSelection } from "../hooks/useStorageSelection";
 import type { useSuccessOverlay } from "./success-overlay";
+import { warmupCatalogSearch } from "../lib/catalog-search";
 import { useCatalogLookup } from "../hooks/useCatalogLookup";
 import { useUserDishes } from "../hooks/useUserDishes";
 import { useBarcodeScanner } from "../hooks/useBarcodeScanner";
@@ -55,6 +56,12 @@ function AddWineTabContent({
   sessionUserId,
 }: Omit<AddWineTabProps, "hidden"> & { hidden: boolean }) {
   const ctx = useCellar();
+  useEffect(() => {
+    void ctx.refreshWines();
+    void ctx.fetchCatalogEntries();
+    void ctx.fetchReferenceOptions();
+    warmupCatalogSearch();
+  }, [ctx.refreshWines, ctx.fetchCatalogEntries, ctx.fetchReferenceOptions]);
   const [draft, setDraft] = useState<WineDraft>(defaultDraft);
   const [saving, setSaving] = useState(false);
   const [selectedCatalogNameEntry, setSelectedCatalogNameEntry] = useState<ProductCatalogWineRow | null>(null);

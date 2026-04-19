@@ -43,9 +43,6 @@ export function useTastingSessions(userId: string) {
     setLoading(false);
   }, []);
 
-  // Fetch sessions on mount
-  useEffect(() => { fetchSessions(); }, []);
-
   const openSession = useCallback(async (session: TastingSessionRow) => {
     setActiveSession(session);
     const [winesResult, tastingsResult] = await Promise.all([

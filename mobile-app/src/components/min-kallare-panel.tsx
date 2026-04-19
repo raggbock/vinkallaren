@@ -57,10 +57,10 @@ export function MinKallarePanel(props: MinKallarePanelProps) {
   );
   const listRef = useRef<SectionList<WineRecord, WineSection>>(null);
 
-  // Default-expand "Otilldelade" on mount → request its wines.
+  // Default-expand "Otilldelade" → request its wines only when there are any.
   useEffect(() => {
-    requestSpace(UNPLACED_SPACE_ID);
-  }, [requestSpace]);
+    if (aggregate.unplacedCount > 0) requestSpace(UNPLACED_SPACE_ID);
+  }, [aggregate.unplacedCount, requestSpace]);
 
   const filterIsActive = Object.keys(ctx.filters.filterState).length > 0
     || ctx.filters.searchQuery.trim().length > 0;
