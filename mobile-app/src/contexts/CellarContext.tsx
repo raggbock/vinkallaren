@@ -4,6 +4,9 @@ import { useStorageSpaces } from "../hooks/useStorageSpaces";
 import { useHistory } from "../hooks/useHistory";
 import { useReferenceOptions } from "../hooks/useReferenceOptions";
 import { useCatalog } from "../hooks/useCatalog";
+import { useCellarAggregate } from "../hooks/useCellarAggregate";
+import { useCellarSpaceWines, UNPLACED_SPACE_ID } from "../hooks/useCellarSpaceWines";
+import { useCellarFilters } from "../hooks/useCellarFilters";
 import type { WineRecord } from "../types/wine";
 import type { StorageSpaceRow } from "../types/storage-space";
 import type { StorageSpaceDraft } from "../types/cellar-drafts";
@@ -12,6 +15,7 @@ import type { ReferenceOptionRow } from "../types/reference-data";
 import type { Suggestion } from "../components/form-controls";
 import type { ProductCatalogWineRow } from "../types/product-catalog";
 import type { WineRow } from "../types/wine";
+import type { CellarAggregate } from "../types/cellar-aggregate";
 
 export type CellarContextValue = {
   userId: string;
@@ -23,14 +27,6 @@ export type CellarContextValue = {
   fetchMoreWines: () => Promise<void>;
   hasMoreWines: boolean;
   deleteWine: (id: string, imagePath?: string | null) => Promise<void>;
-  stats: { totalBottles: number; totalLabels: number; drinkSoon: number; topCountry: string; topType: string; topPairing: string; averageVintage: string };
-  storageSpaceBottleCounts: Map<string, number>;
-  pairingOptions: string[];
-  countryOptions: string[];
-  regionOptions: string[];
-  typeOptions: string[];
-  vintageOptions: string[];
-  cellarGrapeOptions: string[];
   // Storage
   storageSpaces: StorageSpaceRow[];
   storageSpaceById: Map<string, StorageSpaceRow>;
@@ -62,6 +58,18 @@ export type CellarContextValue = {
   fetchCatalogEntriesByName: (name: string) => Promise<ProductCatalogWineRow[]>;
   fetchCatalogEntries: () => Promise<void>;
   matchCatalogByText: (text: string) => Promise<any>;
+  // Aggregate (filtered)
+  aggregate: CellarAggregate;
+  aggregateLoading: boolean;
+  refreshAggregate: () => Promise<void>;
+  onCellarMutated: (opts?: { spaceIds?: Array<string | null> }) => Promise<void>;
+  // Space-wines loader (filtered)
+  getSpaceWines: (spaceId: string) => { wines: WineRecord[]; loading: boolean; loaded: boolean };
+  requestSpace: (spaceId: string) => void;
+  invalidateSpace: (spaceId: string) => void;
+  invalidateAllSpaceWines: () => void;
+  // Filters
+  filters: ReturnType<typeof useCellarFilters>;
   // Refresh all
   refreshAll: () => Promise<void>;
 };
@@ -80,6 +88,10 @@ export function CellarProvider({ userId, children }: { userId: string; children:
   const historyData = useHistory();
   const refOptions = useReferenceOptions();
   const catalogData = useCatalog(userId, wineData.wines, wineData.loading);
+  const filters = useCellarFilters();
+  const { aggregate, loading: aggregateLoading, refresh: refreshAggregate } =
+    useCellarAggregate(filters.filterState, filters.searchQuery);
+  const spaceWines = useCellarSpaceWines(filters.filterState, filters.searchQuery);
 
   const storageSpaceById = useMemo(
     () => new Map(storageData.storageSpaces.map((s) => [s.id, s])),
@@ -102,6 +114,26 @@ export function CellarProvider({ userId, children }: { userId: string; children:
     ]);
   }, [wineData.fetchWines, storageData.fetchStorageSpaces, historyData.fetchHistoryEntries, catalogData.fetchCatalogEntries, refOptions.fetchReferenceOptions]);
 
+  const onCellarMutated = useCallback(
+    async (opts: { spaceIds?: Array<string | null> } = {}) => {
+      const ids = opts.spaceIds ?? [];
+      if (ids.length === 0) {
+        spaceWines.invalidateAll();
+      } else {
+        const uniqueKeys = new Set(ids.map((id) => id ?? UNPLACED_SPACE_ID));
+        for (const key of uniqueKeys) spaceWines.invalidateSpace(key);
+      }
+      await refreshAggregate();
+    },
+    [spaceWines, refreshAggregate],
+  );
+
+  const deleteWineAndMutate = useCallback(async (id: string, imagePath?: string | null) => {
+    const wine = wineData.wines.find((w) => w.id === id);
+    await wineData.deleteWine(id, imagePath);
+    await onCellarMutated({ spaceIds: [wine?.storage_space_id ?? null] });
+  }, [wineData, onCellarMutated]);
+
   const value: CellarContextValue = useMemo(() => ({
     userId,
     // Wines
@@ -111,15 +143,7 @@ export function CellarProvider({ userId, children }: { userId: string; children:
     refreshWines: wineData.fetchWines,
     fetchMoreWines: wineData.fetchMoreWines,
     hasMoreWines: wineData.hasMoreWines,
-    deleteWine: wineData.deleteWine,
-    stats: wineData.stats,
-    storageSpaceBottleCounts: wineData.storageSpaceBottleCounts,
-    pairingOptions: wineData.pairingOptions,
-    countryOptions: wineData.countryOptions,
-    regionOptions: wineData.regionOptions,
-    typeOptions: wineData.typeOptions,
-    vintageOptions: wineData.vintageOptions,
-    cellarGrapeOptions: wineData.cellarGrapeOptions,
+    deleteWine: deleteWineAndMutate,
     // Storage
     storageSpaces: storageData.storageSpaces,
     storageSpaceById,
@@ -151,13 +175,21 @@ export function CellarProvider({ userId, children }: { userId: string; children:
     fetchCatalogEntriesByName: catalogData.fetchCatalogEntriesByName,
     fetchCatalogEntries: catalogData.fetchCatalogEntries,
     matchCatalogByText: catalogData.matchCatalogByText,
+    onCellarMutated,
+    // Aggregate (filtered)
+    aggregate, aggregateLoading, refreshAggregate,
+    // Space-wines loader (filtered)
+    getSpaceWines: spaceWines.getSpaceWines,
+    requestSpace: spaceWines.requestSpace,
+    invalidateSpace: spaceWines.invalidateSpace,
+    invalidateAllSpaceWines: spaceWines.invalidateAll,
+    // Filters
+    filters,
     // Refresh all
     refreshAll,
   }), [userId,
     wineData.wines, wineData.loading, wineData.setWines, wineData.fetchWines, wineData.fetchMoreWines,
-    wineData.hasMoreWines, wineData.deleteWine, wineData.stats, wineData.storageSpaceBottleCounts,
-    wineData.pairingOptions, wineData.countryOptions, wineData.regionOptions, wineData.typeOptions,
-    wineData.vintageOptions, wineData.cellarGrapeOptions,
+    wineData.hasMoreWines, deleteWineAndMutate,
     storageData.storageSpaces, storageSpaceById, storageData.storageSpaceDraft, storageData.savingStorageSpace,
     storageData.setStorageSpaceDraft, storageData.fetchStorageSpaces, storageData.saveStorageSpace,
     storageData.updateStorageSpace, deleteStorageSpaceAndRefresh,
@@ -168,6 +200,10 @@ export function CellarProvider({ userId, children }: { userId: string; children:
     refOptions.mergeReferenceOptions, refOptions.fetchReferenceOptions,
     catalogData.searchCatalogWineNames, catalogData.fetchCatalogEntriesByName,
     catalogData.fetchCatalogEntries, catalogData.matchCatalogByText,
+    onCellarMutated,
+    aggregate, aggregateLoading, refreshAggregate,
+    spaceWines.getSpaceWines, spaceWines.requestSpace, spaceWines.invalidateSpace, spaceWines.invalidateAll,
+    filters,
     refreshAll]);
 
   return <CellarContext.Provider value={value}>{children}</CellarContext.Provider>;

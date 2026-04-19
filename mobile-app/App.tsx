@@ -175,6 +175,7 @@ function CellarScreenInner({ session, pendingJoinCode, onJoinCodeConsumed }: { s
     showSuccess: success.show,
     pickImageFromLibrary: images.pickImageFromLibrary,
     takePhoto: images.takePhoto,
+    onCellarMutated: ctx.onCellarMutated,
   });
   const edit = useEditWineModal({
     userId: session.user.id,
@@ -186,6 +187,7 @@ function CellarScreenInner({ session, pendingJoinCode, onJoinCodeConsumed }: { s
     getOccupiedPositions: storage.getOccupiedPositions,
     pickImageFromLibrary: images.pickImageFromLibrary,
     takePhoto: images.takePhoto,
+    onCellarMutated: ctx.onCellarMutated,
   });
   const catalogEditor = useCatalogEditorModal({
     fetchCatalogEntries: ctx.fetchCatalogEntries,
@@ -201,7 +203,7 @@ function CellarScreenInner({ session, pendingJoinCode, onJoinCodeConsumed }: { s
   }, [ctx.refreshAll]);
 
   const storageProps: StorageProps = useMemo(() => ({
-    storageSpaces: ctx.storageSpaces, storageSpaceById: ctx.storageSpaceById, storageSpaceBottleCounts: ctx.storageSpaceBottleCounts,
+    storageSpaces: ctx.storageSpaces, storageSpaceById: ctx.storageSpaceById,
     storageSpaceDraft: ctx.storageSpaceDraft, savingStorageSpace: ctx.savingStorageSpace,
     onStorageSpaceDraftChange: (patch: Partial<import("./src/types/cellar-drafts").StorageSpaceDraft>) => ctx.setStorageSpaceDraft((c) => ({ ...c, ...patch })),
     onSaveStorageSpace: async () => { const newId = await ctx.saveStorageSpace(); if (newId) { storage.setSelectedStorageSpaceId(newId); storage.setSelectedStorageRow("1"); storage.setSelectedStorageSlot("1"); } success.show("storage_saved"); },
@@ -259,8 +261,6 @@ function CellarScreenInner({ session, pendingJoinCode, onJoinCodeConsumed }: { s
       onEditWine={edit.actions.open}
       onDrinkWine={drink.actions.open}
       storage={storageProps}
-      stats={ctx.stats}
-      onRefreshStats={ctx.refreshWines}
       highlightedWineId={highlightedWineId}
       onClearHighlight={() => setHighlightedWineId(null)}
       onHighlightWine={setHighlightedWineId}

@@ -13,6 +13,7 @@ type Deps = {
   showSuccess: (key: string) => void;
   pickImageFromLibrary: () => Promise<string | null>;
   takePhoto: () => Promise<string | null>;
+  onCellarMutated: (opts?: { spaceIds?: Array<string | null> }) => Promise<void>;
 };
 
 export function useDrinkWineModal(deps: Deps) {
@@ -49,6 +50,7 @@ export function useDrinkWineModal(deps: Deps) {
     if (result.error) { showError("Kunde inte spara historiken", result.error); setSaving(false); return; }
     const [hydrated] = await hydrateWineHistoryRecords([result.data!]);
     deps.setHistoryEntries(prev => [hydrated, ...prev]);
+    await deps.onCellarMutated({ spaceIds: [wine.storage_space_id ?? null] });
     setVisible(false);
     setWine(null);
     deps.showSuccess("wine_drunk");

@@ -123,6 +123,7 @@ function AddWineTabContent({
     const savedRow = result.data!;
     const [hydrated] = await hydrateWineRecords([savedRow]);
     ctx.setWines(prev => [hydrated, ...prev]);
+    await ctx.onCellarMutated({ spaceIds: [hydrated.storage_space_id ?? null] });
     ctx.mergeReferenceOptions(savedRow);
     success.show("wine_added");
     setSavedPrompt(true);
