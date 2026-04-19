@@ -259,8 +259,6 @@ function CellarScreenInner({ session, pendingJoinCode, onJoinCodeConsumed }: { s
       onEditWine={edit.actions.open}
       onDrinkWine={drink.actions.open}
       storage={storageProps}
-      stats={ctx.stats}
-      onRefreshStats={ctx.refreshWines}
       highlightedWineId={highlightedWineId}
       onClearHighlight={() => setHighlightedWineId(null)}
       onHighlightWine={setHighlightedWineId}
