@@ -32,12 +32,12 @@ export function PrivacyPolicyModal({ visible, styles, onClose }: { visible: bool
             <P>Appen använder enbart strikt nödvändiga cookies:</P>
             <Bullet text="Autentisering — Supabase sparar en session-token så att du förblir inloggad." />
             <Bullet text="Säkerhet — Cloudflare kan sätta en cookie (__cf_bm) för att skydda mot automatiserad trafik." />
-            <P>Vi använder inga analys-, spårnings- eller reklamcookies.</P>
+            <P>Vi använder inga spårningscookies. För att förstå om sidan besöks av riktiga människor eller bottar loggar vi anonym besöksstatistik (sidväg, webbläsare, hänvisare, skärmstorlek) utan IP-adress eller cookies. Sessioner räknas per webbläsarflik och försvinner när fliken stängs.</P>
           </Section>
 
           <Section title="Tredjeparter">
             <P>Appen kommunicerar med följande tjänster:</P>
-            <Bullet text="Supabase — databaslagring och autentisering" />
+            <Bullet text="Supabase — databaslagring, autentisering och anonym besöksstatistik" />
             <Bullet text="Cloudflare — webbhosting och DDoS-skydd" />
             <Bullet text="Open Food Facts — produktuppslag via streckkod (ingen personlig data skickas)" />
             <P>Ingen data säljs eller delas med tredjeparter i marknadsföringssyfte.</P>

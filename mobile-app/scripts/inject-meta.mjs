@@ -87,7 +87,17 @@ const withAnalytics = CF_ANALYTICS_TOKEN
     )
   : withSkeleton;
 
-writeFileSync(HTML_PATH, withAnalytics);
+// Anonymous pageview tracker → Supabase page_views table. Cookieless, tab-scoped session_id.
+const SB_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
+const SB_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+const trackerScript = SB_URL && SB_KEY
+  ? `  <script>(function(){try{var K='vk_sid',s=sessionStorage.getItem(K);if(!s){s=crypto.randomUUID();sessionStorage.setItem(K,s);}fetch('${SB_URL}/rest/v1/page_views',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json','Prefer':'return=minimal','apikey':'${SB_KEY}','Authorization':'Bearer ${SB_KEY}'},body:JSON.stringify({session_id:s,path:location.pathname+location.search,referrer:document.referrer||null,ua:navigator.userAgent,screen_w:screen.width,screen_h:screen.height,language:navigator.language||null})}).catch(function(){});}catch(e){}})();</script>\n</body>`
+  : null;
+const withTracker = trackerScript
+  ? withAnalytics.replace("</body>", trackerScript)
+  : withAnalytics;
+
+writeFileSync(HTML_PATH, withTracker);
 console.log(
-  `Injected SEO meta tags + loading skeleton${CF_ANALYTICS_TOKEN ? " + Cloudflare Analytics" : ""} into dist/index.html`
+  `Injected SEO meta tags + loading skeleton${CF_ANALYTICS_TOKEN ? " + Cloudflare Analytics" : ""}${trackerScript ? " + pageview tracker" : ""} into dist/index.html`
 );
