@@ -22,18 +22,19 @@ const samplePayload = {
 describe("useCellarAggregate", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    globalThis.localStorage?.clear();
   });
 
   test("starts with EMPTY_AGGREGATE and loading=true", () => {
     mockRpc.mockReturnValue(new Promise(() => {}));
-    const { result } = renderHook(() => useCellarAggregate({}, ""));
+    const { result } = renderHook(() => useCellarAggregate("u1", {}, ""));
     expect(result.current.aggregate).toEqual(EMPTY_AGGREGATE);
     expect(result.current.loading).toBe(true);
   });
 
   test("calls RPC with filters and search on mount", async () => {
     mockRpc.mockResolvedValue({ data: samplePayload, error: null });
-    renderHook(() => useCellarAggregate({ type: "Rött" }, "barolo"));
+    renderHook(() => useCellarAggregate("u1", { type: "Rött" }, "barolo"));
     await waitFor(() => expect(mockRpc).toHaveBeenCalled());
     expect(mockRpc).toHaveBeenCalledWith("get_cellar_overview", {
       p_filters: { type: "Rött" },
@@ -43,7 +44,7 @@ describe("useCellarAggregate", () => {
 
   test("sets aggregate from RPC response", async () => {
     mockRpc.mockResolvedValue({ data: samplePayload, error: null });
-    const { result } = renderHook(() => useCellarAggregate({}, ""));
+    const { result } = renderHook(() => useCellarAggregate("u1", {}, ""));
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.aggregate.stats.totalBottles).toBe(7);
     expect(result.current.aggregate.bottleCountsBySpaceId["sp-1"]).toBe(4);
@@ -52,7 +53,7 @@ describe("useCellarAggregate", () => {
   test("refetches when filters change", async () => {
     mockRpc.mockResolvedValue({ data: samplePayload, error: null });
     const { result, rerender } = renderHook(
-      ({ f, s }: { f: Record<string, string>; s: string }) => useCellarAggregate(f, s),
+      ({ f, s }: { f: Record<string, string>; s: string }) => useCellarAggregate("u1", f, s),
       { initialProps: { f: {}, s: "" } }
     );
     await waitFor(() => expect(result.current.loading).toBe(false));
@@ -63,7 +64,7 @@ describe("useCellarAggregate", () => {
 
   test("passes null p_search when search is empty/whitespace", async () => {
     mockRpc.mockResolvedValue({ data: samplePayload, error: null });
-    renderHook(() => useCellarAggregate({}, "   "));
+    renderHook(() => useCellarAggregate("u1", {}, "   "));
     await waitFor(() => expect(mockRpc).toHaveBeenCalled());
     expect(mockRpc).toHaveBeenLastCalledWith("get_cellar_overview", {
       p_filters: {}, p_search: null,
@@ -72,7 +73,7 @@ describe("useCellarAggregate", () => {
 
   test("refresh() triggers re-fetch", async () => {
     mockRpc.mockResolvedValue({ data: samplePayload, error: null });
-    const { result } = renderHook(() => useCellarAggregate({}, ""));
+    const { result } = renderHook(() => useCellarAggregate("u1", {}, ""));
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(mockRpc).toHaveBeenCalledTimes(1);
     await act(async () => { await result.current.refresh(); });
@@ -82,7 +83,7 @@ describe("useCellarAggregate", () => {
   test("on RPC error: calls showError, sets loading false, keeps aggregate empty", async () => {
     const { showError } = require("../../lib/show-error");
     mockRpc.mockResolvedValue({ data: null, error: { message: "boom" } });
-    const { result } = renderHook(() => useCellarAggregate({}, ""));
+    const { result } = renderHook(() => useCellarAggregate("u1", {}, ""));
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(showError).toHaveBeenCalledWith("Kunde inte hämta källaren", "boom");
     expect(result.current.aggregate).toEqual(EMPTY_AGGREGATE);
@@ -102,7 +103,7 @@ describe("useCellarAggregate", () => {
       .mockResolvedValueOnce({ data: latePayload, error: null });
 
     const { result, rerender } = renderHook(
-      ({ f }: { f: Record<string, string> }) => useCellarAggregate(f, ""),
+      ({ f }: { f: Record<string, string> }) => useCellarAggregate("u1", f, ""),
       { initialProps: { f: {} } },
     );
     // Trigger the second call before the first resolves.
