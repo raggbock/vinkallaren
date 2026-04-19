@@ -14,11 +14,15 @@ export function useWines() {
 
   const fetchWines = useMemo(() => createGuardedFetcher(async () => {
     setLoading(true);
+    const t0 = performance.now();
     const { data, error } = await supabase.from("wines").select("*").gt("quantity", 0).order("created_at", { ascending: false }).limit(WINES_PAGE_SIZE);
+    const tSelect = performance.now();
     if (error) { showError("Kunde inte hämta viner", error.message); setLoading(false); return; }
     const rows = (data ?? []) as WineRow[];
     setHasMoreWines(rows.length === WINES_PAGE_SIZE);
-    setWines(await hydrateWineRecords(rows));
+    const hydrated = await hydrateWineRecords(rows);
+    console.log(`[perf] useWines start=${Math.round(t0)}ms select=${Math.round(tSelect - t0)}ms hydrate=${Math.round(performance.now() - tSelect)}ms rows=${rows.length}`);
+    setWines(hydrated);
     setLoading(false);
   }), []);
 

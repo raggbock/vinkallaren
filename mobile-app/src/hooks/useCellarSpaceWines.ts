@@ -57,14 +57,18 @@ export function useCellarSpaceWines(filters: CellarFilterState, search: string) 
       );
     }
 
+    const t0 = performance.now();
     const { data, error } = await query.order("created_at", { ascending: false });
+    const tSelect = performance.now();
     if (keyAtStart !== activeCacheKey.current) return; // stale cache key
     if (error) {
       showError("Kunde inte hämta viner", error.message);
       setStates((s) => ({ ...s, [spaceId]: { ...EMPTY_STATE, loaded: true } }));
       return;
     }
-    const hydrated = await hydrateWineRecords((data ?? []) as WineRow[]);
+    const rows = (data ?? []) as WineRow[];
+    const hydrated = await hydrateWineRecords(rows);
+    console.log(`[perf] space.fetch ${spaceId.slice(0, 8)} start=${Math.round(t0)}ms select=${Math.round(tSelect - t0)}ms hydrate=${Math.round(performance.now() - tSelect)}ms rows=${rows.length}`);
     if (keyAtStart !== activeCacheKey.current) return;
     setStates((s) => ({ ...s, [spaceId]: { wines: hydrated, loading: false, loaded: true } }));
   }, [filters, search]);
