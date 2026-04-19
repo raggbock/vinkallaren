@@ -4,6 +4,9 @@ import { useStorageSpaces } from "../hooks/useStorageSpaces";
 import { useHistory } from "../hooks/useHistory";
 import { useReferenceOptions } from "../hooks/useReferenceOptions";
 import { useCatalog } from "../hooks/useCatalog";
+import { useCellarAggregate } from "../hooks/useCellarAggregate";
+import { useCellarSpaceWines } from "../hooks/useCellarSpaceWines";
+import { useCellarFilters } from "../hooks/useCellarFilters";
 import type { WineRecord } from "../types/wine";
 import type { StorageSpaceRow } from "../types/storage-space";
 import type { StorageSpaceDraft } from "../types/cellar-drafts";
@@ -12,6 +15,7 @@ import type { ReferenceOptionRow } from "../types/reference-data";
 import type { Suggestion } from "../components/form-controls";
 import type { ProductCatalogWineRow } from "../types/product-catalog";
 import type { WineRow } from "../types/wine";
+import type { CellarAggregate } from "../types/cellar-aggregate";
 
 export type CellarContextValue = {
   userId: string;
@@ -62,6 +66,17 @@ export type CellarContextValue = {
   fetchCatalogEntriesByName: (name: string) => Promise<ProductCatalogWineRow[]>;
   fetchCatalogEntries: () => Promise<void>;
   matchCatalogByText: (text: string) => Promise<any>;
+  // Aggregate (filtered)
+  aggregate: CellarAggregate;
+  aggregateLoading: boolean;
+  refreshAggregate: () => Promise<void>;
+  // Space-wines loader (filtered)
+  getSpaceWines: (spaceId: string) => { wines: WineRecord[]; loading: boolean; loaded: boolean };
+  requestSpace: (spaceId: string) => void;
+  invalidateSpace: (spaceId: string) => void;
+  invalidateAllSpaceWines: () => void;
+  // Filters
+  filters: ReturnType<typeof useCellarFilters>;
   // Refresh all
   refreshAll: () => Promise<void>;
 };
@@ -80,6 +95,10 @@ export function CellarProvider({ userId, children }: { userId: string; children:
   const historyData = useHistory();
   const refOptions = useReferenceOptions();
   const catalogData = useCatalog(userId, wineData.wines, wineData.loading);
+  const filters = useCellarFilters();
+  const { aggregate, loading: aggregateLoading, refresh: refreshAggregate } =
+    useCellarAggregate(filters.filterState, filters.searchQuery);
+  const spaceWines = useCellarSpaceWines(filters.filterState, filters.searchQuery);
 
   const storageSpaceById = useMemo(
     () => new Map(storageData.storageSpaces.map((s) => [s.id, s])),
@@ -151,6 +170,15 @@ export function CellarProvider({ userId, children }: { userId: string; children:
     fetchCatalogEntriesByName: catalogData.fetchCatalogEntriesByName,
     fetchCatalogEntries: catalogData.fetchCatalogEntries,
     matchCatalogByText: catalogData.matchCatalogByText,
+    // Aggregate (filtered)
+    aggregate, aggregateLoading, refreshAggregate,
+    // Space-wines loader (filtered)
+    getSpaceWines: spaceWines.getSpaceWines,
+    requestSpace: spaceWines.requestSpace,
+    invalidateSpace: spaceWines.invalidateSpace,
+    invalidateAllSpaceWines: spaceWines.invalidateAll,
+    // Filters
+    filters,
     // Refresh all
     refreshAll,
   }), [userId,
@@ -168,6 +196,9 @@ export function CellarProvider({ userId, children }: { userId: string; children:
     refOptions.mergeReferenceOptions, refOptions.fetchReferenceOptions,
     catalogData.searchCatalogWineNames, catalogData.fetchCatalogEntriesByName,
     catalogData.fetchCatalogEntries, catalogData.matchCatalogByText,
+    aggregate, aggregateLoading, refreshAggregate,
+    spaceWines.getSpaceWines, spaceWines.requestSpace, spaceWines.invalidateSpace, spaceWines.invalidateAll,
+    filters,
     refreshAll]);
 
   return <CellarContext.Provider value={value}>{children}</CellarContext.Provider>;
