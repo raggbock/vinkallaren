@@ -3,7 +3,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-nati
 import { PanelHeader } from "./form-controls";
 import type { CreateSessionInput, TastingSessionRow } from "../types/tasting-session";
 import { CreateForm, JoinForm } from "./session-forms";
-import { colors, styles } from "../styles/theme";
+import { colors, serifFont, styles } from "../styles/theme";
 import { formatDateFull } from "../lib/format-date";
 
 type Props = {
@@ -25,6 +25,15 @@ function statusColor(status: TastingSessionRow["status"]): string {
   return status === "active" ? colors.accent : status === "setup" ? colors.textSecondary : colors.text;
 }
 
+function TitleBlock({ title, sub }: { title: string; sub: string }) {
+  return (
+    <View>
+      <Text style={local.title}>{title}</Text>
+      <Text style={local.sub}>{sub}</Text>
+    </View>
+  );
+}
+
 export function TastingTab({ sessions, loading, onCreateSession, onJoinSession, onOpenSession, onOpenProfile, onFetchSessions }: Props) {
   useEffect(() => { onFetchSessions(); }, []);
   const [view, setView] = useState<"list" | "create" | "join">("list");
@@ -36,7 +45,8 @@ export function TastingTab({ sessions, loading, onCreateSession, onJoinSession, 
   if (view === "create") {
     return (
       <View style={styles.panel}>
-        <PanelHeader title="Ny provning" rightLabel="Avbryt" onRightPress={() => setView("list")} />
+        <PanelHeader rightLabel="Avbryt" onRightPress={() => setView("list")} />
+        <TitleBlock title="Ny provning" sub="Bjud in vänner och bestäm format" />
         <CreateForm onCreate={async (input) => {
           const result = await onCreateSession(input);
           if (!result) { setError("Kunde inte skapa provning"); return; }
@@ -49,7 +59,8 @@ export function TastingTab({ sessions, loading, onCreateSession, onJoinSession, 
   if (view === "join") {
     return (
       <View style={styles.panel}>
-        <PanelHeader title="Gå med i provning" rightLabel="Avbryt" onRightPress={() => setView("list")} />
+        <PanelHeader rightLabel="Avbryt" onRightPress={() => setView("list")} />
+        <TitleBlock title="Gå med" sub="Skriv in koden du fått" />
         <JoinForm onJoin={async (code) => {
           const result = await onJoinSession(code);
           if (!result) { setError("Kunde inte gå med — kontrollera koden"); return; }
@@ -61,7 +72,9 @@ export function TastingTab({ sessions, loading, onCreateSession, onJoinSession, 
 
   return (
     <View style={styles.panel}>
-      <PanelHeader title="Provningar" rightLabel="Profil" onRightPress={onOpenProfile} />
+      <PanelHeader rightLabel="Profil" onRightPress={onOpenProfile} />
+      <TitleBlock title="Provning" sub="Blindprova med vänner" />
+
       {error ? <Text style={local.error}>{error}</Text> : null}
 
       <View style={local.actionRow}>
@@ -77,11 +90,11 @@ export function TastingTab({ sessions, loading, onCreateSession, onJoinSession, 
 
       {activeSessions.length > 0 ? (
         <>
-          <Text style={local.sectionLabel}>Pågående</Text>
+          <Text style={styles.eyebrow}>Pågående</Text>
           {activeSessions.map((ses) => (
-            <Pressable key={ses.id} style={local.card} onPress={() => onOpenSession(ses)}>
+            <Pressable key={ses.id} style={({ pressed }) => [local.card, pressed && { opacity: 0.65 }]} onPress={() => onOpenSession(ses)}>
               <View style={local.cardHeader}>
-                <Text style={local.cardTitle}>{ses.title}</Text>
+                <Text style={local.cardTitle} numberOfLines={1}>{ses.title}</Text>
                 <Text style={[local.statusBadge, { color: statusColor(ses.status) }]}>{statusLabel(ses.status)}</Text>
               </View>
               <Text style={local.cardMeta}>{ses.mode === "blind" ? "Blind" : "Öppen"} · {ses.format.toUpperCase()}</Text>
@@ -90,14 +103,14 @@ export function TastingTab({ sessions, loading, onCreateSession, onJoinSession, 
         </>
       ) : null}
 
-      <Text style={local.sectionLabel}>Avslutade</Text>
+      <Text style={styles.eyebrow}>Avslutade</Text>
       {endedSessions.length === 0 && !loading ? (
         <Text style={local.empty}>Inga avslutade provningar ännu.</Text>
       ) : null}
       {endedSessions.map((ses) => (
-        <Pressable key={ses.id} style={local.card} onPress={() => onOpenSession(ses)}>
+        <Pressable key={ses.id} style={({ pressed }) => [local.card, pressed && { opacity: 0.65 }]} onPress={() => onOpenSession(ses)}>
           <View style={local.cardHeader}>
-            <Text style={local.cardTitle}>{ses.title}</Text>
+            <Text style={local.cardTitle} numberOfLines={1}>{ses.title}</Text>
             <Text style={local.cardDate}>{formatDateFull(ses.created_at)}</Text>
           </View>
           <Text style={local.cardMeta}>{ses.mode === "blind" ? "Blind" : "Öppen"} · {ses.format.toUpperCase()}</Text>
@@ -108,14 +121,15 @@ export function TastingTab({ sessions, loading, onCreateSession, onJoinSession, 
 }
 
 const local = StyleSheet.create({
-  actionRow: { flexDirection: "row", gap: 10, marginBottom: 16 },
-  sectionLabel: { color: colors.text, fontSize: 14, fontWeight: "700", marginTop: 16, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 },
-  card: { backgroundColor: colors.textLight, borderRadius: 18, padding: 14, gap: 4, borderWidth: 1, borderColor: colors.surfaceAlt, marginBottom: 8 },
-  cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  cardTitle: { color: colors.text, fontSize: 16, fontWeight: "700", flex: 1 },
+  title: { fontFamily: serifFont, color: colors.text, fontSize: 32, fontWeight: "700", lineHeight: 34 },
+  sub: { color: colors.textSecondary, fontSize: 13, marginTop: 4 },
+  actionRow: { flexDirection: "row", gap: 10, marginTop: 4 },
+  card: { backgroundColor: colors.surface, borderRadius: 18, padding: 14, gap: 6, borderWidth: 1, borderColor: colors.border },
+  cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 8 },
+  cardTitle: { fontFamily: serifFont, color: colors.text, fontSize: 18, fontWeight: "700", flex: 1 },
   cardMeta: { color: colors.textSecondary, fontSize: 13 },
-  cardDate: { color: colors.textSecondary, fontSize: 12 },
-  statusBadge: { fontSize: 12, fontWeight: "600" },
+  cardDate: { color: colors.textSecondary, fontSize: 12, fontStyle: "italic" },
+  statusBadge: { fontSize: 11, fontWeight: "700", letterSpacing: 1.2, textTransform: "uppercase" },
   empty: { color: colors.textSecondary, fontSize: 13, fontStyle: "italic" },
-  error: { color: colors.accent, fontSize: 13, marginBottom: 8 },
+  error: { color: colors.accent, fontSize: 13 },
 });
