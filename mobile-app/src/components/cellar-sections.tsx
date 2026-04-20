@@ -1,21 +1,20 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { ActivityIndicator, FlatList, Image, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from "react-native";
 
-import { buildWsetSummary, type WsetTastingData } from "../lib/wset-data";
 import type { StorageSpaceRow } from "../types/storage-space";
 import type { SessionParticipant, TastingSessionRow } from "../types/tasting-session";
 import type { WineHistoryRecord } from "../types/wine-history";
-import type { WineRecord } from "../types/wine";
 import type { CellarSection } from "../types/cellar";
 import { Expandable, InsightCard, LoadingInline, PanelHeader } from "./form-controls";
 import { buildHistoryStats } from "../lib/cellar-helpers";
 import { fetchSessionWines, fetchSessionTastings, fetchSessionParticipants } from "../lib/session-actions";
-import { formatDateFull, formatDateISO } from "../lib/format-date";
+import { formatDateFull, formatDateShort } from "../lib/format-date";
 import { buildSessionResults } from "../lib/session-results";
 import { ResultsDashboard } from "./results-dashboard";
 import type { SessionWineRow, SessionTastingRow } from "../types/tasting-session";
 
-import { colors } from "../styles/theme";
+import { buildWsetSummary, type WsetTastingData } from "../lib/wset-data";
+import { colors, serifFont } from "../styles/theme";
 import type { styles as themeStyles } from "../styles/theme";
 import { WineGlassDoodle, TabIconCellar, TabIconAdd, TabIconTasting, TabIconDiscover, TabIconHistory } from "./doodles";
 type SharedStyles = typeof themeStyles;
@@ -98,34 +97,38 @@ export function HistoryPanel({
   const renderItem = useCallback(({ item }: { item: WineHistoryRecord }) => (
     <HistoryRow entry={item} styles={styles} onEdit={onEditEntry} />
   ), [styles, onEditEntry]);
+  const renderSeparator = useCallback(() => <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: colors.borderLight }} />, []);
 
   const sessionCount = endedSessions?.length ?? 0;
   const historyStats = useMemo(() => buildHistoryStats(historyEntries), [historyEntries]);
 
   const listHeader = useMemo(() => (
     <View style={{ gap: 14 }}>
-      <PanelHeader title="Historik" rightLabel="Profil" onRightPress={onOpenProfile} />
+      <PanelHeader rightLabel="Profil" onRightPress={onOpenProfile} />
+
+      <View>
+        <Text style={historyStyles.screenTitle}>Historik</Text>
+        <Text style={historyStyles.screenSub}>Flaskor du druckit och betygsatt</Text>
+      </View>
 
       {/* Sub-tabs */}
       <View style={historyStyles.tabRow}>
         <Pressable onPress={() => setTab("viner")} style={[historyStyles.tab, tab === "viner" && historyStyles.tabActive]}>
-          <Text style={[historyStyles.tabText, tab === "viner" && historyStyles.tabTextActive]}>Viner</Text>
+          <Text style={[historyStyles.tabText, tab === "viner" && historyStyles.tabTextActive]}>Viner ({historyEntries.length})</Text>
         </Pressable>
         <Pressable onPress={() => setTab("provningar")} style={[historyStyles.tab, tab === "provningar" && historyStyles.tabActive]}>
-          <Text style={[historyStyles.tabText, tab === "provningar" && historyStyles.tabTextActive]}>Provningar{sessionCount > 0 ? ` (${sessionCount})` : ""}</Text>
+          <Text style={[historyStyles.tabText, tab === "provningar" && historyStyles.tabTextActive]}>Provningar ({sessionCount})</Text>
         </Pressable>
       </View>
 
       {tab === "viner" && historyEntries.length > 0 ? (
         <>
-          <View style={styles.statsSummaryBar}>
-            <Text style={styles.statsSummaryText}>{historyStats.totalDrunk} flaskor druckna · {historyStats.totalTastings} tillfällen · snitt {historyStats.averageRating}/5</Text>
-          </View>
-          <View style={styles.statsGrid}>
-            <View style={styles.statsGridRow}>
-              <InsightCard label="Mest drucket land" value={historyStats.topCountry} />
-              <InsightCard label="Vanligaste typ" value={historyStats.topType} />
+          <View style={historyStyles.statsRow}>
+            <View style={historyStyles.statTan}>
+              <Text style={historyStyles.statTanValue} numberOfLines={1}>{historyStats.topCountry}</Text>
+              <Text style={historyStyles.statTanLabel}>mest drucket land</Text>
             </View>
+            <InsightCard label="Vanligast" value={historyStats.topType} />
           </View>
           <TextInput
             style={styles.input}
@@ -173,6 +176,7 @@ export function HistoryPanel({
       data={tab === "viner" ? filteredEntries : []}
       keyExtractor={(item) => item.id}
       renderItem={renderItem}
+      ItemSeparatorComponent={renderSeparator}
       ListHeaderComponent={listHeader}
       style={{ backgroundColor: colors.bg }}
       contentContainerStyle={[styles.panel, { flexGrow: 1, marginHorizontal: 20, marginTop: 20, maxWidth: 520, width: "100%", alignSelf: "center" as const }]}
@@ -243,63 +247,63 @@ function ExpandableSessionCard({ session, styles }: { session: TastingSessionRow
   );
 }
 
-const HistoryRow = React.memo(function HistoryRow({ entry, styles, onEdit }: {
+const HistoryRow = React.memo(function HistoryRow({ entry, onEdit }: {
   entry: WineHistoryRecord; styles: SharedStyles; onEdit?: (entry: WineHistoryRecord) => void;
 }) {
+  const meta = [entry.producer, entry.vintage, entry.grape].filter(Boolean).join(" · ");
   return (
-    <View style={styles.wineCard}>
-      <View style={styles.wineCardHeader}>
-        {entry.image_url ? (
-          <Image source={{ uri: entry.image_url }} style={styles.wineThumbnail} resizeMode="cover" accessibilityLabel={`Bild på ${entry.name}`} />
+    <Pressable
+      onPress={onEdit ? () => onEdit(entry) : undefined}
+      style={({ pressed }) => [historyStyles.histRow, pressed && onEdit ? { opacity: 0.65 } : null]}
+    >
+      <View style={historyStyles.histDateCol}>
+        <Text style={historyStyles.histDate}>{formatDateShort(entry.consumed_at)}</Text>
+      </View>
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Text style={historyStyles.histName}>{entry.name}</Text>
+        {meta ? <Text style={historyStyles.histMeta}>{meta}</Text> : null}
+        {entry.tasting_notes ? (
+          <Text style={historyStyles.histNote} numberOfLines={2}>{`"${entry.tasting_notes}"`}</Text>
         ) : null}
-        <View style={styles.flex}>
-          <Text style={styles.wineType}>{entry.type || "Historik"}</Text>
-          <Text style={styles.wineName}>{entry.name}</Text>
-          <Text style={styles.wineMeta}>
-            {[entry.producer, entry.vintage, entry.grape, [entry.country, entry.region].filter(Boolean).join(", ")]
-              .filter(Boolean)
-              .join(" • ")}
+        {entry.tasting_data ? (
+          <Text style={historyStyles.histWset} numberOfLines={1}>
+            <Text style={historyStyles.histWsetLabel}>WSET</Text>
+            {"  "}{buildWsetSummary(entry.tasting_data as WsetTastingData)}
           </Text>
-        </View>
-        {entry.rating ? (
-          <View style={styles.ratingBadge}>
-            <Text style={styles.ratingBadgeText}>{"★".repeat(entry.rating)}{"☆".repeat(5 - entry.rating)}</Text>
-          </View>
         ) : null}
       </View>
-      <Text style={historyStyles.consumedText}>
-        Dracks {formatDateISO(entry.consumed_at)} · {entry.quantity_consumed} flaska
-        {entry.quantity_consumed > 1 ? "r" : ""}
-      </Text>
-      {entry.tasting_notes ? <Text style={styles.notesText}>{entry.tasting_notes}</Text> : null}
-      {entry.tasting_data ? (
-        <View style={historyStyles.wsetSection}>
-          <Text style={historyStyles.wsetLabel}>WSET Tasting</Text>
-          <Text style={styles.notesText}>{buildWsetSummary(entry.tasting_data as WsetTastingData)}</Text>
-        </View>
+      {entry.rating ? (
+        <Text style={historyStyles.histRating}>
+          {"★".repeat(entry.rating)}{"☆".repeat(5 - entry.rating)}
+        </Text>
       ) : null}
-      {onEdit ? (
-        <Pressable onPress={() => onEdit(entry)} style={({ pressed }) => [historyStyles.editButton, pressed && { opacity: 0.6 }]}>
-          <Text style={historyStyles.editButtonText}>Redigera</Text>
-        </Pressable>
-      ) : null}
-    </View>
+    </Pressable>
   );
 });
 
 const historyStyles = StyleSheet.create({
-  tabRow: { flexDirection: "row", gap: 0, backgroundColor: colors.surfaceAlt, borderRadius: 12, padding: 3 },
+  screenTitle: { fontFamily: serifFont, color: colors.text, fontSize: 32, fontWeight: "700", lineHeight: 34 },
+  screenSub: { color: colors.textSecondary, fontSize: 13, marginTop: 4 },
+  tabRow: { flexDirection: "row", backgroundColor: colors.surfaceAlt, borderRadius: 12, padding: 3 },
   tab: { flex: 1, paddingVertical: 8, alignItems: "center", borderRadius: 10 },
   tabActive: { backgroundColor: colors.accent },
   tabText: { color: colors.accent, fontSize: 13, fontWeight: "700" },
   tabTextActive: { color: colors.textLight },
-  editButton: { marginTop: 8, alignSelf: "flex-start", backgroundColor: colors.surfaceAlt, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
-  editButtonText: { color: colors.accent, fontSize: 12, fontWeight: "700" },
+  statsRow: { flexDirection: "row", gap: 10 },
+  statTan: { flex: 1, backgroundColor: colors.surfaceAlt, borderRadius: 14, padding: 14, alignItems: "center", justifyContent: "center", gap: 2 },
+  statTanValue: { fontFamily: serifFont, color: colors.accent, fontSize: 22, fontWeight: "800", textAlign: "center" },
+  statTanLabel: { color: colors.textSecondary, fontSize: 11, fontWeight: "600" },
   sessionHeader: { flexDirection: "row", alignItems: "center", gap: 8 },
   sessionInfo: { flex: 1, gap: 4 },
   sessionResults: { marginTop: 12 },
   sessionList: { gap: 10 },
-  consumedText: { color: colors.textSecondary, fontSize: 13, fontWeight: "500" },
-  wsetSection: { marginTop: 6, paddingTop: 6, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
-  wsetLabel: { color: colors.textSecondary, fontWeight: "700", fontSize: 11, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 2 },
+  histRow: { flexDirection: "row", gap: 12, paddingVertical: 14 },
+  histDateCol: { width: 48, alignItems: "center" },
+  histDate: { fontFamily: serifFont, color: colors.accent, fontSize: 17, fontWeight: "500", fontStyle: "italic", lineHeight: 20, letterSpacing: 0.2 },
+  histName: { fontFamily: serifFont, color: colors.text, fontSize: 18, fontWeight: "700", lineHeight: 22 },
+  histMeta: { color: colors.textSecondary, fontSize: 12, marginTop: 2 },
+  histNote: { color: colors.text, fontSize: 13, marginTop: 4, fontStyle: "italic", lineHeight: 18 },
+  histRating: { color: colors.warm, fontSize: 13, letterSpacing: 1.5 },
+  histWset: { color: colors.textSecondary, fontSize: 12, marginTop: 4 },
+  histWsetLabel: { color: colors.accent, fontSize: 10, fontWeight: "700", letterSpacing: 1.4 },
 });

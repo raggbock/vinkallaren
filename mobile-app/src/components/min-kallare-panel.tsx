@@ -110,8 +110,10 @@ export function MinKallarePanel(props: MinKallarePanelProps) {
   }, [props.highlightedWineId, sections]);
 
   const summaryText = useMemo(() => {
-    return `${stats.totalBottles} flaskor · snitt ${stats.averageVintage}`;
-  }, [stats.totalBottles, stats.averageVintage]);
+    const flaskor = `${stats.totalBottles} flask${stats.totalBottles === 1 ? "a" : "or"}`;
+    const labels = stats.totalLabels > 0 ? ` · ${stats.totalLabels} olika vin${stats.totalLabels === 1 ? "" : "er"}` : "";
+    return `${flaskor}${labels}`;
+  }, [stats.totalBottles, stats.totalLabels]);
 
   const renderSectionHeader = useCallback(({ section }: { section: WineSection }) => (
     <SectionHeader

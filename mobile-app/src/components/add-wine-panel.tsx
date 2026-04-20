@@ -6,7 +6,7 @@ import type { StorageSpaceDraft, WineDraft } from "../types/cellar-drafts";
 import type { WineRecord } from "../types/wine";
 import type { CatalogProps, TastingProps } from "../types/panel-prop-groups";
 import { AutocompleteInput, Expandable, LabeledInput, PanelHeader, SuggestionRow } from "./form-controls";
-import { colors } from "../styles/theme";
+import { colors, serifFont } from "../styles/theme";
 import type { styles as themeStyles } from "../styles/theme";
 import { WineCoreFields } from "./wine-core-fields";
 import { TastingFields } from "./tasting-fields";
@@ -23,7 +23,11 @@ export function AddWinePanel(props: AddWinePanelProps) {
 
   return (
     <View style={styles.panel}>
-      <PanelHeader title="Lägg till vin" rightLabel="Profil" onRightPress={props.onOpenProfile} />
+      <PanelHeader rightLabel="Profil" onRightPress={props.onOpenProfile} />
+      <View>
+        <Text style={titleStyles.title}>Lägg till vin</Text>
+        <Text style={titleStyles.sub}>Fyll i själv, eller skanna etiketten</Text>
+      </View>
       <SuggestionRow title="Läge" options={["Källare", "Vinprovning"]} selected={tastingMode ? "Vinprovning" : "Källare"} onSelect={(value) => onTastingModeChange(value === "Vinprovning")} />
       {tastingMode ? <Text style={styles.notesText}>Vinet sparas direkt i din historik — det läggs inte till i källaren.</Text> : null}
 
@@ -82,6 +86,11 @@ function SavedPrompt({ onGoToCellar, onAddMore }: { onGoToCellar?: () => void; o
     </View>
   );
 }
+
+const titleStyles = StyleSheet.create({
+  title: { fontFamily: serifFont, color: colors.text, fontSize: 32, fontWeight: "700", lineHeight: 34 },
+  sub: { color: colors.textSecondary, fontSize: 13, marginTop: 4 },
+});
 
 const savedStyles = StyleSheet.create({
   container: { alignItems: "center", gap: 8, paddingVertical: 20 },

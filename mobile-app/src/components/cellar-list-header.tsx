@@ -5,7 +5,8 @@ import type { FilterProps, StorageProps } from "../types/panel-prop-groups";
 import { Expandable, InsightCard, LabeledInput, LoadingInline, PanelHeader, StorageSpaceForm, SuggestionRow } from "./form-controls";
 import { BottleDoodle, SquigglyLine } from "./doodles";
 
-import { colors, type styles as themeStyles } from "../styles/theme";
+import { StyleSheet } from "react-native";
+import { colors, serifFont, type styles as themeStyles } from "../styles/theme";
 type SharedStyles = typeof themeStyles;
 
 export type CellarListHeaderProps = {
@@ -26,8 +27,8 @@ export type CellarListHeaderProps = {
 export function CellarListHeader(props: CellarListHeaderProps) {
   return (
     <View style={{ gap: 14, paddingBottom: 6 }}>
-      <PanelHeader title="Min källare" rightLabel="Profil" onRightPress={props.onSignOut} />
-      <StatsSummaryBar {...props} />
+      <PanelHeader rightLabel="Profil" onRightPress={props.onSignOut} />
+      <TitleAndStats {...props} />
       <CellarFilters {...props} />
       {props.loading ? <LoadingInline /> : null}
       <StorageSpaceForm
@@ -41,11 +42,15 @@ export function CellarListHeader(props: CellarListHeaderProps) {
   );
 }
 
-function StatsSummaryBar({ styles, statsExpanded, onToggleStats, summaryText, stats, onRefreshStats }: CellarListHeaderProps) {
+function TitleAndStats({ styles, statsExpanded, onToggleStats, summaryText, stats, onRefreshStats }: CellarListHeaderProps) {
   return (
     <>
-      <Pressable onPress={onToggleStats} style={({ pressed }) => [styles.statsSummaryBar, pressed && { opacity: 0.8 }]}>
-        <Text style={styles.statsSummaryText}>{summaryText}</Text>
+      <View>
+        <Text style={header.title}>Min källare</Text>
+        <Text style={header.sub}>{summaryText}</Text>
+      </View>
+      <Pressable onPress={onToggleStats} style={({ pressed }) => [header.toggleRow, pressed && { opacity: 0.7 }]}>
+        <Text style={header.toggleText}>{statsExpanded ? "Dölj statistik" : "Visa statistik"}</Text>
         <Text style={styles.sectionChevron}>{statsExpanded ? "▾" : "›"}</Text>
       </Pressable>
       <Expandable expanded={statsExpanded}>
@@ -64,6 +69,13 @@ function StatsSummaryBar({ styles, statsExpanded, onToggleStats, summaryText, st
     </>
   );
 }
+
+const header = StyleSheet.create({
+  title: { fontFamily: serifFont, color: colors.text, fontSize: 32, fontWeight: "700", lineHeight: 34 },
+  sub: { color: colors.textSecondary, fontSize: 13, marginTop: 4 },
+  toggleRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 4 },
+  toggleText: { color: colors.accent, fontSize: 13, fontWeight: "700" },
+});
 
 function CellarFilters({ styles, filter, storage }: CellarListHeaderProps) {
   const [filtersExpanded, setFiltersExpanded] = useState(false);

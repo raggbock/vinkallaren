@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { colors, styles as theme } from "../styles/theme";
+import { colors, serifFont, styles as theme } from "../styles/theme";
 import { getAvatarLetter, lookupByCellarCode, type ProfileRow } from "../lib/profile-actions";
 import { usePublicProfile } from "../hooks/usePublicProfile";
 import { PanelHeader } from "./form-controls";
@@ -44,11 +44,10 @@ export function DiscoverTab({ onOpenProfile }: Props) {
     setPeekProfile(profile);
   }
 
-  // Show inline public profile when a code is selected
   if (peekProfile && (publicProfile.profile || publicProfile.loading)) {
     return (
-      <View style={s.panel}>
-        <PanelHeader title="Upptäck" rightLabel="Profil" onRightPress={onOpenProfile} />
+      <View style={theme.panel}>
+        <PanelHeader rightLabel="Profil" onRightPress={onOpenProfile} />
         <PublicProfilePage
           profile={publicProfile.profile ?? peekProfile}
           summary={publicProfile.summary}
@@ -61,11 +60,13 @@ export function DiscoverTab({ onOpenProfile }: Props) {
   }
 
   return (
-    <View style={s.panel}>
-      <PanelHeader title="Upptäck" rightLabel="Profil" onRightPress={onOpenProfile} />
+    <View style={theme.panel}>
+      <PanelHeader rightLabel="Profil" onRightPress={onOpenProfile} />
 
-      <Text style={s.heading}>Titta in i en källare</Text>
-      <Text style={s.subtitle}>Skriv in en källarkod för att se någon annans vinsamling.</Text>
+      <View>
+        <Text style={s.screenTitle}>Upptäck</Text>
+        <Text style={s.screenSub}>Titta in i någon annans källare</Text>
+      </View>
 
       <View style={s.inputRow}>
         <TextInput
@@ -73,12 +74,12 @@ export function DiscoverTab({ onOpenProfile }: Props) {
           value={code}
           onChangeText={(t) => { setCode(t.toUpperCase().slice(0, 6)); setError(null); }}
           placeholder="KÄLLARKOD"
-          placeholderTextColor={colors.textSecondary}
+          placeholderTextColor={colors.textFaint}
           autoCapitalize="characters"
           maxLength={6}
         />
         <Pressable
-          style={[s.searchBtn, (!code.trim() || loading) && s.searchBtnDisabled]}
+          style={({ pressed }) => [s.searchBtn, (!code.trim() || loading) && s.searchBtnDisabled, pressed && { opacity: 0.85 }]}
           onPress={() => handleLookup(code)}
           disabled={!code.trim() || loading}
         >
@@ -88,30 +89,37 @@ export function DiscoverTab({ onOpenProfile }: Props) {
 
       {error ? <Text style={s.error}>{error}</Text> : null}
 
-      {publicProfile.loading && (
+      {publicProfile.loading ? (
         <View style={s.loadingRow}>
           <ActivityIndicator color={colors.accent} />
           <Text style={s.loadingText}>Laddar källare...</Text>
         </View>
-      )}
+      ) : null}
 
-      {recent.length > 0 && (
+      {recent.length > 0 ? (
         <>
           <SquigglyLine />
-          <Text style={s.sectionLabel}>Senast besökta</Text>
-          {recent.map((item) => (
-            <Pressable key={item.id} style={s.recentRow} onPress={() => handleLookup(item.cellar_code ?? "")}>
-              <View style={[s.avatar, { backgroundColor: item.avatar_color ?? colors.accent }]}>
-                <Text style={s.avatarLetter}>{getAvatarLetter(item.display_name)}</Text>
-              </View>
-              <View style={s.recentInfo}>
-                <Text style={s.recentName}>{item.display_name ?? "Okänd"}</Text>
-                <Text style={s.recentCode}>{item.cellar_code}</Text>
-              </View>
-            </Pressable>
-          ))}
+          <Text style={theme.eyebrow}>Senast besökta</Text>
+          <View style={{ gap: 0 }}>
+            {recent.map((item, i) => (
+              <Pressable
+                key={item.id}
+                style={({ pressed }) => [s.recentRow, i > 0 && s.recentRowBorder, pressed && { opacity: 0.65 }]}
+                onPress={() => handleLookup(item.cellar_code ?? "")}
+              >
+                <View style={[s.avatar, { backgroundColor: item.avatar_color ?? colors.accent }]}>
+                  <Text style={s.avatarLetter}>{getAvatarLetter(item.display_name)}</Text>
+                </View>
+                <View style={s.recentInfo}>
+                  <Text style={s.recentName}>{item.display_name ?? "Okänd"}</Text>
+                  <Text style={s.recentCode}>{item.cellar_code}</Text>
+                </View>
+                <Text style={s.recentChevron}>›</Text>
+              </Pressable>
+            ))}
+          </View>
         </>
-      )}
+      ) : null}
     </View>
   );
 }
@@ -133,35 +141,43 @@ async function saveRecent(profile: ProfileRow, existing: ProfileRow[]): Promise<
 }
 
 const s = StyleSheet.create({
-  panel: { gap: 12, flex: 1 },
-  heading: { color: colors.text, fontSize: 20, fontWeight: "700" },
-  subtitle: { color: colors.textSecondary, fontSize: 14, lineHeight: 20 },
-  inputRow: { flexDirection: "row", gap: 10 },
+  screenTitle: { fontFamily: serifFont, color: colors.text, fontSize: 32, fontWeight: "700", lineHeight: 34 },
+  screenSub: { color: colors.textSecondary, fontSize: 13, marginTop: 4 },
+  inputRow: { flexDirection: "row", gap: 10, alignItems: "stretch" },
   codeInput: {
-    flex: 1, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 14,
-    backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.border,
-    color: colors.text, fontSize: 20, fontWeight: "700", letterSpacing: 6, textAlign: "center",
+    flex: 1,
+    minWidth: 0,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 14,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    color: colors.text,
+    fontSize: 18,
+    fontWeight: "700",
+    letterSpacing: 4,
+    textAlign: "center",
   },
   searchBtn: {
-    backgroundColor: colors.accent, borderRadius: 16,
-    paddingHorizontal: 20, justifyContent: "center", alignItems: "center", minWidth: 72,
+    backgroundColor: colors.accent,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    justifyContent: "center",
+    alignItems: "center",
+    minWidth: 60,
   },
   searchBtnDisabled: { opacity: 0.5 },
   searchBtnText: { color: "#FFF", fontWeight: "700", fontSize: 15 },
   error: { color: "#C85050", fontSize: 14, textAlign: "center" },
   loadingRow: { flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 8, paddingVertical: 12 },
   loadingText: { color: colors.textSecondary, fontSize: 14 },
-  sectionLabel: {
-    color: colors.textSecondary, fontSize: 11, fontWeight: "700",
-    textTransform: "uppercase", letterSpacing: 0.6,
-  },
-  recentRow: {
-    flexDirection: "row", alignItems: "center", gap: 12,
-    paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.borderLight,
-  },
+  recentRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 12 },
+  recentRowBorder: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.borderLight },
   avatar: { width: 40, height: 40, borderRadius: 20, justifyContent: "center", alignItems: "center" },
   avatarLetter: { color: "#FFF", fontWeight: "700", fontSize: 17 },
   recentInfo: { flex: 1 },
-  recentName: { color: colors.text, fontWeight: "600", fontSize: 15 },
-  recentCode: { color: colors.textSecondary, fontSize: 12, letterSpacing: 1 },
+  recentName: { fontFamily: serifFont, color: colors.text, fontSize: 18, fontWeight: "700" },
+  recentCode: { color: colors.textSecondary, fontSize: 12, letterSpacing: 1.5, marginTop: 1 },
+  recentChevron: { color: colors.textSecondary, fontSize: 22, fontWeight: "400" },
 });

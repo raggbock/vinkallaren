@@ -8,7 +8,7 @@ export const serifFont = Platform.select({
 });
 
 export const handFont = Platform.select({
-  web: '"Caveat", cursive',
+  web: '"Caveat", Georgia, serif',
   ios: "Noteworthy-Bold",
   default: "serif",
 });
@@ -24,6 +24,7 @@ export const colors = {
   text: "#2A2A2A",
   textSecondary: "#666666",
   textLight: "#FDFAF6",
+  textFaint: "#8F8178",
   border: "#E0D8CE",
   borderLight: "#F0EBE3",
   black: "#1A1A1A",
