@@ -2,7 +2,7 @@ import { Platform, StyleSheet } from "react-native";
 import { colors, serifFont, handFont } from "./tokens";
 
 // Re-export tokens for backward compatibility
-export { colors, handFont };
+export { colors, handFont, serifFont };
 
 export const styles = StyleSheet.create({
   flex: { flex: 1 },
