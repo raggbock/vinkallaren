@@ -6,9 +6,11 @@ import {
   fetchSessionTastings,
   fetchSessionWines,
   joinSessionByCode,
+  queueSaveTasting,
 } from "../lib/session-actions";
 import type {
   CreateSessionInput,
+  SessionTastingInsert,
   SessionTastingRow,
   SessionToast,
   SessionWineRow,
@@ -99,6 +101,29 @@ export function useTastingSessions(userId: string) {
     return session;
   }, [openSession]);
 
+  const saveTastingOptimistic = useCallback(async (row: SessionTastingInsert) => {
+    setActiveTastings((prev) => {
+      const existing = prev.find(
+        (t) => t.session_wine_id === row.session_wine_id && t.user_id === row.user_id,
+      );
+      const merged = {
+        ...(existing ?? {
+          id: `local-${Date.now()}`,
+          created_at: new Date().toISOString(),
+        }),
+        ...row,
+      } as SessionTastingRow;
+      const next = existing
+        ? prev.map((t) => (t === existing ? merged : t))
+        : [...prev, merged];
+      if (row.session_id) {
+        offlineStore.set(K.sessionTastings(row.session_id), next);
+      }
+      return next;
+    });
+    await queueSaveTasting(row);
+  }, []);
+
   // Realtime: subscribe to tastings + session status when a session is open
   useEffect(() => {
     if (!activeSession) return;
@@ -187,5 +212,6 @@ export function useTastingSessions(userId: string) {
     setActiveWines,
     setActiveTastings,
     setActiveSession,
+    saveTastingOptimistic,
   };
 }

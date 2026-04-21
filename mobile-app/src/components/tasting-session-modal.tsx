@@ -6,7 +6,7 @@ import { SessionTastingView } from "./session-tasting-view";
 import { addSessionDish, advanceReveal, deleteSessionDish, fetchSessionDishes, fetchSessionParticipants, fetchTastingDishes, finishReveal, saveTasting, saveTastingDishes, startSession } from "../lib/session-actions";
 import { SessionSetupView } from "./session-setup-view";
 import { AddWineForm, CreateForm, HostControls, InlineError, JoinForm, s } from "./session-forms";
-import type { CreateSessionInput, SessionDishRow, SessionParticipant, SessionTastingDishRow, SessionTastingRow, SessionToast, SessionWineRow, TastingSessionRow } from "../types/tasting-session";
+import type { CreateSessionInput, SessionDishRow, SessionParticipant, SessionTastingDishRow, SessionTastingInsert, SessionTastingRow, SessionToast, SessionWineRow, TastingSessionRow } from "../types/tasting-session";
 import type { WsetTastingData } from "../lib/wset-data";
 import type { WineRecord } from "../types/wine";
 import { ResultsDashboard } from "./results-dashboard";
@@ -21,7 +21,7 @@ export function TastingSessionPanel({
   styles, userId, sessions, loading, toasts, activeSession, activeWines, activeTastings,
   wines, searchWineNames, onBack, onFetchSessions, onCreateSession, onJoinSession, onOpenSession,
   onCloseSession, onSetActiveWines, onSetActiveTastings, onSetActiveSession,
-  onOpenWset, wsetData, onSessionEnded,
+  onOpenWset, wsetData, onSessionEnded, onSaveTastingOptimistic,
 }: {
   styles: SharedStyles;
   userId: string;
@@ -45,6 +45,7 @@ export function TastingSessionPanel({
   onOpenWset: (wineType?: string) => void;
   wsetData: WsetTastingData | null;
   onSessionEnded: () => void;
+  onSaveTastingOptimistic: (row: SessionTastingInsert) => Promise<void>;
 }) {
   const [view, setView] = useState<"list" | "create" | "join">("list");
   const [tastingWine, setTastingWine] = useState<SessionWineRow | null>(null);
@@ -62,17 +63,21 @@ export function TastingSessionPanel({
   }) {
     if (!activeSession || !tastingWine) return;
     setSavingTasting(true);
-    const result = await saveTasting({
+    const row: SessionTastingInsert = {
       session_id: activeSession.id, session_wine_id: tastingWine.id,
       user_id: userId, rating: data.rating, notes: data.notes,
       food_pairings: data.foodPairings, tasting_data: data.wsetData ?? null,
-    });
-    if (result.error) { setSavingTasting(false); setInlineError("Kunde inte spara provning"); return; }
+    };
 
-    if (result.data) {
-      await saveTastingDishes(result.data.id, data.dishIds);
+    if (data.dishIds.length > 0) {
+      // Need confirmed DB id to link dishes — use direct save
+      const result = await saveTasting(row);
+      if (result.error) { setSavingTasting(false); setInlineError("Kunde inte spara provning"); return; }
+      await saveTastingDishes(result.data!.id, data.dishIds);
       const tdResult = await fetchTastingDishes(activeSession.id);
       if (tdResult.data) setTastingDishes(tdResult.data);
+    } else {
+      await onSaveTastingOptimistic(row);
     }
 
     setSavingTasting(false);

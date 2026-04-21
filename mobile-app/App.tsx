@@ -304,6 +304,7 @@ function CellarScreenInner({ session, pendingJoinCode, onJoinCodeConsumed }: { s
             onCloseSession={tasting.closeSession} onSetActiveWines={tasting.setActiveWines}
             onSetActiveTastings={tasting.setActiveTastings} onSetActiveSession={tasting.setActiveSession}
             onOpenWset={tasting.openWset} wsetData={tasting.wsetData}
+            onSaveTastingOptimistic={tasting.saveTastingOptimistic}
             onSessionEnded={() => { tasting.closeSession(); setActiveSection("history"); }}
           />
         </Suspense>
