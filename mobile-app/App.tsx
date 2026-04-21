@@ -36,6 +36,9 @@ import { useModalToggle } from "./src/hooks/useModalToggle";
 import { useProfile } from "./src/hooks/useProfile";
 import { DisplayNamePrompt } from "./src/components/display-name-prompt";
 import { parseJoinCodeFromUrl } from "./src/lib/join-link";
+import { useOnlineStatus } from "./src/hooks/useOnlineStatus";
+import { syncQueue } from "./src/lib/sync-queue";
+import { supabaseHandlers } from "./src/lib/sync-handlers";
 
 function useWebStyles() {
   useEffect(() => {
@@ -90,6 +93,13 @@ function useWebStyles() {
 
 function AppRoot() {
   useWebStyles();
+  const { online } = useOnlineStatus();
+  useEffect(() => {
+    if (!online) return;
+    syncQueue.drain(supabaseHandlers);
+    const iv = setInterval(() => syncQueue.drain(supabaseHandlers), 30000);
+    return () => clearInterval(iv);
+  }, [online]);
   const [session, setSession] = useState<Session | null>(null);
   const [loadingSession, setLoadingSession] = useState(true);
   const [pendingJoinCode, setPendingJoinCode] = useState<string | null>(() => parseJoinCodeFromUrl());
