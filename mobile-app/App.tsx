@@ -35,6 +35,7 @@ import { useCatalogEditorModal } from "./src/hooks/useCatalogEditorModal";
 import { useModalToggle } from "./src/hooks/useModalToggle";
 import { useProfile } from "./src/hooks/useProfile";
 import { DisplayNamePrompt } from "./src/components/display-name-prompt";
+import { OfflineBadge } from "./src/components/offline-badge";
 import { parseJoinCodeFromUrl } from "./src/lib/join-link";
 import { useOnlineStatus } from "./src/hooks/useOnlineStatus";
 import { syncQueue } from "./src/lib/sync-queue";
@@ -360,6 +361,7 @@ function CellarScreenInner({ session, pendingJoinCode, onJoinCodeConsumed }: { s
   return (
     <SafeAreaView style={styles.screen}>
       <StatusBar style="light" />
+      <OfflineBadge />
       <DisplayNamePrompt
         visible={userProfile.needsDisplayName && !promptDismissed}
         saving={promptSaving}
