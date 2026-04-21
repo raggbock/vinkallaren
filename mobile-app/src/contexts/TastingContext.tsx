@@ -22,8 +22,8 @@ export type TastingContextValue = {
   saveTastingOptimistic: (row: SessionTastingInsert) => Promise<void>;
   // WSET
   wsetData: WsetTastingData | null;
-  openWset: (wineType?: string) => void;
-  wsetProps: { visible: boolean; onClose: () => void; onSave: (data: WsetTastingData) => void; wineType: string; initialData: WsetTastingData | null };
+  openWset: (wineType?: string, wineId?: string) => void;
+  wsetProps: { visible: boolean; onClose: () => void; onSave: (data: WsetTastingData) => void; wineType: string; wineId?: string; initialData: WsetTastingData | null };
 };
 
 const TastingContext = createContext<TastingContextValue | null>(null);

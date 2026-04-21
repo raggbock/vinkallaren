@@ -42,7 +42,7 @@ export function TastingSessionPanel({
   onSetActiveWines: (fn: (prev: SessionWineRow[]) => SessionWineRow[]) => void;
   onSetActiveTastings: (fn: (prev: SessionTastingRow[]) => SessionTastingRow[]) => void;
   onSetActiveSession: (session: TastingSessionRow | null) => void;
-  onOpenWset: (wineType?: string) => void;
+  onOpenWset: (wineType?: string, wineId?: string) => void;
   wsetData: WsetTastingData | null;
   onSessionEnded: () => void;
   onSaveTastingOptimistic: (row: SessionTastingInsert) => Promise<void>;
@@ -135,7 +135,7 @@ export function TastingSessionPanel({
           dishes={dishes}
           saving={savingTasting}
           onSave={handleSaveTasting}
-          onOpenWset={() => onOpenWset(tastingWine.type || "")}
+          onOpenWset={(type) => onOpenWset(type, tastingWine.id)}
           onBack={() => setTastingWine(null)}
         />
       </View>
