@@ -1,5 +1,6 @@
 import { ok, fail, type Result } from "../types/result";
 import { supabase } from "./supabase";
+import { syncQueue } from "./sync-queue";
 import type {
   CreateSessionInput,
   SessionDishRow,
@@ -190,6 +191,20 @@ export async function fetchTastingDishes(sessionId: string): Promise<Result<Sess
     .in("session_tasting_id", tastingIds);
   if (error) return fail(error.message);
   return ok((data ?? []) as SessionTastingDishRow[]);
+}
+
+export async function queueSaveTasting(row: SessionTastingInsert): Promise<void> {
+  await syncQueue.enqueue({ kind: "upsert_session_tasting", payload: row });
+}
+
+export async function queueAddWineToSession(wine: SessionWineInsert): Promise<void> {
+  await syncQueue.enqueue({ kind: "add_session_wine", payload: wine });
+}
+
+export async function queueCreateSession(
+  row: { host_id: string; title: string; join_code: string; mode: string; format: string; free_order: boolean },
+): Promise<void> {
+  await syncQueue.enqueue({ kind: "create_session", payload: { ...row, status: "setup" } });
 }
 
 export async function saveTastingDishes(
