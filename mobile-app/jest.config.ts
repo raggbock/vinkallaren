@@ -8,7 +8,10 @@ const config: Config = {
       testEnvironment: "node",
       testMatch: ["<rootDir>/src/lib/__tests__/**/*.test.ts"],
       transform: { "^.+\\.ts$": ["ts-jest", { tsconfig: "tsconfig.json" }] },
-      moduleNameMapper: { "^react-native$": "<rootDir>/src/__mocks__/react-native.ts" },
+      moduleNameMapper: {
+        "^react-native$": "<rootDir>/src/__mocks__/react-native.ts",
+        "^@react-native-async-storage/async-storage$": "<rootDir>/src/__mocks__/async-storage.ts",
+      },
     },
     {
       displayName: "hooks",
