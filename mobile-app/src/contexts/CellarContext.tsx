@@ -17,69 +17,87 @@ import type { ProductCatalogWineRow } from "../types/product-catalog";
 import type { WineRow } from "../types/wine";
 import type { CellarAggregate } from "../types/cellar-aggregate";
 
-export type CellarContextValue = {
+export type CellarDataValue = {
   userId: string;
-  // Wines
   wines: WineRecord[];
   winesLoading: boolean;
-  setWines: React.Dispatch<React.SetStateAction<WineRecord[]>>;
-  refreshWines: () => Promise<void | undefined>;
-  fetchMoreWines: () => Promise<void>;
   hasMoreWines: boolean;
-  deleteWine: (id: string, imagePath?: string | null) => Promise<void>;
-  // Storage
   storageSpaces: StorageSpaceRow[];
   storageSpaceById: Map<string, StorageSpaceRow>;
   storageSpaceDraft: StorageSpaceDraft;
   savingStorageSpace: boolean;
-  setStorageSpaceDraft: React.Dispatch<React.SetStateAction<StorageSpaceDraft>>;
-  fetchStorageSpaces: () => Promise<void>;
-  saveStorageSpace: () => Promise<string | null>;
-  updateStorageSpace: (id: string, patch: { name?: string; space_type?: string; row_count?: number; slots_per_row?: number; notes?: string | null }) => Promise<void>;
-  deleteStorageSpace: (id: string) => Promise<boolean>;
-  // History
   historyEntries: WineHistoryRecord[];
   historyLoading: boolean;
   historyHasMore: boolean;
-  setHistoryEntries: React.Dispatch<React.SetStateAction<WineHistoryRecord[]>>;
-  fetchHistoryEntries: () => Promise<void>;
-  fetchMoreHistory: () => Promise<void>;
-  // Reference options
   effectiveCountryOptions: string[];
   effectiveRegionOptions: string[];
   effectiveGrapeOptions: string[];
   countryReferenceRows: ReferenceOptionRow[];
   regionReferenceRows: ReferenceOptionRow[];
   grapeReferenceRows: ReferenceOptionRow[];
+  aggregate: CellarAggregate;
+  aggregateLoading: boolean;
+  getSpaceWines: (spaceId: string) => { wines: WineRecord[]; loading: boolean; loaded: boolean };
+};
+
+export type CellarActionsValue = {
+  setWines: React.Dispatch<React.SetStateAction<WineRecord[]>>;
+  refreshWines: () => Promise<void | undefined>;
+  fetchMoreWines: () => Promise<void>;
+  deleteWine: (id: string, imagePath?: string | null) => Promise<void>;
+  setStorageSpaceDraft: React.Dispatch<React.SetStateAction<StorageSpaceDraft>>;
+  fetchStorageSpaces: () => Promise<void>;
+  saveStorageSpace: () => Promise<string | null>;
+  updateStorageSpace: (id: string, patch: { name?: string; space_type?: string; row_count?: number; slots_per_row?: number; notes?: string | null }) => Promise<void>;
+  deleteStorageSpace: (id: string) => Promise<boolean>;
+  setHistoryEntries: React.Dispatch<React.SetStateAction<WineHistoryRecord[]>>;
+  fetchHistoryEntries: () => Promise<void>;
+  fetchMoreHistory: () => Promise<void>;
   mergeReferenceOptions: (wine: WineRow) => void;
   fetchReferenceOptions: () => Promise<void>;
-  // Catalog
   searchCatalogWineNames: (query: string, offset?: number) => Promise<{ suggestions: Suggestion[]; hasMore: boolean; nextOffset: number }>;
   fetchCatalogEntriesByName: (name: string) => Promise<ProductCatalogWineRow[]>;
   fetchCatalogEntries: () => Promise<void>;
   matchCatalogByText: (text: string) => Promise<any>;
-  // Aggregate (filtered)
-  aggregate: CellarAggregate;
-  aggregateLoading: boolean;
   refreshAggregate: () => Promise<void>;
   onCellarMutated: (opts?: { spaceIds?: Array<string | null> }) => Promise<void>;
-  // Space-wines loader (filtered)
-  getSpaceWines: (spaceId: string) => { wines: WineRecord[]; loading: boolean; loaded: boolean };
   requestSpace: (spaceId: string) => void;
   invalidateSpace: (spaceId: string) => void;
   invalidateAllSpaceWines: () => void;
-  // Filters
-  filters: ReturnType<typeof useCellarFilters>;
-  // Refresh all
   refreshAll: () => Promise<void>;
 };
 
-const CellarContext = createContext<CellarContextValue | null>(null);
+export type CellarFiltersValue = ReturnType<typeof useCellarFilters>;
 
+// Legacy union: components that haven't migrated yet pull everything via useCellar().
+export type CellarContextValue = CellarDataValue & CellarActionsValue & { filters: CellarFiltersValue };
+
+const CellarDataContext = createContext<CellarDataValue | null>(null);
+const CellarActionsContext = createContext<CellarActionsValue | null>(null);
+const CellarFiltersContext = createContext<CellarFiltersValue | null>(null);
+
+export function useCellarData(): CellarDataValue {
+  const v = useContext(CellarDataContext);
+  if (!v) throw new Error("useCellarData must be used inside CellarProvider");
+  return v;
+}
+export function useCellarActions(): CellarActionsValue {
+  const v = useContext(CellarActionsContext);
+  if (!v) throw new Error("useCellarActions must be used inside CellarProvider");
+  return v;
+}
+export function useCellarFiltersContext(): CellarFiltersValue {
+  const v = useContext(CellarFiltersContext);
+  if (!v) throw new Error("useCellarFiltersContext must be used inside CellarProvider");
+  return v;
+}
+
+// Facade for transitional code — prefer the split hooks above for new call sites.
 export function useCellar(): CellarContextValue {
-  const ctx = useContext(CellarContext);
-  if (!ctx) throw new Error("useCellar must be used inside CellarProvider");
-  return ctx;
+  const data = useCellarData();
+  const actions = useCellarActions();
+  const filters = useCellarFiltersContext();
+  return useMemo(() => ({ ...data, ...actions, filters }), [data, actions, filters]);
 }
 
 export function CellarProvider({ userId, children }: { userId: string; children: ReactNode }) {
@@ -134,79 +152,78 @@ export function CellarProvider({ userId, children }: { userId: string; children:
     await onCellarMutated({ spaceIds: [wine?.storage_space_id ?? null] });
   }, [wineData, onCellarMutated]);
 
-  const value: CellarContextValue = useMemo(() => ({
+  const dataValue: CellarDataValue = useMemo(() => ({
     userId,
-    // Wines
     wines: wineData.wines,
     winesLoading: wineData.loading,
-    setWines: wineData.setWines,
-    refreshWines: wineData.fetchWines,
-    fetchMoreWines: wineData.fetchMoreWines,
     hasMoreWines: wineData.hasMoreWines,
-    deleteWine: deleteWineAndMutate,
-    // Storage
     storageSpaces: storageData.storageSpaces,
     storageSpaceById,
     storageSpaceDraft: storageData.storageSpaceDraft,
     savingStorageSpace: storageData.savingStorageSpace,
-    setStorageSpaceDraft: storageData.setStorageSpaceDraft,
-    fetchStorageSpaces: storageData.fetchStorageSpaces,
-    saveStorageSpace: storageData.saveStorageSpace,
-    updateStorageSpace: storageData.updateStorageSpace,
-    deleteStorageSpace: deleteStorageSpaceAndRefresh,
-    // History
     historyEntries: historyData.historyEntries,
     historyLoading: historyData.loadingHistory,
     historyHasMore: historyData.hasMoreHistory,
-    setHistoryEntries: historyData.setHistoryEntries,
-    fetchHistoryEntries: historyData.fetchHistoryEntries,
-    fetchMoreHistory: historyData.fetchMoreHistory,
-    // Reference options
     effectiveCountryOptions: refOptions.effectiveCountryOptions,
     effectiveRegionOptions: refOptions.effectiveRegionOptions,
     effectiveGrapeOptions: refOptions.effectiveGrapeOptions,
     countryReferenceRows: refOptions.countryReferenceRows,
     regionReferenceRows: refOptions.regionReferenceRows,
     grapeReferenceRows: refOptions.grapeReferenceRows,
+    aggregate,
+    aggregateLoading,
+    getSpaceWines: spaceWines.getSpaceWines,
+  }), [userId,
+    wineData.wines, wineData.loading, wineData.hasMoreWines,
+    storageData.storageSpaces, storageSpaceById, storageData.storageSpaceDraft, storageData.savingStorageSpace,
+    historyData.historyEntries, historyData.loadingHistory, historyData.hasMoreHistory,
+    refOptions.effectiveCountryOptions, refOptions.effectiveRegionOptions, refOptions.effectiveGrapeOptions,
+    refOptions.countryReferenceRows, refOptions.regionReferenceRows, refOptions.grapeReferenceRows,
+    aggregate, aggregateLoading, spaceWines.getSpaceWines]);
+
+  const actionsValue: CellarActionsValue = useMemo(() => ({
+    setWines: wineData.setWines,
+    refreshWines: wineData.fetchWines,
+    fetchMoreWines: wineData.fetchMoreWines,
+    deleteWine: deleteWineAndMutate,
+    setStorageSpaceDraft: storageData.setStorageSpaceDraft,
+    fetchStorageSpaces: storageData.fetchStorageSpaces,
+    saveStorageSpace: storageData.saveStorageSpace,
+    updateStorageSpace: storageData.updateStorageSpace,
+    deleteStorageSpace: deleteStorageSpaceAndRefresh,
+    setHistoryEntries: historyData.setHistoryEntries,
+    fetchHistoryEntries: historyData.fetchHistoryEntries,
+    fetchMoreHistory: historyData.fetchMoreHistory,
     mergeReferenceOptions: refOptions.mergeReferenceOptions,
     fetchReferenceOptions: refOptions.fetchReferenceOptions,
-    // Catalog
     searchCatalogWineNames: catalogData.searchCatalogWineNames,
     fetchCatalogEntriesByName: catalogData.fetchCatalogEntriesByName,
     fetchCatalogEntries: catalogData.fetchCatalogEntries,
     matchCatalogByText: catalogData.matchCatalogByText,
+    refreshAggregate,
     onCellarMutated,
-    // Aggregate (filtered)
-    aggregate, aggregateLoading, refreshAggregate,
-    // Space-wines loader (filtered)
-    getSpaceWines: spaceWines.getSpaceWines,
     requestSpace: spaceWines.requestSpace,
     invalidateSpace: spaceWines.invalidateSpace,
     invalidateAllSpaceWines: spaceWines.invalidateAll,
-    // Filters
-    filters,
-    // Refresh all
     refreshAll,
-  }), [userId,
-    wineData.wines, wineData.loading, wineData.setWines, wineData.fetchWines, wineData.fetchMoreWines,
-    wineData.hasMoreWines, deleteWineAndMutate,
-    storageData.storageSpaces, storageSpaceById, storageData.storageSpaceDraft, storageData.savingStorageSpace,
+  }), [wineData.setWines, wineData.fetchWines, wineData.fetchMoreWines, deleteWineAndMutate,
     storageData.setStorageSpaceDraft, storageData.fetchStorageSpaces, storageData.saveStorageSpace,
     storageData.updateStorageSpace, deleteStorageSpaceAndRefresh,
-    historyData.historyEntries, historyData.loadingHistory, historyData.hasMoreHistory,
     historyData.setHistoryEntries, historyData.fetchHistoryEntries, historyData.fetchMoreHistory,
-    refOptions.effectiveCountryOptions, refOptions.effectiveRegionOptions, refOptions.effectiveGrapeOptions,
-    refOptions.countryReferenceRows, refOptions.regionReferenceRows, refOptions.grapeReferenceRows,
     refOptions.mergeReferenceOptions, refOptions.fetchReferenceOptions,
     catalogData.searchCatalogWineNames, catalogData.fetchCatalogEntriesByName,
     catalogData.fetchCatalogEntries, catalogData.matchCatalogByText,
-    onCellarMutated,
-    aggregate, aggregateLoading, refreshAggregate,
-    spaceWines.getSpaceWines, spaceWines.requestSpace, spaceWines.invalidateSpace, spaceWines.invalidateAll,
-    filters,
+    refreshAggregate, onCellarMutated,
+    spaceWines.requestSpace, spaceWines.invalidateSpace, spaceWines.invalidateAll,
     refreshAll]);
 
-  return <CellarContext.Provider value={value}>{children}</CellarContext.Provider>;
+  return (
+    <CellarDataContext.Provider value={dataValue}>
+      <CellarActionsContext.Provider value={actionsValue}>
+        <CellarFiltersContext.Provider value={filters}>
+          {children}
+        </CellarFiltersContext.Provider>
+      </CellarActionsContext.Provider>
+    </CellarDataContext.Provider>
+  );
 }
-
-export { CellarContext };
