@@ -69,9 +69,6 @@ export type CellarActionsValue = {
 
 export type CellarFiltersValue = ReturnType<typeof useCellarFilters>;
 
-// Legacy union: components that haven't migrated yet pull everything via useCellar().
-export type CellarContextValue = CellarDataValue & CellarActionsValue & { filters: CellarFiltersValue };
-
 const CellarDataContext = createContext<CellarDataValue | null>(null);
 const CellarActionsContext = createContext<CellarActionsValue | null>(null);
 const CellarFiltersContext = createContext<CellarFiltersValue | null>(null);
@@ -90,18 +87,6 @@ export function useCellarFiltersContext(): CellarFiltersValue {
   const v = useContext(CellarFiltersContext);
   if (!v) throw new Error("useCellarFiltersContext must be used inside CellarProvider");
   return v;
-}
-
-/**
- * @deprecated Use `useCellarData`, `useCellarActions`, or `useCellarFiltersContext` instead.
- * This facade merges all three contexts so consumers re-render on any change, which defeats
- * the split. Migrate call sites incrementally. Tracking: see follow-up issue for consumer migration.
- */
-export function useCellar(): CellarContextValue {
-  const data = useCellarData();
-  const actions = useCellarActions();
-  const filters = useCellarFiltersContext();
-  return useMemo(() => ({ ...data, ...actions, filters }), [data, actions, filters]);
 }
 
 export function CellarProvider({ userId, children }: { userId: string; children: ReactNode }) {

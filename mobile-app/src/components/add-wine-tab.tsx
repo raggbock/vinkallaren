@@ -18,7 +18,7 @@ import { useVintagePicker } from "../hooks/useVintagePicker";
 import { useLabelScanner } from "../hooks/useLabelScanner";
 import { useAddWineTasting } from "../hooks/useAddWineTasting";
 import { styles } from "../styles/theme";
-import { useCellar } from "../contexts/CellarContext";
+import { useCellarActions, useCellarData } from "../contexts/CellarContext";
 import { useGuestGate } from "../hooks/useGuestGate";
 import { UpgradePrompt } from "./upgrade-prompt";
 
@@ -55,13 +55,23 @@ function AddWineTabContent({
   success,
   sessionUserId,
 }: Omit<AddWineTabProps, "hidden"> & { hidden: boolean }) {
-  const ctx = useCellar();
+  const {
+    wines, storageSpaces, storageSpaceDraft, savingStorageSpace,
+    effectiveCountryOptions, effectiveRegionOptions, effectiveGrapeOptions,
+    countryReferenceRows, regionReferenceRows, grapeReferenceRows,
+  } = useCellarData();
+  const {
+    setWines, refreshWines, onCellarMutated, mergeReferenceOptions,
+    setHistoryEntries, setStorageSpaceDraft, saveStorageSpace,
+    fetchCatalogEntries, fetchCatalogEntriesByName, matchCatalogByText,
+    searchCatalogWineNames, fetchReferenceOptions,
+  } = useCellarActions();
   useEffect(() => {
-    void ctx.refreshWines();
-    void ctx.fetchCatalogEntries();
-    void ctx.fetchReferenceOptions();
+    void refreshWines();
+    void fetchCatalogEntries();
+    void fetchReferenceOptions();
     warmupCatalogSearch();
-  }, [ctx.refreshWines, ctx.fetchCatalogEntries, ctx.fetchReferenceOptions]);
+  }, [refreshWines, fetchCatalogEntries, fetchReferenceOptions]);
   const [draft, setDraft] = useState<WineDraft>(defaultDraft);
   const [saving, setSaving] = useState(false);
   const [selectedCatalogNameEntry, setSelectedCatalogNameEntry] = useState<ProductCatalogWineRow | null>(null);
@@ -69,46 +79,46 @@ function AddWineTabContent({
   const catalogLookup = useCatalogLookup({ selectedCatalogNameEntry });
   const userDishes = useUserDishes();
   const vintage = useVintagePicker({
-    fetchCatalogEntriesByName: ctx.fetchCatalogEntriesByName,
+    fetchCatalogEntriesByName: fetchCatalogEntriesByName,
     setSelectedCatalogNameEntry,
   });
   const barcode = useBarcodeScanner({
     sessionUserId,
-    wines: ctx.wines,
+    wines: wines,
     maybeSuggestCatalogMatch: catalogLookup.maybeSuggestCatalogMatch,
   });
   const label = useLabelScanner({
     takePhoto: images.takePhoto,
-    matchCatalogByText: ctx.matchCatalogByText,
-    fetchCatalogEntriesByName: ctx.fetchCatalogEntriesByName,
+    matchCatalogByText: matchCatalogByText,
+    fetchCatalogEntriesByName: fetchCatalogEntriesByName,
     setSelectedCatalogNameEntry,
   });
   const tasting = useAddWineTasting({
     userId: sessionUserId,
     draft,
     resetDraft: useCallback(() => setDraft(defaultDraft), []),
-    setHistoryEntries: ctx.setHistoryEntries,
+    setHistoryEntries,
     showSuccess: success.show,
   });
 
-  const gate = useGuestGate(isAnonymous, ctx.wines.length);
+  const gate = useGuestGate(isAnonymous, wines.length);
   const [imageNudge, setImageNudge] = useState(false);
   const [savedPrompt, setSavedPrompt] = useState(false);
 
   const catalogProps: CatalogProps = useMemo(() => ({
-    searchWineNames: ctx.searchCatalogWineNames,
-    effectiveCountryOptions: ctx.effectiveCountryOptions,
-    effectiveRegionOptions: ctx.effectiveRegionOptions,
-    effectiveGrapeOptions: ctx.effectiveGrapeOptions,
-    countryReferenceRows: ctx.countryReferenceRows,
-    regionReferenceRows: ctx.regionReferenceRows,
-    grapeReferenceRows: ctx.grapeReferenceRows,
+    searchWineNames: searchCatalogWineNames,
+    effectiveCountryOptions: effectiveCountryOptions,
+    effectiveRegionOptions: effectiveRegionOptions,
+    effectiveGrapeOptions: effectiveGrapeOptions,
+    countryReferenceRows: countryReferenceRows,
+    regionReferenceRows: regionReferenceRows,
+    grapeReferenceRows: grapeReferenceRows,
     lookupBusy: label.labelBusy || catalogLookup.lookupBusy,
     lookupMessage: label.labelMessage || catalogLookup.lookupMessage,
   }), [
-    ctx.searchCatalogWineNames,
-    ctx.effectiveCountryOptions, ctx.effectiveRegionOptions, ctx.effectiveGrapeOptions,
-    ctx.countryReferenceRows, ctx.regionReferenceRows, ctx.grapeReferenceRows,
+    searchCatalogWineNames,
+    effectiveCountryOptions, effectiveRegionOptions, effectiveGrapeOptions,
+    countryReferenceRows, regionReferenceRows, grapeReferenceRows,
     catalogLookup.lookupBusy, catalogLookup.lookupMessage,
     label.labelBusy, label.labelMessage,
   ]);
@@ -129,9 +139,9 @@ function AddWineTabContent({
     storage.setSelectedStorageRow("1"); storage.setSelectedStorageSlot("1");
     const savedRow = result.data!;
     const [hydrated] = await hydrateWineRecords([savedRow]);
-    ctx.setWines(prev => [hydrated, ...prev]);
-    await ctx.onCellarMutated({ spaceIds: [hydrated.storage_space_id ?? null] });
-    ctx.mergeReferenceOptions(savedRow);
+    setWines(prev => [hydrated, ...prev]);
+    await onCellarMutated({ spaceIds: [hydrated.storage_space_id ?? null] });
+    mergeReferenceOptions(savedRow);
     success.show("wine_added");
     setSavedPrompt(true);
   }
@@ -148,8 +158,8 @@ function AddWineTabContent({
       <AddWinePanel
         styles={styles} draft={draft}
         catalog={catalogProps} tasting={tasting.panelProps}
-        storageSpaces={ctx.storageSpaces}
-        wines={ctx.wines}
+        storageSpaces={storageSpaces}
+        wines={wines}
         saving={saving}
         onDraftChange={(patch) => setDraft((c) => catalogLookup.updateDraft(c, patch))}
         onNameSelected={(name, producer) => vintage.handleWineNameSelected(name, producer, setDraft)}
@@ -159,10 +169,10 @@ function AddWineTabContent({
             if (match) setDraft((current) => mergeDraftWithCatalogSuggestion(current, match, "empty", defaultImportSelection));
           });
         }}
-        storageSpaceDraft={ctx.storageSpaceDraft}
-        savingStorageSpace={ctx.savingStorageSpace}
-        onStorageSpaceDraftChange={(patch) => ctx.setStorageSpaceDraft((c) => ({ ...c, ...patch }))}
-        onSaveStorageSpace={async () => { const newId = await ctx.saveStorageSpace(); if (newId) { storage.setSelectedStorageSpaceId(newId); storage.setSelectedStorageRow("1"); storage.setSelectedStorageSlot("1"); } success.show("storage_saved"); }}
+        storageSpaceDraft={storageSpaceDraft}
+        savingStorageSpace={savingStorageSpace}
+        onStorageSpaceDraftChange={(patch) => setStorageSpaceDraft((c) => ({ ...c, ...patch }))}
+        onSaveStorageSpace={async () => { const newId = await saveStorageSpace(); if (newId) { storage.setSelectedStorageSpaceId(newId); storage.setSelectedStorageRow("1"); storage.setSelectedStorageSlot("1"); } success.show("storage_saved"); }}
         onPositionChange={(spaceId, row, slot) => { storage.setSelectedStorageSpaceId(spaceId); storage.setSelectedStorageRow(row); storage.setSelectedStorageSlot(slot); }}
         onScanLabel={() => { barcode.setScannerVisible(false); label.handleLabelPhoto(setDraft); }}
         onOpenSystembolaget={handleOpenSystembolaget}

@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from "react";
 import { openSystembolaget } from "../lib/cellar-actions";
 import { confirmAction, showError } from "../lib/show-error";
-import { useCellar } from "../contexts/CellarContext";
+import { useCellarActions, useCellarData, useCellarFiltersContext } from "../contexts/CellarContext";
 import { MinKallarePanel } from "./min-kallare-panel";
 import { styles } from "../styles/theme";
 import type { StorageProps } from "../types/panel-prop-groups";
@@ -25,8 +25,9 @@ const ALLA = "Alla";
 const withAlla = (values: string[]) => [ALLA, ...values];
 
 export function CellarTab(props: Props) {
-  const ctx = useCellar();
-  const { aggregate, aggregateLoading, filters } = ctx;
+  const { aggregate, aggregateLoading } = useCellarData();
+  const { deleteWine, refreshAggregate } = useCellarActions();
+  const filters = useCellarFiltersContext();
 
   const handleOpenSystembolaget = useCallback(async (productId: string) => {
     const result = await openSystembolaget(productId);
@@ -81,9 +82,9 @@ export function CellarTab(props: Props) {
     onDrinkWine: props.onDrinkWine,
     onDeleteWine: (id: string, imagePath: string | null) =>
       confirmAction("Ta bort vin", "Är du säker på att du vill ta bort det här vinet?",
-        () => ctx.deleteWine(id, imagePath)),
+        () => deleteWine(id, imagePath)),
     onOpenSystembolaget: handleOpenSystembolaget,
-  }), [props.onEditWine, props.onDrinkWine, ctx.deleteWine, handleOpenSystembolaget]);
+  }), [props.onEditWine, props.onDrinkWine, deleteWine, handleOpenSystembolaget]);
 
   return (
     <MinKallarePanel
@@ -94,7 +95,7 @@ export function CellarTab(props: Props) {
       storage={props.storage}
       wineActions={wineActionsProps}
       loading={aggregateLoading}
-      onRefreshStats={ctx.refreshAggregate}
+      onRefreshStats={refreshAggregate}
       onSignOut={props.onOpenProfile}
       onNavigateToAdd={props.onNavigateToAdd}
       highlightedWineId={props.highlightedWineId}

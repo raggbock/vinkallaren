@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { useCellar } from "../contexts/CellarContext";
+import { useCellarActions, useCellarData } from "../contexts/CellarContext";
 import { useTasting } from "../contexts/TastingContext";
 import { styles } from "../styles/theme";
 import type { useDrinkWineModal } from "../hooks/useDrinkWineModal";
@@ -21,7 +21,12 @@ type Props = {
 };
 
 export function ModalLayer({ drink, edit, catalogEditor, privacy }: Props) {
-  const ctx = useCellar();
+  const {
+    storageSpaces, storageSpaceById, storageSpaceDraft, savingStorageSpace,
+    effectiveCountryOptions, effectiveRegionOptions, effectiveGrapeOptions,
+    countryReferenceRows, regionReferenceRows, grapeReferenceRows,
+  } = useCellarData();
+  const { searchCatalogWineNames, setStorageSpaceDraft } = useCellarActions();
   const tasting = useTasting();
 
   return (
@@ -29,26 +34,26 @@ export function ModalLayer({ drink, edit, catalogEditor, privacy }: Props) {
       <PrivacyPolicyModal visible={privacy.visible} styles={styles} onClose={privacy.close} />
       <CatalogEditorModal
         {...catalogEditor.modalProps} styles={styles}
-        searchWineNames={ctx.searchCatalogWineNames}
-        effectiveCountryOptions={ctx.effectiveCountryOptions} effectiveRegionOptions={ctx.effectiveRegionOptions}
-        effectiveGrapeOptions={ctx.effectiveGrapeOptions}
-        countryReferenceRows={ctx.countryReferenceRows} regionReferenceRows={ctx.regionReferenceRows}
-        grapeReferenceRows={ctx.grapeReferenceRows}
+        searchWineNames={searchCatalogWineNames}
+        effectiveCountryOptions={effectiveCountryOptions} effectiveRegionOptions={effectiveRegionOptions}
+        effectiveGrapeOptions={effectiveGrapeOptions}
+        countryReferenceRows={countryReferenceRows} regionReferenceRows={regionReferenceRows}
+        grapeReferenceRows={grapeReferenceRows}
       />
       <WsetTastingModal {...drink.wsetProps} />
       <DrinkWineModal {...drink.modalProps} styles={styles} />
       <WsetTastingModal {...tasting.wsetProps} />
       <EditWineModal
         {...edit.modalProps} styles={styles}
-        storageSpaces={ctx.storageSpaces}
-        storageSpaceById={ctx.storageSpaceById}
-        searchWineNames={ctx.searchCatalogWineNames}
-        effectiveCountryOptions={ctx.effectiveCountryOptions} effectiveRegionOptions={ctx.effectiveRegionOptions}
-        effectiveGrapeOptions={ctx.effectiveGrapeOptions}
-        countryReferenceRows={ctx.countryReferenceRows} regionReferenceRows={ctx.regionReferenceRows}
-        grapeReferenceRows={ctx.grapeReferenceRows}
-        storageSpaceDraft={ctx.storageSpaceDraft} savingStorageSpace={ctx.savingStorageSpace}
-        onStorageSpaceDraftChange={(patch) => ctx.setStorageSpaceDraft((c) => ({ ...c, ...patch }))}
+        storageSpaces={storageSpaces}
+        storageSpaceById={storageSpaceById}
+        searchWineNames={searchCatalogWineNames}
+        effectiveCountryOptions={effectiveCountryOptions} effectiveRegionOptions={effectiveRegionOptions}
+        effectiveGrapeOptions={effectiveGrapeOptions}
+        countryReferenceRows={countryReferenceRows} regionReferenceRows={regionReferenceRows}
+        grapeReferenceRows={grapeReferenceRows}
+        storageSpaceDraft={storageSpaceDraft} savingStorageSpace={savingStorageSpace}
+        onStorageSpaceDraftChange={(patch) => setStorageSpaceDraft((c) => ({ ...c, ...patch }))}
       />
     </Suspense>
   );

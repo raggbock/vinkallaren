@@ -19,7 +19,7 @@ const TastingSessionPanel = lazy(() => import("./src/components/tasting-session-
 const ModalLayer = lazy(() => import("./src/components/modal-layer").then(m => ({ default: m.ModalLayer })));
 const ProfilePage = lazy(() => import("./src/components/profile-page").then(m => ({ default: m.ProfilePage })));
 const OcrDebugPage = lazy(() => import("./src/components/ocr-debug-page").then(m => ({ default: m.OcrDebugPage })));
-import { CellarProvider, useCellar } from "./src/contexts/CellarContext";
+import { CellarProvider, useCellarActions, useCellarData } from "./src/contexts/CellarContext";
 import { TastingProvider, useTasting } from "./src/contexts/TastingContext";
 import { CELLAR_SECTIONS, type CellarSection } from "./src/types/cellar";
 import type { StorageProps } from "./src/types/panel-prop-groups";
@@ -148,10 +148,18 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
 }
 
 function CellarScreenInner({ session, pendingJoinCode, onJoinCodeConsumed }: { session: Session; pendingJoinCode: string | null; onJoinCodeConsumed: () => void }) {
-  const ctx = useCellar();
+  const {
+    wines, storageSpaces, storageSpaceById, storageSpaceDraft, savingStorageSpace,
+  } = useCellarData();
+  const {
+    setWines, setHistoryEntries, onCellarMutated, refreshAll, refreshWines,
+    fetchReferenceOptions, fetchCatalogEntries, saveStorageSpace,
+    updateStorageSpace, deleteStorageSpace, setStorageSpaceDraft,
+    searchCatalogWineNames,
+  } = useCellarActions();
   const tasting = useTasting();
   const images = useImagePicker();
-  const storage = useStorageSelection(ctx.storageSpaces, ctx.wines);
+  const storage = useStorageSelection(storageSpaces, wines);
   const success = useSuccessOverlay();
   const userProfile = useProfile(session.user.id);
   const [profileVisible, setProfileVisible] = useState(false);
@@ -181,27 +189,27 @@ function CellarScreenInner({ session, pendingJoinCode, onJoinCodeConsumed }: { s
 
   const drink = useDrinkWineModal({
     userId: session.user.id,
-    setHistoryEntries: ctx.setHistoryEntries,
-    setWines: ctx.setWines,
+    setHistoryEntries,
+    setWines: setWines,
     showSuccess: success.show,
     pickImageFromLibrary: images.pickImageFromLibrary,
     takePhoto: images.takePhoto,
-    onCellarMutated: ctx.onCellarMutated,
+    onCellarMutated: onCellarMutated,
   });
   const edit = useEditWineModal({
     userId: session.user.id,
-    setWines: ctx.setWines,
-    fetchCatalogEntries: ctx.fetchCatalogEntries,
+    setWines: setWines,
+    fetchCatalogEntries: fetchCatalogEntries,
     showSuccess: success.show,
-    storageSpaces: ctx.storageSpaces,
-    saveStorageSpace: ctx.saveStorageSpace,
+    storageSpaces,
+    saveStorageSpace: saveStorageSpace,
     getOccupiedPositions: storage.getOccupiedPositions,
     pickImageFromLibrary: images.pickImageFromLibrary,
     takePhoto: images.takePhoto,
-    onCellarMutated: ctx.onCellarMutated,
+    onCellarMutated: onCellarMutated,
   });
   const catalogEditor = useCatalogEditorModal({
-    fetchCatalogEntries: ctx.fetchCatalogEntries,
+    fetchCatalogEntries: fetchCatalogEntries,
   });
   const privacy = useModalToggle();
   const [activeSection, setActiveSection] = useState<CellarSection>("cellar");
@@ -210,29 +218,33 @@ function CellarScreenInner({ session, pendingJoinCode, onJoinCodeConsumed }: { s
 
   // Lazy-load data only when the user actually navigates somewhere that needs it.
   useEffect(() => {
-    if (activeSection === "tasting") void ctx.refreshWines();
+    if (activeSection === "tasting") void refreshWines();
     if (activeSection === "history") void tasting.fetchSessions();
-  }, [activeSection, ctx.refreshWines, tasting.fetchSessions]);
+  }, [activeSection, refreshWines, tasting.fetchSessions]);
   useEffect(() => {
     if (edit.modalProps.visible) {
-      void ctx.refreshWines();
-      void ctx.fetchReferenceOptions();
+      void refreshWines();
+      void fetchReferenceOptions();
     }
-  }, [edit.modalProps.visible, ctx.refreshWines, ctx.fetchReferenceOptions]);
+  }, [edit.modalProps.visible, refreshWines, fetchReferenceOptions]);
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await ctx.refreshAll();
+    await refreshAll();
     setRefreshing(false);
-  }, [ctx.refreshAll]);
+  }, [refreshAll]);
 
   const storageProps: StorageProps = useMemo(() => ({
-    storageSpaces: ctx.storageSpaces, storageSpaceById: ctx.storageSpaceById,
-    storageSpaceDraft: ctx.storageSpaceDraft, savingStorageSpace: ctx.savingStorageSpace,
-    onStorageSpaceDraftChange: (patch: Partial<import("./src/types/cellar-drafts").StorageSpaceDraft>) => ctx.setStorageSpaceDraft((c) => ({ ...c, ...patch })),
-    onSaveStorageSpace: async () => { const newId = await ctx.saveStorageSpace(); if (newId) { storage.setSelectedStorageSpaceId(newId); storage.setSelectedStorageRow("1"); storage.setSelectedStorageSlot("1"); } success.show("storage_saved"); },
-    onUpdateStorageSpace: ctx.updateStorageSpace,
-    onDeleteStorageSpace: async (id: string) => { const ok = await ctx.deleteStorageSpace(id); if (ok) { if (storage.selectedStorageSpaceId === id) { storage.setSelectedStorageSpaceId(""); storage.setSelectedStorageRow("1"); storage.setSelectedStorageSlot("1"); } } },
-  }), [ctx, storage, success]);
+    storageSpaces, storageSpaceById,
+    storageSpaceDraft, savingStorageSpace,
+    onStorageSpaceDraftChange: (patch: Partial<import("./src/types/cellar-drafts").StorageSpaceDraft>) => setStorageSpaceDraft((c) => ({ ...c, ...patch })),
+    onSaveStorageSpace: async () => { const newId = await saveStorageSpace(); if (newId) { storage.setSelectedStorageSpaceId(newId); storage.setSelectedStorageRow("1"); storage.setSelectedStorageSlot("1"); } success.show("storage_saved"); },
+    onUpdateStorageSpace: updateStorageSpace,
+    onDeleteStorageSpace: async (id: string) => { const ok = await deleteStorageSpace(id); if (ok) { if (storage.selectedStorageSpaceId === id) { storage.setSelectedStorageSpaceId(""); storage.setSelectedStorageRow("1"); storage.setSelectedStorageSlot("1"); } } },
+  }), [
+    storageSpaces, storageSpaceById, storageSpaceDraft, savingStorageSpace,
+    setStorageSpaceDraft, saveStorageSpace, updateStorageSpace, deleteStorageSpace,
+    storage, success,
+  ]);
 
   async function signOut() {
     const { error } = await supabase.auth.signOut();
@@ -307,8 +319,8 @@ function CellarScreenInner({ session, pendingJoinCode, onJoinCodeConsumed }: { s
             styles={styles} userId={session.user.id}
             sessions={tasting.sessions} loading={tasting.loading} toasts={tasting.toasts}
             activeSession={tasting.activeSession} activeWines={tasting.activeWines}
-            activeTastings={tasting.activeTastings} wines={ctx.wines}
-            searchWineNames={ctx.searchCatalogWineNames}
+            activeTastings={tasting.activeTastings} wines={wines}
+            searchWineNames={searchCatalogWineNames}
             onBack={() => { tasting.closeSession(); }}
             onFetchSessions={tasting.fetchSessions} onCreateSession={tasting.createSession}
             onJoinSession={tasting.joinSession} onOpenSession={tasting.openSession}

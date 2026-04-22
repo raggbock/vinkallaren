@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, RefreshControl, SectionList, Text, View } from "react-native";
 
-import { useCellar } from "../contexts/CellarContext";
+import { useCellarActions, useCellarData, useCellarFiltersContext } from "../contexts/CellarContext";
 import { SPACE_TYPE_LABELS } from "../lib/storage-types";
 import { UNPLACED_SPACE_ID } from "../hooks/useCellarSpaceWines";
 import type { CellarAggregate, CellarStats } from "../types/cellar-aggregate";
@@ -47,9 +47,10 @@ type MinKallarePanelProps = {
 
 export function MinKallarePanel(props: MinKallarePanelProps) {
   const { styles, stats, aggregate, storage, wineActions } = props;
-  const ctx = useCellar();
+  const { wines, getSpaceWines } = useCellarData();
+  const { requestSpace } = useCellarActions();
+  const filters = useCellarFiltersContext();
   const { storageSpaces, storageSpaceById } = storage;
-  const { requestSpace, getSpaceWines } = ctx;
 
   const [statsExpanded, setStatsExpanded] = useState(false);
   const [expandedSpaceIds, setExpandedSpaceIds] = useState<Set<string>>(
@@ -62,8 +63,8 @@ export function MinKallarePanel(props: MinKallarePanelProps) {
     if (aggregate.unplacedCount > 0) requestSpace(UNPLACED_SPACE_ID);
   }, [aggregate.unplacedCount, requestSpace]);
 
-  const filterIsActive = Object.keys(ctx.filters.filterState).length > 0
-    || ctx.filters.searchQuery.trim().length > 0;
+  const filterIsActive = Object.keys(filters.filterState).length > 0
+    || filters.searchQuery.trim().length > 0;
 
   // When a filter/search is active, auto-expand all spaces that have matches.
   useEffect(() => {
@@ -92,7 +93,7 @@ export function MinKallarePanel(props: MinKallarePanelProps) {
   });
 
   useHighlightAutoExpand(
-    props.highlightedWineId, ctx.wines, setExpandedSpaceIds,
+    props.highlightedWineId, wines, setExpandedSpaceIds,
     requestSpace, props.onClearHighlight,
   );
 
@@ -125,7 +126,7 @@ export function MinKallarePanel(props: MinKallarePanelProps) {
       onGoToWine={(wine) => {
         const spaceId = wine.storage_space_id || UNPLACED_SPACE_ID;
         const inFiltered = sections.some((sec) => sec.data.some((w) => w.id === wine.id));
-        if (!inFiltered && filterIsActive) ctx.filters.resetFilters();
+        if (!inFiltered && filterIsActive) filters.resetFilters();
         setExpandedSpaceIds((prev) => { const n = new Set(prev); n.add(spaceId); return n; });
         requestSpace(spaceId);
         props.onHighlightWine?.(wine.id);
@@ -133,7 +134,7 @@ export function MinKallarePanel(props: MinKallarePanelProps) {
     />
   ), [styles, expandedSpaceIds, toggleSpace, storage.onUpdateStorageSpace,
       storage.onDeleteStorageSpace, getSpaceWines, requestSpace, props.onHighlightWine,
-      ctx.filters.resetFilters, sections, filterIsActive]);
+      filters.resetFilters, sections, filterIsActive]);
 
   const renderItem = useCallback(({ item }: { item: WineRecord }) => (
     <WineCard wine={item} styles={styles} highlighted={item.id === props.highlightedWineId}
