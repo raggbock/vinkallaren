@@ -18,7 +18,7 @@ import { useVintagePicker } from "../hooks/useVintagePicker";
 import { useLabelScanner } from "../hooks/useLabelScanner";
 import { useAddWineTasting } from "../hooks/useAddWineTasting";
 import { styles } from "../styles/theme";
-import { useCellarActions, useCellarData } from "../contexts/CellarContext";
+import { useCellarActions, useCellarReference, useCellarStorage, useCellarWines } from "../contexts/CellarContext";
 import { useGuestGate } from "../hooks/useGuestGate";
 import { UpgradePrompt } from "./upgrade-prompt";
 
@@ -55,11 +55,12 @@ function AddWineTabContent({
   success,
   sessionUserId,
 }: Omit<AddWineTabProps, "hidden"> & { hidden: boolean }) {
+  const { wines } = useCellarWines();
+  const { storageSpaces, storageSpaceDraft, savingStorageSpace } = useCellarStorage();
   const {
-    wines, storageSpaces, storageSpaceDraft, savingStorageSpace,
     effectiveCountryOptions, effectiveRegionOptions, effectiveGrapeOptions,
     countryReferenceRows, regionReferenceRows, grapeReferenceRows,
-  } = useCellarData();
+  } = useCellarReference();
   const {
     setWines, refreshWines, onCellarMutated, mergeReferenceOptions,
     setHistoryEntries, setStorageSpaceDraft, saveStorageSpace,

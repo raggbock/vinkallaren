@@ -19,7 +19,7 @@ const TastingSessionPanel = lazy(() => import("./src/components/tasting-session-
 const ModalLayer = lazy(() => import("./src/components/modal-layer").then(m => ({ default: m.ModalLayer })));
 const ProfilePage = lazy(() => import("./src/components/profile-page").then(m => ({ default: m.ProfilePage })));
 const OcrDebugPage = lazy(() => import("./src/components/ocr-debug-page").then(m => ({ default: m.OcrDebugPage })));
-import { CellarProvider, useCellarActions, useCellarData } from "./src/contexts/CellarContext";
+import { CellarProvider, useCellarActions, useCellarStorage, useCellarWines } from "./src/contexts/CellarContext";
 import { TastingProvider, useTasting } from "./src/contexts/TastingContext";
 import { CELLAR_SECTIONS, type CellarSection } from "./src/types/cellar";
 import type { StorageProps } from "./src/types/panel-prop-groups";
@@ -148,9 +148,8 @@ function CellarScreen({ session, pendingJoinCode, onJoinCodeConsumed }: { sessio
 }
 
 function CellarScreenInner({ session, pendingJoinCode, onJoinCodeConsumed }: { session: Session; pendingJoinCode: string | null; onJoinCodeConsumed: () => void }) {
-  const {
-    wines, storageSpaces, storageSpaceById, storageSpaceDraft, savingStorageSpace,
-  } = useCellarData();
+  const { wines } = useCellarWines();
+  const { storageSpaces, storageSpaceById, storageSpaceDraft, savingStorageSpace } = useCellarStorage();
   const {
     setWines, setHistoryEntries, onCellarMutated, refreshAll, refreshWines,
     fetchReferenceOptions, fetchCatalogEntries, saveStorageSpace,
