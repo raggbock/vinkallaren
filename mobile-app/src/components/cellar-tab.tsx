@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from "react";
 import { openSystembolaget } from "../lib/cellar-actions";
 import { confirmAction, showError } from "../lib/show-error";
-import { useCellarActions, useCellarAggregate, useCellarFiltersContext } from "../contexts/CellarContext";
+import { useCellarActionsContext, useCellarAggregateContext, useCellarFiltersContext } from "../contexts/CellarContext";
 import { MinKallarePanel } from "./min-kallare-panel";
 import { styles } from "../styles/theme";
 import type { StorageProps } from "../types/panel-prop-groups";
@@ -25,8 +25,8 @@ const ALLA = "Alla";
 const withAlla = (values: string[]) => [ALLA, ...values];
 
 export function CellarTab(props: Props) {
-  const { aggregate, aggregateLoading } = useCellarAggregate();
-  const { deleteWine, refreshAggregate } = useCellarActions();
+  const { aggregate, aggregateLoading } = useCellarAggregateContext();
+  const { deleteWine, refreshAggregate } = useCellarActionsContext();
   const filters = useCellarFiltersContext();
 
   const handleOpenSystembolaget = useCallback(async (productId: string) => {

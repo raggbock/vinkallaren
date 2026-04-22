@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 
 import type { FilterProps, StorageProps } from "../types/panel-prop-groups";
+import { useCellarStorageContext } from "../contexts/CellarContext";
 import { Expandable, InsightCard, LabeledInput, LoadingInline, PanelHeader, StorageSpaceForm, SuggestionRow } from "./form-controls";
 import { BottleDoodle, SquigglyLine } from "./doodles";
 
@@ -77,7 +78,8 @@ const header = StyleSheet.create({
   toggleText: { color: colors.accent, fontSize: 13, fontWeight: "700" },
 });
 
-function CellarFilters({ styles, filter, storage }: CellarListHeaderProps) {
+function CellarFilters({ styles, filter }: CellarListHeaderProps) {
+  const { storageSpaces, storageSpaceById } = useCellarStorageContext();
   const [filtersExpanded, setFiltersExpanded] = useState(false);
   const activeCount = [
     filter.selectedPairingFilter, filter.selectedCountryFilter, filter.selectedRegionFilter,
@@ -105,13 +107,13 @@ function CellarFilters({ styles, filter, storage }: CellarListHeaderProps) {
           <SuggestionRow title="Druva" options={filter.grapeOptions} selected={filter.selectedGrapeFilter} onSelect={filter.onGrapeChange} />
           <SuggestionRow title="Typ" options={filter.typeOptions} selected={filter.selectedTypeFilter} onSelect={filter.onTypeChange} />
           <SuggestionRow title="Årgång" options={filter.vintageOptions} selected={filter.selectedVintageFilter} onSelect={filter.onVintageChange} />
-          {storage.storageSpaces.length > 0 ? (
+          {storageSpaces.length > 0 ? (
             <SuggestionRow
               title="Plats"
-              options={["Alla", ...storage.storageSpaces.map((s) => s.name)]}
-              selected={filter.selectedStorageSpaceFilterId ? storage.storageSpaceById.get(filter.selectedStorageSpaceFilterId)?.name || "Alla" : "Alla"}
+              options={["Alla", ...storageSpaces.map((s) => s.name)]}
+              selected={filter.selectedStorageSpaceFilterId ? storageSpaceById.get(filter.selectedStorageSpaceFilterId)?.name || "Alla" : "Alla"}
               onSelect={(name) => {
-                const space = storage.storageSpaces.find((s) => s.name === name);
+                const space = storageSpaces.find((s) => s.name === name);
                 filter.onStorageSpaceFilterChange(space?.id || "");
               }}
             />

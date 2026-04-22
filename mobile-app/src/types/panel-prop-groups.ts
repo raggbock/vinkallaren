@@ -1,6 +1,5 @@
 import type { WsetTastingData } from "../lib/wset-data";
 import type { ReferenceOptionRow } from "./reference-data";
-import type { StorageSpaceRow } from "./storage-space";
 import type { StorageSpaceDraft } from "./cellar-drafts";
 import type { WineRecord } from "./wine";
 import type { Suggestion } from "../components/form-controls";
@@ -31,10 +30,8 @@ export type FilterProps = {
   onStorageSpaceFilterChange: (id: string) => void;
 };
 
-/** Storage space data and CRUD operations. */
+/** Storage space draft + CRUD operations. Storage data (spaces, spaceById) comes from useCellarStorage(). */
 export type StorageProps = {
-  storageSpaces: StorageSpaceRow[];
-  storageSpaceById: Map<string, StorageSpaceRow>;
   storageSpaceDraft: StorageSpaceDraft;
   savingStorageSpace: boolean;
   onStorageSpaceDraftChange: (patch: Partial<StorageSpaceDraft>) => void;
