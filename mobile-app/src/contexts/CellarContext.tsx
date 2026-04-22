@@ -4,7 +4,7 @@ import { useStorageSpaces } from "../hooks/useStorageSpaces";
 import { useHistory } from "../hooks/useHistory";
 import { useReferenceOptions } from "../hooks/useReferenceOptions";
 import { useCatalog } from "../hooks/useCatalog";
-import { useCellarAggregate } from "../hooks/useCellarAggregate";
+import { useCellarAggregate as useCellarAggregateHook } from "../hooks/useCellarAggregate";
 import { useCellarSpaceWines, UNPLACED_SPACE_ID } from "../hooks/useCellarSpaceWines";
 import { useCellarFilters } from "../hooks/useCellarFilters";
 import type { WineRecord } from "../types/wine";
@@ -17,27 +17,39 @@ import type { ProductCatalogWineRow } from "../types/product-catalog";
 import type { WineRow } from "../types/wine";
 import type { CellarAggregate } from "../types/cellar-aggregate";
 
-export type CellarDataValue = {
+export type CellarWinesValue = {
   userId: string;
   wines: WineRecord[];
   winesLoading: boolean;
   hasMoreWines: boolean;
+};
+
+export type CellarAggregateValue = {
+  aggregate: CellarAggregate;
+  aggregateLoading: boolean;
+  getSpaceWines: (spaceId: string) => { wines: WineRecord[]; loading: boolean; loaded: boolean };
+};
+
+export type CellarStorageValue = {
   storageSpaces: StorageSpaceRow[];
   storageSpaceById: Map<string, StorageSpaceRow>;
   storageSpaceDraft: StorageSpaceDraft;
   savingStorageSpace: boolean;
+};
+
+export type CellarHistoryValue = {
   historyEntries: WineHistoryRecord[];
   historyLoading: boolean;
   historyHasMore: boolean;
+};
+
+export type CellarReferenceValue = {
   effectiveCountryOptions: string[];
   effectiveRegionOptions: string[];
   effectiveGrapeOptions: string[];
   countryReferenceRows: ReferenceOptionRow[];
   regionReferenceRows: ReferenceOptionRow[];
   grapeReferenceRows: ReferenceOptionRow[];
-  aggregate: CellarAggregate;
-  aggregateLoading: boolean;
-  getSpaceWines: (spaceId: string) => { wines: WineRecord[]; loading: boolean; loaded: boolean };
 };
 
 export type CellarActionsValue = {
@@ -69,25 +81,27 @@ export type CellarActionsValue = {
 
 export type CellarFiltersValue = ReturnType<typeof useCellarFilters>;
 
-const CellarDataContext = createContext<CellarDataValue | null>(null);
+const CellarWinesContext = createContext<CellarWinesValue | null>(null);
+const CellarAggregateContext = createContext<CellarAggregateValue | null>(null);
+const CellarStorageContext = createContext<CellarStorageValue | null>(null);
+const CellarHistoryContext = createContext<CellarHistoryValue | null>(null);
+const CellarReferenceContext = createContext<CellarReferenceValue | null>(null);
 const CellarActionsContext = createContext<CellarActionsValue | null>(null);
 const CellarFiltersContext = createContext<CellarFiltersValue | null>(null);
 
-export function useCellarData(): CellarDataValue {
-  const v = useContext(CellarDataContext);
-  if (!v) throw new Error("useCellarData must be used inside CellarProvider");
+function useRequired<T>(ctx: React.Context<T | null>, name: string): T {
+  const v = useContext(ctx);
+  if (!v) throw new Error(`${name} must be used inside CellarProvider`);
   return v;
 }
-export function useCellarActions(): CellarActionsValue {
-  const v = useContext(CellarActionsContext);
-  if (!v) throw new Error("useCellarActions must be used inside CellarProvider");
-  return v;
-}
-export function useCellarFiltersContext(): CellarFiltersValue {
-  const v = useContext(CellarFiltersContext);
-  if (!v) throw new Error("useCellarFiltersContext must be used inside CellarProvider");
-  return v;
-}
+
+export const useCellarWines = () => useRequired(CellarWinesContext, "useCellarWines");
+export const useCellarAggregate = () => useRequired(CellarAggregateContext, "useCellarAggregate");
+export const useCellarStorage = () => useRequired(CellarStorageContext, "useCellarStorage");
+export const useCellarHistory = () => useRequired(CellarHistoryContext, "useCellarHistory");
+export const useCellarReference = () => useRequired(CellarReferenceContext, "useCellarReference");
+export const useCellarActions = () => useRequired(CellarActionsContext, "useCellarActions");
+export const useCellarFiltersContext = () => useRequired(CellarFiltersContext, "useCellarFiltersContext");
 
 export function CellarProvider({ userId, children }: { userId: string; children: ReactNode }) {
   const wineData = useWines();
@@ -97,7 +111,7 @@ export function CellarProvider({ userId, children }: { userId: string; children:
   const catalogData = useCatalog(userId, wineData.wines, wineData.loading);
   const filters = useCellarFilters();
   const { aggregate, loading: aggregateLoading, refresh: refreshAggregate } =
-    useCellarAggregate(userId, filters.filterState, filters.searchQuery);
+    useCellarAggregateHook(userId, filters.filterState, filters.searchQuery);
   const spaceWines = useCellarSpaceWines(filters.filterState, filters.searchQuery);
 
   const storageSpaceById = useMemo(
@@ -141,34 +155,39 @@ export function CellarProvider({ userId, children }: { userId: string; children:
     await onCellarMutated({ spaceIds: [wine?.storage_space_id ?? null] });
   }, [wineData, onCellarMutated]);
 
-  const dataValue: CellarDataValue = useMemo(() => ({
+  const winesValue: CellarWinesValue = useMemo(() => ({
     userId,
     wines: wineData.wines,
     winesLoading: wineData.loading,
     hasMoreWines: wineData.hasMoreWines,
+  }), [userId, wineData.wines, wineData.loading, wineData.hasMoreWines]);
+
+  const aggregateValue: CellarAggregateValue = useMemo(() => ({
+    aggregate, aggregateLoading, getSpaceWines: spaceWines.getSpaceWines,
+  }), [aggregate, aggregateLoading, spaceWines.getSpaceWines]);
+
+  const storageValue: CellarStorageValue = useMemo(() => ({
     storageSpaces: storageData.storageSpaces,
     storageSpaceById,
     storageSpaceDraft: storageData.storageSpaceDraft,
     savingStorageSpace: storageData.savingStorageSpace,
+  }), [storageData.storageSpaces, storageSpaceById, storageData.storageSpaceDraft, storageData.savingStorageSpace]);
+
+  const historyValue: CellarHistoryValue = useMemo(() => ({
     historyEntries: historyData.historyEntries,
     historyLoading: historyData.loadingHistory,
     historyHasMore: historyData.hasMoreHistory,
+  }), [historyData.historyEntries, historyData.loadingHistory, historyData.hasMoreHistory]);
+
+  const referenceValue: CellarReferenceValue = useMemo(() => ({
     effectiveCountryOptions: refOptions.effectiveCountryOptions,
     effectiveRegionOptions: refOptions.effectiveRegionOptions,
     effectiveGrapeOptions: refOptions.effectiveGrapeOptions,
     countryReferenceRows: refOptions.countryReferenceRows,
     regionReferenceRows: refOptions.regionReferenceRows,
     grapeReferenceRows: refOptions.grapeReferenceRows,
-    aggregate,
-    aggregateLoading,
-    getSpaceWines: spaceWines.getSpaceWines,
-  }), [userId,
-    wineData.wines, wineData.loading, wineData.hasMoreWines,
-    storageData.storageSpaces, storageSpaceById, storageData.storageSpaceDraft, storageData.savingStorageSpace,
-    historyData.historyEntries, historyData.loadingHistory, historyData.hasMoreHistory,
-    refOptions.effectiveCountryOptions, refOptions.effectiveRegionOptions, refOptions.effectiveGrapeOptions,
-    refOptions.countryReferenceRows, refOptions.regionReferenceRows, refOptions.grapeReferenceRows,
-    aggregate, aggregateLoading, spaceWines.getSpaceWines]);
+  }), [refOptions.effectiveCountryOptions, refOptions.effectiveRegionOptions, refOptions.effectiveGrapeOptions,
+    refOptions.countryReferenceRows, refOptions.regionReferenceRows, refOptions.grapeReferenceRows]);
 
   const actionsValue: CellarActionsValue = useMemo(() => ({
     setWines: wineData.setWines,
@@ -207,12 +226,20 @@ export function CellarProvider({ userId, children }: { userId: string; children:
     refreshAll]);
 
   return (
-    <CellarDataContext.Provider value={dataValue}>
-      <CellarActionsContext.Provider value={actionsValue}>
-        <CellarFiltersContext.Provider value={filters}>
-          {children}
-        </CellarFiltersContext.Provider>
-      </CellarActionsContext.Provider>
-    </CellarDataContext.Provider>
+    <CellarWinesContext.Provider value={winesValue}>
+      <CellarAggregateContext.Provider value={aggregateValue}>
+        <CellarStorageContext.Provider value={storageValue}>
+          <CellarHistoryContext.Provider value={historyValue}>
+            <CellarReferenceContext.Provider value={referenceValue}>
+              <CellarActionsContext.Provider value={actionsValue}>
+                <CellarFiltersContext.Provider value={filters}>
+                  {children}
+                </CellarFiltersContext.Provider>
+              </CellarActionsContext.Provider>
+            </CellarReferenceContext.Provider>
+          </CellarHistoryContext.Provider>
+        </CellarStorageContext.Provider>
+      </CellarAggregateContext.Provider>
+    </CellarWinesContext.Provider>
   );
 }

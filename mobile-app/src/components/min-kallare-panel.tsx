@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, RefreshControl, SectionList, Text, View } from "react-native";
 
-import { useCellarActions, useCellarData, useCellarFiltersContext } from "../contexts/CellarContext";
+import { useCellarActions, useCellarAggregate, useCellarFiltersContext, useCellarWines } from "../contexts/CellarContext";
 import { SPACE_TYPE_LABELS } from "../lib/storage-types";
 import { UNPLACED_SPACE_ID } from "../hooks/useCellarSpaceWines";
 import type { CellarAggregate, CellarStats } from "../types/cellar-aggregate";
@@ -47,9 +47,11 @@ type MinKallarePanelProps = {
 
 export function MinKallarePanel(props: MinKallarePanelProps) {
   const { styles, stats, aggregate, storage, wineActions } = props;
-  const { wines, getSpaceWines } = useCellarData();
+  const { wines } = useCellarWines();
+  const { getSpaceWines } = useCellarAggregate();
   const { requestSpace } = useCellarActions();
   const filters = useCellarFiltersContext();
+  // storageSpaces/storageSpaceById come via props for now; tracked for deprecation — see follow-up issue on two-sources-of-truth with useCellarStorage().
   const { storageSpaces, storageSpaceById } = storage;
 
   const [statsExpanded, setStatsExpanded] = useState(false);

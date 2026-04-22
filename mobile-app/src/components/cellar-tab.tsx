@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from "react";
 import { openSystembolaget } from "../lib/cellar-actions";
 import { confirmAction, showError } from "../lib/show-error";
-import { useCellarActions, useCellarData, useCellarFiltersContext } from "../contexts/CellarContext";
+import { useCellarActions, useCellarAggregate, useCellarFiltersContext } from "../contexts/CellarContext";
 import { MinKallarePanel } from "./min-kallare-panel";
 import { styles } from "../styles/theme";
 import type { StorageProps } from "../types/panel-prop-groups";
@@ -25,7 +25,7 @@ const ALLA = "Alla";
 const withAlla = (values: string[]) => [ALLA, ...values];
 
 export function CellarTab(props: Props) {
-  const { aggregate, aggregateLoading } = useCellarData();
+  const { aggregate, aggregateLoading } = useCellarAggregate();
   const { deleteWine, refreshAggregate } = useCellarActions();
   const filters = useCellarFiltersContext();
 

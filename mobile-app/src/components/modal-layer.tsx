@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { useCellarActions, useCellarData } from "../contexts/CellarContext";
+import { useCellarActions, useCellarReference, useCellarStorage } from "../contexts/CellarContext";
 import { useTasting } from "../contexts/TastingContext";
 import { styles } from "../styles/theme";
 import type { useDrinkWineModal } from "../hooks/useDrinkWineModal";
@@ -21,11 +21,11 @@ type Props = {
 };
 
 export function ModalLayer({ drink, edit, catalogEditor, privacy }: Props) {
+  const { storageSpaces, storageSpaceById, storageSpaceDraft, savingStorageSpace } = useCellarStorage();
   const {
-    storageSpaces, storageSpaceById, storageSpaceDraft, savingStorageSpace,
     effectiveCountryOptions, effectiveRegionOptions, effectiveGrapeOptions,
     countryReferenceRows, regionReferenceRows, grapeReferenceRows,
-  } = useCellarData();
+  } = useCellarReference();
   const { searchCatalogWineNames, setStorageSpaceDraft } = useCellarActions();
   const tasting = useTasting();
 
