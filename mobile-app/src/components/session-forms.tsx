@@ -4,6 +4,7 @@ import { colors } from "../styles/theme";
 import { AutocompleteInput, Expandable, LabeledInput, SuggestionRow, type Suggestion } from "./form-controls";
 import { isAllDone } from "./session-active-view";
 import { addWineToSession, batchAddWinesToSession, endSession, revealSession, shareSession } from "../lib/session-actions";
+import { findCatalogMatch } from "../lib/product-catalog";
 import type { CreateSessionInput, SessionTastingRow, SessionWineRow, TastingSessionRow } from "../types/tasting-session";
 import type { WineRecord } from "../types/wine";
 
@@ -150,12 +151,13 @@ export function AddWineForm({ sessionId, wineCount, wines, searchWineNames, onWi
   onWinesAdded?: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const [source, setSource] = useState<"manual" | "cellar">("cellar");
+  const [source, setSource] = useState<"manual" | "cellar" | "article">("cellar");
   const [cellarFilter, setCellarFilter] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [articleNo, setArticleNo] = useState("");
 
   const filteredCellarWines = cellarFilter.length >= 2
     ? wines.filter((w) => w.name.toLowerCase().includes(cellarFilter.toLowerCase())).slice(0, 20)
@@ -187,6 +189,24 @@ export function AddWineForm({ sessionId, wineCount, wines, searchWineNames, onWi
     onWinesAdded?.();
   }
 
+  async function handleArticleLookup() {
+    const trimmed = articleNo.trim();
+    if (!/^\d{4,7}$/.test(trimmed)) { setError("Ange 4–7 siffror"); return; }
+    setSaving(true);
+    setError(null);
+    const match = await findCatalogMatch({ systembolagetProductId: trimmed });
+    if (!match) { setSaving(false); setError("Ingen träff på artikelnumret"); return; }
+    const result = await addWineToSession({
+      session_id: sessionId, position: wineCount + 1,
+      name: match.name, producer: match.producer || null,
+      vintage: match.vintage ?? null, wine_id: null,
+    });
+    setSaving(false);
+    if (result.error) { setError("Kunde inte lägga till vin"); return; }
+    setArticleNo("");
+    onWinesAdded?.();
+  }
+
   async function handleSearchSelect(wineName: string, parentName?: string | null) {
     setSaving(true);
     setError(null);
@@ -210,11 +230,20 @@ export function AddWineForm({ sessionId, wineCount, wines, searchWineNames, onWi
       </Pressable>
       <Expandable expanded={expanded}>
         <View style={s.formSection}>
-          <SuggestionRow title="Källa" options={["Sök", "Från källaren"]}
-            selected={source === "manual" ? "Sök" : "Från källaren"}
-            onSelect={(v: string) => setSource(v === "Sök" ? "manual" : "cellar")} />
+          <SuggestionRow title="Källa" options={["Sök", "Från källaren", "Artikelnr"]}
+            selected={source === "manual" ? "Sök" : source === "cellar" ? "Från källaren" : "Artikelnr"}
+            onSelect={(v: string) => setSource(v === "Sök" ? "manual" : v === "Artikelnr" ? "article" : "cellar")} />
 
-          {source === "cellar" ? (
+          {source === "article" ? (
+            <>
+              <LabeledInput label="Artikelnummer" value={articleNo}
+                onChangeText={(v) => { setArticleNo(v.replace(/\D/g, "")); setError(null); }}
+                placeholder="t.ex. 12345" keyboardType="number-pad" />
+              <Pressable onPress={handleArticleLookup} style={s.primaryBtn} disabled={saving || articleNo.length === 0}>
+                <Text style={s.primaryBtnText}>{saving ? "Söker..." : "Lägg till"}</Text>
+              </Pressable>
+            </>
+          ) : source === "cellar" ? (
             <>
               <LabeledInput label="Filtrera" value={cellarFilter}
                 onChangeText={setCellarFilter} placeholder="Sök bland dina viner..." />
