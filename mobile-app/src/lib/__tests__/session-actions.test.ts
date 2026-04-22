@@ -246,6 +246,33 @@ describe("batchAddWinesToSession", () => {
   });
 });
 
+// --- queueSaveTasting ---
+
+import { queueSaveTasting } from "../session-actions";
+import { syncQueue } from "../sync-queue";
+import { offlineStore } from "../offline-store";
+
+describe("queueSaveTasting", () => {
+  beforeEach(async () => {
+    await offlineStore.clear();
+    syncQueue._resetForTests();
+  });
+
+  test("enqueues upsert_session_tasting item with payload", async () => {
+    await queueSaveTasting({
+      session_id: "s1",
+      session_wine_id: "w1",
+      user_id: "u1",
+      rating: 4,
+      notes: null,
+    } as any);
+    const items = await syncQueue.list();
+    expect(items).toHaveLength(1);
+    expect(items[0].kind).toBe("upsert_session_tasting");
+    expect(items[0].payload.rating).toBe(4);
+  });
+});
+
 // --- createSession ---
 
 describe("createSession", () => {

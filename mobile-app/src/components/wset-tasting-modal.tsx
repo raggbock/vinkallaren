@@ -2,6 +2,7 @@ import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-
 import { colors } from "../styles/theme";
 import { AnimatedModal } from "./animated-modal";
 import { useEffect, useState } from "react";
+import { offlineStore, K } from "../lib/offline-store";
 import {
   AROMA_LEXICON,
   APPEARANCE_INTENSITY,
@@ -62,12 +63,14 @@ function StepNav({ step, onBack, onNext, onSave }: { step: number; onBack: () =>
 export function WsetTastingModal({
   visible,
   wineType,
+  wineId,
   initialData,
   onSave,
   onClose,
 }: {
   visible: boolean;
   wineType: string;
+  wineId?: string;
   initialData: WsetTastingData | null;
   onSave: (data: WsetTastingData) => void;
   onClose: () => void;
@@ -77,15 +80,31 @@ export function WsetTastingModal({
 
   useEffect(() => {
     if (!visible) return;
-    setData(initialData ?? emptyWsetData());
     setStep(0);
+    if (wineId) {
+      offlineStore.get<WsetTastingData>(K.wsetDraft(wineId)).then((draft) => {
+        setData(draft ?? initialData ?? emptyWsetData());
+      });
+    } else {
+      setData(initialData ?? emptyWsetData());
+    }
   }, [visible]);
+
+  useEffect(() => {
+    if (!visible || !wineId) return;
+    const t = setTimeout(() => { offlineStore.set(K.wsetDraft(wineId), data); }, 500);
+    return () => clearTimeout(t);
+  }, [wineId, data, visible]);
 
   function toggleTag(list: string[], tag: string): string[] {
     return list.includes(tag) ? list.filter((t) => t !== tag) : [...list, tag];
   }
 
-  function handleSave() { onSave(data); onClose(); }
+  async function handleSave() {
+    onSave(data);
+    onClose();
+    if (wineId) await offlineStore.remove(K.wsetDraft(wineId));
+  }
 
   return (
     <AnimatedModal visible={visible} onClose={onClose} mode="centered" cardStyle={styles.card}>

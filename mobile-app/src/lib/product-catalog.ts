@@ -225,6 +225,7 @@ async function findRemoteCatalogMatch(input: ProductLookupInput) {
     }
   }
 
+  if (!input.barcode?.trim()) return null;
   return findOpenFoodFactsMatch(input);
 }
 

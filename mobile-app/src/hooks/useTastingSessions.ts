@@ -1,13 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
+import { offlineStore, K } from "../lib/offline-store";
+import { useOnlineStatus } from "./useOnlineStatus";
 import {
   createSession,
   fetchSessionTastings,
   fetchSessionWines,
   joinSessionByCode,
+  queueSaveTasting,
 } from "../lib/session-actions";
 import type {
   CreateSessionInput,
+  SessionTastingInsert,
   SessionTastingRow,
   SessionToast,
   SessionWineRow,
@@ -15,6 +19,7 @@ import type {
 } from "../types/tasting-session";
 
 export function useTastingSessions(userId: string) {
+  const { online } = useOnlineStatus();
   const [sessions, setSessions] = useState<TastingSessionRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [toasts, setToasts] = useState<SessionToast[]>([]);
@@ -35,22 +40,40 @@ export function useTastingSessions(userId: string) {
 
   const fetchSessions = useCallback(async () => {
     setLoading(true);
+    const cached = await offlineStore.get<TastingSessionRow[]>(K.sessions);
+    if (cached) setSessions(cached);
     const { data, error } = await supabase
       .from("tasting_sessions")
       .select("*")
       .order("created_at", { ascending: false });
-    if (!error && data) setSessions(data as TastingSessionRow[]);
+    if (!error && data) {
+      setSessions(data as TastingSessionRow[]);
+      await offlineStore.set(K.sessions, data);
+    }
     setLoading(false);
   }, []);
 
   const openSession = useCallback(async (session: TastingSessionRow) => {
     setActiveSession(session);
+    const [cachedWines, cachedTastings] = await Promise.all([
+      offlineStore.get<SessionWineRow[]>(K.sessionWines(session.id)),
+      offlineStore.get<SessionTastingRow[]>(K.sessionTastings(session.id)),
+    ]);
+    if (cachedWines) setActiveWines(cachedWines);
+    if (cachedTastings) setActiveTastings(cachedTastings);
+
     const [winesResult, tastingsResult] = await Promise.all([
       fetchSessionWines(session.id),
       fetchSessionTastings(session.id),
     ]);
-    setActiveWines(winesResult.data ?? []);
-    setActiveTastings(tastingsResult.data ?? []);
+    if (winesResult.data) {
+      setActiveWines(winesResult.data);
+      await offlineStore.set(K.sessionWines(session.id), winesResult.data);
+    }
+    if (tastingsResult.data) {
+      setActiveTastings(tastingsResult.data);
+      await offlineStore.set(K.sessionTastings(session.id), tastingsResult.data);
+    }
   }, []);
 
   const closeSession = useCallback(() => {
@@ -80,9 +103,33 @@ export function useTastingSessions(userId: string) {
     return session;
   }, [openSession]);
 
+  const saveTastingOptimistic = useCallback(async (row: SessionTastingInsert) => {
+    setActiveTastings((prev) => {
+      const existing = prev.find(
+        (t) => t.session_wine_id === row.session_wine_id && t.user_id === row.user_id,
+      );
+      const merged = {
+        ...(existing ?? {
+          id: `local-${Date.now()}`,
+          created_at: new Date().toISOString(),
+        }),
+        ...row,
+      } as SessionTastingRow;
+      const next = existing
+        ? prev.map((t) => (t === existing ? merged : t))
+        : [...prev, merged];
+      if (row.session_id) {
+        offlineStore.set(K.sessionTastings(row.session_id), next);
+      }
+      return next;
+    });
+    await queueSaveTasting(row);
+  }, []);
+
   // Realtime: subscribe to tastings + session status when a session is open
   useEffect(() => {
     if (!activeSession) return;
+    if (!online) return;
     const sessionId = activeSession.id;
 
     const tastingsChannel = supabase
@@ -151,7 +198,18 @@ export function useTastingSessions(userId: string) {
       supabase.removeChannel(sessionChannel);
       supabase.removeChannel(winesChannel);
     };
-  }, [activeSession?.id]);
+  }, [activeSession?.id, online]);
+
+  // Reconcile local state on reconnect
+  useEffect(() => {
+    if (!online || !activeSession) return;
+    fetchSessionTastings(activeSession.id).then((r) => {
+      if (r.data) {
+        setActiveTastings(r.data);
+        offlineStore.set(K.sessionTastings(activeSession.id), r.data);
+      }
+    });
+  }, [online, activeSession?.id]);
 
   return {
     sessions,
@@ -168,5 +226,6 @@ export function useTastingSessions(userId: string) {
     setActiveWines,
     setActiveTastings,
     setActiveSession,
+    saveTastingOptimistic,
   };
 }

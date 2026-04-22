@@ -2,7 +2,7 @@ import { createContext, useContext, useMemo, type ReactNode } from "react";
 import { useTastingSessions } from "../hooks/useTastingSessions";
 import { useSessionWset } from "../hooks/useSessionWset";
 import type { WsetTastingData } from "../lib/wset-data";
-import type { CreateSessionInput, SessionTastingRow, SessionWineRow, SessionToast, TastingSessionRow } from "../types/tasting-session";
+import type { CreateSessionInput, SessionTastingInsert, SessionTastingRow, SessionWineRow, SessionToast, TastingSessionRow } from "../types/tasting-session";
 
 export type TastingContextValue = {
   sessions: TastingSessionRow[];
@@ -19,10 +19,11 @@ export type TastingContextValue = {
   setActiveWines: (fn: (prev: SessionWineRow[]) => SessionWineRow[]) => void;
   setActiveTastings: (fn: (prev: SessionTastingRow[]) => SessionTastingRow[]) => void;
   setActiveSession: (session: TastingSessionRow | null) => void;
+  saveTastingOptimistic: (row: SessionTastingInsert) => Promise<void>;
   // WSET
   wsetData: WsetTastingData | null;
-  openWset: (wineType?: string) => void;
-  wsetProps: { visible: boolean; onClose: () => void; onSave: (data: WsetTastingData) => void; wineType: string; initialData: WsetTastingData | null };
+  openWset: (wineType?: string, wineId?: string) => void;
+  wsetProps: { visible: boolean; onClose: () => void; onSave: (data: WsetTastingData) => void; wineType: string; wineId?: string; initialData: WsetTastingData | null };
 };
 
 const TastingContext = createContext<TastingContextValue | null>(null);
@@ -52,6 +53,7 @@ export function TastingProvider({ userId, children }: { userId: string; children
     setActiveWines: sessions.setActiveWines,
     setActiveTastings: sessions.setActiveTastings,
     setActiveSession: sessions.setActiveSession,
+    saveTastingOptimistic: sessions.saveTastingOptimistic,
     wsetData: wset.data,
     openWset: wset.open,
     wsetProps: wset.wsetProps,
@@ -59,7 +61,8 @@ export function TastingProvider({ userId, children }: { userId: string; children
     sessions.activeWines, sessions.activeTastings, sessions.fetchSessions,
     sessions.openSession, sessions.closeSession, sessions.createSession,
     sessions.joinSession, sessions.setActiveWines, sessions.setActiveTastings,
-    sessions.setActiveSession, wset.data, wset.open, wset.wsetProps]);
+    sessions.setActiveSession, sessions.saveTastingOptimistic,
+    wset.data, wset.open, wset.wsetProps]);
 
   return <TastingContext.Provider value={value}>{children}</TastingContext.Provider>;
 }

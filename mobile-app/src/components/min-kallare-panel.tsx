@@ -124,13 +124,16 @@ export function MinKallarePanel(props: MinKallarePanelProps) {
       getSpaceWines={getSpaceWines}
       onGoToWine={(wine) => {
         const spaceId = wine.storage_space_id || UNPLACED_SPACE_ID;
+        const inFiltered = sections.some((sec) => sec.data.some((w) => w.id === wine.id));
+        if (!inFiltered && filterIsActive) ctx.filters.resetFilters();
         setExpandedSpaceIds((prev) => { const n = new Set(prev); n.add(spaceId); return n; });
         requestSpace(spaceId);
         props.onHighlightWine?.(wine.id);
       }}
     />
   ), [styles, expandedSpaceIds, toggleSpace, storage.onUpdateStorageSpace,
-      storage.onDeleteStorageSpace, getSpaceWines, requestSpace, props.onHighlightWine]);
+      storage.onDeleteStorageSpace, getSpaceWines, requestSpace, props.onHighlightWine,
+      ctx.filters.resetFilters, sections, filterIsActive]);
 
   const renderItem = useCallback(({ item }: { item: WineRecord }) => (
     <WineCard wine={item} styles={styles} highlighted={item.id === props.highlightedWineId}
@@ -167,6 +170,7 @@ export function MinKallarePanel(props: MinKallarePanelProps) {
       }
       initialNumToRender={15} maxToRenderPerBatch={10} windowSize={5}
       stickySectionHeadersEnabled={false}
+      onScrollToIndexFailed={() => {}}
     />
   );
 }

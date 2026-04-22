@@ -35,7 +35,11 @@ import { useCatalogEditorModal } from "./src/hooks/useCatalogEditorModal";
 import { useModalToggle } from "./src/hooks/useModalToggle";
 import { useProfile } from "./src/hooks/useProfile";
 import { DisplayNamePrompt } from "./src/components/display-name-prompt";
+import { OfflineBadge } from "./src/components/offline-badge";
 import { parseJoinCodeFromUrl } from "./src/lib/join-link";
+import { useOnlineStatus } from "./src/hooks/useOnlineStatus";
+import { syncQueue } from "./src/lib/sync-queue";
+import { supabaseHandlers } from "./src/lib/sync-handlers";
 
 function useWebStyles() {
   useEffect(() => {
@@ -90,6 +94,13 @@ function useWebStyles() {
 
 function AppRoot() {
   useWebStyles();
+  const { online } = useOnlineStatus();
+  useEffect(() => {
+    if (!online) return;
+    syncQueue.drain(supabaseHandlers);
+    const iv = setInterval(() => syncQueue.drain(supabaseHandlers), 30000);
+    return () => clearInterval(iv);
+  }, [online]);
   const [session, setSession] = useState<Session | null>(null);
   const [loadingSession, setLoadingSession] = useState(true);
   const [pendingJoinCode, setPendingJoinCode] = useState<string | null>(() => parseJoinCodeFromUrl());
@@ -304,6 +315,7 @@ function CellarScreenInner({ session, pendingJoinCode, onJoinCodeConsumed }: { s
             onCloseSession={tasting.closeSession} onSetActiveWines={tasting.setActiveWines}
             onSetActiveTastings={tasting.setActiveTastings} onSetActiveSession={tasting.setActiveSession}
             onOpenWset={tasting.openWset} wsetData={tasting.wsetData}
+            onSaveTastingOptimistic={tasting.saveTastingOptimistic}
             onSessionEnded={() => { tasting.closeSession(); setActiveSection("history"); }}
           />
         </Suspense>
@@ -349,6 +361,7 @@ function CellarScreenInner({ session, pendingJoinCode, onJoinCodeConsumed }: { s
   return (
     <SafeAreaView style={styles.screen}>
       <StatusBar style="light" />
+      <OfflineBadge />
       <DisplayNamePrompt
         visible={userProfile.needsDisplayName && !promptDismissed}
         saving={promptSaving}
