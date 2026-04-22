@@ -2,7 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import { HistoryPanel } from "./cellar-sections";
 import { updateHistoryEntry } from "../lib/cellar-actions";
 import { showError } from "../lib/show-error";
-import { useCellarActions, useCellarHistory, useCellarStorage } from "../contexts/CellarContext";
+import { useCellarActionsContext, useCellarHistoryContext, useCellarStorageContext } from "../contexts/CellarContext";
 import { SuccessOverlay, useSuccessOverlay } from "./success-overlay";
 import { styles } from "../styles/theme";
 import type { WineHistoryRecord } from "../types/wine-history";
@@ -19,9 +19,9 @@ type Props = {
 };
 
 export function HistoryTab({ hidden, endedSessions, refreshing, onRefresh, onOpenProfile }: Props) {
-  const { historyEntries, historyLoading, historyHasMore } = useCellarHistory();
-  const { storageSpaceById } = useCellarStorage();
-  const { fetchHistoryEntries, fetchMoreHistory, setHistoryEntries } = useCellarActions();
+  const { historyEntries, historyLoading, historyHasMore } = useCellarHistoryContext();
+  const { storageSpaceById } = useCellarStorageContext();
+  const { fetchHistoryEntries, fetchMoreHistory, setHistoryEntries } = useCellarActionsContext();
   useEffect(() => { void fetchHistoryEntries(); }, [fetchHistoryEntries]);
   const [editingHistory, setEditingHistory] = useState<WineHistoryRecord | null>(null);
   const [editHistorySaving, setEditHistorySaving] = useState(false);

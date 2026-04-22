@@ -4,7 +4,7 @@ import { useStorageSpaces } from "../hooks/useStorageSpaces";
 import { useHistory } from "../hooks/useHistory";
 import { useReferenceOptions } from "../hooks/useReferenceOptions";
 import { useCatalog } from "../hooks/useCatalog";
-import { useCellarAggregate as useCellarAggregateHook } from "../hooks/useCellarAggregate";
+import { useCellarAggregate } from "../hooks/useCellarAggregate";
 import { useCellarSpaceWines, UNPLACED_SPACE_ID } from "../hooks/useCellarSpaceWines";
 import { useCellarFilters } from "../hooks/useCellarFilters";
 import type { WineRecord } from "../types/wine";
@@ -95,12 +95,12 @@ function useRequired<T>(ctx: React.Context<T | null>, name: string): T {
   return v;
 }
 
-export const useCellarWines = () => useRequired(CellarWinesContext, "useCellarWines");
-export const useCellarAggregate = () => useRequired(CellarAggregateContext, "useCellarAggregate");
-export const useCellarStorage = () => useRequired(CellarStorageContext, "useCellarStorage");
-export const useCellarHistory = () => useRequired(CellarHistoryContext, "useCellarHistory");
-export const useCellarReference = () => useRequired(CellarReferenceContext, "useCellarReference");
-export const useCellarActions = () => useRequired(CellarActionsContext, "useCellarActions");
+export const useCellarWinesContext = () => useRequired(CellarWinesContext, "useCellarWinesContext");
+export const useCellarAggregateContext = () => useRequired(CellarAggregateContext, "useCellarAggregateContext");
+export const useCellarStorageContext = () => useRequired(CellarStorageContext, "useCellarStorageContext");
+export const useCellarHistoryContext = () => useRequired(CellarHistoryContext, "useCellarHistoryContext");
+export const useCellarReferenceContext = () => useRequired(CellarReferenceContext, "useCellarReferenceContext");
+export const useCellarActionsContext = () => useRequired(CellarActionsContext, "useCellarActionsContext");
 export const useCellarFiltersContext = () => useRequired(CellarFiltersContext, "useCellarFiltersContext");
 
 export function CellarProvider({ userId, children }: { userId: string; children: ReactNode }) {
@@ -111,7 +111,7 @@ export function CellarProvider({ userId, children }: { userId: string; children:
   const catalogData = useCatalog(userId, wineData.wines, wineData.loading);
   const filters = useCellarFilters();
   const { aggregate, loading: aggregateLoading, refresh: refreshAggregate } =
-    useCellarAggregateHook(userId, filters.filterState, filters.searchQuery);
+    useCellarAggregate(userId, filters.filterState, filters.searchQuery);
   const spaceWines = useCellarSpaceWines(filters.filterState, filters.searchQuery);
 
   const storageSpaceById = useMemo(
