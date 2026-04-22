@@ -123,6 +123,7 @@ export function MinKallarePanel(props: MinKallarePanelProps) {
       onDeleteStorageSpace={storage.onDeleteStorageSpace}
       getSpaceWines={getSpaceWines}
       onGoToWine={(wine) => {
+        ctx.filters.resetFilters();
         const spaceId = wine.storage_space_id || UNPLACED_SPACE_ID;
         setExpandedSpaceIds((prev) => { const n = new Set(prev); n.add(spaceId); return n; });
         requestSpace(spaceId);
@@ -130,7 +131,8 @@ export function MinKallarePanel(props: MinKallarePanelProps) {
       }}
     />
   ), [styles, expandedSpaceIds, toggleSpace, storage.onUpdateStorageSpace,
-      storage.onDeleteStorageSpace, getSpaceWines, requestSpace, props.onHighlightWine]);
+      storage.onDeleteStorageSpace, getSpaceWines, requestSpace, props.onHighlightWine,
+      ctx.filters.resetFilters]);
 
   const renderItem = useCallback(({ item }: { item: WineRecord }) => (
     <WineCard wine={item} styles={styles} highlighted={item.id === props.highlightedWineId}
