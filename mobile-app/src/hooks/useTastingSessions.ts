@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { offlineStore, K } from "../lib/offline-store";
+import { useOnlineStatus } from "./useOnlineStatus";
 import {
   createSession,
   fetchSessionTastings,
@@ -18,6 +19,7 @@ import type {
 } from "../types/tasting-session";
 
 export function useTastingSessions(userId: string) {
+  const { online } = useOnlineStatus();
   const [sessions, setSessions] = useState<TastingSessionRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [toasts, setToasts] = useState<SessionToast[]>([]);
@@ -127,6 +129,7 @@ export function useTastingSessions(userId: string) {
   // Realtime: subscribe to tastings + session status when a session is open
   useEffect(() => {
     if (!activeSession) return;
+    if (!online) return;
     const sessionId = activeSession.id;
 
     const tastingsChannel = supabase
@@ -195,7 +198,18 @@ export function useTastingSessions(userId: string) {
       supabase.removeChannel(sessionChannel);
       supabase.removeChannel(winesChannel);
     };
-  }, [activeSession?.id]);
+  }, [activeSession?.id, online]);
+
+  // Reconcile local state on reconnect
+  useEffect(() => {
+    if (!online || !activeSession) return;
+    fetchSessionTastings(activeSession.id).then((r) => {
+      if (r.data) {
+        setActiveTastings(r.data);
+        offlineStore.set(K.sessionTastings(activeSession.id), r.data);
+      }
+    });
+  }, [online, activeSession?.id]);
 
   return {
     sessions,

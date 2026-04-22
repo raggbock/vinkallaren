@@ -195,7 +195,7 @@ export function AddWineForm({ sessionId, wineCount, wines, searchWineNames, onWi
     setSaving(true);
     setError(null);
     const match = await findCatalogMatch({ systembolagetProductId: trimmed });
-    if (!match) { setSaving(false); setError("Ingen träff på artikelnumret"); return; }
+    if (!match) { setSaving(false); setError("Ingen träff — prova Sök istället"); return; }
     const result = await addWineToSession({
       session_id: sessionId, position: wineCount + 1,
       name: match.name, producer: match.producer || null,
