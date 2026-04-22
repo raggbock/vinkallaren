@@ -18,10 +18,13 @@ import type {
   TastingSessionRow,
 } from "../types/tasting-session";
 
+const SESSIONS_PAGE_SIZE = 30;
+
 export function useTastingSessions(userId: string) {
   const { online } = useOnlineStatus();
   const [sessions, setSessions] = useState<TastingSessionRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
   const [toasts, setToasts] = useState<SessionToast[]>([]);
   const toastIdRef = useRef(0);
 
@@ -45,13 +48,30 @@ export function useTastingSessions(userId: string) {
     const { data, error } = await supabase
       .from("tasting_sessions")
       .select("*")
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(SESSIONS_PAGE_SIZE);
     if (!error && data) {
-      setSessions(data as TastingSessionRow[]);
-      await offlineStore.set(K.sessions, data);
+      const rows = data as TastingSessionRow[];
+      setSessions(rows);
+      setHasMore(rows.length === SESSIONS_PAGE_SIZE);
+      await offlineStore.set(K.sessions, rows);
     }
     setLoading(false);
   }, []);
+
+  const fetchMoreSessions = useCallback(async () => {
+    if (!hasMore) return;
+    const offset = sessions.length;
+    const { data, error } = await supabase
+      .from("tasting_sessions")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .range(offset, offset + SESSIONS_PAGE_SIZE - 1);
+    if (error || !data) return;
+    const rows = data as TastingSessionRow[];
+    setHasMore(rows.length === SESSIONS_PAGE_SIZE);
+    setSessions((prev) => [...prev, ...rows]);
+  }, [hasMore, sessions.length]);
 
   const openSession = useCallback(async (session: TastingSessionRow) => {
     setActiveSession(session);
@@ -214,11 +234,13 @@ export function useTastingSessions(userId: string) {
   return {
     sessions,
     loading,
+    hasMoreSessions: hasMore,
     toasts,
     activeSession,
     activeWines,
     activeTastings,
     fetchSessions,
+    fetchMoreSessions,
     openSession,
     closeSession,
     createSession: handleCreate,
