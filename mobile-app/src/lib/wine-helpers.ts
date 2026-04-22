@@ -1,5 +1,6 @@
 import * as ImageManipulator from "expo-image-manipulator";
 import { supabase } from "./supabase";
+import { getSignedImageUrls } from "./image-url-cache";
 import { cacheCatalogEntry, type ProductCatalogEntry } from "./product-catalog";
 import { emptyToNull, normalizeLookupValue, parseTags, resolveImportedValue, toNumberOrNull } from "./cellar-helpers";
 import { applyNullableCatalogFilter } from "./query-helpers";
@@ -254,18 +255,7 @@ export function mergeReferenceRows(rows: ReferenceOptionRow[]) {
 
 async function hydrateImageUrls<T extends { image_path: string | null }>(rows: T[]): Promise<(T & { image_url: string | null })[]> {
   const paths = rows.map((row) => row.image_path).filter((value): value is string => Boolean(value));
-  const signedUrlMap = new Map<string, string>();
-
-  if (paths.length > 0) {
-    const { data } = await supabase.storage.from("wine-images").createSignedUrls(paths, 60 * 60);
-
-    for (const entry of data ?? []) {
-      if (entry.path && entry.signedUrl) {
-        signedUrlMap.set(entry.path, entry.signedUrl);
-      }
-    }
-  }
-
+  const signedUrlMap = paths.length > 0 ? await getSignedImageUrls(paths) : new Map<string, string>();
   return rows.map((row) => ({
     ...row,
     image_url: row.image_path ? signedUrlMap.get(row.image_path) ?? null : null,
