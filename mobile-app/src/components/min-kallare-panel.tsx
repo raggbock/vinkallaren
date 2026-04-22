@@ -51,6 +51,7 @@ export function MinKallarePanel(props: MinKallarePanelProps) {
   const { getSpaceWines } = useCellarAggregate();
   const { requestSpace } = useCellarActions();
   const filters = useCellarFiltersContext();
+  // storageSpaces/storageSpaceById come via props for now; tracked for deprecation — see follow-up issue on two-sources-of-truth with useCellarStorage().
   const { storageSpaces, storageSpaceById } = storage;
 
   const [statsExpanded, setStatsExpanded] = useState(false);
