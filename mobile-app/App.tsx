@@ -189,7 +189,7 @@ function CellarScreenInner({ session, pendingJoinCode, onJoinCodeConsumed }: { s
 
   const drink = useDrinkWineModal({
     userId: session.user.id,
-    setHistoryEntries: setHistoryEntries,
+    setHistoryEntries,
     setWines: setWines,
     showSuccess: success.show,
     pickImageFromLibrary: images.pickImageFromLibrary,
@@ -201,7 +201,7 @@ function CellarScreenInner({ session, pendingJoinCode, onJoinCodeConsumed }: { s
     setWines: setWines,
     fetchCatalogEntries: fetchCatalogEntries,
     showSuccess: success.show,
-    storageSpaces: storageSpaces,
+    storageSpaces,
     saveStorageSpace: saveStorageSpace,
     getOccupiedPositions: storage.getOccupiedPositions,
     pickImageFromLibrary: images.pickImageFromLibrary,
@@ -234,8 +234,8 @@ function CellarScreenInner({ session, pendingJoinCode, onJoinCodeConsumed }: { s
   }, [refreshAll]);
 
   const storageProps: StorageProps = useMemo(() => ({
-    storageSpaces: storageSpaces, storageSpaceById: storageSpaceById,
-    storageSpaceDraft: storageSpaceDraft, savingStorageSpace: savingStorageSpace,
+    storageSpaces, storageSpaceById,
+    storageSpaceDraft, savingStorageSpace,
     onStorageSpaceDraftChange: (patch: Partial<import("./src/types/cellar-drafts").StorageSpaceDraft>) => setStorageSpaceDraft((c) => ({ ...c, ...patch })),
     onSaveStorageSpace: async () => { const newId = await saveStorageSpace(); if (newId) { storage.setSelectedStorageSpaceId(newId); storage.setSelectedStorageRow("1"); storage.setSelectedStorageSlot("1"); } success.show("storage_saved"); },
     onUpdateStorageSpace: updateStorageSpace,

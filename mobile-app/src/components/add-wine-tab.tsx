@@ -97,7 +97,7 @@ function AddWineTabContent({
     userId: sessionUserId,
     draft,
     resetDraft: useCallback(() => setDraft(defaultDraft), []),
-    setHistoryEntries: setHistoryEntries,
+    setHistoryEntries,
     showSuccess: success.show,
   });
 
