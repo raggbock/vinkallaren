@@ -1,6 +1,7 @@
 import { Linking, Platform } from "react-native";
 
 import { supabase } from "./supabase";
+import { invalidateImageUrl } from "./image-url-cache";
 import { ok, fail, type Result } from "../types/result";
 import { buildSystembolagetProductUrl, emptyToNull, parseTags, toNumberOrNull } from "./cellar-helpers";
 import {
@@ -163,9 +164,11 @@ export async function saveWineEditEntry(args: SaveWineEditArgs): Promise<Result<
     imagePath = await uploadWineImage(userId, editWineDraft.imageUri);
     if (editingWine.image_path) {
       await supabase.storage.from("wine-images").remove([editingWine.image_path]).catch(() => {});
+      invalidateImageUrl(editingWine.image_path);
     }
   } else if (!editWineDraft.imageUri && editingWine.image_path) {
     await supabase.storage.from("wine-images").remove([editingWine.image_path]).catch(() => {});
+    invalidateImageUrl(editingWine.image_path);
     imagePath = null;
   }
   const payload = buildWineInsertFromDraft(editWineDraft, editWineDraft.storageSpaceId, editWineDraft.storageRow, editWineDraft.storageSlot, imagePath);

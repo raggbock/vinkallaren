@@ -4,9 +4,11 @@ import { useCellarSpaceWines } from "../useCellarSpaceWines";
 const mockSelect = jest.fn();
 const mockEq = jest.fn();
 const mockIs = jest.fn();
+const mockIn = jest.fn();
 const mockGt = jest.fn();
 const mockOrder = jest.fn();
 const mockOr = jest.fn();
+const mockContains = jest.fn();
 const mockFrom = jest.fn();
 
 jest.mock("../../lib/supabase", () => ({
@@ -23,11 +25,14 @@ jest.mock("../../lib/show-error", () => ({ showError: jest.fn() }));
 function setupQueryChain(rows: any[]) {
   const terminal = Promise.resolve({ data: rows, error: null });
   mockOrder.mockReturnValue(terminal);
-  mockOr.mockReturnValue({ order: mockOrder });
-  mockIs.mockReturnValue({ gt: mockGt, order: mockOrder, or: mockOr });
-  mockEq.mockReturnValue({ gt: mockGt, order: mockOrder, or: mockOr });
-  mockGt.mockReturnValue({ order: mockOrder, or: mockOr, eq: mockEq, is: mockIs });
-  mockSelect.mockReturnValue({ eq: mockEq, is: mockIs, gt: mockGt, order: mockOrder });
+  const filterable = { eq: mockEq, contains: mockContains, or: mockOr, order: mockOrder };
+  mockOr.mockReturnValue(filterable);
+  mockContains.mockReturnValue(filterable);
+  mockEq.mockReturnValue(filterable);
+  mockIs.mockReturnValue(filterable);
+  mockIn.mockReturnValue(filterable);
+  mockGt.mockReturnValue({ or: mockOr, is: mockIs, in: mockIn });
+  mockSelect.mockReturnValue({ gt: mockGt });
   mockFrom.mockReturnValue({ select: mockSelect });
 }
 
@@ -107,13 +112,8 @@ describe("useCellarSpaceWines", () => {
 
   test("fetch error sets loaded=true, empty wines, calls showError", async () => {
     const { showError } = require("../../lib/show-error");
+    setupQueryChain([]);
     mockOrder.mockReturnValue(Promise.resolve({ data: null, error: { message: "DB error" } }));
-    mockOr.mockReturnValue({ order: mockOrder });
-    mockIs.mockReturnValue({ gt: mockGt, order: mockOrder, or: mockOr });
-    mockEq.mockReturnValue({ gt: mockGt, order: mockOrder, or: mockOr });
-    mockGt.mockReturnValue({ order: mockOrder, or: mockOr, eq: mockEq, is: mockIs });
-    mockSelect.mockReturnValue({ eq: mockEq, is: mockIs, gt: mockGt, order: mockOrder });
-    mockFrom.mockReturnValue({ select: mockSelect });
 
     const { result } = renderHook(() => useCellarSpaceWines({}, ""));
     act(() => { result.current.requestSpace("sp-1"); });

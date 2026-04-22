@@ -24,7 +24,8 @@ export function useCatalog(userId: string, wines: WineRecord[], winesLoading: bo
   }
   const fetchCatalogEntries = createGuardedFetcher(fetchCatalogEntriesRaw);
 
-  // Catalog backfill — runs at most once per day (persisted via AsyncStorage)
+  // Catalog backfill — at most once per day. Gate depends on wines.length so mutations
+  // within the same session don't re-trigger the filter/payload build.
   useEffect(() => {
     if (catalogBackfillDone || winesLoading || wines.length === 0) return;
     let cancelled = false;
@@ -43,7 +44,7 @@ export function useCatalog(userId: string, wines: WineRecord[], winesLoading: bo
       }
     })();
     return () => { cancelled = true; };
-  }, [catalogBackfillDone, winesLoading, userId, wines]);
+  }, [catalogBackfillDone, winesLoading, userId, wines.length]);
 
   return {
     catalogEntries, loadingCatalogEntries,
