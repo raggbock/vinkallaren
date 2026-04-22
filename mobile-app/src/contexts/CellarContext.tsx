@@ -92,7 +92,11 @@ export function useCellarFiltersContext(): CellarFiltersValue {
   return v;
 }
 
-// Facade for transitional code — prefer the split hooks above for new call sites.
+/**
+ * @deprecated Use `useCellarData`, `useCellarActions`, or `useCellarFiltersContext` instead.
+ * This facade merges all three contexts so consumers re-render on any change, which defeats
+ * the split. Migrate call sites incrementally. Tracking: see follow-up issue for consumer migration.
+ */
 export function useCellar(): CellarContextValue {
   const data = useCellarData();
   const actions = useCellarActions();

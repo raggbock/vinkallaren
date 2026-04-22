@@ -13,5 +13,7 @@ CREATE INDEX IF NOT EXISTS idx_wines_user_vintage
 CREATE INDEX IF NOT EXISTS idx_wines_user_grape
   ON wines (user_id, grape) WHERE quantity > 0;
 
-CREATE INDEX IF NOT EXISTS idx_wines_food_pairings_gin
-  ON wines USING gin (food_pairings) WHERE quantity > 0;
+-- Intentionally NO GIN index on food_pairings: get_cellar_overview materializes
+-- `all_mine` before filtering on `= ANY(food_pairings)`, so a GIN index would
+-- never be used and would pure-cost every wine insert/update. Revisit if the
+-- RPC is ever restructured to push the pairing filter down to the base table.

@@ -70,7 +70,10 @@ export function useTastingSessions(userId: string) {
     if (error || !data) return;
     const rows = data as TastingSessionRow[];
     setHasMore(rows.length === SESSIONS_PAGE_SIZE);
-    setSessions((prev) => [...prev, ...rows]);
+    setSessions((prev) => {
+      const seen = new Set(prev.map((s) => s.id));
+      return [...prev, ...rows.filter((r) => !seen.has(r.id))];
+    });
   }, [hasMore, sessions.length]);
 
   const openSession = useCallback(async (session: TastingSessionRow) => {

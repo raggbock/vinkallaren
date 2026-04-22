@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { PostgrestFilterBuilder } from "@supabase/postgrest-js";
 import { supabase } from "../lib/supabase";
 import { showError } from "../lib/show-error";
 import { hydrateWineRecords } from "../lib/wine-helpers";
@@ -6,28 +7,29 @@ import { escapeOrFilterValue } from "../lib/query-helpers";
 import type { CellarFilterState } from "../types/cellar-aggregate";
 import type { WineRecord, WineRow } from "../types/wine";
 
+type WineFilterBuilder = PostgrestFilterBuilder<any, any, WineRow, WineRow[], "wines">;
+
 export const UNPLACED_SPACE_ID = "__unplaced__";
 
 type SpaceState = { wines: WineRecord[]; loading: boolean; loaded: boolean };
 
 const EMPTY_STATE: SpaceState = { wines: [], loading: false, loaded: false };
+// One frame — coalesces expansions fired in the same render pass.
 const BATCH_WINDOW_MS = 16;
 
 function buildCacheKey(filters: CellarFilterState, search: string) {
   return JSON.stringify(filters) + "|" + search.trim().toLowerCase();
 }
 
-function applyFilterPredicates<T>(query: T, filters: CellarFilterState, search: string): T {
-  let q = query as unknown as {
-    eq: (c: string, v: unknown) => T; contains: (c: string, v: unknown[]) => T; or: (s: string) => T;
-  };
+function applyFilterPredicates(query: WineFilterBuilder, filters: CellarFilterState, search: string): WineFilterBuilder {
+  let q = query;
   const f = filters;
-  if (f.country) q = q.eq("country", f.country) as unknown as typeof q;
-  if (f.region) q = q.eq("region", f.region) as unknown as typeof q;
-  if (f.type) q = q.eq("type", f.type) as unknown as typeof q;
-  if (f.grape) q = q.eq("grape", f.grape) as unknown as typeof q;
-  if (f.vintage) q = q.eq("vintage", Number(f.vintage)) as unknown as typeof q;
-  if (f.pairing) q = q.contains("food_pairings", [f.pairing]) as unknown as typeof q;
+  if (f.country) q = q.eq("country", f.country);
+  if (f.region) q = q.eq("region", f.region);
+  if (f.type) q = q.eq("type", f.type);
+  if (f.grape) q = q.eq("grape", f.grape);
+  if (f.vintage) q = q.eq("vintage", Number(f.vintage));
+  if (f.pairing) q = q.contains("food_pairings", [f.pairing]);
   const s = search.trim();
   if (s.length > 0) {
     const like = `%${escapeOrFilterValue(s)}%`;
@@ -35,9 +37,9 @@ function applyFilterPredicates<T>(query: T, filters: CellarFilterState, search: 
       `name.ilike.${like},producer.ilike.${like},country.ilike.${like},` +
       `region.ilike.${like},grape.ilike.${like},type.ilike.${like},` +
       `cellar_location.ilike.${like}`,
-    ) as unknown as typeof q;
+    );
   }
-  return q as unknown as T;
+  return q;
 }
 
 export function useCellarSpaceWines(filters: CellarFilterState, search: string) {
@@ -48,7 +50,14 @@ export function useCellarSpaceWines(filters: CellarFilterState, search: string) 
   const flushTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const keyChanged = activeCacheKey.current !== cacheKey;
-  if (keyChanged) activeCacheKey.current = cacheKey;
+  if (keyChanged) {
+    activeCacheKey.current = cacheKey;
+    pendingIds.current.clear();
+    if (flushTimer.current !== null) {
+      clearTimeout(flushTimer.current);
+      flushTimer.current = null;
+    }
+  }
 
   useEffect(() => {
     if (keyChanged) setStates({});

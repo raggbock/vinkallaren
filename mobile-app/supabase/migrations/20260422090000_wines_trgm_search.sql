@@ -26,8 +26,10 @@ AS $$
 DECLARE
   v_user_id uuid := auth.uid();
   v_search  text := NULLIF(trim(COALESCE(p_search, '')), '');
+  -- Trigram GIN requires ≥ 3 chars to be useful; below that we skip the LIKE filter
+  -- rather than forcing a seq scan with a too-permissive pattern.
   v_like    text := CASE
-    WHEN v_search IS NULL THEN NULL
+    WHEN v_search IS NULL OR char_length(v_search) < 3 THEN NULL
     ELSE '%' || public.immutable_unaccent(lower(v_search)) || '%'
   END;
   result    jsonb;

@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import { showError } from "../lib/show-error";
 import { supabase } from "../lib/supabase";
 import { hydrateWineRecords } from "../lib/wine-helpers";
+import { invalidateImageUrl } from "../lib/image-url-cache";
 import { createGuardedFetcher } from "../lib/guarded-fetcher";
 import type { WineRecord, WineRow } from "../types/wine";
 
@@ -40,7 +41,10 @@ export function useWines() {
   const deleteWine = useCallback(async (id: string, imagePath?: string | null) => {
     const { error } = await supabase.from("wines").delete().eq("id", id);
     if (error) { showError("Kunde inte ta bort", error.message); return; }
-    if (imagePath) await supabase.storage.from("wine-images").remove([imagePath]).catch(() => {});
+    if (imagePath) {
+      await supabase.storage.from("wine-images").remove([imagePath]).catch(() => {});
+      invalidateImageUrl(imagePath);
+    }
     setWines((current) => current.filter((wine) => wine.id !== id));
   }, []);
 
