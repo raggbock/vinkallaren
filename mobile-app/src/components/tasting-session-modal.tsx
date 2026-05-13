@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { PanelHeader, type Suggestion } from "./form-controls";
 import { ActiveSessionView } from "./session-active-view";
@@ -19,7 +19,7 @@ import type { styles as themeStyles } from "../styles/theme";
 type SharedStyles = typeof themeStyles;
 
 export function TastingSessionPanel({
-  styles, userId, sessions, loading, toasts, activeSession, activeWines, activeTastings,
+  styles, userId, sessions, loading, toasts, pushToast, activeSession, activeWines, activeTastings,
   wines, searchWineNames, onBack, onFetchSessions, onCreateSession, onJoinSession, onOpenSession,
   onCloseSession, onSetActiveWines, onSetActiveTastings, onSetActiveSession,
   onOpenWset, wsetData, onSessionEnded, onSaveTastingOptimistic,
@@ -29,6 +29,7 @@ export function TastingSessionPanel({
   sessions: TastingSessionRow[];
   loading: boolean;
   toasts: SessionToast[];
+  pushToast: (message: string) => void;
   activeSession: TastingSessionRow | null;
   activeWines: SessionWineRow[];
   activeTastings: SessionTastingRow[];
@@ -98,6 +99,43 @@ export function TastingSessionPanel({
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [activeSession?.id]);
+
+  // Named realtime toasts: announce new joiners and new ratings from others
+  const seenParticipantsRef = useRef<{ sessionId: string | null; ids: Set<string> }>({ sessionId: null, ids: new Set() });
+  useEffect(() => {
+    if (!activeSession) { seenParticipantsRef.current = { sessionId: null, ids: new Set() }; return; }
+    const ref = seenParticipantsRef.current;
+    if (ref.sessionId !== activeSession.id) {
+      seenParticipantsRef.current = { sessionId: activeSession.id, ids: new Set(participants.map((p) => p.user_id)) };
+      return;
+    }
+    for (const p of participants) {
+      if (ref.ids.has(p.user_id)) continue;
+      ref.ids.add(p.user_id);
+      if (p.user_id !== userId) pushToast(`${p.display_name || "Någon"} har gått med`);
+    }
+  }, [participants, activeSession?.id, userId, pushToast]);
+
+  const seenTastingsRef = useRef<{ sessionId: string | null; keys: Set<string> }>({ sessionId: null, keys: new Set() });
+  useEffect(() => {
+    if (!activeSession) { seenTastingsRef.current = { sessionId: null, keys: new Set() }; return; }
+    const ref = seenTastingsRef.current;
+    const ratedKey = (t: SessionTastingRow) => `${t.user_id}|${t.session_wine_id}`;
+    if (ref.sessionId !== activeSession.id) {
+      seenTastingsRef.current = { sessionId: activeSession.id, keys: new Set(activeTastings.filter((t) => t.rating != null).map(ratedKey)) };
+      return;
+    }
+    for (const t of activeTastings) {
+      if (t.rating == null) continue;
+      const key = ratedKey(t);
+      if (ref.keys.has(key)) continue;
+      ref.keys.add(key);
+      if (t.user_id === userId) continue;
+      const wineName = activeWines.find((w) => w.id === t.session_wine_id)?.name;
+      const display = participants.find((p) => p.user_id === t.user_id)?.display_name || "Någon";
+      pushToast(wineName ? `${display} har provat ${wineName}` : `${display} har provat ett vin`);
+    }
+  }, [activeTastings, activeSession?.id, userId, activeWines, participants, pushToast]);
 
   useEffect(() => {
     if (!activeSession) { setDishes([]); setTastingDishes([]); return; }

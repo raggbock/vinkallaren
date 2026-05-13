@@ -190,7 +190,6 @@ export function useTastingSessions(userId: string) {
             });
           } else if (payload.eventType === "UPDATE") {
             const tasting = payload.new as SessionTastingRow;
-            if (tasting.user_id !== userId && tasting.rating != null) pushToast("Någon har smakat klart på ett vin");
             setActiveTastings((prev) => {
               const next = prev.map((t) => t.id === tasting.id ? tasting : t);
               persist(next);
@@ -262,6 +261,7 @@ export function useTastingSessions(userId: string) {
     loading,
     hasMoreSessions: hasMore,
     toasts,
+    pushToast,
     activeSession,
     activeWines,
     activeTastings,

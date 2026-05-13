@@ -333,7 +333,7 @@ function CellarScreenInner({ session, pendingJoinCode, onJoinCodeConsumed }: { s
         <Suspense fallback={lazyFallback}>
           <TastingSessionPanel
             styles={styles} userId={session.user.id}
-            sessions={tasting.sessions} loading={tasting.loading} toasts={tasting.toasts}
+            sessions={tasting.sessions} loading={tasting.loading} toasts={tasting.toasts} pushToast={tasting.pushToast}
             activeSession={tasting.activeSession} activeWines={tasting.activeWines}
             activeTastings={tasting.activeTastings} wines={wines}
             searchWineNames={searchCatalogWineNames}
