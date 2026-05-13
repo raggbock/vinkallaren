@@ -166,6 +166,9 @@ export function useTastingSessions(userId: string) {
     if (!online) return;
     const sessionId = activeSession.id;
 
+    const persist = (next: SessionTastingRow[]) => {
+      void offlineStore.set(K.sessionTastings(sessionId), next);
+    };
     const tastingsChannel = supabase
       .channel(`session-tastings-${sessionId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "session_tastings", filter: `session_id=eq.${sessionId}` },
@@ -174,11 +177,8 @@ export function useTastingSessions(userId: string) {
             const tasting = payload.new as SessionTastingRow;
             setActiveTastings((prev) => {
               const next = [...prev.filter((t) => t.id !== tasting.id), tasting];
-              const isNewParticipant = !prev.some((t) => t.user_id === tasting.user_id);
-              if (isNewParticipant && tasting.user_id !== userId) pushToast("Ny deltagare gick med!");
-
-              // Check if all participants have now tasted this wine
-              if (tasting.rating != null && tasting.user_id !== userId) {
+              persist(next);
+              if (tasting.user_id !== userId && tasting.rating != null) {
                 const participants = new Set(next.map((t) => t.user_id));
                 const wineTastings = next.filter((t) => t.session_wine_id === tasting.session_wine_id && t.rating != null);
                 if (wineTastings.length === participants.size && participants.size > 1) {
@@ -190,12 +190,19 @@ export function useTastingSessions(userId: string) {
             });
           } else if (payload.eventType === "UPDATE") {
             const tasting = payload.new as SessionTastingRow;
-            if (tasting.user_id !== userId && tasting.rating != null) {
-              pushToast("Någon har smakat klart på ett vin");
-            }
-            setActiveTastings((prev) => prev.map((t) => t.id === tasting.id ? tasting : t));
+            if (tasting.user_id !== userId && tasting.rating != null) pushToast("Någon har smakat klart på ett vin");
+            setActiveTastings((prev) => {
+              const next = prev.map((t) => t.id === tasting.id ? tasting : t);
+              persist(next);
+              return next;
+            });
           } else if (payload.eventType === "DELETE") {
-            setActiveTastings((prev) => prev.filter((t) => t.id !== (payload.old as { id: string }).id));
+            const id = (payload.old as { id: string }).id;
+            setActiveTastings((prev) => {
+              const next = prev.filter((t) => t.id !== id);
+              persist(next);
+              return next;
+            });
           }
         }
       )
@@ -222,7 +229,12 @@ export function useTastingSessions(userId: string) {
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "session_wines", filter: `session_id=eq.${sessionId}` },
         (payload) => {
           const wine = payload.new as SessionWineRow;
-          setActiveWines((prev) => prev.some((w) => w.id === wine.id) ? prev : [...prev, wine].sort((a, b) => a.position - b.position));
+          setActiveWines((prev) => {
+            if (prev.some((w) => w.id === wine.id)) return prev;
+            const next = [...prev, wine].sort((a, b) => a.position - b.position);
+            void offlineStore.set(K.sessionWines(sessionId), next);
+            return next;
+          });
         }
       )
       .subscribe();

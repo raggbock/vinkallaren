@@ -4,6 +4,7 @@ import { PanelHeader, type Suggestion } from "./form-controls";
 import { ActiveSessionView } from "./session-active-view";
 import { SessionTastingView } from "./session-tasting-view";
 import { addSessionDish, advanceReveal, deleteSessionDish, fetchSessionDishes, fetchSessionParticipants, fetchTastingDishes, finishReveal, saveTasting, saveTastingDishes, startSession } from "../lib/session-actions";
+import { supabase } from "../lib/supabase";
 import { SessionSetupView } from "./session-setup-view";
 import { AddWineForm, CreateForm, HostControls, InlineError, JoinForm, s } from "./session-forms";
 import type { CreateSessionInput, SessionDishRow, SessionParticipant, SessionTastingDishRow, SessionTastingInsert, SessionTastingRow, SessionToast, SessionWineRow, TastingSessionRow } from "../types/tasting-session";
@@ -86,16 +87,17 @@ export function TastingSessionPanel({
 
   useEffect(() => {
     if (!activeSession) { setParticipants([]); return; }
-    const fetchParticipants = () => fetchSessionParticipants(activeSession.id).then((r) => {
+    const sessionId = activeSession.id;
+    const refetch = () => fetchSessionParticipants(sessionId).then((r) => {
       if (r.data) setParticipants(r.data);
     });
-    fetchParticipants();
-    // Poll for new participants during setup (no realtime trigger for joins)
-    if (activeSession.status === "setup") {
-      const interval = setInterval(fetchParticipants, 3000);
-      return () => clearInterval(interval);
-    }
-  }, [activeSession?.id, activeSession?.status, activeTastings.length]);
+    refetch();
+    const channel = supabase
+      .channel(`session-participants-${sessionId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "session_participants", filter: `session_id=eq.${sessionId}` }, refetch)
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [activeSession?.id]);
 
   useEffect(() => {
     if (!activeSession) { setDishes([]); setTastingDishes([]); return; }
