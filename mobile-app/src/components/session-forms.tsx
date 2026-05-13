@@ -123,19 +123,25 @@ export function CreateForm({ onCreate, onCancel }: {
 
 /* ── Join session form ── */
 
-export function JoinForm({ onJoin, onCancel }: { onJoin: (code: string) => void; onCancel: () => void }) {
+export function JoinForm({ onJoin, onCancel }: { onJoin: (code: string) => Promise<void> | void; onCancel: () => void }) {
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [joining, setJoining] = useState(false);
+  async function submit() {
+    if (code.length < 6) { setError("Skriv in en 6-teckens kod"); return; }
+    setJoining(true);
+    try { await onJoin(code); } finally { setJoining(false); }
+  }
   return (
     <View style={s.formSection}>
       <LabeledInput label="Provningskod" value={code}
         onChangeText={(v) => { setCode(v.toUpperCase()); setError(null); }} placeholder="ABC123" autoCapitalize="characters" />
       <InlineError message={error} />
       <View style={s.actionRow}>
-        <Pressable onPress={() => { if (code.length < 6) { setError("Skriv in en 6-teckens kod"); return; } onJoin(code); }} style={s.primaryBtn}>
-          <Text style={s.primaryBtnText}>Gå med</Text>
+        <Pressable onPress={submit} style={[s.primaryBtn, joining && { opacity: 0.6 }]} disabled={joining}>
+          <Text style={s.primaryBtnText}>{joining ? "Ansluter..." : "Gå med"}</Text>
         </Pressable>
-        <Pressable onPress={onCancel} style={s.secondaryBtn}>
+        <Pressable onPress={onCancel} style={s.secondaryBtn} disabled={joining}>
           <Text style={s.secondaryBtnText}>Avbryt</Text>
         </Pressable>
       </View>

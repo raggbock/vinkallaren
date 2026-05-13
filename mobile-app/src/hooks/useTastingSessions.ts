@@ -84,12 +84,18 @@ export function useTastingSessions(userId: string) {
 
   const openSession = useCallback(async (session: TastingSessionRow) => {
     setActiveSession(session);
-    const [cachedWines, cachedTastings] = await Promise.all([
+    const [cachedWines, cachedTastings, cachedParticipants, cachedDishes, cachedTastingDishes] = await Promise.all([
       offlineStore.get<SessionWineRow[]>(K.sessionWines(session.id)),
       offlineStore.get<SessionTastingRow[]>(K.sessionTastings(session.id)),
+      offlineStore.get<SessionParticipant[]>(K.sessionParticipants(session.id)),
+      offlineStore.get<SessionDishRow[]>(K.sessionDishes(session.id)),
+      offlineStore.get<SessionTastingDishRow[]>(K.sessionTastingDishes(session.id)),
     ]);
     if (cachedWines) setActiveWines(cachedWines);
     if (cachedTastings) setActiveTastings(cachedTastings);
+    if (cachedParticipants) setActiveParticipants(cachedParticipants);
+    if (cachedDishes) setActiveDishes(cachedDishes);
+    if (cachedTastingDishes) setActiveTastingDishes(cachedTastingDishes);
 
     const result = await fetchSessionOverview(session.id);
     if (result.data) {
@@ -101,6 +107,9 @@ export function useTastingSessions(userId: string) {
       await Promise.all([
         offlineStore.set(K.sessionWines(session.id), result.data.wines),
         offlineStore.set(K.sessionTastings(session.id), result.data.tastings),
+        offlineStore.set(K.sessionParticipants(session.id), result.data.participants),
+        offlineStore.set(K.sessionDishes(session.id), result.data.dishes),
+        offlineStore.set(K.sessionTastingDishes(session.id), result.data.tasting_dishes),
       ]);
     }
   }, []);
@@ -148,6 +157,9 @@ export function useTastingSessions(userId: string) {
       await Promise.all([
         offlineStore.set(K.sessionWines(session.id), overview.wines),
         offlineStore.set(K.sessionTastings(session.id), overview.tastings),
+        offlineStore.set(K.sessionParticipants(session.id), overview.participants),
+        offlineStore.set(K.sessionDishes(session.id), overview.dishes),
+        offlineStore.set(K.sessionTastingDishes(session.id), overview.tasting_dishes),
       ]);
     } else {
       await openSession(session);
