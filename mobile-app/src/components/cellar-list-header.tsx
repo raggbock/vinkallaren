@@ -36,7 +36,7 @@ export function CellarListHeader(props: CellarListHeaderProps) {
         draft={props.storage.storageSpaceDraft} saving={props.storage.savingStorageSpace}
         onDraftChange={props.storage.onStorageSpaceDraftChange} onSave={props.storage.onSaveStorageSpace}
       />
-      {!props.loading && !props.hasSections ? (
+      {!props.loading && !props.hasSections && props.stats.totalBottles === 0 ? (
         <EmptyState styles={props.styles} onNavigateToAdd={props.onNavigateToAdd} />
       ) : null}
     </View>

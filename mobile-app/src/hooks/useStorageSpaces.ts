@@ -1,3 +1,4 @@
+import { Platform } from "react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { showError } from "../lib/show-error";
 import { supabase } from "../lib/supabase";
@@ -5,19 +6,44 @@ import { emptyToNull } from "../lib/cellar-helpers";
 import { defaultStorageSpaceDraft, type StorageSpaceDraft } from "../types/cellar-drafts";
 import type { StorageSpaceInsert, StorageSpaceRow } from "../types/storage-space";
 
+const CACHE_KEY_PREFIX = "storage_spaces_";
+
+function getWebStorage(): Storage | null {
+  if (Platform.OS !== "web") return null;
+  try { return (globalThis as { localStorage?: Storage }).localStorage ?? null; }
+  catch { return null; }
+}
+
+function readCache(userId: string): StorageSpaceRow[] | null {
+  const ls = getWebStorage();
+  if (!ls || !userId) return null;
+  try {
+    const raw = ls.getItem(CACHE_KEY_PREFIX + userId);
+    return raw ? (JSON.parse(raw) as StorageSpaceRow[]) : null;
+  } catch { return null; }
+}
+
+function writeCache(userId: string, value: StorageSpaceRow[]): void {
+  const ls = getWebStorage();
+  if (!ls || !userId) return;
+  try { ls.setItem(CACHE_KEY_PREFIX + userId, JSON.stringify(value)); } catch { /* quota/security */ }
+}
+
 export function useStorageSpaces(userId: string) {
-  const [storageSpaces, setStorageSpaces] = useState<StorageSpaceRow[]>([]);
-  const [loadingStorageSpaces, setLoadingStorageSpaces] = useState(true);
+  const initialCache = useMemo(() => readCache(userId), []); // eslint-disable-line react-hooks/exhaustive-deps
+  const [storageSpaces, setStorageSpaces] = useState<StorageSpaceRow[]>(initialCache ?? []);
+  const [loadingStorageSpaces, setLoadingStorageSpaces] = useState(initialCache === null);
   const [storageSpaceDraft, setStorageSpaceDraft] = useState<StorageSpaceDraft>(defaultStorageSpaceDraft);
   const [savingStorageSpace, setSavingStorageSpace] = useState(false);
 
   const fetchStorageSpaces = useCallback(async () => {
-    setLoadingStorageSpaces(true);
     const { data, error } = await supabase.from("storage_spaces").select("*").order("created_at", { ascending: true });
     if (error) { showError("Kunde inte hämta förvaringsplatser", error.message); setLoadingStorageSpaces(false); return; }
-    setStorageSpaces((data ?? []) as StorageSpaceRow[]);
+    const rows = (data ?? []) as StorageSpaceRow[];
+    setStorageSpaces(rows);
     setLoadingStorageSpaces(false);
-  }, []);
+    writeCache(userId, rows);
+  }, [userId]);
 
   useEffect(() => { void fetchStorageSpaces(); }, [fetchStorageSpaces]);
 
