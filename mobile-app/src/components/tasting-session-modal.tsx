@@ -236,6 +236,7 @@ export function TastingSessionPanel({
           participants={participants}
           isHost={isHost}
           dishes={dishes}
+          toasts={toasts}
           onAddDish={handleAddDish}
           onRemoveDish={handleRemoveDish}
           onStart={async () => {

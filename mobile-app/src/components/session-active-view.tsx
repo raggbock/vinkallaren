@@ -5,6 +5,7 @@ import { getWineProgress, isAllDone } from "../lib/session-progress";
 import { styles as theme, colors } from "../styles/theme";
 import type { SessionDishRow, SessionParticipant, SessionTastingRow, SessionToast, SessionWineRow, TastingSessionRow } from "../types/tasting-session";
 import { SessionDishes } from "./session-dishes";
+import { SessionToasts } from "./session-toasts";
 
 export { isAllDone } from "../lib/session-progress";
 
@@ -68,12 +69,7 @@ export function ActiveSessionView({
         </Pressable>
       </View>
 
-      {/* Toasts */}
-      {toasts.map((toast) => (
-        <View key={toast.id} style={s.toast}>
-          <Text style={s.toastText}>{toast.message}</Text>
-        </View>
-      ))}
+      <SessionToasts toasts={toasts} />
 
       {/* Dishes */}
       <SessionDishes dishes={dishes} isHost={session.host_id === userId} onAdd={onAddDish} onRemove={onRemoveDish} />
@@ -143,8 +139,6 @@ const s = StyleSheet.create({
   progressTrack: { marginTop: 8, height: 20, backgroundColor: colors.surfaceAlt, borderRadius: 10, overflow: "hidden", justifyContent: "center" },
   progressFill: { position: "absolute", left: 0, top: 0, bottom: 0, backgroundColor: colors.accent, borderRadius: 10 },
   progressLabel: { fontSize: 11, fontWeight: "700", color: colors.text, textAlign: "center", zIndex: 1 },
-  toast: { backgroundColor: colors.accent, borderRadius: 12, paddingVertical: 8, paddingHorizontal: 14 },
-  toastText: { color: colors.textLight, fontSize: 13, fontWeight: "600", textAlign: "center" as const },
   wineCard: { backgroundColor: colors.textLight, borderRadius: 18, padding: 14, gap: 8, borderWidth: 1, borderColor: colors.surfaceAlt },
   wineCardUntasted: { opacity: 0.65 },
   wineCardHeader: { flexDirection: "row", alignItems: "center", gap: 12 },

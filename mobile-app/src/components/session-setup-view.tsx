@@ -3,8 +3,9 @@ import { styles as theme, colors } from "../styles/theme";
 import { Avatar } from "./avatar";
 import { PanelHeader } from "./form-controls";
 import { reorderSessionWines, shareSession } from "../lib/session-actions";
-import type { SessionDishRow, SessionParticipant, SessionWineRow, TastingSessionRow } from "../types/tasting-session";
+import type { SessionDishRow, SessionParticipant, SessionToast, SessionWineRow, TastingSessionRow } from "../types/tasting-session";
 import { SessionDishes } from "./session-dishes";
+import { SessionToasts } from "./session-toasts";
 
 type Props = {
   session: TastingSessionRow;
@@ -12,6 +13,7 @@ type Props = {
   participants: SessionParticipant[];
   isHost: boolean;
   dishes: SessionDishRow[];
+  toasts: SessionToast[];
   onAddDish: (name: string) => void;
   onRemoveDish: (dishId: string) => void;
   onStart: () => void;
@@ -20,7 +22,7 @@ type Props = {
   children?: React.ReactNode; // AddWineForm slot for host
 };
 
-export function SessionSetupView({ session, wines, participants, isHost, dishes, onAddDish, onRemoveDish, onStart, onBack, onReorder, children }: Props) {
+export function SessionSetupView({ session, wines, participants, isHost, dishes, toasts, onAddDish, onRemoveDish, onStart, onBack, onReorder, children }: Props) {
   function swapWines(a: number, b: number) {
     const reordered = [...wines];
     [reordered[a], reordered[b]] = [reordered[b], reordered[a]];
@@ -32,6 +34,7 @@ export function SessionSetupView({ session, wines, participants, isHost, dishes,
   return (
     <View style={s.container}>
       <PanelHeader title="Provning" rightLabel="Tillbaka" onRightPress={onBack} />
+      <SessionToasts toasts={toasts} />
 
       {/* Session info */}
       <View style={s.infoCard}>
