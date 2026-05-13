@@ -1,7 +1,7 @@
 import { type ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { AvatarRow } from "./avatar";
-import { getPersonalProgress, getWineProgress, isAllDone } from "../lib/session-progress";
+import { getWineProgress, isAllDone } from "../lib/session-progress";
 import { styles as theme, colors } from "../styles/theme";
 import type { SessionDishRow, SessionParticipant, SessionTastingRow, SessionToast, SessionWineRow, TastingSessionRow } from "../types/tasting-session";
 import { SessionDishes } from "./session-dishes";
@@ -26,9 +26,12 @@ type ActiveSessionViewProps = {
 export function ActiveSessionView({
   session, userId, wines, tastings, toasts, participants, dishes, onAddDish, onRemoveDish, onTasteWine, onBack, children,
 }: ActiveSessionViewProps) {
-  const progress = getPersonalProgress(userId, wines, tastings);
-  const progressPct = progress.total > 0 ? progress.tasted / progress.total : 0;
   const wineProgressMap = getWineProgress(wines, tastings);
+  const totalParticipants = participants.length;
+  const fullyTasted = totalParticipants > 0
+    ? wines.filter((w) => (wineProgressMap.get(w.id)?.participantsDone.size ?? 0) >= totalParticipants).length
+    : 0;
+  const progressPct = wines.length > 0 ? fullyTasted / wines.length : 0;
 
   return (
     <>
@@ -53,10 +56,10 @@ export function ActiveSessionView({
             <Text style={s.meta}>{wines.length} viner</Text>
           )}
           {/* Progress bar */}
-          {progress.total > 0 ? (
+          {wines.length > 0 ? (
             <View style={s.progressTrack}>
               <View style={[s.progressFill, { width: `${Math.round(progressPct * 100)}%` as unknown as number }]} />
-              <Text style={s.progressLabel}>{progress.tasted}/{progress.total} provade</Text>
+              <Text style={s.progressLabel}>{fullyTasted}/{wines.length} klara</Text>
             </View>
           ) : null}
         </View>

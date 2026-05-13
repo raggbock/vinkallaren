@@ -1,7 +1,15 @@
 import { Alert, Platform } from "react-native";
 
+const DEDUPE_WINDOW_MS = 3000;
+const recent = new Map<string, number>();
+
 export function showError(title: string, detail?: string) {
   const message = detail ?? "Försök igen.";
+  const key = `${title}\n${message}`;
+  const now = Date.now();
+  const last = recent.get(key);
+  if (last !== undefined && now - last < DEDUPE_WINDOW_MS) return;
+  recent.set(key, now);
   if (Platform.OS === "web") {
     // RN-web's Alert.alert is a no-op; fall back to the browser alert
     // so failed saves/loads actually surface to the user.

@@ -48,17 +48,6 @@ export function getWineProgress(
   return map;
 }
 
-export function getPersonalProgress(
-  userId: string,
-  wines: SessionWineRow[],
-  tastings: SessionTastingRow[],
-): { tasted: number; total: number } {
-  const tastedWineIds = new Set(
-    tastings.filter((t) => t.user_id === userId && t.rating != null).map((t) => t.session_wine_id),
-  );
-  return { tasted: tastedWineIds.size, total: wines.length };
-}
-
 export function isAllDone(
   wines: SessionWineRow[],
   tastings: SessionTastingRow[],

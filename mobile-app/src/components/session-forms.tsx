@@ -247,13 +247,6 @@ export function AddWineForm({ sessionId, wineCount, wines, searchWineNames, onWi
             <>
               <LabeledInput label="Filtrera" value={cellarFilter}
                 onChangeText={setCellarFilter} placeholder="Sök bland dina viner..." />
-              {filteredCellarWines.map((w) => (
-                <Pressable key={w.id} style={[s.cellarPick, selectedIds.has(w.id) && s.cellarPickSelected]}
-                  onPress={() => toggleWine(w.id)}>
-                  <Text style={s.cellarPickName}>{selectedIds.has(w.id) ? "☑ " : "☐ "}{w.name}</Text>
-                  <Text style={s.cellarPickMeta}>{[w.producer, w.vintage].filter(Boolean).join(" · ")}</Text>
-                </Pressable>
-              ))}
               {selectedIds.size > 0 ? (
                 <Pressable onPress={handleBatchAdd} style={s.primaryBtn} disabled={saving}>
                   <Text style={s.primaryBtnText}>
@@ -261,6 +254,13 @@ export function AddWineForm({ sessionId, wineCount, wines, searchWineNames, onWi
                   </Text>
                 </Pressable>
               ) : null}
+              {filteredCellarWines.map((w) => (
+                <Pressable key={w.id} style={[s.cellarPick, selectedIds.has(w.id) && s.cellarPickSelected]}
+                  onPress={() => toggleWine(w.id)}>
+                  <Text style={s.cellarPickName}>{selectedIds.has(w.id) ? "☑ " : "☐ "}{w.name}</Text>
+                  <Text style={s.cellarPickMeta}>{[w.producer, w.vintage].filter(Boolean).join(" · ")}</Text>
+                </Pressable>
+              ))}
             </>
           ) : (
             <AutocompleteInput label="Sök vin" value={searchQuery} onChangeText={setSearchQuery}
