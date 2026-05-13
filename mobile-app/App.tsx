@@ -37,6 +37,7 @@ import { useProfile } from "./src/hooks/useProfile";
 import { DisplayNamePrompt } from "./src/components/display-name-prompt";
 import { OfflineBadge } from "./src/components/offline-badge";
 import { parseJoinCodeFromUrl } from "./src/lib/join-link";
+import { parseSessionIdFromUrl, writeSessionRoute } from "./src/lib/session-route";
 import { useOnlineStatus } from "./src/hooks/useOnlineStatus";
 import { syncQueue } from "./src/lib/sync-queue";
 import { supabaseHandlers } from "./src/lib/sync-handlers";
@@ -214,6 +215,23 @@ function CellarScreenInner({ session, pendingJoinCode, onJoinCodeConsumed }: { s
   const [activeSection, setActiveSection] = useState<CellarSection>("cellar");
   const [highlightedWineId, setHighlightedWineId] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+
+  // Restore tasting session from /provning/:id URL on first mount
+  const sessionRouteRestored = useRef(false);
+  useEffect(() => {
+    if (sessionRouteRestored.current) return;
+    const id = parseSessionIdFromUrl();
+    if (!id) return;
+    sessionRouteRestored.current = true;
+    setActiveSection("tasting");
+    void tasting.openSessionById(id);
+  }, []);
+
+  // Mirror tasting state into the URL so refresh keeps the user in place
+  useEffect(() => {
+    if (activeSection !== "tasting") { writeSessionRoute(null); return; }
+    writeSessionRoute(tasting.activeSession?.id ?? null);
+  }, [activeSection, tasting.activeSession?.id]);
 
   // Lazy-load data only when the user actually navigates somewhere that needs it.
   useEffect(() => {

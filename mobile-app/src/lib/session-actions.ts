@@ -51,6 +51,13 @@ export async function joinSessionByCode(code: string): Promise<Result<TastingSes
   return ok(data as TastingSessionRow);
 }
 
+export async function fetchSessionById(sessionId: string): Promise<Result<TastingSessionRow>> {
+  const { data, error } = await supabase.from("tasting_sessions").select("*").eq("id", sessionId).maybeSingle();
+  if (error) return fail(error.message);
+  if (!data) return fail("Provningen finns inte");
+  return ok(data as TastingSessionRow);
+}
+
 export async function fetchSessionWines(sessionId: string): Promise<Result<SessionWineRow[]>> {
   const { data, error } = await supabase
     .from("session_wines")

@@ -4,6 +4,7 @@ import { offlineStore, K } from "../lib/offline-store";
 import { useOnlineStatus } from "./useOnlineStatus";
 import {
   createSession,
+  fetchSessionById,
   fetchSessionTastings,
   fetchSessionWines,
   joinSessionByCode,
@@ -98,6 +99,16 @@ export function useTastingSessions(userId: string) {
       await offlineStore.set(K.sessionTastings(session.id), tastingsResult.data);
     }
   }, []);
+
+  const openSessionById = useCallback(async (sessionId: string) => {
+    const cached = sessions.find((s) => s.id === sessionId);
+    if (cached) { await openSession(cached); return cached; }
+    const r = await fetchSessionById(sessionId);
+    if (r.error || !r.data) return null;
+    setSessions((prev) => prev.some((s) => s.id === r.data!.id) ? prev : [r.data!, ...prev]);
+    await openSession(r.data);
+    return r.data;
+  }, [sessions, openSession]);
 
   const closeSession = useCallback(() => {
     setActiveSession(null);
@@ -245,6 +256,7 @@ export function useTastingSessions(userId: string) {
     fetchSessions,
     fetchMoreSessions,
     openSession,
+    openSessionById,
     closeSession,
     createSession: handleCreate,
     joinSession: handleJoin,

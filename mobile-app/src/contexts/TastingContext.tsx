@@ -13,6 +13,7 @@ export type TastingContextValue = {
   activeTastings: SessionTastingRow[];
   fetchSessions: () => void;
   openSession: (session: TastingSessionRow) => void;
+  openSessionById: (sessionId: string) => Promise<TastingSessionRow | null>;
   closeSession: () => void;
   createSession: (input: CreateSessionInput) => Promise<TastingSessionRow | null>;
   joinSession: (code: string) => Promise<TastingSessionRow | null>;
@@ -47,6 +48,7 @@ export function TastingProvider({ userId, children }: { userId: string; children
     activeTastings: sessions.activeTastings,
     fetchSessions: sessions.fetchSessions,
     openSession: sessions.openSession,
+    openSessionById: sessions.openSessionById,
     closeSession: sessions.closeSession,
     createSession: sessions.createSession,
     joinSession: sessions.joinSession,
@@ -59,7 +61,7 @@ export function TastingProvider({ userId, children }: { userId: string; children
     wsetProps: wset.wsetProps,
   }), [sessions.sessions, sessions.loading, sessions.toasts, sessions.activeSession,
     sessions.activeWines, sessions.activeTastings, sessions.fetchSessions,
-    sessions.openSession, sessions.closeSession, sessions.createSession,
+    sessions.openSession, sessions.openSessionById, sessions.closeSession, sessions.createSession,
     sessions.joinSession, sessions.setActiveWines, sessions.setActiveTastings,
     sessions.setActiveSession, sessions.saveTastingOptimistic,
     wset.data, wset.open, wset.wsetProps]);
