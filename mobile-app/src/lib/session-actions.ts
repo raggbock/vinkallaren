@@ -44,11 +44,12 @@ export async function startSession(sessionId: string): Promise<Result<true>> {
   return ok(true);
 }
 
-export async function joinSessionByCode(code: string): Promise<Result<TastingSessionRow>> {
+export async function joinSessionByCode(code: string): Promise<Result<{ session: TastingSessionRow; overview: SessionOverview | null }>> {
   const { data, error } = await supabase.rpc("join_session_by_code", { code: code.toUpperCase() });
   if (error) return fail(error.message);
   if (data?.error) return fail("Ingen aktiv provning med den koden.");
-  return ok(data as TastingSessionRow);
+  const { overview, ...session } = data as TastingSessionRow & { overview: SessionOverview | null };
+  return ok({ session, overview: overview ?? null });
 }
 
 export async function fetchSessionById(sessionId: string): Promise<Result<TastingSessionRow>> {

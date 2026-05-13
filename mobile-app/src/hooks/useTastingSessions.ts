@@ -136,12 +136,22 @@ export function useTastingSessions(userId: string) {
   const handleJoin = useCallback(async (code: string): Promise<TastingSessionRow | null> => {
     const result = await joinSessionByCode(code);
     if (result.error) return null;
-    const session = result.data!;
-    setSessions((prev) => {
-      if (prev.some((s) => s.id === session.id)) return prev;
-      return [session, ...prev];
-    });
-    await openSession(session);
+    const { session, overview } = result.data!;
+    setSessions((prev) => prev.some((s) => s.id === session.id) ? prev : [session, ...prev]);
+    setActiveSession(session);
+    if (overview) {
+      setActiveWines(overview.wines);
+      setActiveTastings(overview.tastings);
+      setActiveParticipants(overview.participants);
+      setActiveDishes(overview.dishes);
+      setActiveTastingDishes(overview.tasting_dishes);
+      await Promise.all([
+        offlineStore.set(K.sessionWines(session.id), overview.wines),
+        offlineStore.set(K.sessionTastings(session.id), overview.tastings),
+      ]);
+    } else {
+      await openSession(session);
+    }
     return session;
   }, [openSession]);
 
