@@ -5,13 +5,15 @@ import { useOnlineStatus } from "./useOnlineStatus";
 import {
   createSession,
   fetchSessionById,
-  fetchSessionTastings,
-  fetchSessionWines,
+  fetchSessionOverview,
   joinSessionByCode,
   queueSaveTasting,
 } from "../lib/session-actions";
 import type {
   CreateSessionInput,
+  SessionDishRow,
+  SessionParticipant,
+  SessionTastingDishRow,
   SessionTastingInsert,
   SessionTastingRow,
   SessionToast,
@@ -41,6 +43,9 @@ export function useTastingSessions(userId: string) {
   const activeWinesRef = useRef<SessionWineRow[]>([]);
   useEffect(() => { activeWinesRef.current = activeWines; }, [activeWines]);
   const [activeTastings, setActiveTastings] = useState<SessionTastingRow[]>([]);
+  const [activeParticipants, setActiveParticipants] = useState<SessionParticipant[]>([]);
+  const [activeDishes, setActiveDishes] = useState<SessionDishRow[]>([]);
+  const [activeTastingDishes, setActiveTastingDishes] = useState<SessionTastingDishRow[]>([]);
 
   const fetchSessions = useCallback(async () => {
     setLoading(true);
@@ -86,17 +91,17 @@ export function useTastingSessions(userId: string) {
     if (cachedWines) setActiveWines(cachedWines);
     if (cachedTastings) setActiveTastings(cachedTastings);
 
-    const [winesResult, tastingsResult] = await Promise.all([
-      fetchSessionWines(session.id),
-      fetchSessionTastings(session.id),
-    ]);
-    if (winesResult.data) {
-      setActiveWines(winesResult.data);
-      await offlineStore.set(K.sessionWines(session.id), winesResult.data);
-    }
-    if (tastingsResult.data) {
-      setActiveTastings(tastingsResult.data);
-      await offlineStore.set(K.sessionTastings(session.id), tastingsResult.data);
+    const result = await fetchSessionOverview(session.id);
+    if (result.data) {
+      setActiveWines(result.data.wines);
+      setActiveTastings(result.data.tastings);
+      setActiveParticipants(result.data.participants);
+      setActiveDishes(result.data.dishes);
+      setActiveTastingDishes(result.data.tasting_dishes);
+      await Promise.all([
+        offlineStore.set(K.sessionWines(session.id), result.data.wines),
+        offlineStore.set(K.sessionTastings(session.id), result.data.tastings),
+      ]);
     }
   }, []);
 
@@ -114,6 +119,9 @@ export function useTastingSessions(userId: string) {
     setActiveSession(null);
     setActiveWines([]);
     setActiveTastings([]);
+    setActiveParticipants([]);
+    setActiveDishes([]);
+    setActiveTastingDishes([]);
   }, []);
 
   const handleCreate = useCallback(async (input: CreateSessionInput): Promise<TastingSessionRow | null> => {
@@ -216,7 +224,7 @@ export function useTastingSessions(userId: string) {
           setSessions((prev) => prev.map((s) => s.id === updated.id ? updated : s));
           // Re-fetch tastings when status changes or reveal advances (RLS opens up progressively)
           if (updated.status !== "active") {
-            fetchSessionTastings(sessionId).then((r) => { if (r.data) setActiveTastings(r.data); });
+            fetchSessionOverview(sessionId).then((r) => { if (r.data) setActiveTastings(r.data.tastings); });
           }
         }
       )
@@ -248,11 +256,13 @@ export function useTastingSessions(userId: string) {
   // Reconcile local state on reconnect
   useEffect(() => {
     if (!online || !activeSession) return;
-    fetchSessionTastings(activeSession.id).then((r) => {
-      if (r.data) {
-        setActiveTastings(r.data);
-        offlineStore.set(K.sessionTastings(activeSession.id), r.data);
-      }
+    fetchSessionOverview(activeSession.id).then((r) => {
+      if (!r.data) return;
+      setActiveTastings(r.data.tastings);
+      setActiveParticipants(r.data.participants);
+      setActiveDishes(r.data.dishes);
+      setActiveTastingDishes(r.data.tasting_dishes);
+      void offlineStore.set(K.sessionTastings(activeSession.id), r.data.tastings);
     });
   }, [online, activeSession?.id]);
 
@@ -265,6 +275,12 @@ export function useTastingSessions(userId: string) {
     activeSession,
     activeWines,
     activeTastings,
+    activeParticipants,
+    activeDishes,
+    activeTastingDishes,
+    setActiveParticipants,
+    setActiveDishes,
+    setActiveTastingDishes,
     fetchSessions,
     fetchMoreSessions,
     openSession,

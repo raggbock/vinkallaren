@@ -335,7 +335,14 @@ function CellarScreenInner({ session, pendingJoinCode, onJoinCodeConsumed }: { s
             styles={styles} userId={session.user.id}
             sessions={tasting.sessions} loading={tasting.loading} toasts={tasting.toasts} pushToast={tasting.pushToast}
             activeSession={tasting.activeSession} activeWines={tasting.activeWines}
-            activeTastings={tasting.activeTastings} wines={wines}
+            activeTastings={tasting.activeTastings}
+            activeParticipants={tasting.activeParticipants}
+            activeDishes={tasting.activeDishes}
+            activeTastingDishes={tasting.activeTastingDishes}
+            onSetActiveParticipants={tasting.setActiveParticipants}
+            onSetActiveDishes={tasting.setActiveDishes}
+            onSetActiveTastingDishes={tasting.setActiveTastingDishes}
+            wines={wines}
             searchWineNames={searchCatalogWineNames}
             onBack={() => { tasting.closeSession(); }}
             onFetchSessions={tasting.fetchSessions} onCreateSession={tasting.createSession}

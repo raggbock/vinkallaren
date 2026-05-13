@@ -2,7 +2,7 @@ import { createContext, useContext, useMemo, type ReactNode } from "react";
 import { useTastingSessions } from "../hooks/useTastingSessions";
 import { useSessionWset } from "../hooks/useSessionWset";
 import type { WsetTastingData } from "../lib/wset-data";
-import type { CreateSessionInput, SessionTastingInsert, SessionTastingRow, SessionWineRow, SessionToast, TastingSessionRow } from "../types/tasting-session";
+import type { CreateSessionInput, SessionDishRow, SessionParticipant, SessionTastingDishRow, SessionTastingInsert, SessionTastingRow, SessionWineRow, SessionToast, TastingSessionRow } from "../types/tasting-session";
 
 export type TastingContextValue = {
   sessions: TastingSessionRow[];
@@ -12,6 +12,12 @@ export type TastingContextValue = {
   activeSession: TastingSessionRow | null;
   activeWines: SessionWineRow[];
   activeTastings: SessionTastingRow[];
+  activeParticipants: SessionParticipant[];
+  activeDishes: SessionDishRow[];
+  activeTastingDishes: SessionTastingDishRow[];
+  setActiveParticipants: React.Dispatch<React.SetStateAction<SessionParticipant[]>>;
+  setActiveDishes: React.Dispatch<React.SetStateAction<SessionDishRow[]>>;
+  setActiveTastingDishes: React.Dispatch<React.SetStateAction<SessionTastingDishRow[]>>;
   fetchSessions: () => void;
   openSession: (session: TastingSessionRow) => void;
   openSessionById: (sessionId: string) => Promise<TastingSessionRow | null>;
@@ -48,6 +54,12 @@ export function TastingProvider({ userId, children }: { userId: string; children
     activeSession: sessions.activeSession,
     activeWines: sessions.activeWines,
     activeTastings: sessions.activeTastings,
+    activeParticipants: sessions.activeParticipants,
+    activeDishes: sessions.activeDishes,
+    activeTastingDishes: sessions.activeTastingDishes,
+    setActiveParticipants: sessions.setActiveParticipants,
+    setActiveDishes: sessions.setActiveDishes,
+    setActiveTastingDishes: sessions.setActiveTastingDishes,
     fetchSessions: sessions.fetchSessions,
     openSession: sessions.openSession,
     openSessionById: sessions.openSessionById,
@@ -62,7 +74,8 @@ export function TastingProvider({ userId, children }: { userId: string; children
     openWset: wset.open,
     wsetProps: wset.wsetProps,
   }), [sessions.sessions, sessions.loading, sessions.toasts, sessions.pushToast, sessions.activeSession,
-    sessions.activeWines, sessions.activeTastings, sessions.fetchSessions,
+    sessions.activeWines, sessions.activeTastings, sessions.activeParticipants, sessions.activeDishes, sessions.activeTastingDishes,
+    sessions.setActiveParticipants, sessions.setActiveDishes, sessions.setActiveTastingDishes, sessions.fetchSessions,
     sessions.openSession, sessions.openSessionById, sessions.closeSession, sessions.createSession,
     sessions.joinSession, sessions.setActiveWines, sessions.setActiveTastings,
     sessions.setActiveSession, sessions.saveTastingOptimistic,

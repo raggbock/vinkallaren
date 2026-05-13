@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { PanelHeader, type Suggestion } from "./form-controls";
 import { ActiveSessionView } from "./session-active-view";
 import { SessionTastingView } from "./session-tasting-view";
-import { addSessionDish, advanceReveal, deleteSessionDish, fetchSessionDishes, fetchSessionParticipants, fetchTastingDishes, finishReveal, saveTasting, saveTastingDishes, startSession } from "../lib/session-actions";
+import { addSessionDish, advanceReveal, deleteSessionDish, fetchSessionParticipants, fetchTastingDishes, finishReveal, saveTasting, saveTastingDishes, startSession } from "../lib/session-actions";
 import { supabase } from "../lib/supabase";
 import { SessionSetupView } from "./session-setup-view";
 import { AddWineForm, CreateForm, HostControls, InlineError, JoinForm, s } from "./session-forms";
@@ -20,6 +20,8 @@ type SharedStyles = typeof themeStyles;
 
 export function TastingSessionPanel({
   styles, userId, sessions, loading, toasts, pushToast, activeSession, activeWines, activeTastings,
+  activeParticipants, activeDishes, activeTastingDishes,
+  onSetActiveParticipants, onSetActiveDishes, onSetActiveTastingDishes,
   wines, searchWineNames, onBack, onFetchSessions, onCreateSession, onJoinSession, onOpenSession,
   onCloseSession, onSetActiveWines, onSetActiveTastings, onSetActiveSession,
   onOpenWset, wsetData, onSessionEnded, onSaveTastingOptimistic,
@@ -33,6 +35,12 @@ export function TastingSessionPanel({
   activeSession: TastingSessionRow | null;
   activeWines: SessionWineRow[];
   activeTastings: SessionTastingRow[];
+  activeParticipants: SessionParticipant[];
+  activeDishes: SessionDishRow[];
+  activeTastingDishes: SessionTastingDishRow[];
+  onSetActiveParticipants: React.Dispatch<React.SetStateAction<SessionParticipant[]>>;
+  onSetActiveDishes: React.Dispatch<React.SetStateAction<SessionDishRow[]>>;
+  onSetActiveTastingDishes: React.Dispatch<React.SetStateAction<SessionTastingDishRow[]>>;
   wines: WineRecord[];
   searchWineNames: (query: string, offset?: number) => Promise<{ suggestions: Suggestion[]; hasMore: boolean; nextOffset: number }>;
   onBack: () => void;
@@ -52,10 +60,13 @@ export function TastingSessionPanel({
   const [view, setView] = useState<"list" | "create" | "join">("list");
   const [tastingWine, setTastingWine] = useState<SessionWineRow | null>(null);
   const [savingTasting, setSavingTasting] = useState(false);
-  const [participants, setParticipants] = useState<SessionParticipant[]>([]);
+  const participants = activeParticipants;
+  const dishes = activeDishes;
+  const tastingDishes = activeTastingDishes;
+  const setParticipants = onSetActiveParticipants;
+  const setDishes = onSetActiveDishes;
+  const setTastingDishes = onSetActiveTastingDishes;
   const [inlineError, setInlineError] = useState<string | null>(null);
-  const [dishes, setDishes] = useState<SessionDishRow[]>([]);
-  const [tastingDishes, setTastingDishes] = useState<SessionTastingDishRow[]>([]);
 
   useEffect(() => { onFetchSessions(); setView("list"); setTastingWine(null); }, []);
 
@@ -87,18 +98,17 @@ export function TastingSessionPanel({
   }
 
   useEffect(() => {
-    if (!activeSession) { setParticipants([]); return; }
+    if (!activeSession) return;
     const sessionId = activeSession.id;
     const refetch = () => fetchSessionParticipants(sessionId).then((r) => {
       if (r.data) setParticipants(r.data);
     });
-    refetch();
     const channel = supabase
       .channel(`session-participants-${sessionId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "session_participants", filter: `session_id=eq.${sessionId}` }, refetch)
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [activeSession?.id]);
+  }, [activeSession?.id, setParticipants]);
 
   // Named realtime toasts: announce new joiners and new ratings from others
   const seenParticipantsRef = useRef<{ sessionId: string | null; ids: Set<string> }>({ sessionId: null, ids: new Set() });
@@ -137,11 +147,8 @@ export function TastingSessionPanel({
     }
   }, [activeTastings, activeSession?.id, userId, activeWines, participants, pushToast]);
 
-  useEffect(() => {
-    if (!activeSession) { setDishes([]); setTastingDishes([]); return; }
-    fetchSessionDishes(activeSession.id).then((r) => { if (r.data) setDishes(r.data); });
-    fetchTastingDishes(activeSession.id).then((r) => { if (r.data) setTastingDishes(r.data); });
-  }, [activeSession?.id, activeSession?.status]);
+  // Dishes/tastingDishes are seeded by the hook's openSession overview RPC;
+  // we only refetch tastingDishes after a save that attaches dish links.
 
   async function handleAddDish(name: string) {
     if (!activeSession) return;

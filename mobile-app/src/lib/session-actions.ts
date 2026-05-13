@@ -123,6 +123,20 @@ export async function fetchSessionParticipants(sessionId: string): Promise<Resul
   return ok((data ?? []) as SessionParticipant[]);
 }
 
+export type SessionOverview = {
+  wines: SessionWineRow[];
+  tastings: SessionTastingRow[];
+  participants: SessionParticipant[];
+  dishes: SessionDishRow[];
+  tasting_dishes: SessionTastingDishRow[];
+};
+
+export async function fetchSessionOverview(sessionId: string): Promise<Result<SessionOverview>> {
+  const { data, error } = await supabase.rpc("get_session_overview", { p_session_id: sessionId });
+  if (error) return fail(error.message);
+  return ok(data as SessionOverview);
+}
+
 export { shareSession } from "./join-link";
 
 export async function reorderSessionWines(
