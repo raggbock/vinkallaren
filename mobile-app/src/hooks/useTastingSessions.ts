@@ -205,26 +205,32 @@ export function useTastingSessions(userId: string) {
       .channel(`session-tastings-${sessionId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "session_tastings", filter: `session_id=eq.${sessionId}` },
         (payload) => {
+          const announceRating = (tasting: SessionTastingRow, next: SessionTastingRow[]) => {
+            if (tasting.user_id === userId || tasting.rating == null) return;
+            const wineName = activeWinesRef.current.find((w) => w.id === tasting.session_wine_id)?.name;
+            const display = activeParticipantsRef.current.find((p) => p.user_id === tasting.user_id)?.display_name || "Någon";
+            pushToast(wineName ? `${display} har provat ${wineName}` : `${display} har provat ett vin`);
+            const total = activeParticipantsRef.current.length;
+            const wineTastings = next.filter((t) => t.session_wine_id === tasting.session_wine_id && t.rating != null);
+            if (total > 1 && wineTastings.length >= total && wineName) {
+              pushToast(`Alla har smakat ${wineName}`);
+            }
+          };
           if (payload.eventType === "INSERT") {
             const tasting = payload.new as SessionTastingRow;
             setActiveTastings((prev) => {
               const next = [...prev.filter((t) => t.id !== tasting.id), tasting];
               persist(next);
-              if (tasting.user_id !== userId && tasting.rating != null) {
-                const total = activeParticipantsRef.current.length;
-                const wineTastings = next.filter((t) => t.session_wine_id === tasting.session_wine_id && t.rating != null);
-                if (total > 1 && wineTastings.length >= total) {
-                  const wineName = activeWinesRef.current.find((w) => w.id === tasting.session_wine_id)?.name;
-                  if (wineName) pushToast(`Alla har smakat ${wineName}`);
-                }
-              }
+              announceRating(tasting, next);
               return next;
             });
           } else if (payload.eventType === "UPDATE") {
             const tasting = payload.new as SessionTastingRow;
             setActiveTastings((prev) => {
+              const before = prev.find((t) => t.id === tasting.id);
               const next = prev.map((t) => t.id === tasting.id ? tasting : t);
               persist(next);
+              if ((before?.rating ?? null) === null && tasting.rating != null) announceRating(tasting, next);
               return next;
             });
           } else if (payload.eventType === "DELETE") {

@@ -110,7 +110,8 @@ export function TastingSessionPanel({
     return () => { supabase.removeChannel(channel); };
   }, [activeSession?.id, setParticipants]);
 
-  // Named realtime toasts: announce new joiners and new ratings from others
+  // Named "X har gått med" toast — diff participants list locally because the
+  // realtime payload only carries user_id (display_name lands via refetch).
   const seenParticipantsRef = useRef<{ sessionId: string | null; ids: Set<string> }>({ sessionId: null, ids: new Set() });
   useEffect(() => {
     if (!activeSession) { seenParticipantsRef.current = { sessionId: null, ids: new Set() }; return; }
@@ -125,27 +126,6 @@ export function TastingSessionPanel({
       if (p.user_id !== userId) pushToast(`${p.display_name || "Någon"} har gått med`);
     }
   }, [participants, activeSession?.id, userId, pushToast]);
-
-  const seenTastingsRef = useRef<{ sessionId: string | null; keys: Set<string> }>({ sessionId: null, keys: new Set() });
-  useEffect(() => {
-    if (!activeSession) { seenTastingsRef.current = { sessionId: null, keys: new Set() }; return; }
-    const ref = seenTastingsRef.current;
-    const ratedKey = (t: SessionTastingRow) => `${t.user_id}|${t.session_wine_id}`;
-    if (ref.sessionId !== activeSession.id) {
-      seenTastingsRef.current = { sessionId: activeSession.id, keys: new Set(activeTastings.filter((t) => t.rating != null).map(ratedKey)) };
-      return;
-    }
-    for (const t of activeTastings) {
-      if (t.rating == null) continue;
-      const key = ratedKey(t);
-      if (ref.keys.has(key)) continue;
-      ref.keys.add(key);
-      if (t.user_id === userId) continue;
-      const wineName = activeWines.find((w) => w.id === t.session_wine_id)?.name;
-      const display = participants.find((p) => p.user_id === t.user_id)?.display_name || "Någon";
-      pushToast(wineName ? `${display} har provat ${wineName}` : `${display} har provat ett vin`);
-    }
-  }, [activeTastings, activeSession?.id, userId, activeWines, participants, pushToast]);
 
   // Dishes/tastingDishes are seeded by the hook's openSession overview RPC;
   // we only refetch tastingDishes after a save that attaches dish links.
