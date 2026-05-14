@@ -7,6 +7,7 @@ import type { Session } from "@supabase/supabase-js";
 import { supabase, supabaseConfigured } from "./src/lib/supabase";
 import { showError } from "./src/lib/show-error";
 import { BottomTabBar } from "./src/components/cellar-sections";
+import { SessionToasts } from "./src/components/session-toasts";
 import { CellarTab } from "./src/components/cellar-tab";
 import { SuccessOverlay, useSuccessOverlay } from "./src/components/success-overlay";
 
@@ -431,6 +432,7 @@ function CellarScreenInner({ session, pendingJoinCode, onJoinCodeConsumed }: { s
           </RNView>
         </ScrollView>
       )}
+      <SessionToasts toasts={tasting.toasts} />
       <BottomTabBar activeSection={activeSection} sections={CELLAR_SECTIONS} styles={styles} onSelect={setActiveSection} />
     </SafeAreaView>
   );

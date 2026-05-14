@@ -5,7 +5,6 @@ import { getWineProgress, isAllDone } from "../lib/session-progress";
 import { styles as theme, colors } from "../styles/theme";
 import type { SessionDishRow, SessionParticipant, SessionTastingRow, SessionToast, SessionWineRow, TastingSessionRow } from "../types/tasting-session";
 import { SessionDishes } from "./session-dishes";
-import { SessionToasts } from "./session-toasts";
 
 export { isAllDone } from "../lib/session-progress";
 
@@ -69,7 +68,6 @@ export function ActiveSessionView({
         </Pressable>
       </View>
 
-      <SessionToasts toasts={toasts} />
 
       {/* Dishes */}
       <SessionDishes dishes={dishes} isHost={session.host_id === userId} onAdd={onAddDish} onRemove={onRemoveDish} />

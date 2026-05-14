@@ -44,6 +44,8 @@ export function useTastingSessions(userId: string) {
   useEffect(() => { activeWinesRef.current = activeWines; }, [activeWines]);
   const [activeTastings, setActiveTastings] = useState<SessionTastingRow[]>([]);
   const [activeParticipants, setActiveParticipants] = useState<SessionParticipant[]>([]);
+  const activeParticipantsRef = useRef<SessionParticipant[]>([]);
+  useEffect(() => { activeParticipantsRef.current = activeParticipants; }, [activeParticipants]);
   const [activeDishes, setActiveDishes] = useState<SessionDishRow[]>([]);
   const [activeTastingDishes, setActiveTastingDishes] = useState<SessionTastingDishRow[]>([]);
 
@@ -209,9 +211,9 @@ export function useTastingSessions(userId: string) {
               const next = [...prev.filter((t) => t.id !== tasting.id), tasting];
               persist(next);
               if (tasting.user_id !== userId && tasting.rating != null) {
-                const participants = new Set(next.map((t) => t.user_id));
+                const total = activeParticipantsRef.current.length;
                 const wineTastings = next.filter((t) => t.session_wine_id === tasting.session_wine_id && t.rating != null);
-                if (wineTastings.length === participants.size && participants.size > 1) {
+                if (total > 1 && wineTastings.length >= total) {
                   const wineName = activeWinesRef.current.find((w) => w.id === tasting.session_wine_id)?.name;
                   if (wineName) pushToast(`Alla har smakat ${wineName}`);
                 }
