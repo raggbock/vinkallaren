@@ -13,13 +13,14 @@ import type { WineRecord } from "../types/wine";
 import { ResultsDashboard } from "./results-dashboard";
 import { buildSessionResults } from "../lib/session-results";
 import { RevealView } from "./reveal-view";
+import { UpgradePrompt } from "./upgrade-prompt";
 
 import { colors } from "../styles/theme";
 import type { styles as themeStyles } from "../styles/theme";
 type SharedStyles = typeof themeStyles;
 
 export function TastingSessionPanel({
-  styles, userId, sessions, loading, toasts, pushToast, activeSession, activeWines, activeTastings,
+  styles, userId, isAnonymous, sessions, loading, toasts, pushToast, activeSession, activeWines, activeTastings,
   activeParticipants, activeDishes, activeTastingDishes,
   onSetActiveParticipants, onSetActiveDishes, onSetActiveTastingDishes,
   wines, searchWineNames, onBack, onFetchSessions, onCreateSession, onJoinSession, onOpenSession,
@@ -28,6 +29,7 @@ export function TastingSessionPanel({
 }: {
   styles: SharedStyles;
   userId: string;
+  isAnonymous: boolean;
   sessions: TastingSessionRow[];
   loading: boolean;
   toasts: SessionToast[];
@@ -58,6 +60,7 @@ export function TastingSessionPanel({
   onSaveTastingOptimistic: (row: SessionTastingInsert) => Promise<void>;
 }) {
   const [view, setView] = useState<"list" | "create" | "join">("list");
+  const [upgradeVisible, setUpgradeVisible] = useState(false);
   const [tastingWine, setTastingWine] = useState<SessionWineRow | null>(null);
   const [savingTasting, setSavingTasting] = useState(false);
   const participants = activeParticipants;
@@ -172,12 +175,23 @@ export function TastingSessionPanel({
   // Results view for ended/revealed sessions
   if (activeSession && activeSession.status === "ended") {
     const results = buildSessionResults(activeWines, activeTastings, activeSession.format, activeSession.created_at, dishes, tastingDishes);
+    const isHost = activeSession.host_id === userId;
     return (
       <View style={styles.panel}>
         <ResultsDashboard
           results={results}
           participants={participants}
           onBack={() => { onCloseSession(); setView("list"); }}
+          isAnonymous={isAnonymous}
+          isHost={isHost}
+          onCreateAccount={() => setUpgradeVisible(true)}
+          onStartOwnTasting={() => { onCloseSession(); setView("create"); }}
+        />
+        <UpgradePrompt
+          visible={upgradeVisible}
+          isBlocked={false}
+          onUpgraded={() => setUpgradeVisible(false)}
+          onDismiss={() => setUpgradeVisible(false)}
         />
       </View>
     );
