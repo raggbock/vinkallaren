@@ -49,4 +49,4 @@ At the start of each session, check for bloat:
 
 - Commit messages in English
 - One logical change per commit
-- Push to `codex/initial-setup` branch (auto-deploys to Cloudflare Pages)
+- Push to `main` (auto-deploys to Cloudflare Pages — production branch must be set to `main` in the Pages dashboard)

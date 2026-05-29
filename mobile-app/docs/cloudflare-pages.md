@@ -5,7 +5,7 @@ Use Cloudflare Pages to host the Expo web export from this repo.
 ## Repository Settings
 
 - Repository: `raggbock/vinkallaren`
-- Branch: `codex/initial-setup` for first test deploy
+- Production branch: `main` (the old `codex/initial-setup` branch is archived as tag `archive/codex-initial-setup` and no longer exists — the Pages "Production branch" setting MUST be `main` or deploys will silently stop)
 - Root directory: `mobile-app`
 
 ## Build Settings
