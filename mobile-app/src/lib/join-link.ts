@@ -1,7 +1,7 @@
 import { Platform, Share, Alert } from "react-native";
 import * as Clipboard from "expo-clipboard";
 
-const BASE_URL = "https://minvinkallare.se";
+const BASE_URL = "https://www.minvinkallare.se";
 
 /** Extract join code from current URL path: /join/ABC123 → ABC123 */
 export function parseJoinCodeFromUrl(): string | null {

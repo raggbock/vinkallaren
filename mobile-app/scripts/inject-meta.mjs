@@ -26,20 +26,20 @@ const tags = `
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&display=swap" onload="this.rel='stylesheet'" />
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&display=swap" /></noscript>${preloadTag}
-    <link rel="canonical" href="https://minvinkallare.se/" />
+    <link rel="canonical" href="https://www.minvinkallare.se/" />
     <meta property="og:title" content="Vinkällaren — Vinprovning med vänner" />
     <meta property="og:description" content="Skapa eller gå med i en vinprovning, blindprova och betygsätt tillsammans, och avslöja resultaten. Gratis och utan reklam." />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://minvinkallare.se/" />
+    <meta property="og:url" content="https://www.minvinkallare.se/" />
     <meta property="og:locale" content="sv_SE" />
     <meta property="og:site_name" content="Vinkällaren" />
-    <meta property="og:image" content="https://minvinkallare.se/og-image.png" />
+    <meta property="og:image" content="https://www.minvinkallare.se/og-image.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Vinkällaren — Vinprovning med vänner" />
     <meta name="twitter:description" content="Skapa eller gå med i en vinprovning, blindprova och betygsätt tillsammans, och avslöja resultaten." />
-    <meta name="twitter:image" content="https://minvinkallare.se/og-image.png" />
+    <meta name="twitter:image" content="https://www.minvinkallare.se/og-image.png" />
     <link rel="manifest" href="/manifest.json" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -51,7 +51,7 @@ const jsonLd = `
       "@type": "WebApplication",
       name: "Vinkällaren",
       description: "Skapa eller gå med i en vinprovning, blindprova och betygsätt tillsammans, och avslöja resultaten. Plus: katalogisera din vinsamling och hitta rätt vin till maten.",
-      url: "https://minvinkallare.se/",
+      url: "https://www.minvinkallare.se/",
       applicationCategory: "LifestyleApplication",
       operatingSystem: "Web",
       inLanguage: "sv-SE",
