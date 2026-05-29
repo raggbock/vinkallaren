@@ -27,22 +27,46 @@ const tags = `
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&display=swap" onload="this.rel='stylesheet'" />
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&display=swap" /></noscript>${preloadTag}
     <link rel="canonical" href="https://minvinkallare.se/" />
-    <meta property="og:title" content="Vinkällaren — Din digitala vinsamling" />
-    <meta property="og:description" content="Håll koll på din vinsamling, hitta rätt vin till maten och spara smaknoteringar. Gratis och utan reklam." />
+    <meta property="og:title" content="Vinkällaren — Vinprovning med vänner" />
+    <meta property="og:description" content="Skapa eller gå med i en vinprovning, blindprova och betygsätt tillsammans, och avslöja resultaten. Gratis och utan reklam." />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://minvinkallare.se/" />
     <meta property="og:locale" content="sv_SE" />
     <meta property="og:site_name" content="Vinkällaren" />
-    <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="Vinkällaren — Din digitala vinsamling" />
-    <meta name="twitter:description" content="Håll koll på din vinsamling, hitta rätt vin till maten och spara smaknoteringar." />
+    <meta property="og:image" content="https://minvinkallare.se/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Vinkällaren — Vinprovning med vänner" />
+    <meta name="twitter:description" content="Skapa eller gå med i en vinprovning, blindprova och betygsätt tillsammans, och avslöja resultaten." />
+    <meta name="twitter:image" content="https://minvinkallare.se/og-image.png" />
     <link rel="manifest" href="/manifest.json" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Vinkällaren" />`;
 
+const jsonLd = `
+    <script type="application/ld+json">${JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      name: "Vinkällaren",
+      description: "Skapa eller gå med i en vinprovning, blindprova och betygsätt tillsammans, och avslöja resultaten. Plus: katalogisera din vinsamling och hitta rätt vin till maten.",
+      url: "https://minvinkallare.se/",
+      applicationCategory: "LifestyleApplication",
+      operatingSystem: "Web",
+      inLanguage: "sv-SE",
+      offers: { "@type": "Offer", price: "0", priceCurrency: "SEK" },
+      featureList: [
+        "Vinprovning med vänner",
+        "Blindprovning med avslöjning",
+        "Betygsätt och jämför viner tillsammans",
+        "Katalogisera din vinsamling",
+        "Hitta rätt vin till maten",
+      ],
+    })}</script>`;
+
 // Inject before </head>
-const patched = html.replace("</head>", tags + "\n  </head>");
+const patched = html.replace("</head>", tags + jsonLd + "\n  </head>");
 
 // Also fix the noscript message to Swedish
 const withNoscript = patched.replace(
@@ -74,6 +98,10 @@ const skeleton = `
         <div style="width:170px;height:12px;background:#E0D8CE;border-radius:6px;animation:pulse 1.5s ease-in-out infinite;animation-delay:0.4s"></div>
       </div>
       <style>@keyframes pulse{0%,100%{opacity:0.4}50%{opacity:1}}.app-ready #loading-skeleton{opacity:0;pointer-events:none}</style>
+    </div>
+    <div id="seo-content" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%)">
+      <h1>Vinprovning med vänner</h1>
+      <p>Vinkällaren är appen för vinprovning. Skapa en blindprovning, dela en kod med dina vänner och betygsätt vinerna tillsammans — avslöja resultaten när alla är klara. Håll dessutom ordning på din vinsamling och hitta rätt vin till maten.</p>
     </div>
     <div id="root"></div>`;
 const withSkeleton = withTheme.replace('<div id="root"></div>', skeleton);
