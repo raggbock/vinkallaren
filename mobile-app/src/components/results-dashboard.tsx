@@ -7,14 +7,19 @@ import { getWsetParameterComparison, getSharedAromas, type DishWineResult, type 
 import { buildWsetSummary, type WsetTastingData } from "../lib/wset-data";
 import type { SessionParticipant } from "../types/tasting-session";
 import { formatDateShort } from "../lib/format-date";
+import { TastingCta } from "./tasting-cta";
 
 type Props = {
   results: SessionResults;
   participants: SessionParticipant[];
   onBack: () => void;
+  isAnonymous: boolean;
+  isHost: boolean;
+  onCreateAccount: () => void;
+  onStartOwnTasting: () => void;
 };
 
-export function ResultsDashboard({ results, participants, onBack }: Props) {
+export function ResultsDashboard({ results, participants, onBack, isAnonymous, isHost, onCreateAccount, onStartOwnTasting }: Props) {
   const participantMap = new Map(participants.map((p) => [p.user_id, p]));
 
   return (
@@ -63,6 +68,13 @@ export function ResultsDashboard({ results, participants, onBack }: Props) {
           participantMap={participantMap}
         />
       ))}
+
+      <TastingCta
+        isAnonymous={isAnonymous}
+        isHost={isHost}
+        onCreateAccount={onCreateAccount}
+        onStartOwnTasting={onStartOwnTasting}
+      />
     </View>
   );
 }

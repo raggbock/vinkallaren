@@ -237,6 +237,10 @@ function ExpandableSessionCard({ session, styles }: { session: TastingSessionRow
               results={buildSessionResults(wines, tastings, session.format, session.created_at)}
               participants={participants}
               onBack={() => setExpanded(false)}
+              isAnonymous={false}
+              isHost={true}
+              onCreateAccount={() => {}}
+              onStartOwnTasting={() => {}}
             />
           </View>
         ) : expanded && !loaded ? (

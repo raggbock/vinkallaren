@@ -165,7 +165,7 @@ function MarketingContent() {
         <SvgLogo height={220} />
       </View>
       <Text style={s.subheadline}>
-        Din personliga vinsamling i fickan — katalogisera flaskor, håll provningar med vänner och hitta perfekta vinet till middagen.
+        Håll vinprovningar med vänner — blindprova, betygsätt tillsammans och avslöja resultaten. Och håll ordning på din vinsamling däremellan.
       </Text>
       <Divider />
       <View style={s.featureList}>
@@ -214,8 +214,9 @@ function VerificationView({ email, onBack, onGuestSignIn, guestBusy }: Verificat
   );
 }
 
-function AuthForm() {
+function AuthForm({ invited }: { invited?: boolean }) {
   const auth = useAuthForm();
+  const [showLogin, setShowLogin] = useState(!invited);
 
   if (auth.awaitingVerification) {
     return <VerificationView email={auth.email} onBack={auth.resetVerification} onGuestSignIn={auth.handleGuestSignIn} guestBusy={auth.guestBusy} />;
@@ -226,30 +227,52 @@ function AuthForm() {
       <View style={{ alignItems: "center", marginBottom: -4 }}>
         <WineGlassDoodle size={48} color="#C83C2D" />
       </View>
-      <Text style={s.formWelcome}>Välkommen in</Text>
-      <View style={s.segment}>
-        <Pressable onPress={() => auth.setMode("signin")} style={[s.segmentTab, auth.mode === "signin" && s.segmentTabActive]}>
-          <Text style={[s.segmentLabel, auth.mode === "signin" && s.segmentLabelActive]}>Logga in</Text>
-        </Pressable>
-        <Pressable onPress={() => auth.setMode("signup")} style={[s.segmentTab, auth.mode === "signup" && s.segmentTabActive]}>
-          <Text style={[s.segmentLabel, auth.mode === "signup" && s.segmentLabelActive]}>Skapa konto</Text>
-        </Pressable>
-      </View>
-      <View style={s.fieldGroup}>
-        <Text style={s.fieldLabel}>E-post</Text>
-        <TextInput value={auth.email} onChangeText={auth.setEmail} autoCapitalize="none" keyboardType="email-address" returnKeyType="next" placeholder="namn@exempel.se" style={s.fieldInput} placeholderTextColor="#8f8178" accessibilityLabel="E-post" />
-      </View>
-      <View style={s.fieldGroup}>
-        <Text style={s.fieldLabel}>Lösenord</Text>
-        <TextInput value={auth.password} onChangeText={auth.setPassword} secureTextEntry returnKeyType="go" onSubmitEditing={auth.handleAuth} style={s.fieldInput} placeholderTextColor="#8f8178" accessibilityLabel="Lösenord" />
-      </View>
-      <Pressable onPress={auth.handleAuth} style={s.primaryCta} disabled={auth.busy} {...web({ dataSet: { landingCta: true } })}>
-        <Text style={s.primaryCtaText}>{auth.busy ? "Arbetar..." : auth.mode === "signup" ? "Skapa konto" : "Logga in"}</Text>
-      </Pressable>
-      {auth.signupNotice ? <Text style={s.notice}>{auth.signupNotice}</Text> : null}
-      <Pressable onPress={auth.handleGuestSignIn} style={s.guestCta} disabled={auth.guestBusy} {...web({ dataSet: { landingCta: true } })}>
-        <Text style={s.guestCtaText}>{auth.guestBusy ? "Startar gästläge..." : "Testa utan konto"}</Text>
-      </Pressable>
+
+      {invited ? (
+        <>
+          <Text style={s.formWelcome}>Du är inbjuden!</Text>
+          <Pressable onPress={auth.handleGuestSignIn} style={s.primaryCta} disabled={auth.guestBusy} {...web({ dataSet: { landingCta: true } })}>
+            <Text style={s.primaryCtaText}>{auth.guestBusy ? "Ansluter..." : "Gå med i provningen"}</Text>
+          </Pressable>
+          {!showLogin ? (
+            <Pressable onPress={() => setShowLogin(true)} style={{ alignItems: "center", paddingVertical: 6 }}>
+              <Text style={s.guestCtaText}>Har du redan ett konto? Logga in</Text>
+            </Pressable>
+          ) : null}
+        </>
+      ) : (
+        <Text style={s.formWelcome}>Välkommen in</Text>
+      )}
+
+      {showLogin ? (
+        <>
+          <View style={s.segment}>
+            <Pressable onPress={() => auth.setMode("signin")} style={[s.segmentTab, auth.mode === "signin" && s.segmentTabActive]}>
+              <Text style={[s.segmentLabel, auth.mode === "signin" && s.segmentLabelActive]}>Logga in</Text>
+            </Pressable>
+            <Pressable onPress={() => auth.setMode("signup")} style={[s.segmentTab, auth.mode === "signup" && s.segmentTabActive]}>
+              <Text style={[s.segmentLabel, auth.mode === "signup" && s.segmentLabelActive]}>Skapa konto</Text>
+            </Pressable>
+          </View>
+          <View style={s.fieldGroup}>
+            <Text style={s.fieldLabel}>E-post</Text>
+            <TextInput value={auth.email} onChangeText={auth.setEmail} autoCapitalize="none" keyboardType="email-address" returnKeyType="next" placeholder="namn@exempel.se" style={s.fieldInput} placeholderTextColor="#8f8178" accessibilityLabel="E-post" />
+          </View>
+          <View style={s.fieldGroup}>
+            <Text style={s.fieldLabel}>Lösenord</Text>
+            <TextInput value={auth.password} onChangeText={auth.setPassword} secureTextEntry returnKeyType="go" onSubmitEditing={auth.handleAuth} style={s.fieldInput} placeholderTextColor="#8f8178" accessibilityLabel="Lösenord" />
+          </View>
+          <Pressable onPress={auth.handleAuth} style={s.primaryCta} disabled={auth.busy} {...web({ dataSet: { landingCta: true } })}>
+            <Text style={s.primaryCtaText}>{auth.busy ? "Arbetar..." : auth.mode === "signup" ? "Skapa konto" : "Logga in"}</Text>
+          </Pressable>
+          {auth.signupNotice ? <Text style={s.notice}>{auth.signupNotice}</Text> : null}
+          {!invited ? (
+            <Pressable onPress={auth.handleGuestSignIn} style={s.guestCta} disabled={auth.guestBusy} {...web({ dataSet: { landingCta: true } })}>
+              <Text style={s.guestCtaText}>{auth.guestBusy ? "Startar gästläge..." : "Testa utan konto"}</Text>
+            </Pressable>
+          ) : null}
+        </>
+      ) : null}
     </View>
   );
 }
@@ -271,7 +294,7 @@ export function LandingScreen({ pendingJoinCode }: { pendingJoinCode?: string | 
                 <Text style={s.joinBannerSub}>Logga in eller skapa konto för att gå med.</Text>
               </View>
             ) : null}
-            <AuthForm />
+            <AuthForm invited={!!pendingJoinCode} />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
