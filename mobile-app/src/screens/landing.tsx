@@ -165,7 +165,7 @@ function MarketingContent() {
         <SvgLogo height={220} />
       </View>
       <Text style={s.subheadline}>
-        Din personliga vinsamling i fickan — katalogisera flaskor, håll provningar med vänner och hitta perfekta vinet till middagen.
+        Håll vinprovningar med vänner — blindprova, betygsätt tillsammans och avslöja resultaten. Och håll ordning på din vinsamling däremellan.
       </Text>
       <Divider />
       <View style={s.featureList}>
