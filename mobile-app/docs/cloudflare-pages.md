@@ -25,13 +25,17 @@ Set these in Cloudflare Pages:
 
 ## Routing
 
-The app includes `public/_redirects` with:
+SPA routing (serving `index.html` with HTTP 200 for unknown paths such as
+`/join/:code`) is handled by `wrangler.jsonc`:
 
-```text
-/* /index.html 200
+```jsonc
+"assets": { "not_found_handling": "single-page-application" }
 ```
 
-That keeps SPA routes working on Cloudflare Pages.
+Do NOT add a `public/_redirects` with `/* /index.html 200` — this project
+deploys as Cloudflare Workers Static Assets, where that rule fails the build
+with "Infinite loop detected" (code 100324). The wrangler.jsonc setting above
+is the correct SPA fallback.
 
 ## Domain
 
